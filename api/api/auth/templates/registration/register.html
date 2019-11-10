@@ -1,0 +1,32 @@
+{% extends './base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+
+    <main>
+        <div id="auth-wrapper">
+            <div class="box" id="auth">
+                <h2 class="title">Sign up</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.username.errors }}
+                    <input class="form-control" type="text" name="username" maxlength="150" autofocus="" required="" id="id_username"
+                           placeholder="username">
+                    <br>
+                    {{ form.email.errors }}
+                    <input class="form-control" type="email" name="email" maxlength="200" required="" id="id_email" placeholder="email">
+                    <br>
+                    {{ form.password1.errors }}
+                    <input class="form-control" type="password" name="password1" required="" id="id_password1" placeholder="password">
+                    <br>
+                    {% if form.password1.help_text %}
+                        <p class="help">{{ form.password1.help_text|safe }}</p>
+                    {% endif %}
+                    {{ form.password2.errors }}
+                    <input class="form-control" type="password" name="password2" required="" id="id_password2" placeholder="repeat password">
+                    <br>
+                    <button class="btn btn-primary submit" type="submit">Sign up</button>
+                </form>
+            </div>
+        </div>
+    </main>
+{% endblock %}

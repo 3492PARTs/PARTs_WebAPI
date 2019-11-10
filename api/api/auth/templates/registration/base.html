@@ -1,0 +1,20 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %} | WV Flood</title>
+    <base href="/">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="{% static 'contents/favicon.ico' %}">
+    <link rel="stylesheet" type="text/css" href="{%  static 'style.css' %}">
+
+</head>
+<body>
+    <a id="home-btn" href="http://envnet.duckdns.org">
+        <img src="{% static 'home.svg' %}">
+    </a>
+  {% block content %}{% endblock %}
+</body>
+</html>
