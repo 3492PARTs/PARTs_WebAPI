@@ -15,7 +15,7 @@ from django.core.mail import EmailMessage
 from django.contrib.auth.models import User
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from api.auth.serializers import UserSerializer
 from rest_framework.views import APIView
 from .models import *
@@ -105,12 +105,22 @@ def activate(request, uidb64, token):
         return render(request, 'registration/activate_incomplete.html')
 
 
+# Custom permission for users with "is_active" = True.
+class scoutupdate(BasePermission):
+    """
+    Allows access only to "is_active" users.
+    """
+    def has_permission(self, request, view):
+        print(request.user.user_permissions)
+        return request.user
+
+
 class UserData(APIView):
     """
     API endpoint
     """
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, scoutupdate)
 
     def get_user(self, token):
         user = AuthtokenToken.objects.get(key=token['token']).user
@@ -122,5 +132,25 @@ class UserData(APIView):
         if serializer.is_valid():
             req = self.get_user(serializer.data)
             serializer = UserSerializer(req)
+            return Response(serializer.data)
+        return HttpResponse(status=400)
+
+class UserLinks(APIView):
+    """
+    API endpoint to get links a user has based on permissions
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_links(self, req):
+
+
+        return req
+
+    def post(self, request, format=None):
+        serializer = MainQuerySerializer(data=request.data)
+        if serializer.is_valid():
+            req = self.generate_data(serializer.data)
+            serializer = MainQuerySerializer(req)
             return Response(serializer.data)
         return HttpResponse(status=400)

@@ -10,3 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 class TokenSerializer(serializers.Serializer):
     token = serializers.CharField(max_length=40, min_length=40)
+
+
+class LinkSerializer(serializers.Serializer):
+    MenuName = serializers.CharField()
+    RouterLink = serializers.CharField()
+
+
+class UserLinksSerializer(serializers.Serializer):
+    links = LinkSerializer(many=True)
