@@ -16,11 +16,11 @@ from django.contrib.auth.models import User
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, BasePermission
-from api.auth.serializers import UserSerializer
 from rest_framework.views import APIView
 from .models import *
 from .serializers import *
 from rest_framework.response import Response
+from .security import *
 
 
 def register(request):
@@ -105,52 +105,43 @@ def activate(request, uidb64, token):
         return render(request, 'registration/activate_incomplete.html')
 
 
-# Custom permission for users with "is_active" = True.
-class scoutupdate(BasePermission):
-    """
-    Allows access only to "is_active" users.
-    """
-    def has_permission(self, request, view):
-        print(request.user.user_permissions)
-        return request.user
-
-
-class UserData(APIView):
+class GetUserData(APIView):
     """
     API endpoint
     """
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated, scoutupdate)
+    permission_classes = (IsAuthenticated,)
 
-    def get_user(self, token):
-        user = AuthtokenToken.objects.get(key=token['token']).user
-
+    def get_user(self):
+        user = self.request.user
         return user
 
-    def post(self, request, format=None):
-        serializer = TokenSerializer(data=request.data)
-        if serializer.is_valid():
-            req = self.get_user(serializer.data)
-            serializer = UserSerializer(req)
-            return Response(serializer.data)
-        return HttpResponse(status=400)
+    def get(self, request, format=None):
+        req = self.get_user()
+        serializer = UserSerializer(req)
+        return Response(serializer.data)
 
-class UserLinks(APIView):
+
+class GetUserLinks(APIView):
     """
     API endpoint to get links a user has based on permissions
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def get_links(self, req):
+    def get_links(self):
+        id = [per.id for per in get_user_permissions(self.request.user.id)]
 
+        user_links = UserLinks.objects.filter(auth_permission__in=[37])
+
+        req = []
+
+        for link in user_links:
+            req.append({'MenuName': link.menu_name, 'RouterLink': link.routerlink})
 
         return req
 
-    def post(self, request, format=None):
-        serializer = MainQuerySerializer(data=request.data)
-        if serializer.is_valid():
-            req = self.generate_data(serializer.data)
-            serializer = MainQuerySerializer(req)
-            return Response(serializer.data)
-        return HttpResponse(status=400)
+    def get(self, request, format=None):
+        req = self.get_links()
+        serializer = UserLinksSerializer({'links': req})
+        return Response(serializer.data)

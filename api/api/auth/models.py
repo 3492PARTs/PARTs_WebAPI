@@ -66,9 +66,10 @@ class AuthUserUserPermissions(models.Model):
 
 
 class AuthtokenToken(models.Model):
-    key = models.CharField(unique=True, max_length=40, blank=True, null=True)
-    created = models.DateTimeField(blank=True, null=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING, unique=True, blank=True, null=True)
+    key = models.CharField(primary_key=True, max_length=40)
+    created = models.DateTimeField()
+    user = models.OneToOneField(AuthUser, models.DO_NOTHING)
+    # user = models.ForeignKey(AuthUser, models.DO_NOTHING, unique=True)
 
     class Meta:
         managed = False
@@ -99,7 +100,7 @@ class DjangoContentType(models.Model):
 
 
 class DjangoMigrations(models.Model):
-    id = models.IntegerField(blank=True, null=True)
+    id = models.IntegerField(primary_key=True)
     app = models.CharField(max_length=255, blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)
     applied = models.DateTimeField(blank=True, null=True)
@@ -117,6 +118,17 @@ class DjangoSession(models.Model):
     class Meta:
         managed = False
         db_table = 'django_session'
+
+
+class UserLinks(models.Model):
+    user_links_id = models.AutoField(primary_key=True)
+    auth_permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
+    menu_name = models.CharField(max_length=255)
+    routerlink = models.CharField(max_length=255)
+
+    class Meta:
+        managed = False
+        db_table = 'user_links'
 
 
 class Contact(models.Model):
