@@ -8,10 +8,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'first_name', 'last_name')
 
 
-class LinkSerializer(serializers.Serializer):
+class UserLinksSerializer(serializers.Serializer):
     MenuName = serializers.CharField()
     RouterLink = serializers.CharField()
 
 
-class UserLinksSerializer(serializers.Serializer):
-    links = LinkSerializer(many=True)
+class RetMessageSerializer(serializers.Serializer):
+    retMessage = serializers.CharField()
+    error = serializers.BooleanField()

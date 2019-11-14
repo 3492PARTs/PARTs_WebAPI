@@ -32,6 +32,27 @@ class EventTeamXref(models.Model):
         unique_together = (('event', 'team_no'),)
 
 
+class QuestionOptionType(models.Model):
+    q_opt_typ_cd = models.CharField(primary_key=True, max_length=255)
+    q_opt_nm = models.CharField(max_length=255, blank=True, null=True)
+    void_ind = models.CharField(max_length=1, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'question_option_type'
+
+
+class QuestionOptions(models.Model):
+    q_opt_id = models.AutoField(primary_key=True)
+    q_opt_typ_cd = models.ForeignKey(QuestionOptionType, models.DO_NOTHING, db_column='q_opt_typ_cd', blank=True, null=True)
+    option = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'question_options'
+
+
 class QuestionType(models.Model):
     question_typ = models.CharField(primary_key=True, max_length=50)
     question_typ_nm = models.CharField(max_length=255)
@@ -69,7 +90,9 @@ class ScoutFieldQuestion(models.Model):
     sfq_id = models.AutoField(primary_key=True)
     season = models.ForeignKey('Season', models.DO_NOTHING)
     question_typ = models.ForeignKey(QuestionType, models.DO_NOTHING, db_column='question_typ')
+    q_opt_typ_cd = models.ForeignKey(QuestionOptionType, models.DO_NOTHING, db_column='q_opt_typ_cd', blank=True, null=True)
     question = models.CharField(max_length=1000)
+    order = models.IntegerField()
     void_ind = models.CharField(max_length=1)
 
     class Meta:
@@ -106,6 +129,7 @@ class ScoutPitQuestion(models.Model):
     spq_id = models.IntegerField(primary_key=True)
     season = models.ForeignKey('Season', models.DO_NOTHING)
     question_typ = models.ForeignKey(QuestionType, models.DO_NOTHING, db_column='question_typ', blank=True, null=True)
+    q_opt_typ_cd = models.ForeignKey(QuestionOptionType, models.DO_NOTHING, db_column='q_opt_typ_cd', blank=True, null=True)
     question = models.CharField(max_length=1000)
     void_ind = models.CharField(max_length=1)
 
@@ -115,7 +139,7 @@ class ScoutPitQuestion(models.Model):
 
 
 class Season(models.Model):
-    season_id = models.IntegerField(primary_key=True)
+    season_id = models.AutoField(primary_key=True)
     season = models.CharField(max_length=45)
 
     class Meta:

@@ -122,7 +122,7 @@ class DjangoSession(models.Model):
 
 class UserLinks(models.Model):
     user_links_id = models.AutoField(primary_key=True)
-    auth_permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
+    permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
     menu_name = models.CharField(max_length=255)
     routerlink = models.CharField(max_length=255)
 

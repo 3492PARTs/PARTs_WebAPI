@@ -130,9 +130,7 @@ class GetUserLinks(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_links(self):
-        id = [per.id for per in get_user_permissions(self.request.user.id)]
-
-        user_links = UserLinks.objects.filter(auth_permission__in=[37])
+        user_links = UserLinks.objects.filter(permission__in=[per.id for per in get_user_permissions(self.request.user.id)])
 
         req = []
 
@@ -143,5 +141,5 @@ class GetUserLinks(APIView):
 
     def get(self, request, format=None):
         req = self.get_links()
-        serializer = UserLinksSerializer({'links': req})
+        serializer = UserLinksSerializer(req, many=True)
         return Response(serializer.data)
