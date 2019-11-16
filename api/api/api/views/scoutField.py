@@ -26,7 +26,34 @@ class GetScoutFieldInputs(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, 1):
             req = self.get_questions()
-            serializer = QuestionSerializer(req, many=True)
+            serializer = ScoutFieldQuestionSerializer(req, many=True)
             return Response(serializer.data)
         else:
             return ret_message('You do not have access', True)
+
+"""
+class PostSaveScoutFieldQuestionAnswers(APIView):
+    
+    API endpoint to get links a user has based on permissions
+    
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def save_answers(self, data):
+        for d in data:
+
+
+        #return questions
+
+    def post(self, request, format=None):
+        serializer = ScoutFieldQuestionAnswerSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 1):
+            req = self.save_answers(serializer.data)
+            serializer = ScoutFieldQuestionSerializer(req, many=True)
+            return Response(serializer.data)
+        else:
+            return ret_message('You do not have access', True)
+"""

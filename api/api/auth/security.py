@@ -1,6 +1,7 @@
 from .models import *
 from .serializers import RetMessageSerializer
 from django.db.models import Q
+from rest_framework.response import Response
 
 
 def has_access(user_id, sec_permission):
@@ -21,4 +22,4 @@ def get_user_permissions(user_id):
 
 
 def ret_message(message, error=False):
-    return RetMessageSerializer({'retMessage': message, 'error': error})
+    return Response(RetMessageSerializer({'retMessage': message, 'error': error}).data)
