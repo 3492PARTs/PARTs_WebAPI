@@ -21,5 +21,7 @@ def get_user_permissions(user_id):
     return [prmsn.permission for prmsn in auth_grp_prmsns]
 
 
-def ret_message(message, error=False):
+def ret_message(message, error=False, exception=None):
+    if exception is not None:
+        print(exception)
     return Response(RetMessageSerializer({'retMessage': message, 'error': error}).data)

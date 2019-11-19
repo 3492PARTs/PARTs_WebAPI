@@ -1,3 +1,7 @@
+from datetime import datetime
+
+import pytz
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework import viewsets
@@ -54,8 +58,8 @@ class GetScoutAdminSyncSeason(APIView):
         for e in r:
             event_ = {
                 'event_nm': e['name'],
-                'date_st': e['start_date'],
-                'date_end': e['end_date'],
+                'date_st': datetime.strptime(e['start_date'], '%Y-%m-%d').astimezone(pytz.utc),
+                'date_end': datetime.strptime(e['end_date'], '%Y-%m-%d').astimezone(pytz.utc),
                 'event_cd': e['key'],
                 'teams': [],
                 'teams_to_keep': []
@@ -79,41 +83,41 @@ class GetScoutAdminSyncSeason(APIView):
         messages = ''
         for e in insert:
             # remove teams that have been removed from an event
-            db.event_team_xref.delete().where((db.event_team_xref.team_no.not_in(e['teams_to_keep']) & (
-                        db.event_team_xref.event == db.event.select(db.event.event_id).where(
-                    db.event.event_cd == e['event_cd'])))).execute()
+            EventTeamXref.objects.filter(~Q(team_no__in=e['teams_to_keep']) &
+                                         Q(event=Event.objects.get(event_cd=e['event_cd']).event_id)).delete()
 
             try:
-                db.event(event_nm=e['event_nm'], date_st=e['date_st'], date_end=e['date_end'],
-                         event_cd=e['event_cd']).save(force_insert=True)
+                Event(season=season, event_nm=e['event_nm'], date_st=e['date_st'], date_end=e['date_end'],
+                      event_cd=e['event_cd']).save()
                 messages += "Added event to DB: " + e['event_cd'] + '\n'
-            except peewee.IntegrityError:
+            except IntegrityError:
                 messages += "Event already in DB: " + e['event_cd'] + '\n'
 
             for t in e['teams']:
 
                 try:
-                    db.team(team_no=t['team_no'], team_nm=t['team_nm']).save(force_insert=True)
+                    Team(team_no=t['team_no'], team_nm=t['team_nm']).save()
                     messages += "Added team to DB: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
-                except peewee.IntegrityError:
+                except IntegrityError:
                     messages += "Team already in DB: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
 
                 try:
-                    db.event_team_xref(team_no=t['team_no'],
-                                       event_id=(db.event.select(db.event.event_id).where(
-                                           db.event.event_cd == e['event_cd']))).save(force_insert=True)
+                    EventTeamXref(team_no=Team.objects.get(team_no=t['team_no']),
+                                  event=Event.objects.get(event_cd=e['event_cd'])).save()
                     messages += "Added team to event in DB: " + str(t['team_no']) + " " + t['team_nm'] + " event: " + e[
                         'event_cd'] + '\n'
-                except peewee.IntegrityError:
+                except IntegrityError:
                     messages += "Team already in DB at event: " + str(t['team_no']) + " " + t['team_nm'] + " event: " + \
                                 e['event_cd'] + '\n'
 
-        return seasons
+        return messages
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
-            req = self.sync_season(request)
-            serializer = SeasonSerializer(req, many=True)
-            return Response(serializer.data)
+            try:
+                req = self.sync_season(request.query_params.get('season_id', None))
+                return ret_message(req)
+            except Exception as e:
+                return ret_message('An error occurred while syncing teams', True, e)
         else:
             return ret_message('You do not have access', True)

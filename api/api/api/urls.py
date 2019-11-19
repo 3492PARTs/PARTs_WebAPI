@@ -8,5 +8,6 @@ from api.api.views.scoutAdmin import *
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path('get_scout_field_questions/', GetScoutFieldInputs.as_view()),
-    path('get_scout_admin_init/', GetScoutAdminInit.as_view())
+    path('get_scout_admin_init/', GetScoutAdminInit.as_view()),
+    path('get_sync_season/', GetScoutAdminSyncSeason.as_view())
 ]
