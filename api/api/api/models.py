@@ -141,6 +141,7 @@ class ScoutPitQuestion(models.Model):
 class Season(models.Model):
     season_id = models.AutoField(primary_key=True)
     season = models.CharField(max_length=45)
+    current = models.CharField(max_length=1)
 
     class Meta:
         managed = False

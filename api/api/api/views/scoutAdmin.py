@@ -89,25 +89,25 @@ class GetScoutAdminSyncSeason(APIView):
             try:
                 Event(season=season, event_nm=e['event_nm'], date_st=e['date_st'], date_end=e['date_end'],
                       event_cd=e['event_cd']).save()
-                messages += "Added event to DB: " + e['event_cd'] + '\n'
+                messages += "(ADD) Added event: " + e['event_cd'] + '\n'
             except IntegrityError:
-                messages += "Event already in DB: " + e['event_cd'] + '\n'
+                messages += "(NO ADD) Already have event: " + e['event_cd'] + '\n'
 
             for t in e['teams']:
 
                 try:
-                    Team(team_no=t['team_no'], team_nm=t['team_nm']).save()
-                    messages += "Added team to DB: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
+                    Team(team_no=t['team_no'], team_nm=t['team_nm']).save(force_insert=True)
+                    messages += "(ADD) Added team: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
                 except IntegrityError:
-                    messages += "Team already in DB: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
+                    messages += "(NO ADD) Already have team: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
 
                 try:
                     EventTeamXref(team_no=Team.objects.get(team_no=t['team_no']),
                                   event=Event.objects.get(event_cd=e['event_cd'])).save()
-                    messages += "Added team to event in DB: " + str(t['team_no']) + " " + t['team_nm'] + " event: " + e[
+                    messages += "(ADD) Added team: " + str(t['team_no']) + " " + t['team_nm'] + " to event: " + e[
                         'event_cd'] + '\n'
                 except IntegrityError:
-                    messages += "Team already in DB at event: " + str(t['team_no']) + " " + t['team_nm'] + " event: " + \
+                    messages += "(NO ADD) Team: " + str(t['team_no']) + " " + t['team_nm'] + " already at event: " + \
                                 e['event_cd'] + '\n'
 
         return messages
@@ -119,5 +119,30 @@ class GetScoutAdminSyncSeason(APIView):
                 return ret_message(req)
             except Exception as e:
                 return ret_message('An error occurred while syncing teams', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+class GetScoutAdminSetSeason(APIView):
+    """
+    API endpoint to set the season
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def set(self, season_id):
+        Season.objects.filter(current='y').update(current='n')
+        season = Season.objects.get(season_id=season_id)
+        season.current = 'y'
+        season.save()
+
+        return ret_message("Successfully set the season")
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 2):
+            try:
+                req = self.set(request.query_params.get('season_id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while setting the season', True, e)
         else:
             return ret_message('You do not have access', True)
