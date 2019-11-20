@@ -27,14 +27,23 @@ class GetScoutAdminInit(APIView):
 
     def get_init(self):
         seasons = Season.objects.all()
+        current_season = Season.objects.get(current='y')
+        events = Event.objects.filter(void_ind='n')
+        try:
+            current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
+        except Exception as e:
+            current_event = Event()
 
-        return seasons
+        return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event}
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
-            req = self.get_init()
-            serializer = SeasonSerializer(req, many=True)
-            return Response(serializer.data)
+            try:
+                req = self.get_init()
+                serializer = ScoutAdminInitSerializer(req)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while initializing', True, e)
         else:
             return ret_message('You do not have access', True)
 
@@ -122,6 +131,7 @@ class GetScoutAdminSyncSeason(APIView):
         else:
             return ret_message('You do not have access', True)
 
+
 class GetScoutAdminSetSeason(APIView):
     """
     API endpoint to set the season
@@ -129,18 +139,28 @@ class GetScoutAdminSetSeason(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def set(self, season_id):
+    def set(self, season_id, event_id):
+        msg = ""
+
         Season.objects.filter(current='y').update(current='n')
         season = Season.objects.get(season_id=season_id)
         season.current = 'y'
         season.save()
+        msg = "Successfully set the season to: " + season.season
 
-        return ret_message("Successfully set the season")
+        if event_id is not None:
+            Event.objects.filter(current='y').update(current='n')
+            event = Event.objects.get(event_id=event_id)
+            event.current = 'y'
+            event.save()
+            msg += "\nSuccessfully set the event to: " + event.event_nm
+
+        return ret_message(msg)
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
             try:
-                req = self.set(request.query_params.get('season_id', None))
+                req = self.set(request.query_params.get('season_id', None), request.query_params.get('event_id', None))
                 return req
             except Exception as e:
                 return ret_message('An error occurred while setting the season', True, e)

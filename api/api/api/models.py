@@ -15,6 +15,7 @@ class Event(models.Model):
     date_st = models.DateTimeField()
     event_cd = models.CharField(unique=True, max_length=10)
     date_end = models.DateTimeField()
+    current = models.CharField(max_length=1)
     void_ind = models.CharField(max_length=1, blank=True, null=True)
 
     class Meta:
