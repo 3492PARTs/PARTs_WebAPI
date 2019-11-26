@@ -27,8 +27,13 @@ class GetScoutAdminInit(APIView):
 
     def get_init(self):
         seasons = Season.objects.all()
-        current_season = Season.objects.get(current='y')
         events = Event.objects.filter(void_ind='n')
+
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            current_season = Season()
+
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
@@ -91,16 +96,17 @@ class GetScoutAdminSyncSeason(APIView):
 
         messages = ''
         for e in insert:
-            # remove teams that have been removed from an event
-            EventTeamXref.objects.filter(~Q(team_no__in=e['teams_to_keep']) &
-                                         Q(event=Event.objects.get(event_cd=e['event_cd']).event_id)).delete()
 
             try:
                 Event(season=season, event_nm=e['event_nm'], date_st=e['date_st'], date_end=e['date_end'],
-                      event_cd=e['event_cd']).save()
+                      event_cd=e['event_cd'], current='n', void_ind='n').save(force_insert=True)
                 messages += "(ADD) Added event: " + e['event_cd'] + '\n'
             except IntegrityError:
                 messages += "(NO ADD) Already have event: " + e['event_cd'] + '\n'
+
+            # remove teams that have been removed from an event
+            EventTeamXref.objects.filter(~Q(team_no__in=e['teams_to_keep']) &
+                                         Q(event=Event.objects.get(event_cd=e['event_cd']).event_id)).delete()
 
             for t in e['teams']:
 
@@ -112,7 +118,7 @@ class GetScoutAdminSyncSeason(APIView):
 
                 try:
                     EventTeamXref(team_no=Team.objects.get(team_no=t['team_no']),
-                                  event=Event.objects.get(event_cd=e['event_cd'])).save()
+                                  event=Event.objects.get(event_cd=e['event_cd'])).save(force_insert=True)
                     messages += "(ADD) Added team: " + str(t['team_no']) + " " + t['team_nm'] + " to event: " + e[
                         'event_cd'] + '\n'
                 except IntegrityError:
@@ -161,6 +167,77 @@ class GetScoutAdminSetSeason(APIView):
         if has_access(request.user.id, 2):
             try:
                 req = self.set(request.query_params.get('season_id', None), request.query_params.get('event_id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while setting the season', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class GetScoutAdminAddSeason(APIView):
+    """
+    API endpoint to add a season
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def add(self, season):
+        Season(season=season, current='n').save()
+
+        return ret_message('Successfully added season: ' + season)
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 2):
+            try:
+                req = self.add(request.query_params.get('season', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while setting the season', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class GetScoutAdminDeleteSeason(APIView):
+    """
+    API endpoint to delete a season
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, season_id):
+        season = Season.objects.get(season_id=season_id)
+
+        events = Event.objects.filter(season=season)
+
+        for e in events:
+            EventTeamXref.objects.filter(event=e).delete()
+
+            scout_fields = ScoutField.objects.filter(event=e)
+
+            for sf in scout_fields:
+                ScoutFieldAnswer.objects.filter(scout_field=sf).delete()
+                sf.delete()
+
+            ScoutFieldQuestion.objects.filter(season=season).delete()
+
+            scout_pits = ScoutPit.objects.filter(event=e)
+
+            for sp in scout_pits:
+                ScoutPitAnswer.objects.filter(scout_pit=sp).delete()
+                sp.delete()
+
+            ScoutPitQuestion.objects.filter(season=season).delete()
+
+            e.delete()
+
+        season.delete()
+
+        return ret_message('Successfully deleted season: ' + season.season)
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 2):
+            try:
+                req = self.delete(request.query_params.get('season_id', None))
                 return req
             except Exception as e:
                 return ret_message('An error occurred while setting the season', True, e)
