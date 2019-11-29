@@ -30,8 +30,17 @@ class EventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class QuestionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionType
+        fields = '__all__'
+
+
 class ScoutAdminInitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     events = EventSerializer(many=True)
     currentSeason = SeasonSerializer()
     currentEvent = EventSerializer()
+    questionTypes = QuestionTypeSerializer(many=True)
+    scoutFieldQuestions = ScoutFieldQuestionSerializer(many=True)
+

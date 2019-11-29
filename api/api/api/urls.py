@@ -12,5 +12,7 @@ urlpatterns = [
     path('get_sync_season/', GetScoutAdminSyncSeason.as_view()),
     path('get_set_season/', GetScoutAdminSetSeason.as_view()),
     path('get_add_season/', GetScoutAdminAddSeason.as_view()),
-    path('get_delete_season/', GetScoutAdminDeleteSeason.as_view())
+    path('get_delete_season/', GetScoutAdminDeleteSeason.as_view()),
+    path('post_save_scout_field_question/', PostSaveScoutFieldQuestionAnswers.as_view()),
+    path('post_update_scout_field_question/', PostUpdateScoutFieldQuestionAnswers.as_view())
 ]

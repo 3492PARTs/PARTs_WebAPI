@@ -28,18 +28,22 @@ class GetScoutAdminInit(APIView):
     def get_init(self):
         seasons = Season.objects.all()
         events = Event.objects.filter(void_ind='n')
+        question_types = QuestionType.objects.filter(void_ind='n')
 
         try:
             current_season = Season.objects.get(current='y')
+            scout_field_questions = ScoutFieldQuestion.objects.filter(Q(season=current_season) & Q(void_ind='n'))
         except Exception as e:
             current_season = Season()
+            scout_field_questions = ScoutFieldQuestion()
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
             current_event = Event()
 
-        return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event}
+        return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
+                'questionTypes': question_types, 'scoutFieldQuestions': scout_field_questions}
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
@@ -241,5 +245,70 @@ class GetScoutAdminDeleteSeason(APIView):
                 return req
             except Exception as e:
                 return ret_message('An error occurred while setting the season', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class PostSaveScoutFieldQuestionAnswers(APIView):
+    """API endpoint to save new questions"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def save_question(self, data):
+        try:
+            season = Season.objects.get(current='y')
+            ScoutFieldQuestion(season=season, question_typ_id=data['question_typ'], q_opt_typ_cd_id=None,
+                               question=data['question'], order=data['order'], void_ind='n').save()
+            return ret_message('Saved question successfully', False)
+        except Exception as e:
+            return ret_message('No season set, can\'t save question', True)
+
+
+    def post(self, request, format=None):
+        serializer = ScoutFieldQuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 2):
+            try:
+                req = self.save_question(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while saving the question', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class PostUpdateScoutFieldQuestionAnswers(APIView):
+    """API endpoint to update questions"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def update_question(self, data):
+        print(data)
+        question = ScoutFieldQuestion.objects.get(sfq_id=data['sfq_id'])
+
+        question.question = data['question']
+        question.order = data['order']
+        question.question_typ = data['question_typ']
+
+        question.save()
+
+        return ret_message('Question saved successfully', False)
+
+
+    def post(self, request, format=None):
+        serializer = ScoutFieldQuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 2):
+            try:
+                req = self.update_question(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while updating the question', True, e)
         else:
             return ret_message('You do not have access', True)
