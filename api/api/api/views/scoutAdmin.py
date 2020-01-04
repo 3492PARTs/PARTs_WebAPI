@@ -32,18 +32,74 @@ class GetScoutAdminInit(APIView):
 
         try:
             current_season = Season.objects.get(current='y')
-            scout_field_questions = ScoutFieldQuestion.objects.filter(Q(season=current_season) & Q(void_ind='n'))
         except Exception as e:
             current_season = Season()
-            scout_field_questions = ScoutFieldQuestion()
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
             current_event = Event()
 
+        scout_field_questions = []
+        try:
+            sfqs = ScoutFieldQuestion.objects.filter(season=current_season)
+            for sfq in sfqs:
+                ops = QuestionOptions.objects.filter(sfq=sfq)
+                options = []
+                for op in ops:
+                    options.append({
+                        'q_opt_id': op.q_opt_id,
+                        'option': op.option,
+                        'sfq': op.sfq_id,
+                        'spq': op.spq_id,
+                        'active': op.active,
+                        'void_ind': op.void_ind
+                    })
+
+                scout_field_questions.append({
+                    'sfq_id': sfq.sfq_id,
+                    'season': sfq.season_id,
+                    'question_typ': sfq.question_typ_id,
+                    'question': sfq.question,
+                    'order': sfq.order,
+                    'active': sfq.active,
+                    'void_ind': sfq.void_ind,
+                    'options': options
+                })
+        except Exception as e:
+            scout_field_questions = ScoutFieldQuestion()
+
+        scout_pit_questions = []
+        try:
+            spqs = ScoutPitQuestion.objects.filter(season=current_season)
+            for spq in spqs:
+                ops = QuestionOptions.objects.filter(spq=spq)
+                options = []
+                for op in ops:
+                    options.append({
+                        'q_opt_id': op.q_opt_id,
+                        'option': op.option,
+                        'sfq': op.sfq_id,
+                        'spq': op.spq_id,
+                        'active': op.active,
+                        'void_ind': op.void_ind
+                    })
+
+                scout_pit_questions.append({
+                    'spq_id': spq.spq_id,
+                    'season': spq.season_id,
+                    'question_typ': spq.question_typ_id,
+                    'question': spq.question,
+                    'order': spq.order,
+                    'active': spq.active,
+                    'void_ind': spq.void_ind,
+                    'options': options
+                })
+        except Exception as e:
+            scout_pit_questions = ScoutPitQuestion()
+
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
-                'questionTypes': question_types, 'scoutFieldQuestions': scout_field_questions}
+                'questionTypes': question_types, 'scoutFieldQuestions': scout_field_questions, 'scoutPitQuestions': scout_pit_questions}
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
@@ -258,8 +314,14 @@ class PostSaveScoutFieldQuestionAnswers(APIView):
     def save_question(self, data):
         try:
             season = Season.objects.get(current='y')
-            ScoutFieldQuestion(season=season, question_typ_id=data['question_typ'], q_opt_typ_cd_id=None,
-                               question=data['question'], order=data['order'], void_ind='n').save()
+            sfq = ScoutFieldQuestion(season=season, question_typ_id=data['question_typ'],
+                               question=data['question'], order=data['order'], active='y', void_ind='n')
+
+            sfq.save()
+
+            for op in data['options']:
+                QuestionOptions(option=op['option'], sfq_id=sfq.sfq_id, active='y', void_ind='n').save()
+
             return ret_message('Saved question successfully', False)
         except Exception as e:
             return ret_message('No season set, can\'t save question', True)
@@ -288,13 +350,21 @@ class PostUpdateScoutFieldQuestionAnswers(APIView):
 
     def update_question(self, data):
         print(data)
-        question = ScoutFieldQuestion.objects.get(sfq_id=data['sfq_id'])
+        sfq = ScoutFieldQuestion.objects.get(sfq_id=data['sfq_id'])
 
-        question.question = data['question']
-        question.order = data['order']
-        question.question_typ = data['question_typ']
+        sfq.question = data['question']
+        sfq.order = data['order']
+        sfq.question_typ_id = data['question_typ']
+        sfq.save()
 
-        question.save()
+        for op in data['options']:
+            if op.get('q_opt_id', None) is not None:
+                o = QuestionOptions.objects.get(q_opt_id=op['q_opt_id'])
+                o.option = op['option']
+                o.active = op['active']
+                o.save()
+            else:
+                QuestionOptions(option=op['option'], sfq_id=sfq.sfq_id, active='y', void_ind='n').save()
 
         return ret_message('Question saved successfully', False)
 
@@ -310,5 +380,173 @@ class PostUpdateScoutFieldQuestionAnswers(APIView):
                 return req
             except Exception as e:
                 return ret_message('An error occurred while updating the question', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class GetScoutAdminDeleteScoutFieldQuestion(APIView):
+    """
+    API endpoint to delete a scout field question
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, sfq_id):
+        sfq = ScoutFieldQuestion.objects.get(sfq_id=sfq_id)
+
+        if sfq.active == 'n':
+            sfq.active = 'y'
+        else:
+            sfq.active = 'n'
+
+        sfq.save()
+
+        return ret_message('Successfully toggled the question')
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 2):
+            try:
+                req = self.delete(request.query_params.get('sfq_id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while toggling the scout field question', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class GetScoutAdminToggleOption(APIView):
+    """
+    API endpoint to toggle a question option
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def toggle(self, q_opt_id):
+        opt = QuestionOptions.objects.get(q_opt_id=q_opt_id)
+
+        if opt.active == 'n':
+            opt.active = 'y'
+        else:
+            opt.active = 'n'
+
+        opt.save()
+
+        return ret_message('Successfully toggled the option')
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 2):
+            try:
+                req = self.toggle(request.query_params.get('q_opt_id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while toggling the option', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class PostSaveScoutPitQuestionAnswers(APIView):
+    """API endpoint to save new questions"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def save_question(self, data):
+        try:
+            season = Season.objects.get(current='y')
+            spq = ScoutPitQuestion(season=season, question_typ_id=data['question_typ'],
+                               question=data['question'], order=data['order'], active='y', void_ind='n')
+
+            spq.save()
+
+            for op in data['options']:
+                QuestionOptions(option=op['option'], spq_id=spq.spq_id, active='y', void_ind='n').save()
+
+            return ret_message('Saved question successfully', False)
+        except Exception as e:
+            return ret_message('No season set, can\'t save question', True)
+
+
+    def post(self, request, format=None):
+        serializer = ScoutPitQuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 2):
+            try:
+                req = self.save_question(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while saving the question', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class PostUpdateScoutPitQuestionAnswers(APIView):
+    """API endpoint to update questions"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def update_question(self, data):
+        spq = ScoutPitQuestion.objects.get(spq_id=data['spq_id'])
+
+        spq.question = data['question']
+        spq.order = data['order']
+        spq.question_typ_id = data['question_typ']
+        spq.save()
+
+        for op in data['options']:
+            if op.get('q_opt_id', None) is not None:
+                o = QuestionOptions.objects.get(q_opt_id=op['q_opt_id'])
+                o.option = op['option']
+                o.active = op['active']
+                o.save()
+            else:
+                QuestionOptions(option=op['option'], spq_id=spq.spq_id, active='y', void_ind='n').save()
+
+        return ret_message('Question saved successfully', False)
+
+
+    def post(self, request, format=None):
+        serializer = ScoutPitQuestionSerializer(data=request.data)
+        if serializer.is_valid() and len(serializer.data['options']) > 0:
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 2):
+            try:
+                req = self.update_question(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while updating the question', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class GetScoutAdminDeleteScoutPitQuestion(APIView):
+    """
+    API endpoint to delete a scout field question
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, spq_id):
+        spq = ScoutPitQuestion.objects.get(spq_id=spq_id)
+
+        if spq.active == 'n':
+            spq.active = 'y'
+        else:
+            spq.active = 'n'
+
+        spq.save()
+
+        return ret_message('Successfully toggled the question')
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 2):
+            try:
+                req = self.delete(request.query_params.get('sfq_id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while toggling the scout field question', True, e)
         else:
             return ret_message('You do not have access', True)

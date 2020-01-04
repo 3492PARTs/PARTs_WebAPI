@@ -2,10 +2,35 @@ from rest_framework import serializers
 from .models import *
 
 
-class ScoutFieldQuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ScoutFieldQuestion
-        fields = '__all__'
+class QuestionOptionsSerializer(serializers.Serializer):
+    q_opt_id = serializers.IntegerField()
+    option = serializers.CharField()
+    sfq = serializers.IntegerField()
+    spq = serializers.IntegerField()
+    active = serializers.CharField()
+    void_ind = serializers.CharField()
+
+
+class ScoutFieldQuestionSerializer(serializers.Serializer):
+    sfq_id = serializers.IntegerField()
+    season = serializers.IntegerField()
+    question_typ = serializers.CharField()
+    question = serializers.CharField()
+    order = serializers.IntegerField()
+    active = serializers.CharField()
+    void_ind = serializers.CharField()
+    options = QuestionOptionsSerializer(many=True, allow_null=True)
+
+
+class ScoutPitQuestionSerializer(serializers.Serializer):
+    spq_id = serializers.IntegerField()
+    season = serializers.IntegerField()
+    question_typ = serializers.CharField()
+    question = serializers.CharField()
+    order = serializers.IntegerField()
+    active = serializers.CharField()
+    void_ind = serializers.CharField()
+    options = QuestionOptionsSerializer(many=True, allow_null=True)
 
 
 class ScoutFieldQuestionAnswerSerializer(serializers.Serializer):
@@ -43,4 +68,5 @@ class ScoutAdminInitSerializer(serializers.Serializer):
     currentEvent = EventSerializer()
     questionTypes = QuestionTypeSerializer(many=True)
     scoutFieldQuestions = ScoutFieldQuestionSerializer(many=True)
+    scoutPitQuestions = ScoutPitQuestionSerializer(many=True)
 
