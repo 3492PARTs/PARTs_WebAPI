@@ -13,11 +13,9 @@ urlpatterns = [
     path('get_set_season/', GetScoutAdminSetSeason.as_view()),
     path('get_add_season/', GetScoutAdminAddSeason.as_view()),
     path('get_delete_season/', GetScoutAdminDeleteSeason.as_view()),
-    path('post_save_scout_field_question/', PostSaveScoutFieldQuestionAnswers.as_view()),
-    path('post_update_scout_field_question/', PostUpdateScoutFieldQuestionAnswers.as_view()),
-    path('get_delete_scout_field_question/', GetScoutAdminDeleteScoutFieldQuestion.as_view()),
+    path('get_scout_question_init/', GetScoutAdminQuestionInit.as_view()),
+    path('post_save_scout_question/', PostSaveScoutFieldQuestionAnswers.as_view()),
+    path('post_update_scout_question/', PostUpdateScoutFieldQuestionAnswers.as_view()),
+    path('get_delete_scout_question/', GetScoutAdminDeleteScoutFieldQuestion.as_view()),
     path('get_toggle_option/', GetScoutAdminToggleOption.as_view()),
-    path('post_save_scout_pit_question/', PostSaveScoutPitQuestionAnswers.as_view()),
-    path('post_update_scout_pit_question/', PostUpdateScoutPitQuestionAnswers.as_view()),
-    path('get_delete_scout_pit_question/', GetScoutAdminDeleteScoutPitQuestion.as_view())
 ]

@@ -62,8 +62,10 @@ class ScoutAdminInitSerializer(serializers.Serializer):
     events = EventSerializer(many=True)
     currentSeason = SeasonSerializer()
     currentEvent = EventSerializer()
-    questionTypes = QuestionTypeSerializer(many=True)
-    scoutFieldQuestions = ScoutQuestionSerializer(many=True)
-    scoutPitQuestions = ScoutQuestionSerializer(many=True)
     users = UserSerializer(many=True)
+
+
+class ScoutAdminQuestionInitSerializer(serializers.Serializer):
+    questionTypes = QuestionTypeSerializer(many=True)
+    scoutQuestions = ScoutQuestionSerializer(many=True)
 

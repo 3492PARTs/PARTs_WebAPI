@@ -29,7 +29,6 @@ class GetScoutAdminInit(APIView):
     def get_init(self):
         seasons = Season.objects.all()
         events = Event.objects.filter(void_ind='n')
-        question_types = QuestionType.objects.filter(void_ind='n')
 
         try:
             current_season = Season.objects.get(current='y')
@@ -41,69 +40,10 @@ class GetScoutAdminInit(APIView):
         except Exception as e:
             current_event = Event()
 
-        scout_field_questions = []
-        try:
-            sfqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field'))
-            for sfq in sfqs:
-                ops = QuestionOptions.objects.filter(sq=sfq)
-                options = []
-                for op in ops:
-                    options.append({
-                        'q_opt_id': op.q_opt_id,
-                        'option': op.option,
-                        'sq': op.sq_id,
-                        'active': op.active,
-                        'void_ind': op.void_ind
-                    })
-
-                scout_field_questions.append({
-                    'sq_id': sfq.sq_id,
-                    'season': sfq.season_id,
-                    'sq_typ': sfq.sq_typ_id,
-                    'question_typ': sfq.question_typ_id,
-                    'question': sfq.question,
-                    'order': sfq.order,
-                    'active': sfq.active,
-                    'void_ind': sfq.void_ind,
-                    'options': options
-                })
-        except Exception as e:
-            scout_field_questions = []
-
-        scout_pit_questions = []
-        try:
-            spqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='pit'))
-            for spq in spqs:
-                ops = QuestionOptions.objects.filter(sq=spq)
-                options = []
-                for op in ops:
-                    options.append({
-                        'q_opt_id': op.q_opt_id,
-                        'option': op.option,
-                        'sq': op.sq_id,
-                        'active': op.active,
-                        'void_ind': op.void_ind
-                    })
-
-                scout_pit_questions.append({
-                    'sq_id': spq.sq_id,
-                    'season': spq.season_id,
-                    'sq_typ': spq.sq_typ_id,
-                    'question_typ': spq.question_typ_id,
-                    'question': spq.question,
-                    'order': spq.order,
-                    'active': spq.active,
-                    'void_ind': spq.void_ind,
-                    'options': options
-                })
-        except Exception as e:
-            scout_pit_questions = []
-
         users = AuthUser.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
-                'questionTypes': question_types, 'scoutFieldQuestions': scout_field_questions,
-                'scoutPitQuestions': scout_pit_questions, 'users': users}
+                'users': users}
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
@@ -306,6 +246,68 @@ class GetScoutAdminDeleteSeason(APIView):
         else:
             return ret_message('You do not have access', True)
 
+
+class GetScoutAdminQuestionInit(APIView):
+    """
+    API endpoint to get all the init values for the scout admin screen
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_init(self, question_type):
+        question_types = QuestionType.objects.filter(void_ind='n')
+
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            return ret_message('An error occurred while initializing', True, e) # TODO NEed to return no season set message
+
+        try:
+            current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
+        except Exception as e:
+            current_event = Event()
+
+        scout_questions = []
+        try:
+            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id=question_type))
+            for sq in sqs:
+                ops = QuestionOptions.objects.filter(sq=sq)
+                options = []
+                for op in ops:
+                    options.append({
+                        'q_opt_id': op.q_opt_id,
+                        'option': op.option,
+                        'sq': op.sq_id,
+                        'active': op.active,
+                        'void_ind': op.void_ind
+                    })
+
+                scout_questions.append({
+                    'sq_id': sq.sq_id,
+                    'season': sq.season_id,
+                    'sq_typ': sq.sq_typ_id,
+                    'question_typ': sq.question_typ_id,
+                    'question': sq.question,
+                    'order': sq.order,
+                    'active': sq.active,
+                    'void_ind': sq.void_ind,
+                    'options': options
+                })
+        except Exception as e:
+            scout_questions = []
+
+        return {'questionTypes': question_types, 'scoutQuestions': scout_questions}
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 2):
+            try:
+                req = self.get_init(request.query_params.get('sq_typ', None))
+                serializer = ScoutAdminQuestionInitSerializer(req)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while initializing', True, e)
+        else:
+            return ret_message('You do not have access', True)
 
 class PostSaveScoutFieldQuestionAnswers(APIView):
     """API endpoint to save new questions"""
