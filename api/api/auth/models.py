@@ -3,6 +3,7 @@ from django.db import models
 
 class AuthGroup(models.Model):
     name = models.CharField(max_length=150, blank=True, null=True)
+    description = models.CharField(max_length=255)
 
     class Meta:
         managed = False

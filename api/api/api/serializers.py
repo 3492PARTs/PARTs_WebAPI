@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import *
-from api.auth.models import AuthUser
+from api.auth.serializers import UserSerializer
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
@@ -48,12 +48,6 @@ class EventSerializer(serializers.ModelSerializer):
 class QuestionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionType
-        fields = '__all__'
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AuthUser
         fields = '__all__'
 
 

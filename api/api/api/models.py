@@ -6,6 +6,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from api.auth.models import AuthGroup
 
 
 class Event(models.Model):
@@ -145,3 +146,12 @@ class Team(models.Model):
     class Meta:
         managed = False
         db_table = 'team'
+
+
+class ScoutGroups(models.Model):
+    scout_group = models.ForeignKey(AuthGroup, models.DO_NOTHING, primary_key=True)
+    auth_group_id = models.IntegerField(unique=True)
+
+    class Meta:
+        managed = False
+        db_table = 'scout_groups'

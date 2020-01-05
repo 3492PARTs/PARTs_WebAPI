@@ -40,7 +40,7 @@ class GetScoutAdminInit(APIView):
         except Exception as e:
             current_event = Event()
 
-        users = AuthUser.objects.all()
+        users = AuthUser.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False))
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
                 'users': users}
