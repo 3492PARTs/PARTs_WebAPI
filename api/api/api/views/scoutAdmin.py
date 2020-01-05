@@ -11,6 +11,7 @@ from rest_framework.utils import json
 
 from api.api.serializers import *
 from api.api.models import *
+from api.auth.models import AuthUser
 from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -42,23 +43,23 @@ class GetScoutAdminInit(APIView):
 
         scout_field_questions = []
         try:
-            sfqs = ScoutFieldQuestion.objects.filter(season=current_season)
+            sfqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field'))
             for sfq in sfqs:
-                ops = QuestionOptions.objects.filter(sfq=sfq)
+                ops = QuestionOptions.objects.filter(sq=sfq)
                 options = []
                 for op in ops:
                     options.append({
                         'q_opt_id': op.q_opt_id,
                         'option': op.option,
-                        'sfq': op.sfq_id,
-                        'spq': op.spq_id,
+                        'sq': op.sq_id,
                         'active': op.active,
                         'void_ind': op.void_ind
                     })
 
                 scout_field_questions.append({
-                    'sfq_id': sfq.sfq_id,
+                    'sq_id': sfq.sq_id,
                     'season': sfq.season_id,
+                    'sq_typ': sfq.sq_typ_id,
                     'question_typ': sfq.question_typ_id,
                     'question': sfq.question,
                     'order': sfq.order,
@@ -67,27 +68,27 @@ class GetScoutAdminInit(APIView):
                     'options': options
                 })
         except Exception as e:
-            scout_field_questions = ScoutFieldQuestion()
+            scout_field_questions = []
 
         scout_pit_questions = []
         try:
-            spqs = ScoutPitQuestion.objects.filter(season=current_season)
+            spqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='pit'))
             for spq in spqs:
-                ops = QuestionOptions.objects.filter(spq=spq)
+                ops = QuestionOptions.objects.filter(sq=spq)
                 options = []
                 for op in ops:
                     options.append({
                         'q_opt_id': op.q_opt_id,
                         'option': op.option,
-                        'sfq': op.sfq_id,
-                        'spq': op.spq_id,
+                        'sq': op.sq_id,
                         'active': op.active,
                         'void_ind': op.void_ind
                     })
 
                 scout_pit_questions.append({
-                    'spq_id': spq.spq_id,
+                    'sq_id': spq.sq_id,
                     'season': spq.season_id,
+                    'sq_typ': spq.sq_typ_id,
                     'question_typ': spq.question_typ_id,
                     'question': spq.question,
                     'order': spq.order,
@@ -96,10 +97,13 @@ class GetScoutAdminInit(APIView):
                     'options': options
                 })
         except Exception as e:
-            scout_pit_questions = ScoutPitQuestion()
+            scout_pit_questions = []
+
+        users = AuthUser.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
-                'questionTypes': question_types, 'scoutFieldQuestions': scout_field_questions, 'scoutPitQuestions': scout_pit_questions}
+                'questionTypes': question_types, 'scoutFieldQuestions': scout_field_questions,
+                'scoutPitQuestions': scout_pit_questions, 'users': users}
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
@@ -278,15 +282,13 @@ class GetScoutAdminDeleteSeason(APIView):
                 ScoutFieldAnswer.objects.filter(scout_field=sf).delete()
                 sf.delete()
 
-            ScoutFieldQuestion.objects.filter(season=season).delete()
-
             scout_pits = ScoutPit.objects.filter(event=e)
 
             for sp in scout_pits:
                 ScoutPitAnswer.objects.filter(scout_pit=sp).delete()
                 sp.delete()
 
-            ScoutPitQuestion.objects.filter(season=season).delete()
+            ScoutQuestion.objects.filter(season=season).delete()
 
             e.delete()
 
@@ -314,13 +316,13 @@ class PostSaveScoutFieldQuestionAnswers(APIView):
     def save_question(self, data):
         try:
             season = Season.objects.get(current='y')
-            sfq = ScoutFieldQuestion(season=season, question_typ_id=data['question_typ'],
+            sfq = ScoutQuestion(season=season, question_typ_id=data['question_typ'],  sq_typ_id='field',
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
             sfq.save()
 
             for op in data['options']:
-                QuestionOptions(option=op['option'], sfq_id=sfq.sfq_id, active='y', void_ind='n').save()
+                QuestionOptions(option=op['option'], sfq_id=sfq.sq_id, active='y', void_ind='n').save()
 
             return ret_message('Saved question successfully', False)
         except Exception as e:
@@ -328,8 +330,8 @@ class PostSaveScoutFieldQuestionAnswers(APIView):
 
 
     def post(self, request, format=None):
-        serializer = ScoutFieldQuestionSerializer(data=request.data)
-        if serializer.is_valid():
+        serializer = ScoutQuestionSerializer(data=request.data)
+        if not serializer.is_valid():
             return ret_message('Invalid data', True)
 
         if has_access(request.user.id, 2):
@@ -350,7 +352,7 @@ class PostUpdateScoutFieldQuestionAnswers(APIView):
 
     def update_question(self, data):
         print(data)
-        sfq = ScoutFieldQuestion.objects.get(sfq_id=data['sfq_id'])
+        sfq = ScoutQuestion.objects.get(sq_id=data['sq_id'])
 
         sfq.question = data['question']
         sfq.order = data['order']
@@ -364,14 +366,14 @@ class PostUpdateScoutFieldQuestionAnswers(APIView):
                 o.active = op['active']
                 o.save()
             else:
-                QuestionOptions(option=op['option'], sfq_id=sfq.sfq_id, active='y', void_ind='n').save()
+                QuestionOptions(option=op['option'], sq_id=sfq.sq_id, active='y', void_ind='n').save()
 
         return ret_message('Question saved successfully', False)
 
 
     def post(self, request, format=None):
-        serializer = ScoutFieldQuestionSerializer(data=request.data)
-        if serializer.is_valid():
+        serializer = ScoutQuestionSerializer(data=request.data)
+        if not serializer.is_valid():
             return ret_message('Invalid data', True)
 
         if has_access(request.user.id, 2):
@@ -392,7 +394,7 @@ class GetScoutAdminDeleteScoutFieldQuestion(APIView):
     permission_classes = (IsAuthenticated,)
 
     def delete(self, sfq_id):
-        sfq = ScoutFieldQuestion.objects.get(sfq_id=sfq_id)
+        sfq = ScoutQuestion.objects.get(sq_id=sfq_id)
 
         if sfq.active == 'n':
             sfq.active = 'y'
@@ -453,13 +455,13 @@ class PostSaveScoutPitQuestionAnswers(APIView):
     def save_question(self, data):
         try:
             season = Season.objects.get(current='y')
-            spq = ScoutPitQuestion(season=season, question_typ_id=data['question_typ'],
+            spq = ScoutQuestion(season=season, question_typ_id=data['question_typ'], sq_typ_id='pit',
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
             spq.save()
 
             for op in data['options']:
-                QuestionOptions(option=op['option'], spq_id=spq.spq_id, active='y', void_ind='n').save()
+                QuestionOptions(option=op['option'], spq_id=spq.sq_id, active='y', void_ind='n').save()
 
             return ret_message('Saved question successfully', False)
         except Exception as e:
@@ -467,8 +469,8 @@ class PostSaveScoutPitQuestionAnswers(APIView):
 
 
     def post(self, request, format=None):
-        serializer = ScoutPitQuestionSerializer(data=request.data)
-        if serializer.is_valid():
+        serializer = ScoutQuestionSerializer(data=request.data)
+        if not serializer.is_valid():
             return ret_message('Invalid data', True)
 
         if has_access(request.user.id, 2):
@@ -488,7 +490,7 @@ class PostUpdateScoutPitQuestionAnswers(APIView):
     permission_classes = (IsAuthenticated,)
 
     def update_question(self, data):
-        spq = ScoutPitQuestion.objects.get(spq_id=data['spq_id'])
+        spq = ScoutQuestion.objects.get(sq_id=data['sq_id'])
 
         spq.question = data['question']
         spq.order = data['order']
@@ -502,14 +504,14 @@ class PostUpdateScoutPitQuestionAnswers(APIView):
                 o.active = op['active']
                 o.save()
             else:
-                QuestionOptions(option=op['option'], spq_id=spq.spq_id, active='y', void_ind='n').save()
+                QuestionOptions(option=op['option'], sq_id=spq.sq_id, active='y', void_ind='n').save()
 
         return ret_message('Question saved successfully', False)
 
 
     def post(self, request, format=None):
-        serializer = ScoutPitQuestionSerializer(data=request.data)
-        if serializer.is_valid() and len(serializer.data['options']) > 0:
+        serializer = ScoutQuestionSerializer(data=request.data)
+        if not serializer.is_valid():
             return ret_message('Invalid data', True)
 
         if has_access(request.user.id, 2):
@@ -530,7 +532,7 @@ class GetScoutAdminDeleteScoutPitQuestion(APIView):
     permission_classes = (IsAuthenticated,)
 
     def delete(self, spq_id):
-        spq = ScoutPitQuestion.objects.get(spq_id=spq_id)
+        spq = ScoutQuestion.objects.get(sq_id=spq_id)
 
         if spq.active == 'n':
             spq.active = 'y'

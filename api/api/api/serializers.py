@@ -1,36 +1,26 @@
 from rest_framework import serializers
 from .models import *
+from api.auth.models import AuthUser
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
-    q_opt_id = serializers.IntegerField()
+    q_opt_id = serializers.IntegerField(required=False)
     option = serializers.CharField()
-    sfq = serializers.IntegerField()
-    spq = serializers.IntegerField()
-    active = serializers.CharField()
-    void_ind = serializers.CharField()
+    sq = serializers.IntegerField(required=False)
+    active = serializers.CharField(required=False)
+    void_ind = serializers.CharField(required=False)
 
 
-class ScoutFieldQuestionSerializer(serializers.Serializer):
-    sfq_id = serializers.IntegerField()
-    season = serializers.IntegerField()
+class ScoutQuestionSerializer(serializers.Serializer):
+    sq_id = serializers.IntegerField(required=False)
+    season = serializers.IntegerField(required=False)
+    sq_typ = serializers.CharField(required=False)
     question_typ = serializers.CharField()
     question = serializers.CharField()
     order = serializers.IntegerField()
-    active = serializers.CharField()
-    void_ind = serializers.CharField()
-    options = QuestionOptionsSerializer(many=True, allow_null=True)
-
-
-class ScoutPitQuestionSerializer(serializers.Serializer):
-    spq_id = serializers.IntegerField()
-    season = serializers.IntegerField()
-    question_typ = serializers.CharField()
-    question = serializers.CharField()
-    order = serializers.IntegerField()
-    active = serializers.CharField()
-    void_ind = serializers.CharField()
-    options = QuestionOptionsSerializer(many=True, allow_null=True)
+    active = serializers.CharField(required=False)
+    void_ind = serializers.CharField(required=False)
+    options = QuestionOptionsSerializer(many=True)
 
 
 class ScoutFieldQuestionAnswerSerializer(serializers.Serializer):
@@ -61,12 +51,19 @@ class QuestionTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuthUser
+        fields = '__all__'
+
+
 class ScoutAdminInitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     events = EventSerializer(many=True)
     currentSeason = SeasonSerializer()
     currentEvent = EventSerializer()
     questionTypes = QuestionTypeSerializer(many=True)
-    scoutFieldQuestions = ScoutFieldQuestionSerializer(many=True)
-    scoutPitQuestions = ScoutPitQuestionSerializer(many=True)
+    scoutFieldQuestions = ScoutQuestionSerializer(many=True)
+    scoutPitQuestions = ScoutQuestionSerializer(many=True)
+    users = UserSerializer(many=True)
 
