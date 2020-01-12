@@ -21,6 +21,16 @@ def get_user_permissions(user_id):
     return [prmsn.permission for prmsn in auth_grp_prmsns]
 
 
+def get_user_groups(user_id):
+    augs = AuthUserGroups.objects.filter(user=user_id)
+
+    ags = []
+    for aug in augs:
+        ags.append(aug.group)
+
+    return ags
+
+
 def ret_message(message, error=False, exception=None):
     if exception is not None:
         print(exception)

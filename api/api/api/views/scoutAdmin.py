@@ -12,6 +12,7 @@ from rest_framework.utils import json
 from api.api.serializers import *
 from api.api.models import *
 from api.auth.models import AuthUser
+from api.auth import send_email
 from django.db.models import Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -40,10 +41,70 @@ class GetScoutAdminInit(APIView):
         except Exception as e:
             current_event = Event()
 
-        users = AuthUser.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False))
+        users = AuthUser.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False) &
+                                        ~Q(id__in=list(AuthUserGroups.objects
+                                                       .filter(group=AuthGroup.objects.get(name='sysadmin'))
+                                                       .values_list('user_id', flat=True)
+                                                       )
+                                           )
+                                        )
+
+        user_groups = []
+        try:
+            user_groups = AuthGroup.objects.filter(id__in=list(ScoutGroups.objects.all().values_list('auth_group_id', flat=True)))
+        except Exception as e:
+            user_groups = []
+
+        phone_types = PhoneType.objects.all()
+
+        fieldSchedule = []
+        sss = ScoutSchedule.objects.filter(sq_typ_id='field', time__gte=datetime.datetime.now(pytz.timezone('US/Eastern'))).order_by('time', 'user')
+        for ss in sss:
+            fieldSchedule.append({
+                'scout_sch_id': ss.scout_sch_id,
+                'user': ss.user.first_name + ' ' + ss.user.last_name,
+                'user_id': ss.user.id,
+                'sq_typ': ss.sq_typ_id,
+                'sq_nm': ss.sq_typ.sq_nm,
+                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'notified': ss.notified
+            })
+
+        pitSchedule = []
+        sss = ScoutSchedule.objects.filter(sq_typ_id='pit',
+                                           time__gte=datetime.datetime.now(pytz.timezone('US/Eastern'))).order_by(
+            'time', 'user')
+        for ss in sss:
+            pitSchedule.append({
+                'scout_sch_id': ss.scout_sch_id,
+                'user': ss.user.first_name + ' ' + ss.user.last_name,
+                'user_id': ss.user.id,
+                'sq_typ': ss.sq_typ_id,
+                'sq_nm': ss.sq_typ.sq_nm,
+                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'notified': ss.notified
+            })
+
+        pastSchedule = []
+        sss = ScoutSchedule.objects.filter(time__lt=datetime.datetime.now(pytz.timezone('US/Eastern'))).order_by(
+            'time', 'user')
+        for ss in sss:
+            pastSchedule.append({
+                'scout_sch_id': ss.scout_sch_id,
+                'user': ss.user.first_name + ' ' + ss.user.last_name,
+                'user_id': ss.user.id,
+                'sq_typ': ss.sq_typ_id,
+                'sq_nm': ss.sq_typ.sq_nm,
+                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'notified': ss.notified
+            })
+
+        scoutQuestionType = ScoutQuestionType.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
-                'users': users}
+                'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
+                'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule, 'pastSchedule': pastSchedule,
+                'scoutQuestionType': scoutQuestionType}
 
     def get(self, request, format=None):
         if has_access(request.user.id, 2):
@@ -445,3 +506,112 @@ class GetScoutAdminToggleOption(APIView):
         else:
             return ret_message('You do not have access.', True)
 
+
+class PostScoutAdminSaveUser(APIView):
+    """API endpoint to save new questions"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def save_user(self, data):
+        try:
+            groups = []
+            user = AuthUser.objects.get(username=data['user']['username'])
+            user.first_name = data['user']['first_name']
+            user.last_name = data['user']['last_name']
+            user.phone = data['user']['phone']
+            user.phone_type_id = data['user']['phone_type']
+            user.save()
+
+            for d in data['groups']:
+                groups.append(d['name'])
+                aug = AuthUserGroups.objects.filter(group=AuthGroup.objects.get(name=d['name'])).exists()
+                if not aug:
+                    AuthUserGroups(user=user, group=AuthGroup.objects.get(name=d['name'])).save()
+
+            AuthUserGroups.objects.filter(~Q(group__in=AuthGroup.objects.filter(name__in=groups)) &
+                                          Q(user=user)).delete()
+
+            return ret_message('Saved user groups successfully', False)
+        except Exception as e:
+            return ret_message('Can\'t save the user groups', True)
+
+    def post(self, request, format=None):
+        serializer = ScoutAdminSaveUserSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 2):
+            try:
+                req = self.save_user(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while saving the question', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class PostScoutAdminSaveScoutScheduleEntry(APIView):
+    """API endpoint to save new questions"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def save_scout_schedule(self, data):
+        print(type(data['time']))
+        ScoutSchedule(user_id=data['user_id'], sq_typ_id=data['sq_typ'], time=data['time'], notified='n').save()
+
+        return ret_message('Saved schedule entry successfully', False)
+
+    def post(self, request, format=None):
+        serializer = ScoutScheduleSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 2):
+            try:
+                req = self.save_scout_schedule(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while saving the schedule entry', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+class PostScoutAdminNotifyUser(APIView):
+    """API endpoint to save new questions"""
+
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def notify_user(self, data):
+        for d in data:
+            if d.get('notify', 'n') == 'y':
+                user = AuthUser.objects.get(id=d['user_id'])
+                ss = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
+                time = ss.time.strftime('%m/%d/%Y %I:%M %p')
+                data = {
+                    'scout_location': d['sq_typ'],
+                    'scout_time': time,
+                    'lead_scout': self.request.user.first_name + ' ' + self.request.user.last_name
+                }
+                send_email.send_message(user.phone + user.phone_type.phone_type, 'Time to Scout!', 'notify_scout.html', data)
+
+                scout_sch = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
+                scout_sch.notified = 'y'
+                scout_sch.save()
+
+        return ret_message('Successfully notified selected users', False)
+
+    def post(self, request, format=None):
+        serializer = ScoutScheduleSerializer(data=request.data, many=True)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True)
+
+        if has_access(request.user.id, 2):
+            try:
+                req = self.notify_user(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while notifying user', True, e)
+        else:
+            return ret_message('You do not have access', True)

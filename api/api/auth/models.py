@@ -40,6 +40,8 @@ class AuthUser(models.Model):
     is_staff = models.IntegerField(blank=True, null=True)
     is_active = models.IntegerField(blank=True, null=True)
     date_joined = models.DateTimeField(blank=True, null=True)
+    phone = models.CharField(max_length=10, blank=True, null=True)
+    phone_type = models.ForeignKey('PhoneType', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -70,7 +72,6 @@ class AuthtokenToken(models.Model):
     key = models.CharField(primary_key=True, max_length=40)
     created = models.DateTimeField()
     user = models.OneToOneField(AuthUser, models.DO_NOTHING)
-    # user = models.ForeignKey(AuthUser, models.DO_NOTHING, unique=True)
 
     class Meta:
         managed = False
@@ -132,21 +133,11 @@ class UserLinks(models.Model):
         db_table = 'user_links'
 
 
-class Contact(models.Model):
-    contact_id = models.BigAutoField(primary_key=True)
-    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
-    phone_no = models.CharField(max_length=20)
-    address_1 = models.CharField(max_length=100)
-    address_2 = models.CharField(max_length=100, blank=True, null=True)
-    city = models.CharField(max_length=100)
-    providence = models.CharField(max_length=100, blank=True, null=True)
-    zip = models.CharField(max_length=100, blank=True, null=True)
-    audit_user_crea = models.ForeignKey(AuthUser, models.DO_NOTHING, related_name="contact_user_crea_id")
-    audit_user_crea_dtm = models.DateTimeField()
-    audit_user_upd = models.ForeignKey(AuthUser, models.DO_NOTHING, blank=True, null=True, related_name="contact_user_upd_id")
-    audit_user_upd_dtm = models.DateTimeField(blank=True, null=True)
-    void_ind = models.CharField(max_length=1, blank=True, null=True)
+class PhoneType(models.Model):
+    phone_type_id = models.AutoField(primary_key=True)
+    carrier = models.CharField(max_length=255)
+    phone_type = models.CharField(max_length=255)
 
     class Meta:
         managed = False
-        db_table = 'contact'
+        db_table = 'phone_type'

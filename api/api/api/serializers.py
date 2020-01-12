@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
-from api.auth.serializers import UserSerializer
+from api.auth.serializers import UserSerializer, AuthGroupSerializer, PhoneTypeSerializer
+import datetime
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
@@ -51,15 +52,41 @@ class QuestionTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ScoutScheduleSerializer(serializers.Serializer):
+    scout_sch_id = serializers.IntegerField(required=False)
+    user = serializers.CharField(required=False, allow_blank=True)
+    user_id = serializers.IntegerField()
+    sq_typ = serializers.CharField()
+    sq_nm = serializers.CharField(required=False)
+    time = serializers.DateTimeField()
+    notified = serializers.CharField(required=False)
+    notify = serializers.CharField(required=False)
+
+
+class ScoutQuestionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutQuestionType
+        fields = '__all__'
+
 class ScoutAdminInitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     events = EventSerializer(many=True)
     currentSeason = SeasonSerializer()
     currentEvent = EventSerializer()
     users = UserSerializer(many=True)
+    userGroups = AuthGroupSerializer(many=True)
+    phoneTypes = PhoneTypeSerializer(many=True)
+    fieldSchedule = ScoutScheduleSerializer(many=True)
+    pitSchedule = ScoutScheduleSerializer(many=True)
+    pastSchedule = ScoutScheduleSerializer(many=True)
+    scoutQuestionType = ScoutQuestionTypeSerializer(many=True)
 
 
 class ScoutAdminQuestionInitSerializer(serializers.Serializer):
     questionTypes = QuestionTypeSerializer(many=True)
     scoutQuestions = ScoutQuestionSerializer(many=True)
 
+
+class ScoutAdminSaveUserSerializer(serializers.Serializer):
+    user = UserSerializer(read_only=False)
+    groups = AuthGroupSerializer(many=True)

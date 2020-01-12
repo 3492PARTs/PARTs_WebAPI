@@ -68,7 +68,7 @@ def resend_activation_email(request):
             email = form.cleaned_data["email"]
             user = User.objects.get(email=email, is_active=0)
             current_site = get_current_site(request)
-            mail_subject = 'Activate your flood account.'
+            mail_subject = 'Activate your PARTs account.'
             message = render_to_string('email_templates/acc_active_email.html', {
                 'user': user,
                 'domain': current_site.domain,
@@ -142,4 +142,20 @@ class GetUserLinks(APIView):
     def get(self, request, format=None):
         req = self.get_links()
         serializer = UserLinksSerializer(req, many=True)
+        return Response(serializer.data)
+
+
+class GetUserGroups(APIView):
+    """
+    API endpoint to get groups a user has based on permissions
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_groups(self, user_id):
+        return get_user_groups(user_id)
+
+    def get(self, request, format=None):
+        req = self.get_groups(request.query_params.get('user_id', None))
+        serializer = AuthGroupSerializer(req, many=True)
         return Response(serializer.data)

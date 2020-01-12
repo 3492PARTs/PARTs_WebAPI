@@ -21,7 +21,8 @@ urlpatterns = [
     path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(), name='password_change_done'),
     path('resend_activation/', views.resend_activation_email),
     path('user_data/', views.GetUserData.as_view()),
-    path('user_links/', views.GetUserLinks.as_view())
+    path('user_links/', views.GetUserLinks.as_view()),
+    path('get_user_groups/', views.GetUserGroups.as_view())
 ]
 
 # TODO Proper git ignore
