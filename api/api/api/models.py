@@ -71,6 +71,7 @@ class ScoutFieldAnswer(models.Model):
     sfa_id = models.AutoField(primary_key=True)
     scout_field = models.ForeignKey(ScoutField, models.DO_NOTHING)
     sq = models.ForeignKey('ScoutQuestion', models.DO_NOTHING)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
     answer = models.CharField(max_length=1000, blank=True, null=True)
     void_ind = models.CharField(max_length=1)
 
@@ -96,6 +97,7 @@ class ScoutPitAnswer(models.Model):
     spa_id = models.AutoField(primary_key=True)
     scout_pit = models.ForeignKey(ScoutPit, models.DO_NOTHING)
     sq = models.ForeignKey('ScoutQuestion', models.DO_NOTHING)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
     answer = models.CharField(max_length=1000, blank=True, null=True)
     void_ind = models.CharField(max_length=1)
 

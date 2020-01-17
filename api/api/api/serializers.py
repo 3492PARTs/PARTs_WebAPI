@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import *
 from api.auth.serializers import UserSerializer, AuthGroupSerializer, PhoneTypeSerializer
-import datetime
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
@@ -22,16 +21,18 @@ class ScoutQuestionSerializer(serializers.Serializer):
     active = serializers.CharField(required=False)
     void_ind = serializers.CharField(required=False)
     options = QuestionOptionsSerializer(many=True)
+    answer = serializers.CharField(required=False)
 
 
-class ScoutFieldQuestionAnswerSerializer(serializers.Serializer):
-    order = serializers.IntegerField()
-    question = serializers.CharField()
-    question_typ = serializers.CharField()
-    season = serializers.IntegerField()
-    sfq_id = serializers.IntegerField()
-    void_ind = serializers.CharField()
-    answer = serializers.CharField()
+class Team(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = '__all__'
+
+class ScoutAnswerSerializer(serializers.Serializer):
+    scoutQuestions = ScoutQuestionSerializer(many=True)
+    teams = Team(many=True, required=False)
+    team = serializers.CharField(required=False)
 
 
 class SeasonSerializer(serializers.ModelSerializer):
