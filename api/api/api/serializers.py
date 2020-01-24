@@ -91,3 +91,19 @@ class ScoutAdminQuestionInitSerializer(serializers.Serializer):
 class ScoutAdminSaveUserSerializer(serializers.Serializer):
     user = UserSerializer(read_only=False)
     groups = AuthGroupSerializer(many=True)
+
+
+class ScoutColSerializer(serializers.Serializer):
+    PropertyName = serializers.CharField()
+    ColLabel = serializers.CharField()
+    order = serializers.CharField()
+
+
+class ScoutResultAnswerSerializer(serializers.BaseSerializer):
+    def to_representation(self, instance):
+        return instance
+
+
+class ScoutFieldResultsSerializer(serializers.Serializer):
+    scoutCols = ScoutColSerializer(many=True)
+    scoutAnswers = ScoutResultAnswerSerializer(many=True)

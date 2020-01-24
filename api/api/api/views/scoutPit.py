@@ -115,11 +115,11 @@ class PostSaveScoutPitAnswers(APIView):
             return ret_message('An error occurred while saving: no event set', True,
                                e)  # TODO NEed to return no season set message
 
-        sp = ScoutPit(event=current_event, team_no_id=data['team'], void_ind='n')
+        sp = ScoutPit(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
         sp.save()
 
         for d in data['scoutQuestions']:
-            spa = ScoutPitAnswer(scout_pit=sp, sq_id=d['sq_id'], user_id=self.request.user.id,
+            spa = ScoutPitAnswer(scout_pit=sp, sq_id=d['sq_id'],
                                  answer=d.get('answer', ''), void_ind='n')
             spa.save()
 

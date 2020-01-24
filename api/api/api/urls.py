@@ -10,6 +10,7 @@ from api.api.views.scoutAdmin import *
 urlpatterns = [
     path('get_scout_field_questions/', GetScoutFieldInputs.as_view()),
     path('post_save_scout_field_answers/', PostSaveScoutFieldAnswers.as_view()),
+    path('get_scout_field_results/', GetScoutFieldQuery.as_view()),
     path('get_scout_pit_questions/', GetScoutPitInputs.as_view()),
     path('post_save_scout_pit_answers/', PostSaveScoutPitAnswers.as_view()),
     path('post_save_scout_pit_picture/', PostSaveScoutPitPicture.as_view()),
