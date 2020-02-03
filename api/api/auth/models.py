@@ -127,6 +127,7 @@ class UserLinks(models.Model):
     permission = models.ForeignKey(AuthPermission, models.DO_NOTHING)
     menu_name = models.CharField(max_length=255)
     routerlink = models.CharField(max_length=255)
+    order = models.IntegerField()
 
     class Meta:
         managed = False

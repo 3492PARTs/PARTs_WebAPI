@@ -24,14 +24,15 @@ class ScoutQuestionSerializer(serializers.Serializer):
     answer = serializers.CharField(required=False)
 
 
-class Team(serializers.ModelSerializer):
-    class Meta:
-        model = Team
-        fields = '__all__'
+class TeamSerializer(serializers.Serializer):
+    team_no = serializers.CharField()
+    team_nm = serializers.CharField()
+    checked = serializers.BooleanField(required=False)
+
 
 class ScoutAnswerSerializer(serializers.Serializer):
     scoutQuestions = ScoutQuestionSerializer(many=True)
-    teams = Team(many=True, required=False)
+    teams = TeamSerializer(many=True, required=False)
     team = serializers.CharField(required=False)
 
 
@@ -82,6 +83,11 @@ class ScoutAdminInitSerializer(serializers.Serializer):
     pastSchedule = ScoutScheduleSerializer(many=True)
     scoutQuestionType = ScoutQuestionTypeSerializer(many=True)
 
+class ScoutPortalInitSerializer(serializers.Serializer):
+    fieldSchedule = ScoutScheduleSerializer(many=True)
+    pitSchedule = ScoutScheduleSerializer(many=True)
+    pastSchedule = ScoutScheduleSerializer(many=True)
+
 
 class ScoutAdminQuestionInitSerializer(serializers.Serializer):
     questionTypes = QuestionTypeSerializer(many=True)
@@ -107,3 +113,15 @@ class ScoutResultAnswerSerializer(serializers.BaseSerializer):
 class ScoutFieldResultsSerializer(serializers.Serializer):
     scoutCols = ScoutColSerializer(many=True)
     scoutAnswers = ScoutResultAnswerSerializer(many=True)
+
+
+class ScoutPitResultAnswerSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    answer = serializers.CharField()
+
+
+class ScoutPitResultsSerializer(serializers.Serializer):
+    teamNo = serializers.CharField()
+    teamNm = serializers.CharField()
+    pic = serializers.CharField()
+    results = ScoutPitResultAnswerSerializer(many=True)

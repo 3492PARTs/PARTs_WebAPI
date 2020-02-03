@@ -130,7 +130,7 @@ class GetUserLinks(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_links(self):
-        user_links = UserLinks.objects.filter(permission__in=[per.id for per in get_user_permissions(self.request.user.id)])
+        user_links = UserLinks.objects.filter(permission__in=[per.id for per in get_user_permissions(self.request.user.id)]).order_by('order')
 
         req = []
 

@@ -189,6 +189,113 @@ class PostSaveScoutPitPicture(APIView):
             return ret_message('You do not have access', True)
 
 
+class GetScoutPitResultInit(APIView):
+    """
+    API endpoint to get links a user has based on permissions
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_teams(self):
+
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            return ret_message('An error occurred while initializing: no season set', True,
+                               e)  # TODO NEed to return no season set message
+
+        try:
+            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+        except Exception as e:
+            return ret_message('An error occurred while initializing: no event set', True,
+                               e)  # TODO NEed to return no season set message
+
+        teams = []
+        try:
+            teams = Team.objects.filter(
+                Q(team_no__in=list(EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True))) &
+                Q(team_no__in=(list(ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n')).values_list('team_no', flat=True))))
+            ).order_by('team_no')
+
+        except Exception as e:
+            teams.append(Team())
+
+        return teams
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 1):
+            try:
+                req = self.get_teams()
+                serializer = TeamSerializer(req, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while initializing', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
+class PostGetScoutPitResults(APIView):
+    """
+    API endpoint to get links a user has based on permissions
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_results(self, teams):
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            return ret_message('An error occurred while saving: no season set', True,
+                               e)  # TODO NEed to return no season set message
+
+        try:
+            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+        except Exception as e:
+            return ret_message('An error occurred while saving: no event set', True,
+                               e)  # TODO NEed to return no season set message
+
+        results = []
+        for t in teams:
+            if t.get('checked', False):
+                sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(event=current_event) & Q(void_ind='n'))
+                spas = ScoutPitAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n'))
+
+                tmp = {
+                    'teamNo': t['team_no'],
+                    'teamNm': t['team_nm'],
+                    'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(),
+                }
+
+                tmp_questions = []
+                for spa in spas:
+                    sq = ScoutQuestion.objects.get(sq_id=spa.sq_id)
+                    tmp_questions.append({
+                        'question':  sq.question,
+                        'answer': spa.answer
+                    })
+
+                tmp['results'] = tmp_questions
+                results.append(tmp)
+
+        return results
+
+
+    def post(self, request, format=None):
+        if has_access(request.user.id, 1):
+            try:
+                serializer = TeamSerializer(data=request.data, many=True)
+                if not serializer.is_valid():
+                    return ret_message('Invalid data', True)
+
+                ret = self.get_results(serializer.data)
+                serializer = ScoutPitResultsSerializer(ret, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting pit results.', True, e)
+        else:
+            return ret_message('You do not have access', True)
+
+
 def allowed_file(filename):
     '''Returns whether a filename's extension indicates that it is an image.
     :param str filename: A filename.

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytz
 from django.db import IntegrityError
@@ -43,7 +43,7 @@ class GetScoutAdminInit(APIView):
 
         users = AuthUser.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False) &
                                         ~Q(id__in=list(AuthUserGroups.objects
-                                                       .filter(group=AuthGroup.objects.get(name='sysadmin'))
+                                                       .filter(group=AuthGroup.objects.get(name='pit_scout'))
                                                        .values_list('user_id', flat=True)
                                                        )
                                            )
@@ -57,8 +57,11 @@ class GetScoutAdminInit(APIView):
 
         phone_types = PhoneType.objects.all()
 
+        time = datetime.now() - timedelta(hours=5) # datetime.now(pytz.timezone('US/Eastern'))
         fieldSchedule = []
-        sss = ScoutSchedule.objects.filter(sq_typ_id='field', time__gte=datetime.datetime.now(pytz.timezone('US/Eastern'))).order_by('time', 'user')
+        sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
+                                           Q(time__gte=time))\
+            .order_by('time', 'user')
         for ss in sss:
             fieldSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -71,9 +74,9 @@ class GetScoutAdminInit(APIView):
             })
 
         pitSchedule = []
-        sss = ScoutSchedule.objects.filter(sq_typ_id='pit',
-                                           time__gte=datetime.datetime.now(pytz.timezone('US/Eastern'))).order_by(
-            'time', 'user')
+        sss = ScoutSchedule.objects.filter(Q(sq_typ_id='pit') &
+                                           Q(time__gte=time))\
+            .order_by('time', 'user')
         for ss in sss:
             pitSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -86,8 +89,7 @@ class GetScoutAdminInit(APIView):
             })
 
         pastSchedule = []
-        sss = ScoutSchedule.objects.filter(time__lt=datetime.datetime.now(pytz.timezone('US/Eastern'))).order_by(
-            'time', 'user')
+        sss = ScoutSchedule.objects.filter(time__lt=time).order_by('time', 'user')
         for ss in sss:
             pastSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
