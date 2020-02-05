@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import pymysql
 import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -81,6 +82,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'api.wsgi.application'
 
+# Fake PyMySQL's version and install as MySQLdb
+# https://adamj.eu/tech/2020/02/04/how-to-use-pymysql-with-django/
+pymysql.version_info = (1, 4, 2, "final", 0)
+pymysql.install_as_MySQLdb()
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases

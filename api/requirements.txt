@@ -1,0 +1,8 @@
+django
+djangorestframework
+django-cors-headers
+pymysql
+requests
+cloudinary
+gunicorn
+django-heroku

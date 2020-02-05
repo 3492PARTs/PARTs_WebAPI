@@ -1,4 +1,4 @@
-#!/Users/brandon/Git/PARTs_Website/api/venv/bin/python3
+#!/Users/brandon/Git/PARTs_WebAPI/venv/bin/python
 from django.core import management
 
 if __name__ == "__main__":
