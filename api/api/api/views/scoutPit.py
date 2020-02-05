@@ -13,13 +13,6 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-cloudinary.config(
-    cloud_name="hbcgsvmyc",
-    api_key="483847116472347",
-    api_secret="UYew22cMiFrua6LbuHUQey40ahE"
-)
-
-
 class GetScoutPitInputs(APIView):
     """
     API endpoint to get links a user has based on permissions

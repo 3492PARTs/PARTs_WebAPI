@@ -33,7 +33,7 @@ def register(request):
 
             try:
                 current_site = get_current_site(request)
-                mail_subject = 'Activate your flood account.'
+                mail_subject = 'Activate your PARTs account.'
                 message = render_to_string('email_templates/acc_active_email.html', {
                     'user': user,
                     'domain': current_site.domain,
