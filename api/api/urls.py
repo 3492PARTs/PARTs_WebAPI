@@ -1,23 +1,34 @@
-"""api URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/2.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.conf.urls import url, include
-from django.contrib import admin
+from django.urls import path
+from rest_framework import routers
+from api.api.views.scoutField import *
+from api.api.views.scoutPit import *
+from api.api.views.scoutAdmin import *
+from api.api.views.scoutPortal import *
 
+# Wire up our API using atomic URL routing.
+# Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^api/', include('api.api.urls')),
-    url(r'^auth/', include('api.auth.urls'))
+    path('get_scout_field_questions/', GetScoutFieldInputs.as_view()),
+    path('post_save_scout_field_answers/', PostSaveScoutFieldAnswers.as_view()),
+    path('get_scout_field_results/', GetScoutFieldQuery.as_view()),
+    path('get_scout_pit_questions/', GetScoutPitInputs.as_view()),
+    path('post_save_scout_pit_answers/', PostSaveScoutPitAnswers.as_view()),
+    path('post_save_scout_pit_picture/', PostSaveScoutPitPicture.as_view()),
+    path('get_scout_pit_results_init/', GetScoutPitResultInit.as_view()),
+    path('post_get_scout_pit_results/', PostGetScoutPitResults.as_view()),
+    path('get_scout_admin_init/', GetScoutAdminInit.as_view()),
+    path('get_sync_season/', GetScoutAdminSyncSeason.as_view()),
+    path('get_set_season/', GetScoutAdminSetSeason.as_view()),
+    path('get_add_season/', GetScoutAdminAddSeason.as_view()),
+    path('get_delete_season/', GetScoutAdminDeleteSeason.as_view()),
+    path('get_scout_question_init/', GetScoutAdminQuestionInit.as_view()),
+    path('post_save_scout_question/', PostScoutAdminSaveScoutQuestion.as_view()),
+    path('post_update_scout_question/', PostScoutAdminUpdateScoutQuestion.as_view()),
+    path('get_toggle_scout_question/', GetScoutAdminToggleScoutQuestion.as_view()),
+    path('get_toggle_option/', GetScoutAdminToggleOption.as_view()),
+    path('post_save_user/', PostScoutAdminSaveUser.as_view()),
+    path('post_save_scout_schedule_entry/', PostScoutAdminSaveScoutScheduleEntry.as_view()),
+    path('post_notify_users/', PostScoutAdminNotifyUser.as_view()),
+    path('get_scout_portal_init/', GetScoutPortalInit.as_view()),
 ]
