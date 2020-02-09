@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from .models import *
 from .serializers import RetMessageSerializer
 from django.db.models import Q
@@ -31,7 +33,14 @@ def get_user_groups(user_id):
     return ags
 
 
-def ret_message(message, error=False, exception=None):
-    if exception is not None:
+def ret_message(message, error=False, location='', user_id=0, exception=None):
+    if error:
+        user = AuthUser.objects.get(id=user_id)
+        print('----------ERROR START----------')
+        print('Error in: ' + location)
+        print('Error by: ' + user.username + ' ' + user.first_name + ' ' + user.last_name)
+        print('Exception: ')
         print(exception)
+        print('----------ERROR END----------')
+        ErrorLog(user=user, location=location, exception=exception, time=timezone.now(), void_ind='n').save()
     return Response(RetMessageSerializer({'retMessage': message, 'error': error}).data)

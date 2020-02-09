@@ -1,23 +1,19 @@
-from datetime import datetime, timedelta
+import datetime
 
 import pytz
 from django.db import IntegrityError
-from django.http import HttpResponse
-from django.utils import timezone
-from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 
 from api.api.serializers import *
 from api.api.models import *
-from api.auth.models import AuthUser
 from api.auth import send_email
-from django.db.models import Q
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from api.auth.security import *
 import requests
+
+auth_obj = 2
 
 
 class GetScoutAdminInit(APIView):
@@ -43,7 +39,7 @@ class GetScoutAdminInit(APIView):
 
         users = AuthUser.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False) &
                                         ~Q(id__in=list(AuthUserGroups.objects
-                                                       .filter(group=AuthGroup.objects.get(name='pit_scout'))
+                                                       .filter(group=AuthGroup.objects.get(name='sysadmin'))
                                                        .values_list('user_id', flat=True)
                                                        )
                                            )
@@ -57,7 +53,7 @@ class GetScoutAdminInit(APIView):
 
         phone_types = PhoneType.objects.all()
 
-        time = datetime.now() - timedelta(hours=5) # datetime.now(pytz.timezone('US/Eastern'))
+        time = timezone.now()  # datetime.now() - timedelta(hours=5) # datetime.now(pytz.timezone('US/Eastern'))
         fieldSchedule = []
         sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
                                            Q(time__gte=time))\
@@ -69,7 +65,7 @@ class GetScoutAdminInit(APIView):
                 'user_id': ss.user.id,
                 'sq_typ': ss.sq_typ_id,
                 'sq_nm': ss.sq_typ.sq_nm,
-                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'time': ss.time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'notified': ss.notified
             })
 
@@ -84,7 +80,7 @@ class GetScoutAdminInit(APIView):
                 'user_id': ss.user.id,
                 'sq_typ': ss.sq_typ_id,
                 'sq_nm': ss.sq_typ.sq_nm,
-                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'time': ss.time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'notified': ss.notified
             })
 
@@ -97,7 +93,7 @@ class GetScoutAdminInit(APIView):
                 'user_id': ss.user.id,
                 'sq_typ': ss.sq_typ_id,
                 'sq_nm': ss.sq_typ.sq_nm,
-                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'time': ss.time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'notified': ss.notified
             })
 
@@ -109,15 +105,16 @@ class GetScoutAdminInit(APIView):
                 'scoutQuestionType': scoutQuestionType}
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_init()
                 serializer = ScoutAdminInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing', True, e)
+                return ret_message('An error occurred while initializing.', True, 'GetScoutAdminInit', request.user.id,
+                                   e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminInit', request.user.id)
 
 
 class GetScoutAdminSyncSeason(APIView):
@@ -139,8 +136,8 @@ class GetScoutAdminSyncSeason(APIView):
         for e in r:
             event_ = {
                 'event_nm': e['name'],
-                'date_st': datetime.strptime(e['start_date'], '%Y-%m-%d').astimezone(pytz.utc),
-                'date_end': datetime.strptime(e['end_date'], '%Y-%m-%d').astimezone(pytz.utc),
+                'date_st': datetime.datetime.strptime(e['start_date'], '%Y-%m-%d').astimezone(pytz.utc),
+                'date_end': datetime.datetime.strptime(e['end_date'], '%Y-%m-%d').astimezone(pytz.utc),
                 'event_cd': e['key'],
                 'teams': [],
                 'teams_to_keep': []
@@ -195,14 +192,15 @@ class GetScoutAdminSyncSeason(APIView):
         return messages
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.sync_season(request.query_params.get('season_id', None))
                 return ret_message(req)
             except Exception as e:
-                return ret_message('An error occurred while syncing teams', True, e)
+                return ret_message('An error occurred while syncing teams.', True, 'GetScoutAdminSyncSeason',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminSyncSeason', request.user.id)
 
 
 class GetScoutAdminSetSeason(APIView):
@@ -231,14 +229,15 @@ class GetScoutAdminSetSeason(APIView):
         return ret_message(msg)
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.set(request.query_params.get('season_id', None), request.query_params.get('event_id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while setting the season', True, e)
+                return ret_message('An error occurred while setting the season.', True, 'GetScoutAdminSetSeason',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminSetSeason', request.user.id)
 
 
 class GetScoutAdminAddSeason(APIView):
@@ -254,14 +253,15 @@ class GetScoutAdminAddSeason(APIView):
         return ret_message('Successfully added season: ' + season)
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.add(request.query_params.get('season', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while setting the season', True, e)
+                return ret_message('An error occurred while setting the season.', True, 'GetScoutAdminAddSeason',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminAddSeason', request.user.id)
 
 
 class GetScoutAdminDeleteSeason(APIView):
@@ -300,19 +300,20 @@ class GetScoutAdminDeleteSeason(APIView):
         return ret_message('Successfully deleted season: ' + season.season)
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.delete(request.query_params.get('season_id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while setting the season', True, e)
+                return ret_message('An error occurred while setting the season.', True, 'GetScoutAdminDeleteSeason',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminDeleteSeason', request.user.id)
 
 
 class GetScoutAdminQuestionInit(APIView):
     """
-    API endpoint to get all the init values for the scout admin screen
+    API endpoint to get the question init values for the scout admin screen
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -323,12 +324,7 @@ class GetScoutAdminQuestionInit(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while initializing', True, e) # TODO NEed to return no season set message
-
-        try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
-        except Exception as e:
-            current_event = Event()
+            return ret_message('No season set, see an admin.', True, 'GetScoutAdminQuestionInit', self.request.user.id, e)
 
         scout_questions = []
         try:
@@ -362,15 +358,16 @@ class GetScoutAdminQuestionInit(APIView):
         return {'questionTypes': question_types, 'scoutQuestions': scout_questions}
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_init(request.query_params.get('sq_typ', None))
                 serializer = ScoutAdminQuestionInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing', True, e)
+                return ret_message('An error occurred while initializing.', True, 'GetScoutAdminQuestionInit',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminQuestionInit', request.user.id)
 
 
 class PostScoutAdminSaveScoutQuestion(APIView):
@@ -381,8 +378,13 @@ class PostScoutAdminSaveScoutQuestion(APIView):
 
     def save_question(self, data):
         try:
-            season = Season.objects.get(current='y')
-            sq = ScoutQuestion(season=season, question_typ_id=data['question_typ'],  sq_typ_id=data['sq_typ'],
+            try:
+                current_season = Season.objects.get(current='y')
+            except Exception as e:
+                return ret_message('No season set, see an admin.', True, 'PostScoutAdminSaveQuestion',
+                                   self.request.user.id, e)
+
+            sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'],  sq_typ_id=data['sq_typ'],
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
             sq.save()
@@ -390,23 +392,24 @@ class PostScoutAdminSaveScoutQuestion(APIView):
             for op in data['options']:
                 QuestionOptions(option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
 
-            return ret_message('Saved question successfully', False)
+            return ret_message('Saved question successfully.')
         except Exception as e:
-            return ret_message('No season set, can\'t save question', True)
+            return ret_message('Couldn\'t save question', True, 'PostScoutAdminSaveQuestion', self.request.user.id, e)
 
     def post(self, request, format=None):
         serializer = ScoutQuestionSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutQuestion', request.user.id)
 
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_question(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving the question', True, e)
+                return ret_message('An error occurred while saving the question.', True,
+                                   'PostScoutAdminSaveScoutQuestion', request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutAdminSaveScoutQuestion', request.user.id)
 
 
 class PostScoutAdminUpdateScoutQuestion(APIView):
@@ -432,31 +435,32 @@ class PostScoutAdminUpdateScoutQuestion(APIView):
             else:
                 QuestionOptions(option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
 
-        return ret_message('Question saved successfully', False)
+        return ret_message('Question saved successfully')
 
     def post(self, request, format=None):
         serializer = ScoutQuestionSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True)
+            return ret_message('Invalid data', True, 'PostScoutAdminUpdateScoutQuestion', request.user.id)
 
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.update_question(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while updating the question', True, e)
+                return ret_message('An error occurred while updating the question.', True,
+                                   'PostScoutAdminUpdateScoutQuestion', request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutAdminUpdateScoutQuestion', request.user.id)
 
 
 class GetScoutAdminToggleScoutQuestion(APIView):
     """
-    API endpoint to delete a scout field question
+    API endpoint to toggle a scout field question
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def delete(self, sq_id):
+    def toggle(self, sq_id):
         sq = ScoutQuestion.objects.get(sq_id=sq_id)
 
         if sq.active == 'n':
@@ -469,14 +473,15 @@ class GetScoutAdminToggleScoutQuestion(APIView):
         return ret_message('Successfully toggled the question state.')
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
-                req = self.delete(request.query_params.get('sq_id', None))
+                req = self.toggle(request.query_params.get('sq_id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while toggling the scout question.', True, e)
+                return ret_message('An error occurred while toggling the scout question.', True,
+                                   'GetScoutAdminToggleScoutQuestion', request.user.id, e)
         else:
-            return ret_message('You do not have access.', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminToggleScoutQuestion', request.user.id)
 
 
 class GetScoutAdminToggleOption(APIView):
@@ -499,18 +504,19 @@ class GetScoutAdminToggleOption(APIView):
         return ret_message('Successfully toggled the option.')
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.toggle(request.query_params.get('q_opt_id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while toggling the option.', True, e)
+                return ret_message('An error occurred while toggling the option.', True, 'GetScoutAdminToggleOption',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access.', True)
+            return ret_message('You do not have access.', True, 'GetScoutAdminToggleOption', request.user.id)
 
 
 class PostScoutAdminSaveUser(APIView):
-    """API endpoint to save new questions"""
+    """API endpoint to save user data"""
 
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -534,53 +540,59 @@ class PostScoutAdminSaveUser(APIView):
             AuthUserGroups.objects.filter(~Q(group__in=AuthGroup.objects.filter(name__in=groups)) &
                                           Q(user=user)).delete()
 
-            return ret_message('Saved user groups successfully', False)
+            return ret_message('Saved user groups successfully')
         except Exception as e:
-            return ret_message('Can\'t save the user groups', True)
+            return ret_message('Can\'t save the user groups', True, 'PostScoutAdminSaveUser', self.request.user.id, e)
 
     def post(self, request, format=None):
         serializer = ScoutAdminSaveUserSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveUser', request.user.id)
 
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_user(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving the question', True, e)
+                return ret_message('An error occurred while saving the question.', True, 'PostScoutAdminSaveUser',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutAdminSaveUser', request.user.id)
 
 
 class PostScoutAdminSaveScoutScheduleEntry(APIView):
-    """API endpoint to save new questions"""
+    """API endpoint to save scout schedule entry"""
 
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_scout_schedule(self, data):
-        print(type(data['time']))
-        ScoutSchedule(user_id=data['user_id'], sq_typ_id=data['sq_typ'], time=data['time'], notified='n').save()
+        local = pytz.timezone('US/Eastern')
+        native = datetime.datetime.strptime(data['time'].replace('T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
+        local_dt = local.localize(native, is_dst=None)
+        utc_dt = local_dt.astimezone(pytz.utc)
+        ScoutSchedule(user_id=data['user_id'], sq_typ_id=data['sq_typ'], time=utc_dt, notified='n').save()
 
-        return ret_message('Saved schedule entry successfully', False)
+        return ret_message('Saved schedule entry successfully')
 
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutScheduleEntry', request.user.id)
 
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_scout_schedule(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving the schedule entry', True, e)
+                return ret_message('An error occurred while saving the schedule entry.', True,
+                                   'PostScoutAdminSaveScoutScheduleEntry', request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutAdminSaveScoutScheduleEntry', request.user.id)
+
 
 class PostScoutAdminNotifyUser(APIView):
-    """API endpoint to save new questions"""
+    """API endpoint to notify users"""
 
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -589,31 +601,37 @@ class PostScoutAdminNotifyUser(APIView):
         for d in data:
             if d.get('notify', 'n') == 'y':
                 user = AuthUser.objects.get(id=d['user_id'])
+                print(d['scout_sch_id'])
                 ss = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
-                time = ss.time.strftime('%m/%d/%Y %I:%M %p')
+                    #ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
+                time = ss.time
+                time = time.astimezone(pytz.timezone('US/Eastern'))
+                time = time.strftime('%m/%d/%Y %I:%M %p')
                 data = {
                     'scout_location': d['sq_typ'],
                     'scout_time': time,
                     'lead_scout': self.request.user.first_name + ' ' + self.request.user.last_name
                 }
-                send_email.send_message(user.phone + user.phone_type.phone_type, 'Time to Scout!', 'notify_scout.html', data)
+                send_email.send_message(user.phone + user.phone_type.phone_type, 'Time to Scout!', 'notify_scout.html',
+                                        data)
 
                 scout_sch = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
                 scout_sch.notified = 'y'
                 scout_sch.save()
 
-        return ret_message('Successfully notified selected users', False)
+        return ret_message('Successfully notified selected users')
 
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data, many=True)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True)
+            return ret_message('Invalid data', True, 'PostScoutAdminNotifyUser', request.user.id)
 
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.notify_user(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while notifying user', True, e)
+                return ret_message('An error occurred while notifying user.', True, 'PostScoutAdminNotifyUser',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutAdminNotifyUser', request.user.id)

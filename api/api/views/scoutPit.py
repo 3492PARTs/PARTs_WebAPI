@@ -1,21 +1,19 @@
-from django.http import HttpResponse
-from django.utils import timezone
-from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from api.api.serializers import *
 from api.api.models import *
-from django.db.models import Q
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from api.auth.security import *
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
+auth_obj = 3
+
+
 class GetScoutPitInputs(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to get scout pit inputs
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -25,13 +23,13 @@ class GetScoutPitInputs(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while initializing: no season set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'GetScoutPitInputs', self.request.user.id, e)
 
         scout_questions = []
         try:
             sqs = ScoutQuestion.objects.filter(
                 Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
+
             for sq in sqs:
                 ops = QuestionOptions.objects.filter(sq=sq)
                 options = []
@@ -56,13 +54,12 @@ class GetScoutPitInputs(APIView):
                     'options': options
                 })
         except Exception as e:
-            scout_questions = []
+            x = 1
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('An error occurred while initializing: no event set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No event set, see an admin.', True, 'GetScoutPitInputs', self.request.user.id, e)
 
         teams = []
         try:
@@ -77,20 +74,21 @@ class GetScoutPitInputs(APIView):
         return {'scoutQuestions': scout_questions, 'teams': teams}
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_questions()
                 serializer = ScoutAnswerSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing', True, e)
+                return ret_message('An error occurred while initializing.', True, 'GetScoutPitInputs',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutPitInputs', request.user.id)
 
 
-class PostSaveScoutPitAnswers(APIView):
+class PostScoutPitSaveAnswers(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to save scout pit answers
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -99,14 +97,12 @@ class PostSaveScoutPitAnswers(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while saving: no season set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'PostScoutPitSaveAnswers', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('An error occurred while saving: no event set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No event set, see an admin', True, 'PostScoutPitSaveAnswers', self.request.user.id, e)
 
         sp = ScoutPit(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
         sp.save()
@@ -116,26 +112,27 @@ class PostSaveScoutPitAnswers(APIView):
                                  answer=d.get('answer', ''), void_ind='n')
             spa.save()
 
-        return ret_message('Question saved successfully', False)
+        return ret_message('Question saved successfully')
 
     def post(self, request, format=None):
         serializer = ScoutAnswerSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveAnswers', request.user.id)
 
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_answers(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving answers', True, e)
+                return ret_message('An error occurred while saving answers.', True, 'PostScoutAdminSaveAnswers',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutAdminSaveAnswers', request.user.id)
 
 
-class PostSaveScoutPitPicture(APIView):
+class PostScoutPitSavePicture(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to save a robot picture
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -145,17 +142,15 @@ class PostSaveScoutPitPicture(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while saving: no season set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'PostScoutPitSavePicture', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('An error occurred while saving: no event set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No event set, see an admin.', True, 'PostScoutPitSavePicture', self.request.user.id, e)
 
         if not allowed_file(file.name):
-            return ret_message('Invalid file type', True)
+            return ret_message('Invalid file type.', True, 'PostScoutPitSavePicture', self.request.user.id)
 
         try:
             response = cloudinary.uploader.upload(file)
@@ -165,26 +160,27 @@ class PostSaveScoutPitPicture(APIView):
             sp.img_ver = str(response['version'])
             sp.save()
         except Exception as e:
-            return ret_message('An error occurred while saving image', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('An error occurred while saving the image.', True, 'PostScoutPitSavePicture',
+                               self.request.user.id, e)
 
-        return ret_message('Save Image Successfully.', True)
+        return ret_message('Save Image Successfully.')
 
     def post(self, request, format=None):
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 file_obj = request.FILES['file']
                 ret = self.save_file(file_obj, request.data.get('team_no', ''))
                 return ret
             except Exception as e:
-                return ret_message('An error occurred while saving robot picture', True, e)
+                return ret_message('An error occurred while saving robot picture.', True, 'PostScoutPitSavePicture',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutPitSavePicture', request.user.id)
 
 
 class GetScoutPitResultInit(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to get the teams who have already been scouted
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -194,14 +190,12 @@ class GetScoutPitResultInit(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while initializing: no season set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'GetScoutPitResultsInit', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('An error occurred while initializing: no event set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No event set, see an admin.', True, 'GetScoutPitResultsInit', self.request.user.id, e)
 
         teams = []
         try:
@@ -211,25 +205,26 @@ class GetScoutPitResultInit(APIView):
             ).order_by('team_no')
 
         except Exception as e:
-            teams.append(Team())
+            x = 1
 
         return teams
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_teams()
                 serializer = TeamSerializer(req, many=True)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing', True, e)
+                return ret_message('An error occurred while initializing.', True, 'GetScoutPitResultsInit',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutPitResultsInit', request.user.id)
 
 
-class PostGetScoutPitResults(APIView):
+class PostScoutPitGetResults(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to get scout pit results for the selected teams
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -238,14 +233,12 @@ class PostGetScoutPitResults(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while saving: no season set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'PostScoutPitGetResults', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('An error occurred while saving: no event set', True,
-                               e)  # TODO NEed to return no season set message
+            return ret_message('No event set, see an admin', True, 'PostScoutPitGetResults', self.request.user.id, e)
 
         results = []
         for t in teams:
@@ -272,27 +265,27 @@ class PostGetScoutPitResults(APIView):
 
         return results
 
-
     def post(self, request, format=None):
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 serializer = TeamSerializer(data=request.data, many=True)
                 if not serializer.is_valid():
-                    return ret_message('Invalid data', True)
+                    return ret_message('Invalid data', True, 'PostScoutPitGetResults', request.user.id)
 
                 ret = self.get_results(serializer.data)
                 serializer = ScoutPitResultsSerializer(ret, many=True)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while getting pit results.', True, e)
+                return ret_message('An error occurred while getting pit results.', True, 'PostScoutPitGetResults',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutPitGetResults', request.user.id)
 
 
 def allowed_file(filename):
-    '''Returns whether a filename's extension indicates that it is an image.
+    """Returns whether a filename's extension indicates that it is an image.
     :param str filename: A filename.
     :return: Whether the filename has an recognized image file extension
-    :rtype: bool'''
+    :rtype: bool"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}

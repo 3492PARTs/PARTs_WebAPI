@@ -56,11 +56,14 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware'
 ]
 
-#CORS_ORIGIN_WHITELIST = [
- #   'localhost:4200'
-#]
+CORS_ORIGIN_WHITELIST = [
+    'http://parts3492.org',
+    'https://parts3492.org',
+    'http://127.0.0.1',
+    'http://localhost:4200'
+]
 
-CORS_ORIGIN_ALLOW_ALL = True
+#CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'api.urls'
 

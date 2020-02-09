@@ -1,19 +1,16 @@
-from django.http import HttpResponse
-from django.utils import timezone
-from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from api.api.serializers import *
 from api.api.models import *
-from django.db.models import Q
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from api.auth.security import *
+
+auth_obj = 1
 
 
 class GetScoutFieldInputs(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to get scout field inputs
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -23,11 +20,13 @@ class GetScoutFieldInputs(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while initializing: no season set', True, e) # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'GetScoutFieldInputs', self.request.user.id, e)
 
         scout_questions = []
         try:
-            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('order')
+            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
+                                               Q(void_ind='n')).order_by('order')
+
             for sq in sqs:
                 ops = QuestionOptions.objects.filter(sq=sq)
                 options = []
@@ -52,37 +51,40 @@ class GetScoutFieldInputs(APIView):
                     'options': options
                 })
         except Exception as e:
-            scout_questions = []
+            x = 1
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('An error occurred while initializing: no event set', True, e) # TODO NEed to return no season set message
+            return ret_message('No event set, see an admin.', True, 'GetScoutFieldInputs', self.request.user.id, e)
 
         teams = []
         try:
-            teams = Team.objects.filter(team_no__in=list(EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True))).order_by('team_no')
+            teams = Team.objects.filter(team_no__in=list(
+                EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True)
+            )).order_by('team_no')
 
         except Exception as e:
-            teams.append(Team())
+            x = 1
 
         return {'scoutQuestions': scout_questions, 'teams': teams}
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_questions()
                 serializer = ScoutAnswerSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing', True, e)
+                return ret_message('An error occurred while initializing.', True, 'GetScoutFieldInputs',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutFieldInputs', request.user.id)
 
 
-class PostSaveScoutFieldAnswers(APIView):
+class PostScoutFieldSaveAnswers(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to save scout field answers
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -91,12 +93,12 @@ class PostSaveScoutFieldAnswers(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while saving: no season set', True, e) # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'PostScoutFieldSaveAnswers', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('An error occurred while saving: no event set', True, e) # TODO NEed to return no season set message
+            return ret_message('No event set, see an admin', True, 'PostScoutFieldSaveAnswers', self.request.user.id, e)
 
         sf = ScoutField(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
         sf.save()
@@ -105,26 +107,27 @@ class PostSaveScoutFieldAnswers(APIView):
             sfa = ScoutFieldAnswer(scout_field=sf, sq_id=d['sq_id'], answer=d.get('answer', ''), void_ind='n')
             sfa.save()
 
-        return ret_message('Question saved successfully', False)
+        return ret_message('Question saved successfully')
 
     def post(self, request, format=None):
         serializer = ScoutAnswerSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True)
+            return ret_message('Invalid data', True, 'PostScoutFieldSaveAnswers', request.user.id)
 
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_answers(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving answers', True, e)
+                return ret_message('An error occurred while saving answers.', True, 'PostScoutFieldSaveAnswers',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'PostScoutFieldSaveAnswers', request.user.id)
 
 
 class GetScoutFieldQuery(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to get the results of field scouting
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -134,12 +137,12 @@ class GetScoutFieldQuery(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('An error occurred while getting: no season set', True, e) # TODO NEed to return no season set message
+            return ret_message('No season set, see an admin.', True, 'GetScoutFieldQuery', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
-            current_event = Event()
+            return ret_message('No event set, see an admin.', True, 'GetScoutFieldQuery', self.request.user.id, e)
 
         scout_cols = [{
                     'PropertyName': 'team',
@@ -179,16 +182,16 @@ class GetScoutFieldQuery(APIView):
             scout_cols = []
             scout_answers = []
 
-
         return {'scoutCols': scout_cols, 'scoutAnswers': scout_answers}
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 1):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_answers()
                 serializer = ScoutFieldResultsSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing', True, e)
+                return ret_message('An error occurred while initializing.', True, 'GetScoutFieldQuery',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access.', True, 'GetScoutFieldQuery', request.user.id)

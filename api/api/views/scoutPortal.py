@@ -1,27 +1,18 @@
 from datetime import datetime, timedelta
-
-import pytz
-from django.db import IntegrityError
-from django.http import HttpResponse
-from django.utils import timezone
-from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.utils import json
 
 from api.api.serializers import *
 from api.api.models import *
-from api.auth.models import AuthUser
-from api.auth import send_email
-from django.db.models import Q
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from api.auth.security import *
-import requests
+
+auth_obj = 6
+
 
 class GetScoutPortalInit(APIView):
     """
-    API endpoint to get all the init values for the scout admin screen
+    API endpoint to get the init values for the scout portal
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -30,14 +21,9 @@ class GetScoutPortalInit(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            current_season = Season()
+            return ret_message('No season set, see an admin.', True, self.request.user.id, e)
 
-        try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
-        except Exception as e:
-            current_event = Event()
-
-        time = datetime.now() - timedelta(hours=5)  # datetime.now(pytz.timezone('US/Eastern'))
+        time = datetime.now() - timedelta(hours=5)  #TODO datetime.now(pytz.timezone('US/Eastern'))
         fieldSchedule = []
         sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
                                            Q(time__gte=time) &
@@ -86,12 +72,13 @@ class GetScoutPortalInit(APIView):
         return {'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule, 'pastSchedule': pastSchedule}
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 2):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_init(request.user.id)
                 serializer = ScoutPortalInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing', True, e)
+                return ret_message('An error occurred while initializing.', True, 'GetScoutPortalInit',
+                                   request.user.id, e)
         else:
-            return ret_message('You do not have access', True)
+            return ret_message('You do not have access,', True, 'GetScoutPortalInit', request.user.id)

@@ -142,3 +142,16 @@ class PhoneType(models.Model):
     class Meta:
         managed = False
         db_table = 'phone_type'
+
+
+class ErrorLog(models.Model):
+    error_log_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    exception = models.CharField(max_length=4000, blank=True, null=True)
+    time = models.DateTimeField()
+    void_ind = models.CharField(max_length=1)
+
+    class Meta:
+        managed = False
+        db_table = 'error_log'

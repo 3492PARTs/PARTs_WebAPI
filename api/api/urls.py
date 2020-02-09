@@ -10,13 +10,13 @@ from api.api.views.scoutPortal import *
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path('get_scout_field_questions/', GetScoutFieldInputs.as_view()),
-    path('post_save_scout_field_answers/', PostSaveScoutFieldAnswers.as_view()),
+    path('post_save_scout_field_answers/', PostScoutFieldSaveAnswers.as_view()),
     path('get_scout_field_results/', GetScoutFieldQuery.as_view()),
     path('get_scout_pit_questions/', GetScoutPitInputs.as_view()),
-    path('post_save_scout_pit_answers/', PostSaveScoutPitAnswers.as_view()),
-    path('post_save_scout_pit_picture/', PostSaveScoutPitPicture.as_view()),
+    path('post_save_scout_pit_answers/', PostScoutPitSaveAnswers.as_view()),
+    path('post_save_scout_pit_picture/', PostScoutPitSavePicture.as_view()),
     path('get_scout_pit_results_init/', GetScoutPitResultInit.as_view()),
-    path('post_get_scout_pit_results/', PostGetScoutPitResults.as_view()),
+    path('post_get_scout_pit_results/', PostScoutPitGetResults.as_view()),
     path('get_scout_admin_init/', GetScoutAdminInit.as_view()),
     path('get_sync_season/', GetScoutAdminSyncSeason.as_view()),
     path('get_set_season/', GetScoutAdminSetSeason.as_view()),
