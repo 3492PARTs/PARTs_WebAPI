@@ -26,7 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['parts3492.org']
+ALLOWED_HOSTS = ['https://parts-webapi.herokuapp.com', 'parts-webapi.herokuapp.com', 'parts3492.org']
 
 # Application definition
 
