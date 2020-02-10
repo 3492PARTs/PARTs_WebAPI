@@ -15,164 +15,6 @@ body {
     box-sizing: border-box;
 }
 
-#auth-wrapper {
-    background-color: #f9f9f9;
-    position: fixed;
-    width: 100%;
-    height: 100vh;
-    z-index: 10;
-    top: 0;
-    left: 0;
-    overflow: auto;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    align-content: center;
-}
-
-#auth {
-    width: initial;
-    display: inline-block;
-    max-width: 100%;
-
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    transition: all 0.2s ease-in-out;
-}
-
-#auth:hover {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-}
-
-#auth #options {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#auth #options > div {
-    padding-right: 1em;
-}
-
-#auth #options > div a {
-    color: #007bff;
-}
-
-.submit {
-    float: right;
-}
-
-.box {
-    width: 100%;
-
-    background-color: #fff;
-    padding: 1em;
-    box-sizing: border-box;
-
-
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    transition: all 0.2s ease-in-out;
-}
-
-.box:hover {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-}
-
-.box .title {
-    text-align: center;
-}
-
-.btn {
-    text-decoration: none;
-    display: inline-block;
-    font-weight: 400;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    cursor: pointer;
-    border: 1px solid transparent;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    border-radius: .25rem;
-    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-}
-
-.btn-primary {
-    color: #fff !important;
-    background-color: #007bff;
-    border-color: #007bff;
-}
-
-.form-control {
-    display: block;
-    width: 100%;
-    height: calc(1.5em + .75rem + 2px);
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: .25rem;
-    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-}
-
-.form-control:focus {
-    background-color: #fff;
-    border-color: #80bdff;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
-}
-
-.form-control.initial {
-    width: initial !important;
-}
-
-.errorlist {
-    list-style: none;
-    padding: 0;
-}
-
-.errorlist li {
-    background-color: rgba(220, 53, 69, .5);
-    padding: 1em;
-    box-sizing: border-box;
-    margin: 1em 0;
-
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-}
-
-/*Home Button*/
-#home-btn {
-    height: 4em;
-    position: fixed;
-    top: 1em;
-    left: 1em;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    width: 4em;
-    z-index: 100;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    transition: all 0.2s ease-in-out;
-    background: #f1c40f;
-}
-
-#home-btn img{
-    width: 100%;
-    height: 100%;
-    padding: 0.5em;
-}
 /*FONT IMPORT*/
 
 @font-face {
@@ -220,4 +62,145 @@ main input {
 
 main input[type='datetime-local'] {
     width: 14em;
+}
+
+/* CUSTOM */
+#auth-wrapper {
+	background-color: #f9f9f9;
+	position: fixed;
+	width: 100%;
+	height: 100vh;
+	z-index: 18;
+	top: 0;
+	left: 0;
+	overflow: auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	align-content: center;
+}
+
+#auth-wrapper #auth {
+	width: initial;
+	display: inline-block;
+	max-width: 100%;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+	transition: all 0.2s ease-in-out;
+}
+
+#auth-wrapper #auth:hover {
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+#auth-wrapper #auth #options {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+#auth-wrapper #auth #options > div {
+	padding-right: 1em;
+}
+
+#auth-wrapper #auth #options > div a {
+	color: #007bff;
+}
+
+#auth-wrapper * {
+	box-sizing: border-box;
+}
+
+.box {
+	width: 100%;
+	background-color: #fff;
+	padding: 1em;
+	box-sizing: border-box;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+	transition: all 0.2s ease-in-out;
+}
+
+.box:hover {
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+}
+
+.box .title {
+	text-align: center;
+}
+
+.btn {
+	text-decoration: none;
+	display: inline-block;
+	font-weight: 400;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	cursor: pointer;
+	border: 1px solid transparent;
+	padding: .375rem .75rem;
+	font-size: 1rem;
+	line-height: 1.5;
+	border-radius: .25rem;
+	transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.btn-primary {
+	color: #fff !important;
+	background-color: #007bff;
+	border-color: #007bff;
+}
+
+.form-control {
+	display: block;
+	width: 100%;
+	height: calc(1.5em + .75rem + 2px);
+	padding: .375rem .75rem;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: #495057;
+	background-color: #fff;
+	background-clip: padding-box;
+	border: 1px solid #ced4da;
+	border-radius: .25rem;
+	transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+.form-control:focus {
+	background-color: #fff;
+	border-color: #80bdff;
+	outline: 0;
+	box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-control.initial {
+	width: initial !important;
+}
+
+/*Home Button*/
+#home-btn {
+	height: 4em;
+	position: fixed;
+	top: 1em;
+	left: 1em;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	width: 4em;
+	z-index: 100;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+	transition: all 0.2s ease-in-out;
+	background: #2E3094;
+}
+
+#home-btn img {
+	width: 100%;
+	height: 100%;
+	padding: 0.5em;
 }

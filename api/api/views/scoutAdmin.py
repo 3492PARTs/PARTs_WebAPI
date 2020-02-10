@@ -601,7 +601,6 @@ class PostScoutAdminNotifyUser(APIView):
         for d in data:
             if d.get('notify', 'n') == 'y':
                 user = AuthUser.objects.get(id=d['user_id'])
-                print(d['scout_sch_id'])
                 ss = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
                 time = ss.time
                 time = time.astimezone(pytz.timezone('US/Eastern'))
