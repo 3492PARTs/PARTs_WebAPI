@@ -24,9 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECRET_KEY =
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['https://parts-webapi.herokuapp.com', 'parts-webapi.herokuapp.com', 'http://parts-webapi.herokuapp.com', 'parts3492.org']
+ALLOWED_HOSTS = ['parts-webapi.herokuapp.com']
 
 # Application definition
 
