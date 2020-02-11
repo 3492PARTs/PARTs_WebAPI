@@ -51,8 +51,6 @@ def register(request):
                 return render(request, 'registration/register_fail.html')
     else:
         form = SignupForm()
-    print('i got this far')
-    print(render(request, 'registration/register.html', {'form': form}))
     return render(request, 'registration/register.html', {'form': form}) #TODO maybe check email here and yeah
 
 
