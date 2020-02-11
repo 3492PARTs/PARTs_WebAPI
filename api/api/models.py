@@ -163,7 +163,8 @@ class ScoutSchedule(models.Model):
     scout_sch_id = models.IntegerField(primary_key=True)
     user = models.ForeignKey(AuthUser, models.DO_NOTHING)
     sq_typ = models.ForeignKey(ScoutQuestionType, models.DO_NOTHING, db_column='sq_typ')
-    time = models.DateTimeField()
+    st_time = models.DateTimeField()
+    end_time = models.DateTimeField()
     notified = models.CharField(max_length=1)
 
     class Meta:

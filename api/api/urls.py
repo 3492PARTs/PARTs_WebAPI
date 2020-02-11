@@ -30,5 +30,6 @@ urlpatterns = [
     path('post_save_user/', PostScoutAdminSaveUser.as_view()),
     path('post_save_scout_schedule_entry/', PostScoutAdminSaveScoutScheduleEntry.as_view()),
     path('post_notify_users/', PostScoutAdminNotifyUser.as_view()),
+    path('post_save_phone_type/', PostScoutAdminSavePhoneType.as_view()),
     path('get_scout_portal_init/', GetScoutPortalInit.as_view()),
 ]

@@ -148,6 +148,7 @@ class ErrorLog(models.Model):
     error_log_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(AuthUser, models.DO_NOTHING)
     location = models.CharField(max_length=255, blank=True, null=True)
+    message = models.CharField(max_length=1000, blank=True, null=True)
     exception = models.CharField(max_length=4000, blank=True, null=True)
     time = models.DateTimeField()
     void_ind = models.CharField(max_length=1)

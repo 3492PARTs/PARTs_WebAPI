@@ -28,7 +28,7 @@ def register(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False # TODO on error delete user
+            user.is_active = False  # TODO on error delete user
             user.save()
 
             try:
@@ -49,6 +49,8 @@ def register(request):
             except Exception:
                 user.delete()
                 return render(request, 'registration/register_fail.html')
+        #else:
+         #   return render(request, 'registration/register.html', {'form': form})
     else:
         form = SignupForm()
     return render(request, 'registration/register.html', {'form': form}) #TODO maybe check email here and yeah

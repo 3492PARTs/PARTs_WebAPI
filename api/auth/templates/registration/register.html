@@ -10,10 +10,19 @@
                     {% csrf_token %}
                     {{ form.username.errors }}
                     <input class="form-control" type="text" name="username" maxlength="150" autofocus="" required="" id="id_username"
-                           placeholder="username">
+                           placeholder="username" {% if form.username.value is not None %} value="{{ form.username.value }}" {% endif %}>
                     <br>
                     {{ form.email.errors }}
-                    <input class="form-control" type="email" name="email" maxlength="200" required="" id="id_email" placeholder="email">
+                    <input class="form-control" type="email" name="email" maxlength="200" required="" id="id_email"
+                           placeholder="email" {% if form.email.value is not None %} value="{{ form.email.value }}" {% endif %}>
+                    <br>
+                    {{ form.first_name.errors }}
+                    <input class="form-control" type="text" name="first_name" maxlength="150" autofocus="" required="" id="id_first_name"
+                           placeholder="first name" {% if form.first_name.value is not None %} value="{{ form.first_name.value }}" {% endif %}>
+                    <br>
+                    {{ form.last_name.errors }}
+                    <input class="form-control" type="text" name="last_name" maxlength="150" autofocus="" required="" id="id_last_name"
+                           placeholder="last name" {% if form.last_name.value is not None %} value="{{ form.last_name.value }}" {% endif %}>
                     <br>
                     {{ form.password1.errors }}
                     <input class="form-control" type="password" name="password1" required="" id="id_password1" placeholder="password">

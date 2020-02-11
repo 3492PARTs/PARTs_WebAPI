@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+
+import pytz
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -23,11 +25,11 @@ class GetScoutPortalInit(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, self.request.user.id, e)
 
-        time = datetime.now() - timedelta(hours=5)  #TODO datetime.now(pytz.timezone('US/Eastern'))
+        time = timezone.now()
         fieldSchedule = []
         sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
-                                           Q(time__gte=time) &
-                                           Q(user_id=user_id)).order_by('time', 'user')
+                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
+                                           Q(user_id=user_id)).order_by('st_time', 'user')
         for ss in sss:
             fieldSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -35,14 +37,15 @@ class GetScoutPortalInit(APIView):
                 'user_id': ss.user.id,
                 'sq_typ': ss.sq_typ_id,
                 'sq_nm': ss.sq_typ.sq_nm,
-                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
+                'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'notified': ss.notified
             })
 
         pitSchedule = []
         sss = ScoutSchedule.objects.filter(Q(sq_typ_id='pit') &
-                                           Q(time__gte=time) &
-                                           Q(user_id=user_id)).order_by('time', 'user')
+                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
+                                           Q(user_id=user_id)).order_by('st_time', 'user')
         for ss in sss:
             pitSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -50,14 +53,14 @@ class GetScoutPortalInit(APIView):
                 'user_id': ss.user.id,
                 'sq_typ': ss.sq_typ_id,
                 'sq_nm': ss.sq_typ.sq_nm,
-                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
+                'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'notified': ss.notified
             })
 
         pastSchedule = []
-        sss = ScoutSchedule.objects.filter(Q(time__lt=time) &
-                                           Q(user_id=user_id)).order_by(
-            'time', 'user')
+        sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) &
+                                           Q(user_id=user_id)).order_by('st_time', 'user')
         for ss in sss:
             pastSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -65,7 +68,8 @@ class GetScoutPortalInit(APIView):
                 'user_id': ss.user.id,
                 'sq_typ': ss.sq_typ_id,
                 'sq_nm': ss.sq_typ.sq_nm,
-                'time': ss.time.strftime('%m/%d/%Y %I:%M %p'),
+                'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
+                'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'notified': ss.notified
             })
 

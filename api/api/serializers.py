@@ -60,7 +60,8 @@ class ScoutScheduleSerializer(serializers.Serializer):
     user_id = serializers.IntegerField()
     sq_typ = serializers.CharField()
     sq_nm = serializers.CharField(required=False)
-    time = serializers.DateTimeField()
+    st_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
     notified = serializers.CharField(required=False)
     notify = serializers.CharField(required=False)
 

@@ -24,10 +24,10 @@ class UserLinksSerializer(serializers.Serializer):
     RouterLink = serializers.CharField()
 
 
-class PhoneTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PhoneType
-        fields = '__all__'
+class PhoneTypeSerializer(serializers.Serializer):
+    phone_type_id = serializers.IntegerField(required=False)
+    carrier = serializers.CharField()
+    phone_type = serializers.CharField()
 
 class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
