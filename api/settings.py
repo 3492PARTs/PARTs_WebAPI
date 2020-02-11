@@ -144,6 +144,14 @@ STATICFILES_DIRS = (
     (os.path.join(BASE_DIR, 'staticfiles')),
 )
 
+# Email and SMTP settings
+DEFAULT_FROM_EMAIL = 'team3492@gmail.com'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = os.Getenv("SENDGRID_USERNAME")
+EMAIL_HOST_PASSWORD = os.Getenv("SENDGRID_PASSWORD")
+EMAIL_PORT = 587
 
 # URLs
 LOGIN_URL = '/auth/login/'
