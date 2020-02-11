@@ -34,6 +34,7 @@ def get_user_groups(user_id):
 
 
 def ret_message(message, error=False, location='', user_id=0, exception=None):
+    # TODO Make all of these optional in the DB
     if error:
         user = AuthUser.objects.get(id=user_id)
         print('----------ERROR START----------')
