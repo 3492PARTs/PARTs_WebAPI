@@ -1,1 +1,1 @@
-web: python api/manage.py collectstatic --noinput; bin/gunicorn_django --workers=4 --bind=0.0.0.0:$PORT api/settings.py 
+web: python manage.py collectstatic --noinput; gunicorno --workers=4 --bind=0.0.0.0:$PORT api/settings.py 
