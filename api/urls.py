@@ -21,3 +21,8 @@ urlpatterns = [
     url(r'^api/', include('api.api.urls')),
     url(r'^auth/', include('api.auth.urls'))
 ]
+
+if not settings.DEBUG:
+    urlpatterns += patterns('',
+        (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
+    )
