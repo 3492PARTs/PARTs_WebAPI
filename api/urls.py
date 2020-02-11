@@ -24,4 +24,5 @@ urlpatterns = [
 ]
 
 if not settings.DEBUG:
-    print(django.views.static.serve)
+    urlpatterns + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    print('urls: ' + settings.STATIC_ROOT)
