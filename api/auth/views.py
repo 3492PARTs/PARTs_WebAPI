@@ -24,7 +24,6 @@ from .security import *
 
 
 def register(request):
-    print('i got this far')
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
@@ -52,6 +51,7 @@ def register(request):
                 return render(request, 'registration/register_fail.html')
     else:
         form = SignupForm()
+    print('i got this far')
     return render(request, 'registration/register.html', {'form': form}) #TODO maybe check email here and yeah
 
 
