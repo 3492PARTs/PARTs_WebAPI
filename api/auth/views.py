@@ -46,7 +46,9 @@ def register(request):
                 )
                 email.send()
                 return render(request, 'registration/register_complete.html')
-            except Exception:
+            except Exception as e:
+                print(e)
+                # TODO ret_message('An error occurred while creating a user.', True, 'register', e)
                 user.delete()
                 return render(request, 'registration/register_fail.html')
     else:
