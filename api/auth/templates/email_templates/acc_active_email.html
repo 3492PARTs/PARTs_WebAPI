@@ -1,8 +1,9 @@
-{% autoescape off %}
-Hi {{ user.username }},
+{% extends './base.html' %}
+{% block content %}
+Hi {{ user.first_name }} {{ user.last_name }},
 Please click on the link to confirm your registration,
-    <a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}">https://{{ domain }}{% url 'activate' uidb64=uid token=token %}</a>
+    <a href="https://{{ domain }}{% url 'activate' uidb64=uid token=token %}">https://{{ domain }}{% url 'activate' uidb64=uid token=token %}</a>
 
     If the link does not work, copy and paste the url below into your browser.
 https://{{ domain }}{% url 'activate' uidb64=uid token=token %}
-{% endautoescape %}
+{% endblock %}

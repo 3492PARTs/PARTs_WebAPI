@@ -3,13 +3,14 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.template import Context
+from django.core.mail import EmailMultiAlternatives
 
 from api import settings
 from .forms import SignupForm, ResendActivationEmailForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.template.loader import render_to_string
+from django.template.loader import render_to_string, get_template
 from .tokens import account_activation_token
 from django.core.mail import EmailMessage
 from django.contrib.auth.models import User
@@ -33,17 +34,22 @@ def register(request):
 
             try:
                 current_site = get_current_site(request)
-                mail_subject = 'Activate your PARTs account.'
-                message = render_to_string('email_templates/acc_active_email.html', {
+                plaintext = get_template('email_templates/acc_active_email.txt')
+                htmly = get_template('email_templates/acc_active_email.html')
+                cntx = {
                     'user': user,
                     'domain': current_site.domain,
                     'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                     'token': account_activation_token.make_token(user),
-                })
+                }
+                mail_subject = 'Activate your PARTs account.'
+
+                text_content = plaintext.render(cntx)
+                html_content = htmly.render(cntx)
+
                 to_email = form.cleaned_data.get('email')
-                email = EmailMessage(
-                            mail_subject, message, to=[to_email]
-                )
+                email = EmailMultiAlternatives(mail_subject, text_content, 'team3492@gmail.com', [to_email])
+                email.attach_alternative(html_content, "text/html")
                 email.send()
                 return render(request, 'registration/register_complete.html')
             except Exception as e:
