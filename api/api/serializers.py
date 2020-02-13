@@ -74,8 +74,8 @@ class ScoutQuestionTypeSerializer(serializers.ModelSerializer):
 class ScoutAdminInitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     events = EventSerializer(many=True)
-    currentSeason = SeasonSerializer()
-    currentEvent = EventSerializer()
+    currentSeason = SeasonSerializer(required=False)
+    currentEvent = EventSerializer(required=False)
     users = UserSerializer(many=True)
     userGroups = AuthGroupSerializer(many=True)
     phoneTypes = PhoneTypeSerializer(many=True)

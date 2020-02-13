@@ -134,7 +134,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
@@ -156,7 +155,13 @@ EMAIL_PORT = 587
 # URLs
 LOGIN_URL = '/auth/login/'
 
-
+DATABASES = {
+    'default': {
+        'OPTIONS': {
+            'sslmode': 'no'
+        }
+    }
+}
 # Activate Django-Heroku.
 django_heroku.settings(locals())
 del DATABASES['default']['OPTIONS']['sslmode']

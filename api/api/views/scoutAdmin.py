@@ -254,7 +254,12 @@ class GetScoutAdminAddSeason(APIView):
     permission_classes = (IsAuthenticated,)
 
     def add(self, season):
-        Season(season=season, current='n').save()
+        try:
+            Season.objects.get(season=season)
+            return ret_message('Season not added. Season ' + season + ' already exists.', True,
+                               'GetScoutAdminAddSeason', self.request.user.id)
+        except Exception as e:
+            Season(season=season, current='n').save()
 
         return ret_message('Successfully added season: ' + season)
 
@@ -297,7 +302,11 @@ class GetScoutAdminDeleteSeason(APIView):
                 ScoutPitAnswer.objects.filter(scout_pit=sp).delete()
                 sp.delete()
 
-            ScoutQuestion.objects.filter(season=season).delete()
+            sqs = ScoutQuestion.objects.filter(season=season)
+
+            #QuestionOptions.objects.filter(sq__in=list(sqs.values_list('user_id', flat=True)))
+            QuestionOptions.objects.filter(sq__in=sqs).delete()
+            sqs.delete()
 
             e.delete()
 
@@ -311,7 +320,7 @@ class GetScoutAdminDeleteSeason(APIView):
                 req = self.delete(request.query_params.get('season_id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while setting the season.', True, 'GetScoutAdminDeleteSeason',
+                return ret_message('An error occurred while deleting the season.', True, 'GetScoutAdminDeleteSeason',
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'GetScoutAdminDeleteSeason', request.user.id)
@@ -367,6 +376,8 @@ class GetScoutAdminQuestionInit(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_init(request.query_params.get('sq_typ', None))
+                if type(req) == Response:
+                    return req
                 serializer = ScoutAdminQuestionInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
