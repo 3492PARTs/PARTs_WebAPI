@@ -19,7 +19,7 @@ body {
 
 @font-face {
     font-family: roboto;
-    src: url(roboto-regular.ttf);
+    src: url("https://cloud-cube.s3.amazonaws.com/q330o4s7bjvy/public/roboto-regular.ttf");
 }
 
 
