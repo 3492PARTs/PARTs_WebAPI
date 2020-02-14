@@ -117,7 +117,7 @@ class PostScoutPitSaveAnswers(APIView):
     def post(self, request, format=None):
         serializer = ScoutAnswerSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminSaveAnswers', request.user.id)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveAnswers', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
@@ -270,7 +270,8 @@ class PostScoutPitGetResults(APIView):
             try:
                 serializer = TeamSerializer(data=request.data, many=True)
                 if not serializer.is_valid():
-                    return ret_message('Invalid data', True, 'PostScoutPitGetResults', request.user.id)
+                    return ret_message('Invalid data', True, 'PostScoutPitGetResults', request.user.id,
+                                       serializer.errors)
 
                 ret = self.get_results(serializer.data)
                 serializer = ScoutPitResultsSerializer(ret, many=True)

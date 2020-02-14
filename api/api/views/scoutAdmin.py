@@ -458,7 +458,8 @@ class PostScoutAdminUpdateScoutQuestion(APIView):
     def post(self, request, format=None):
         serializer = ScoutQuestionSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminUpdateScoutQuestion', request.user.id)
+            return ret_message('Invalid data', True, 'PostScoutAdminUpdateScoutQuestion', request.user.id,
+                               serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
@@ -565,7 +566,7 @@ class PostScoutAdminSaveUser(APIView):
     def post(self, request, format=None):
         serializer = ScoutAdminSaveUserSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminSaveUser', request.user.id)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveUser', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
@@ -610,7 +611,8 @@ class PostScoutAdminSaveScoutScheduleEntry(APIView):
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutScheduleEntry', request.user.id)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutScheduleEntry', request.user.id,
+                               serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
@@ -660,7 +662,7 @@ class PostScoutAdminNotifyUser(APIView):
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data, many=True)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminNotifyUser', request.user.id)
+            return ret_message('Invalid data', True, 'PostScoutAdminNotifyUser', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
@@ -694,7 +696,7 @@ class PostScoutAdminSavePhoneType(APIView):
     def post(self, request, format=None):
         serializer = PhoneTypeSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminAddPhoneType', request.user.id)
+            return ret_message('Invalid data', True, 'PostScoutAdminAddPhoneType', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
