@@ -416,7 +416,8 @@ class PostScoutAdminSaveScoutQuestion(APIView):
     def post(self, request, format=None):
         serializer = ScoutQuestionSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutQuestion', request.user.id)
+            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutQuestion', request.user.id,
+                               serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:

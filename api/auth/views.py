@@ -6,6 +6,7 @@ from django.template import Context
 from django.core.mail import EmailMultiAlternatives
 
 from api import settings
+from . import send_email
 from .forms import SignupForm, ResendActivationEmailForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
@@ -34,8 +35,6 @@ def register(request):
 
             try:
                 current_site = get_current_site(request)
-                plaintext = get_template('email_templates/acc_active_email.txt')
-                htmly = get_template('email_templates/acc_active_email.html')
                 cntx = {
                     'user': user,
                     'domain': current_site.domain,
@@ -44,13 +43,9 @@ def register(request):
                 }
                 mail_subject = 'Activate your PARTs account.'
 
-                text_content = plaintext.render(cntx)
-                html_content = htmly.render(cntx)
-
                 to_email = form.cleaned_data.get('email')
-                email = EmailMultiAlternatives(mail_subject, text_content, 'team3492@gmail.com', [to_email])
-                email.attach_alternative(html_content, "text/html")
-                email.send()
+
+                send_email.send_message(to_email, mail_subject, 'acc_active_email', cntx)
                 return render(request, 'registration/register_complete.html')
             except Exception as e:
                 print(e)
@@ -73,21 +68,18 @@ def resend_activation_email(request):
     if request.method == 'POST':
         form = ResendActivationEmailForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data["email"]
-            user = User.objects.get(email=email, is_active=0)
+            to_email = form.cleaned_data["email"]
+            user = User.objects.get(email=to_email, is_active=0)
             current_site = get_current_site(request)
-            mail_subject = 'Activate your PARTs account.'
-            message = render_to_string('email_templates/acc_active_email.html', {
+            cntx = {
                 'user': user,
                 'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.id)),
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': account_activation_token.make_token(user),
-            })
-            to_email = form.cleaned_data.get('email')
-            email = EmailMessage(
-                mail_subject, message, to=[to_email]
-            )
-            email.send()
+            }
+            mail_subject = 'Activate your PARTs account.'
+
+            send_email.send_message(to_email, mail_subject, 'acc_active_email', cntx)
             return render(request, 'registration/register_complete.html')
 
     if not form:

@@ -21,7 +21,7 @@ class ScoutQuestionSerializer(serializers.Serializer):
     active = serializers.CharField(required=False)
     void_ind = serializers.CharField(required=False)
     options = QuestionOptionsSerializer(many=True)
-    answer = serializers.CharField(required=False)
+    answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
 class TeamSerializer(serializers.Serializer):
