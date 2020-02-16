@@ -166,6 +166,7 @@ class ScoutSchedule(models.Model):
     st_time = models.DateTimeField()
     end_time = models.DateTimeField()
     notified = models.CharField(max_length=1)
+    void_ind = models.CharField(max_length=1, blank=True, null=True)
 
     class Meta:
         managed = False

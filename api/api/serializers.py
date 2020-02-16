@@ -64,6 +64,10 @@ class ScoutScheduleSerializer(serializers.Serializer):
     end_time = serializers.DateTimeField()
     notified = serializers.CharField(required=False)
     notify = serializers.CharField(required=False)
+    void_ind = serializers.CharField()
+
+    st_time_str = serializers.CharField(required=False)
+    end_time_str = serializers.CharField(required=False)
 
 
 class ScoutQuestionTypeSerializer(serializers.ModelSerializer):

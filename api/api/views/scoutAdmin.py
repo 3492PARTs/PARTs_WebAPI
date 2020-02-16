@@ -57,7 +57,8 @@ class GetScoutAdminInit(APIView):
         time = timezone.now()  # datetime.now() - timedelta(hours=5) # datetime.now(pytz.timezone('US/Eastern'))
         fieldSchedule = []
         sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
-                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time)))
+                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
+                                           Q(void_ind='n')
                                            )\
             .order_by('st_time', 'user')
         for ss in sss:
@@ -69,12 +70,16 @@ class GetScoutAdminInit(APIView):
                 'sq_nm': ss.sq_typ.sq_nm,
                 'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'notified': ss.notified
+                'notified': ss.notified,
+                'void_ind': ss.void_ind,
+                'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
+                'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
 
         pitSchedule = []
         sss = ScoutSchedule.objects.filter(Q(sq_typ_id='pit') &
-                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time)))
+                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
+                                           Q(void_ind='n')
                                            )\
             .order_by('st_time', 'user')
         for ss in sss:
@@ -86,11 +91,14 @@ class GetScoutAdminInit(APIView):
                 'sq_nm': ss.sq_typ.sq_nm,
                 'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'notified': ss.notified
+                'notified': ss.notified,
+                'void_ind': ss.void_ind,
+                'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
+                'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
 
         pastSchedule = []
-        sss = ScoutSchedule.objects.filter(end_time__lt=time).order_by('st_time', 'user')
+        sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) & Q(void_ind='n')).order_by('st_time', 'user')
         for ss in sss:
             pastSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -100,7 +108,10 @@ class GetScoutAdminInit(APIView):
                 'sq_nm': ss.sq_typ.sq_nm,
                 'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'notified': ss.notified
+                'notified': ss.notified,
+                'void_ind': ss.void_ind,
+                'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
+                'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
 
         scoutQuestionType = ScoutQuestionType.objects.all()
@@ -586,14 +597,17 @@ class PostScoutAdminSaveScoutScheduleEntry(APIView):
     permission_classes = (IsAuthenticated,)
 
     def save_scout_schedule(self, data):
-        local = pytz.timezone('US/Eastern')
+        #local = pytz.timezone('US/Eastern')
+        local = pytz.utc
         native = datetime.datetime.strptime(data['st_time'].replace('T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
         local_dt = local.localize(native, is_dst=None)
-        st_utc_dt = local_dt.astimezone(pytz.utc)
+        #st_utc_dt = local_dt.astimezone(pytz.utc)
+        st_utc_dt = local_dt
 
         native = datetime.datetime.strptime(data['end_time'].replace('T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
         local_dt = local.localize(native, is_dst=None)
-        end_utc_dt = local_dt.astimezone(pytz.utc)
+        #end_utc_dt = local_dt.astimezone(pytz.utc)
+        end_utc_dt = local_dt
 
         if st_utc_dt <= timezone.now():
             return ret_message('Start time can\'t be in the past.', True, 'PostScoutAdminSaveScoutScheduleEntry',
@@ -603,10 +617,22 @@ class PostScoutAdminSaveScoutScheduleEntry(APIView):
             return ret_message('End time can\'t come before start.', True, 'PostScoutAdminSaveScoutScheduleEntry',
                                self.request.user.id)
 
-        ScoutSchedule(user_id=data['user_id'], sq_typ_id=data['sq_typ'], st_time=st_utc_dt, end_time=end_utc_dt,
-                      notified='n').save()
+        if data.get('scout_sch_id', None) is None:
+            ScoutSchedule(user_id=data['user_id'], sq_typ_id=data['sq_typ'], st_time=st_utc_dt, end_time=end_utc_dt,
+                          notified='n').save()
+            return ret_message('Saved schedule entry successfully')
+        else:
+            ss = ScoutSchedule.objects.get(scout_sch_id=data['scout_sch_id'])
+            ss.user_id = data['user_id']
+            ss.sq_typ_id = data['sq_typ']
+            ss.st_time = st_utc_dt
+            ss.end_time = end_utc_dt
+            ss.notified = 'n'
+            ss.void_ind = data['void_ind']
+            ss.save()
+            return ret_message('Updated schedule entry successfully')
 
-        return ret_message('Saved schedule entry successfully')
+
 
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data)
