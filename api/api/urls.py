@@ -10,14 +10,17 @@ from api.api.views.admin import *
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
+    # Scout Field Endpoints
     path('get_scout_field_questions/', GetScoutFieldInputs.as_view()),
     path('post_save_scout_field_answers/', PostScoutFieldSaveAnswers.as_view()),
     path('get_scout_field_results/', GetScoutFieldQuery.as_view()),
+    # Scout Pit Endpoints
     path('get_scout_pit_questions/', GetScoutPitInputs.as_view()),
     path('post_save_scout_pit_answers/', PostScoutPitSaveAnswers.as_view()),
     path('post_save_scout_pit_picture/', PostScoutPitSavePicture.as_view()),
     path('get_scout_pit_results_init/', GetScoutPitResultInit.as_view()),
     path('post_get_scout_pit_results/', PostScoutPitGetResults.as_view()),
+    # Scout Admin Endpoints
     path('get_scout_admin_init/', GetScoutAdminInit.as_view()),
     path('get_sync_season/', GetScoutAdminSyncSeason.as_view()),
     path('get_set_season/', GetScoutAdminSetSeason.as_view()),
@@ -32,6 +35,9 @@ urlpatterns = [
     path('post_save_scout_schedule_entry/', PostScoutAdminSaveScoutScheduleEntry.as_view()),
     path('post_notify_users/', PostScoutAdminNotifyUser.as_view()),
     path('post_save_phone_type/', PostScoutAdminSavePhoneType.as_view()),
+    # Scout Portal Endpoints
     path('get_scout_portal_init/', GetScoutPortalInit.as_view()),
+    # Admin Endpoints
     path('get_admin_init/', GetAdminInit.as_view()),
+    path('get_error_log', GetAdminErrors.as_view()),
 ]
