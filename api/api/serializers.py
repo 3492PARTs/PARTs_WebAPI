@@ -3,6 +3,12 @@ from .models import *
 from api.auth.serializers import UserSerializer, AuthGroupSerializer, PhoneTypeSerializer
 
 
+class AdminInitSerializer(serializers.Serializer):
+    users = UserSerializer(many=True)
+    userGroups = AuthGroupSerializer(many=True)
+    phoneTypes = PhoneTypeSerializer(many=True)
+
+
 class QuestionOptionsSerializer(serializers.Serializer):
     q_opt_id = serializers.IntegerField(required=False)
     option = serializers.CharField()

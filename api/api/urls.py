@@ -5,6 +5,7 @@ from api.api.views.scoutField import *
 from api.api.views.scoutPit import *
 from api.api.views.scoutAdmin import *
 from api.api.views.scoutPortal import *
+from api.api.views.admin import *
 
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -32,4 +33,5 @@ urlpatterns = [
     path('post_notify_users/', PostScoutAdminNotifyUser.as_view()),
     path('post_save_phone_type/', PostScoutAdminSavePhoneType.as_view()),
     path('get_scout_portal_init/', GetScoutPortalInit.as_view()),
+    path('get_admin_init/', GetAdminInit.as_view()),
 ]

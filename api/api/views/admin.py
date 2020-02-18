@@ -14,27 +14,33 @@ from rest_framework.views import APIView
 from api.auth.security import *
 import requests
 
-auth_obj = 2
+auth_obj = 7
 
 
 class GetAdminInit(APIView):
     """
-    API endpoint to get all the init values for the scout admin screen
+    API endpoint to get all the init values for the admin screen
     """
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_init(self):
-        return True
+        users = AuthUser.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False))# & ~Q(id=self.request.user.id))
+
+        user_groups = AuthGroup.objects.all()
+
+        phone_types = PhoneType.objects.all()
+
+        return {'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_init()
-                serializer = ScoutAdminInitSerializer(req)
+                serializer = AdminInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutAdminInit', request.user.id,
+                return ret_message('An error occurred while initializing.', True, 'GetAdminInit', request.user.id,
                                    e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutAdminInit', request.user.id)
+            return ret_message('You do not have access.', True, 'GetAdminInit', request.user.id)

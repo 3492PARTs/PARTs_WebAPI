@@ -57,11 +57,10 @@ def register(request):
                 return render(request, 'registration/register_fail.html')
     else:
         form = SignupForm()
-    return render(request, 'registration/register.html', {'form': form}) #TODO maybe check email here and yeah
+    return render(request, 'registration/register.html', {'form': form})  # TODO maybe check email here and yeah
 
 
 def resend_activation_email(request):
-
     email_body_template = 'registration/activation_email.txt'
     email_subject_template = 'registration/activation_email_subject.txt'
 
@@ -88,7 +87,7 @@ def resend_activation_email(request):
     if not form:
         form = ResendActivationEmailForm()
 
-    context.update({"form" : form})
+    context.update({"form": form})
     return render(request, 'registration/resend_activation_email_form.html', context)
 
 
@@ -108,7 +107,67 @@ def activate(request, uidb64, token):
         return render(request, 'registration/activate_incomplete.html')
 
 
+class GetUserData(APIView):
+    """
+    API endpoint
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_user(self):
+        user = self.request.user
+        return user
+
+    def get(self, request, format=None):
+        req = self.get_user()
+        serializer = UserSerializer(req)
+        return Response(serializer.data)
+
+
+class GetUserLinks(APIView):
+    """
+    API endpoint to get links a user has based on permissions
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_links(self):
+        user_links = UserLinks.objects.filter(
+            permission__in=[per.id for per in get_user_permissions(self.request.user.id)]).order_by('order')
+
+        req = []
+
+        for link in user_links:
+            req.append({'MenuName': link.menu_name, 'RouterLink': link.routerlink})
+
+        return req
+
+    def get(self, request, format=None):
+        req = self.get_links()
+        serializer = UserLinksSerializer(req, many=True)
+        return Response(serializer.data)
+
+
+class GetUserGroups(APIView):
+    """
+    API endpoint to get groups a user has based on permissions
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_groups(self, user_id):
+        return get_user_groups(user_id)
+
+    def get(self, request, format=None):
+        req = self.get_groups(request.query_params.get('user_id', None))
+        serializer = AuthGroupSerializer(req, many=True)
+        return Response(serializer.data)
+
+
 class HTMLPasswordResetForm(PasswordResetForm):
+    """
+    Override the password reset form to send html emails
+    """
     email = forms.EmailField(label=("Email"), max_length=254)
 
     def save(self, domain_override=None, subject_template_name='registration/password_reset_subject.txt',
@@ -147,58 +206,3 @@ class HTMLPasswordResetForm(PasswordResetForm):
             'protocol': 'https' if use_https else 'http',
         }
         send_email.send_message(email, 'PARTs Password Reset', 'password_reset_email', c)
-
-class GetUserData(APIView):
-    """
-    API endpoint
-    """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def get_user(self):
-        user = self.request.user
-        return user
-
-    def get(self, request, format=None):
-        req = self.get_user()
-        serializer = UserSerializer(req)
-        return Response(serializer.data)
-
-
-class GetUserLinks(APIView):
-    """
-    API endpoint to get links a user has based on permissions
-    """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def get_links(self):
-        user_links = UserLinks.objects.filter(permission__in=[per.id for per in get_user_permissions(self.request.user.id)]).order_by('order')
-
-        req = []
-
-        for link in user_links:
-            req.append({'MenuName': link.menu_name, 'RouterLink': link.routerlink})
-
-        return req
-
-    def get(self, request, format=None):
-        req = self.get_links()
-        serializer = UserLinksSerializer(req, many=True)
-        return Response(serializer.data)
-
-
-class GetUserGroups(APIView):
-    """
-    API endpoint to get groups a user has based on permissions
-    """
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def get_groups(self, user_id):
-        return get_user_groups(user_id)
-
-    def get(self, request, format=None):
-        req = self.get_groups(request.query_params.get('user_id', None))
-        serializer = AuthGroupSerializer(req, many=True)
-        return Response(serializer.data)
