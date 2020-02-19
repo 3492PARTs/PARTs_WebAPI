@@ -619,7 +619,7 @@ class PostScoutAdminSaveScoutScheduleEntry(APIView):
 
         if data.get('scout_sch_id', None) is None:
             ScoutSchedule(user_id=data['user_id'], sq_typ_id=data['sq_typ'], st_time=st_utc_dt, end_time=end_utc_dt,
-                          notified='n').save()
+                          notified='n', void_ind='n').save()
             return ret_message('Saved schedule entry successfully')
         else:
             ss = ScoutSchedule.objects.get(scout_sch_id=data['scout_sch_id'])
