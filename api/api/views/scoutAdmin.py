@@ -676,7 +676,7 @@ class PostScoutAdminNotifyUser(APIView):
                     'scout_time_end': end_time,
                     'lead_scout': self.request.user.first_name + ' ' + self.request.user.last_name
                 }
-                send_email.send_message(user.phone + user.phone_type.phone_type, 'Time to Scout!', 'notify_scout.html',
+                send_email.send_message(user.phone + user.phone_type.phone_type, 'Time to Scout!', 'notify_scout',
                                         data)
 
                 scout_sch = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
