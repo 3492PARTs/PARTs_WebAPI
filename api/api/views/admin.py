@@ -5,10 +5,10 @@ from django.db import IntegrityError
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from api.api.serializers import *
-from api.auth.serializers import PhoneTypeSerializer, ErrorSerializer, PaginatedErrorSerializer
+from api.auth.serializers import PhoneTypeSerializer, ErrorLogSerializer
 from api.api.models import *
 from api.auth.models import ErrorLog
 from api.auth import send_email
@@ -27,7 +27,8 @@ class GetAdminInit(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_init(self):
-        users = AuthUser.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False))# & ~Q(id=self.request.user.id))
+        users = AuthUser.objects.filter(
+            Q(is_active=True) & Q(date_joined__isnull=False))  # & ~Q(id=self.request.user.id))
 
         user_groups = AuthGroup.objects.all()
 
@@ -46,7 +47,7 @@ class GetAdminInit(APIView):
                                    e)
         else:
             return ret_message('You do not have access.', True, 'GetAdminInit', request.user.id)
-        
+
 
 class GetAdminErrors(APIView):
     """
@@ -56,8 +57,8 @@ class GetAdminErrors(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_errors(self, pg):
-        errors = ErrorLog.objects.filter(void_ind='n').order_by('time)                                                      
-        paginator = Paginator(queryset, 20)
+        errors = ErrorLog.objects.filter(void_ind='n').order_by('-time')
+        paginator = Paginator(errors, 10)
         try:
             errors = paginator.page(pg)
         except PageNotAnInteger:
@@ -66,17 +67,20 @@ class GetAdminErrors(APIView):
         except EmptyPage:
             # If page is out of range (e.g. 9999),
             # deliver last page of results.
-            errors = paginator.page(paginator.num_pages)                            
+            errors = paginator.page(paginator.num_pages)
 
-        return errors
+        previous_pg = None if not errors.has_previous() else errors.previous_page_number()
+        next_pg = None if not errors.has_next() else errors.next_page_number()
+        serializer = ErrorLogSerializer(errors, many=True)
+        data = {'count': paginator.num_pages, 'previous': previous_pg,
+                'next': next_pg, 'errors': serializer.data}
+        return data
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_errors(request.query_params.get('pg_num', 1))
-                serializer_context = {'request': request}
-                serializer = PaginatedErrorSerializer(req, context=serializer_context)
-                return Response(serializer.data)
+                return Response(req)
             except Exception as e:
                 return ret_message('An error occurred while getting errors.', True, 'GetAdminErrors', request.user.id,
                                    e)

@@ -1,5 +1,5 @@
-from rest_framework import serializers
-from rest_framework.pagination import PaginationSerializer
+from rest_framework.response import Response
+from rest_framework import serializers, pagination
 from .models import *
 
 
@@ -34,8 +34,9 @@ class PhoneTypeSerializer(serializers.Serializer):
 class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
     error = serializers.BooleanField()
-    
-class ErrorSerializer(serializers.Serializer):
+
+
+class ErrorLogSerializer(serializers.Serializer):
     error_log_id = serializers.IntegerField()
     user = UserSerializer(required=False)
     location = serializers.CharField(required=False)
@@ -43,12 +44,3 @@ class ErrorSerializer(serializers.Serializer):
     exception = serializers.CharField(required=False)
     time = serializers.DateTimeField()
     void_ind = serializers.CharField()
-
-    
-class PaginatedErrorSerializer(pagination.PaginationSerializer):
-    """
-    TODO Serializes page objects of user querysets.
-    """
-    class Meta:
-        object_serializer_class = ErrorSerializer
-        

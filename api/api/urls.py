@@ -20,7 +20,7 @@ urlpatterns = [
     path('post_save_scout_pit_picture/', PostScoutPitSavePicture.as_view()),
     path('get_scout_pit_results_init/', GetScoutPitResultInit.as_view()),
     path('post_get_scout_pit_results/', PostScoutPitGetResults.as_view()),
-    # Scout Admin Endpoints
+    # Scout Admin Endpoints;
     path('get_scout_admin_init/', GetScoutAdminInit.as_view()),
     path('get_sync_season/', GetScoutAdminSyncSeason.as_view()),
     path('get_set_season/', GetScoutAdminSetSeason.as_view()),
@@ -39,5 +39,5 @@ urlpatterns = [
     path('get_scout_portal_init/', GetScoutPortalInit.as_view()),
     # Admin Endpoints
     path('get_admin_init/', GetAdminInit.as_view()),
-    path('get_error_log', GetAdminErrors.as_view()),
+    path('get_error_log/', GetAdminErrors.as_view()),
 ]
