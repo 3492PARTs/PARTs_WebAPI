@@ -243,12 +243,13 @@ class PostScoutPitGetResults(APIView):
         results = []
         for t in teams:
             if t.get('checked', False):
+                team = Team.objects.get(team_no=t['team_no'])
                 sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(event=current_event) & Q(void_ind='n'))
                 spas = ScoutPitAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n'))
 
                 tmp = {
-                    'teamNo': t['team_no'],
-                    'teamNm': t['team_nm'],
+                    'teamNo': team.team_no,
+                    'teamNm': team.team_nm,
                     'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(),
                 }
 

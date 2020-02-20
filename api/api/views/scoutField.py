@@ -132,7 +132,7 @@ class GetScoutFieldQuery(APIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def get_answers(self):
+    def get_answers(self, team):
 
         try:
             current_season = Season.objects.get(current='y')
@@ -165,7 +165,12 @@ class GetScoutFieldQuery(APIView):
                 'order': 9999999999
             })
 
-            sfs = ScoutField.objects.filter(Q(event=current_event) & Q(void_ind='n')).order_by('scout_field_id')
+            if team is not None:
+                sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n'))\
+                    .order_by('scout_field_id')
+            else:
+                sfs = ScoutField.objects.filter(Q(event=current_event) & Q(void_ind='n')).order_by('scout_field_id')
+
             for sf in sfs:
                 sfas = ScoutFieldAnswer.objects.filter(Q(scout_field=sf) & Q(void_ind='n'))
 
@@ -187,7 +192,7 @@ class GetScoutFieldQuery(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.get_answers()
+                req = self.get_answers(request.query_params.get('team', None))
                 serializer = ScoutFieldResultsSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
