@@ -20,6 +20,7 @@ urlpatterns = [
     path('post_save_scout_pit_picture/', PostScoutPitSavePicture.as_view()),
     path('get_scout_pit_results_init/', GetScoutPitResultInit.as_view()),
     path('post_get_scout_pit_results/', PostScoutPitGetResults.as_view()),
+    path('post_get_scout_pit_team_data/', GetScoutPitLoadTeamData.as_view()),
     # Scout Admin Endpoints;
     path('get_scout_admin_init/', GetScoutAdminInit.as_view()),
     path('get_sync_season/', GetScoutAdminSyncSeason.as_view()),

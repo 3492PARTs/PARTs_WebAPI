@@ -417,6 +417,20 @@ class PostScoutAdminSaveScoutQuestion(APIView):
 
             sq.save()
 
+            if data['sq_typ'] == 'field':
+                questions_answered = ScoutField.objects.filter(void_ind='n')
+
+                for qa in questions_answered:
+                    ScoutFieldAnswer(scout_field=qa, sq=sq, answer='!EXIST', void_ind='n').save()
+            elif data['sq_typ'] == 'pit':
+                questions_answered = ScoutPit.objects.filter(void_ind='n')
+
+                for qa in questions_answered:
+                    ScoutPitAnswer(scout_pit=qa, sq=sq, answer='!EXIST', void_ind='n').save()
+
+
+
+
             for op in data['options']:
                 QuestionOptions(option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
 
@@ -563,16 +577,16 @@ class PostScoutAdminSaveUser(APIView):
 
             for d in data['groups']:
                 groups.append(d['name'])
-                aug = AuthUserGroups.objects.filter(group=AuthGroup.objects.get(name=d['name'])).exists()
+                aug = AuthUserGroups.objects.filter(Q(group=AuthGroup.objects.get(name=d['name'])) & Q(user=user)).exists()
                 if not aug:
                     AuthUserGroups(user=user, group=AuthGroup.objects.get(name=d['name'])).save()
 
             AuthUserGroups.objects.filter(~Q(group__in=AuthGroup.objects.filter(name__in=groups)) &
                                           Q(user=user)).delete()
 
-            return ret_message('Saved user groups successfully')
+            return ret_message('Saved user successfully')
         except Exception as e:
-            return ret_message('Can\'t save the user groups', True, 'PostScoutAdminSaveUser', self.request.user.id, e)
+            return ret_message('Can\'t save the user', True, 'PostScoutAdminSaveUser', self.request.user.id, e)
 
     def post(self, request, format=None):
         serializer = ScoutAdminSaveUserSerializer(data=request.data)
@@ -584,7 +598,7 @@ class PostScoutAdminSaveUser(APIView):
                 req = self.save_user(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving the question.', True, 'PostScoutAdminSaveUser',
+                return ret_message('An error occurred while saving the user.', True, 'PostScoutAdminSaveUser',
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'PostScoutAdminSaveUser', request.user.id)

@@ -71,13 +71,26 @@ class GetScoutPitInputs(APIView):
         except Exception as e:
             teams.append(Team())
 
-        return {'scoutQuestions': scout_questions, 'teams': teams}
+        comp_teams = []
+        try:
+            comp_teams = Team.objects.filter(
+                Q(team_no__in=list(
+                    EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True))) &
+                Q(team_no__in=(list(
+                    ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n')).values_list('team_no',
+                                                                                                  flat=True))))
+            ).order_by('team_no')
+
+        except Exception as e:
+            comp_teams.append(Team())
+
+        return {'scoutQuestions': scout_questions, 'teams': teams, 'comp_teams': comp_teams}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_questions()
-                serializer = ScoutAnswerSerializer(req)
+                serializer = ScoutPitInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message('An error occurred while initializing.', True, 'GetScoutPitInputs',
@@ -104,12 +117,19 @@ class PostScoutPitSaveAnswers(APIView):
         except Exception as e:
             return ret_message('No event set, see an admin', True, 'PostScoutPitSaveAnswers', self.request.user.id, e)
 
-        sp = ScoutPit(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
-        sp.save()
+        try:
+            sp = ScoutPit.objects.get(team_no_id=data['team'])
+        except Exception as e:
+            sp = ScoutPit(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
+            sp.save()
 
         for d in data['scoutQuestions']:
-            spa = ScoutPitAnswer(scout_pit=sp, sq_id=d['sq_id'],
-                                 answer=d.get('answer', ''), void_ind='n')
+            try:
+                spa = ScoutPitAnswer.objects.get(Q(scout_pit=sp) & Q(sq_id=d['sq_id']))
+                spa.answer = d.get('answer', '')
+            except Exception as e:
+                spa = ScoutPitAnswer(scout_pit=sp, sq_id=d['sq_id'],
+                                     answer=d.get('answer', ''), void_ind='n')
             spa.save()
 
         return ret_message('Question saved successfully')
@@ -282,6 +302,77 @@ class PostScoutPitGetResults(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'PostScoutPitGetResults', request.user.id)
+
+
+class GetScoutPitLoadTeamData(APIView):
+    """
+    API endpoint to get scout pit team data
+    """
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_questions(self, team_num):
+
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            return ret_message('No season set, see an admin.', True, 'GetScoutPitInputs', self.request.user.id, e)
+
+        scout_questions = []
+        try:
+            sqs = ScoutQuestion.objects.filter(
+                Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
+
+            for sq in sqs:
+                try:
+                    sp = ScoutPit.objects.get(team_no=team_num)
+
+                    spa = ScoutPitAnswer.objects.get(Q(scout_pit=sp) & Q(sq=sq))
+                except Exception as e:
+                    spa = ScoutPitAnswer(answer='')
+
+                ops = QuestionOptions.objects.filter(sq=sq)
+
+                options = []
+                for op in ops:
+                    options.append({
+                        'q_opt_id': op.q_opt_id,
+                        'option': op.option,
+                        'sq': op.sq_id,
+                        'active': op.active,
+                        'void_ind': op.void_ind
+                    })
+
+                scout_questions.append({
+                    'sq_id': sq.sq_id,
+                    'season': sq.season_id,
+                    'sq_typ': sq.sq_typ_id,
+                    'question_typ': sq.question_typ_id,
+                    'question': sq.question,
+                    'order': sq.order,
+                    'active': sq.active,
+                    'void_ind': sq.void_ind,
+                    'options': options,
+                    'answer': spa.answer
+                })
+        except Exception as e:
+            x = 1
+
+
+        return scout_questions
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.get_questions(request.query_params.get('team_num', None))
+                serializer = ScoutQuestionSerializer(req, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while initializing.', True, 'GetScoutPitInputs',
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, 'GetScoutPitInputs', request.user.id)
+
 
 
 def allowed_file(filename):

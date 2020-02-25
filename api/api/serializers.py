@@ -42,6 +42,12 @@ class ScoutAnswerSerializer(serializers.Serializer):
     team = serializers.CharField(required=False)
 
 
+class ScoutPitInitSerializer(serializers.Serializer):
+    scoutQuestions = ScoutQuestionSerializer(many=True)
+    teams = TeamSerializer(many=True, required=False)
+    comp_teams = TeamSerializer(many=True, required=False)
+
+
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Season
