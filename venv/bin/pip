@@ -1,4 +1,4 @@
-#!/Users/brandon/Git/PARTs_WebAPI/api/venv/bin/python
+#!/Users/brandon/git/PARTs_WebAPI/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

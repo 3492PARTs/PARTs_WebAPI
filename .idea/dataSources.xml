@@ -16,7 +16,7 @@
         <property name="serverTimezone" value="America/New_York" />
       </driver-properties>
     </data-source>
-    <data-source source="LOCAL" name="db" uuid="df1f2f9a-e864-4b13-af15-18bc8a68d4a8">
+    <data-source source="LOCAL" name="db.sqlite3" uuid="a6a5d54e-e234-46ab-9cb1-584cdfbc5a1f">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
