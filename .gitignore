@@ -1,1 +1,5 @@
 settings_dev.py
+__pycache__
+.idea
+venv
+.DS_Store
