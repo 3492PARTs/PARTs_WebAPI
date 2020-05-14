@@ -39,5 +39,6 @@ urlpatterns = [
     # Scout Portal Endpoints
     path('get_scout_portal_init/', GetScoutPortalInit.as_view()),
     # Admin Endpoints
-    url(r'^admin/', include('api.api.admin.urls'))
+    path('get_admin_init/', GetAdminInit.as_view()),
+    path('get_error_log/', GetAdminErrors.as_view()),
 ]

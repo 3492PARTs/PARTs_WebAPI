@@ -48,7 +48,7 @@ class GetScoutAdminInit(APIView):
 
         user_groups = []
         try:
-            user_groups = AuthGroup.objects.filter(id__in=list(ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True)))
+            user_groups = AuthGroup.objects.filter(id__in=list(ScoutGroups.objects.all().values_list('auth_group_id', flat=True)))
         except Exception as e:
             user_groups = []
 
