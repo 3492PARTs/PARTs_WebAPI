@@ -1,23 +1,55 @@
-from rest_framework.response import Response
-from rest_framework import serializers, pagination
+from django.contrib.auth.models import User, Group, Permission
+from rest_framework import serializers
 from .models import *
 
 
-class UserSerializer(serializers.ModelSerializer):
+class PermissionSerializer(serializers.ModelSerializer):
+    def get_unique_together_validators(self):
+        """Overriding method to disable unique together checks"""
+        return []
+
     class Meta:
-        model = AuthUser
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'phone_type')
+        model = Permission
+        fields = '__all__'
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    permissions = PermissionSerializer(many=True, required=False)
+
+    class Meta:
+        model = Group
+        fields = '__all__'
         extra_kwargs = {
-            'username': {
+            'name': {'validators': []},
+        }
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {
                 'validators': [],
             }
         }
 
 
-class AuthGroupSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
+    groups = GroupSerializer(many=True, required=False)
+
     class Meta:
-        model = AuthGroup
-        fields = '__all__'
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile', 'groups')
+        extra_kwargs = {
+            'username': {
+                'validators': [],
+            },
+            'groups': {
+                'validators': [],
+            }
+        }
 
 
 class UserLinksSerializer(serializers.Serializer):
@@ -36,11 +68,8 @@ class RetMessageSerializer(serializers.Serializer):
     error = serializers.BooleanField()
 
 
-class ErrorLogSerializer(serializers.Serializer):
-    error_log_id = serializers.IntegerField()
+class ErrorLogSerializer(serializers.ModelSerializer):
     user = UserSerializer(required=False)
-    location = serializers.CharField(required=False)
-    message = serializers.CharField(required=False)
-    exception = serializers.CharField(required=False)
-    time = serializers.DateTimeField()
-    void_ind = serializers.CharField()
+    class Meta:
+        model = ErrorLog
+        fields = '__all__'

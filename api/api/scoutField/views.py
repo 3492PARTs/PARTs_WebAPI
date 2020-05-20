@@ -1,14 +1,14 @@
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from api.api.serializers import *
 from api.api.models import *
 from rest_framework.views import APIView
 from api.auth.security import *
+from .serializers import *
 
 auth_obj = 1
 
 
-class GetScoutFieldInputs(APIView):
+class GetQuestions(APIView):
     """
     API endpoint to get scout field inputs
     """
@@ -60,9 +60,7 @@ class GetScoutFieldInputs(APIView):
 
         teams = []
         try:
-            teams = Team.objects.filter(team_no__in=list(
-                EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True)
-            )).order_by('team_no')
+            teams = Team.objects.filter(event=current_event).order_by('team_no')
 
         except Exception as e:
             x = 1
@@ -73,7 +71,11 @@ class GetScoutFieldInputs(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_questions()
-                serializer = ScoutAnswerSerializer(req)
+
+                if type(req) == Response:
+                    return req
+
+                serializer = ScoutFieldSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message('An error occurred while initializing.', True, 'GetScoutFieldInputs',
@@ -82,7 +84,7 @@ class GetScoutFieldInputs(APIView):
             return ret_message('You do not have access.', True, 'GetScoutFieldInputs', request.user.id)
 
 
-class PostScoutFieldSaveAnswers(APIView):
+class PostSaveAnswers(APIView):
     """
     API endpoint to save scout field answers
     """
@@ -110,7 +112,7 @@ class PostScoutFieldSaveAnswers(APIView):
         return ret_message('Question saved successfully')
 
     def post(self, request, format=None):
-        serializer = ScoutAnswerSerializer(data=request.data)
+        serializer = ScoutFieldSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, 'PostScoutFieldSaveAnswers', request.user.id, serializer.errors)
 
@@ -125,7 +127,7 @@ class PostScoutFieldSaveAnswers(APIView):
             return ret_message('You do not have access.', True, 'PostScoutFieldSaveAnswers', request.user.id)
 
 
-class GetScoutFieldQuery(APIView):
+class GetResults(APIView):
     """
     API endpoint to get the results of field scouting
     """
@@ -154,7 +156,7 @@ class GetScoutFieldQuery(APIView):
             sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('order')
             for sq in sqs:
                 scout_cols.append({
-                    'PropertyName': sq.sq_id,
+                    'PropertyName': 'ans' + str(sq.sq_id),
                     'ColLabel': sq.question,
                     'order': sq.order
                 })
@@ -176,7 +178,7 @@ class GetScoutFieldQuery(APIView):
 
                 sa_obj = {}
                 for sfa in sfas:
-                    sa_obj[sfa.sq_id] = sfa.answer
+                    sa_obj['ans' + str(sfa.sq_id)] = sfa.answer
 
                 sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name
                 sa_obj['user_id'] = sf.user.id
@@ -193,6 +195,10 @@ class GetScoutFieldQuery(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_answers(request.query_params.get('team', None))
+
+                if type(req) == Response:
+                    return req
+
                 serializer = ScoutFieldResultsSerializer(req)
                 return Response(serializer.data)
             except Exception as e:

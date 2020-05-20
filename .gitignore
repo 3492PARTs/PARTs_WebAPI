@@ -1,4 +1,6 @@
-settings_dev.py
+api/settings_dev.py
+
+.DS_Store
 
 # Django #
 *.log

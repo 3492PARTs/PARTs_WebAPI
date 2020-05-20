@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta
-
 import pytz
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from api.api.serializers import *
+from .serializers import *
 from api.api.models import *
 from rest_framework.views import APIView
 from api.auth.security import *
@@ -12,7 +10,7 @@ from api.auth.security import *
 auth_obj = 6
 
 
-class GetScoutPortalInit(APIView):
+class GetInit(APIView):
     """
     API endpoint to get the init values for the scout portal
     """
@@ -23,7 +21,7 @@ class GetScoutPortalInit(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutAdmin/GetInit', self.request.user.id, e)
 
         time = timezone.now()
         fieldSchedule = []
@@ -88,7 +86,11 @@ class GetScoutPortalInit(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_init(request.user.id)
-                serializer = ScoutPortalInitSerializer(req)
+
+                if isinstance(req, Response):
+                    return req
+
+                serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message('An error occurred while initializing.', True, 'GetScoutPortalInit',

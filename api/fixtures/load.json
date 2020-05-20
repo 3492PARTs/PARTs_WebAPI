@@ -1,0 +1,3542 @@
+[
+  {
+    "model": "contenttypes.contenttype",
+    "pk": -1,
+    "fields": {
+      "app_label": "i dont use this",
+      "model": "i dont use this"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 1,
+    "fields": {
+      "app_label": "admin",
+      "model": "logentry"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 2,
+    "fields": {
+      "app_label": "auth",
+      "model": "permission"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 3,
+    "fields": {
+      "app_label": "auth",
+      "model": "group"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 4,
+    "fields": {
+      "app_label": "auth",
+      "model": "user"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 5,
+    "fields": {
+      "app_label": "contenttypes",
+      "model": "contenttype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 6,
+    "fields": {
+      "app_label": "sessions",
+      "model": "session"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 7,
+    "fields": {
+      "app_label": "authtoken",
+      "model": "token"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 8,
+    "fields": {
+      "app_label": "api",
+      "model": "event"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 9,
+    "fields": {
+      "app_label": "api",
+      "model": "questiontype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 10,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutfield"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 11,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutpit"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 12,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutquestiontype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 13,
+    "fields": {
+      "app_label": "api",
+      "model": "season"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 14,
+    "fields": {
+      "app_label": "api",
+      "model": "team"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 15,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutschedule"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 16,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutquestion"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 17,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutpitanswer"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 18,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutfieldanswer"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 19,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutauthgroups"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 20,
+    "fields": {
+      "app_label": "api",
+      "model": "questionoptions"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 21,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authgroup"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 22,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authgrouppermissions"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 23,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authpermission"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 24,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authtokentoken"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 25,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authuser"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 26,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authusergroups"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 27,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authuseruserpermissions"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 28,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangoadminlog"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 29,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangocontenttype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 30,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangomigrations"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 31,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangosession"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 32,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "errorlog"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 33,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "phonetype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 34,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "userlinks"
+    }
+  },
+  {
+    "model": "api.questiontype",
+    "pk": "area",
+    "fields": {
+      "question_typ_nm": "Text Area",
+      "void_ind": "n"
+    }
+  },
+  {
+    "model": "api.questiontype",
+    "pk": "number",
+    "fields": {
+      "question_typ_nm": "Number",
+      "void_ind": "n"
+    }
+  },
+  {
+    "model": "api.questiontype",
+    "pk": "select",
+    "fields": {
+      "question_typ_nm": "Select List",
+      "void_ind": "n"
+    }
+  },
+  {
+    "model": "api.questiontype",
+    "pk": "text",
+    "fields": {
+      "question_typ_nm": "Text",
+      "void_ind": "n"
+    }
+  },
+  {
+    "model": "api.scoutquestiontype",
+    "pk": "field",
+    "fields": {
+      "sq_nm": "Scout Field"
+    }
+  },
+  {
+    "model": "api.scoutquestiontype",
+    "pk": "pit",
+    "fields": {
+      "sq_nm": "Scout Pit"
+    }
+  },
+  {
+    "model": "authAPI.authgroup",
+    "pk": 1,
+    "fields": {
+      "name": "sysadmin"
+    }
+  },
+  {
+    "model": "authAPI.authgroup",
+    "pk": 2,
+    "fields": {
+      "name": "lead_scout"
+    }
+  },
+  {
+    "model": "authAPI.authgroup",
+    "pk": 3,
+    "fields": {
+      "name": "field_scout"
+    }
+  },
+  {
+    "model": "authAPI.authgroup",
+    "pk": 4,
+    "fields": {
+      "name": "pit_scout"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 1,
+    "fields": {
+      "content_type": -1,
+      "codename": "scoutfield",
+      "name": "Page: Scout Field"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 2,
+    "fields": {
+      "content_type": -1,
+      "codename": "scoutadmin",
+      "name": "Page: Scout Admin"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 3,
+    "fields": {
+      "content_type": -1,
+      "codename": "scoutpit",
+      "name": "Page: Scout Pit"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 4,
+    "fields": {
+      "content_type": -1,
+      "codename": "scoutFieldResults",
+      "name": "Page: Scout Field Results"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 5,
+    "fields": {
+      "content_type": -1,
+      "codename": "scoutPitResults",
+      "name": "Page: Scout Pit Results"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 6,
+    "fields": {
+      "content_type": -1,
+      "codename": "scoutPortal",
+      "name": "Page: Scout Portal"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 137,
+    "fields": {
+      "content_type": 1,
+      "codename": "add_logentry",
+      "name": "Can add log entry"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 138,
+    "fields": {
+      "content_type": 1,
+      "codename": "change_logentry",
+      "name": "Can change log entry"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 139,
+    "fields": {
+      "content_type": 1,
+      "codename": "delete_logentry",
+      "name": "Can delete log entry"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 140,
+    "fields": {
+      "content_type": 1,
+      "codename": "view_logentry",
+      "name": "Can view log entry"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 141,
+    "fields": {
+      "content_type": 2,
+      "codename": "add_permission",
+      "name": "Can add permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 142,
+    "fields": {
+      "content_type": 2,
+      "codename": "change_permission",
+      "name": "Can change permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 143,
+    "fields": {
+      "content_type": 2,
+      "codename": "delete_permission",
+      "name": "Can delete permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 144,
+    "fields": {
+      "content_type": 2,
+      "codename": "view_permission",
+      "name": "Can view permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 145,
+    "fields": {
+      "content_type": 3,
+      "codename": "add_group",
+      "name": "Can add group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 146,
+    "fields": {
+      "content_type": 3,
+      "codename": "change_group",
+      "name": "Can change group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 147,
+    "fields": {
+      "content_type": 3,
+      "codename": "delete_group",
+      "name": "Can delete group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 148,
+    "fields": {
+      "content_type": 3,
+      "codename": "view_group",
+      "name": "Can view group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 149,
+    "fields": {
+      "content_type": 4,
+      "codename": "add_user",
+      "name": "Can add user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 150,
+    "fields": {
+      "content_type": 4,
+      "codename": "change_user",
+      "name": "Can change user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 151,
+    "fields": {
+      "content_type": 4,
+      "codename": "delete_user",
+      "name": "Can delete user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 152,
+    "fields": {
+      "content_type": 4,
+      "codename": "view_user",
+      "name": "Can view user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 153,
+    "fields": {
+      "content_type": 5,
+      "codename": "add_contenttype",
+      "name": "Can add content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 154,
+    "fields": {
+      "content_type": 5,
+      "codename": "change_contenttype",
+      "name": "Can change content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 155,
+    "fields": {
+      "content_type": 5,
+      "codename": "delete_contenttype",
+      "name": "Can delete content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 156,
+    "fields": {
+      "content_type": 5,
+      "codename": "view_contenttype",
+      "name": "Can view content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 157,
+    "fields": {
+      "content_type": 6,
+      "codename": "add_session",
+      "name": "Can add session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 158,
+    "fields": {
+      "content_type": 6,
+      "codename": "change_session",
+      "name": "Can change session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 159,
+    "fields": {
+      "content_type": 6,
+      "codename": "delete_session",
+      "name": "Can delete session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 160,
+    "fields": {
+      "content_type": 6,
+      "codename": "view_session",
+      "name": "Can view session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 161,
+    "fields": {
+      "content_type": 7,
+      "codename": "add_token",
+      "name": "Can add Token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 162,
+    "fields": {
+      "content_type": 7,
+      "codename": "change_token",
+      "name": "Can change Token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 163,
+    "fields": {
+      "content_type": 7,
+      "codename": "delete_token",
+      "name": "Can delete Token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 164,
+    "fields": {
+      "content_type": 7,
+      "codename": "view_token",
+      "name": "Can view Token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 165,
+    "fields": {
+      "content_type": 8,
+      "codename": "add_event",
+      "name": "Can add event"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 166,
+    "fields": {
+      "content_type": 8,
+      "codename": "change_event",
+      "name": "Can change event"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 167,
+    "fields": {
+      "content_type": 8,
+      "codename": "delete_event",
+      "name": "Can delete event"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 168,
+    "fields": {
+      "content_type": 8,
+      "codename": "view_event",
+      "name": "Can view event"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 169,
+    "fields": {
+      "content_type": 9,
+      "codename": "add_questiontype",
+      "name": "Can add question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 170,
+    "fields": {
+      "content_type": 9,
+      "codename": "change_questiontype",
+      "name": "Can change question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 171,
+    "fields": {
+      "content_type": 9,
+      "codename": "delete_questiontype",
+      "name": "Can delete question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 172,
+    "fields": {
+      "content_type": 9,
+      "codename": "view_questiontype",
+      "name": "Can view question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 173,
+    "fields": {
+      "content_type": 10,
+      "codename": "add_scoutfield",
+      "name": "Can add scout field"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 174,
+    "fields": {
+      "content_type": 10,
+      "codename": "change_scoutfield",
+      "name": "Can change scout field"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 175,
+    "fields": {
+      "content_type": 10,
+      "codename": "delete_scoutfield",
+      "name": "Can delete scout field"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 176,
+    "fields": {
+      "content_type": 10,
+      "codename": "view_scoutfield",
+      "name": "Can view scout field"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 177,
+    "fields": {
+      "content_type": 11,
+      "codename": "add_scoutpit",
+      "name": "Can add scout pit"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 178,
+    "fields": {
+      "content_type": 11,
+      "codename": "change_scoutpit",
+      "name": "Can change scout pit"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 179,
+    "fields": {
+      "content_type": 11,
+      "codename": "delete_scoutpit",
+      "name": "Can delete scout pit"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 180,
+    "fields": {
+      "content_type": 11,
+      "codename": "view_scoutpit",
+      "name": "Can view scout pit"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 181,
+    "fields": {
+      "content_type": 12,
+      "codename": "add_scoutquestiontype",
+      "name": "Can add scout question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 182,
+    "fields": {
+      "content_type": 12,
+      "codename": "change_scoutquestiontype",
+      "name": "Can change scout question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 183,
+    "fields": {
+      "content_type": 12,
+      "codename": "delete_scoutquestiontype",
+      "name": "Can delete scout question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 184,
+    "fields": {
+      "content_type": 12,
+      "codename": "view_scoutquestiontype",
+      "name": "Can view scout question type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 185,
+    "fields": {
+      "content_type": 13,
+      "codename": "add_season",
+      "name": "Can add season"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 186,
+    "fields": {
+      "content_type": 13,
+      "codename": "change_season",
+      "name": "Can change season"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 187,
+    "fields": {
+      "content_type": 13,
+      "codename": "delete_season",
+      "name": "Can delete season"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 188,
+    "fields": {
+      "content_type": 13,
+      "codename": "view_season",
+      "name": "Can view season"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 189,
+    "fields": {
+      "content_type": 14,
+      "codename": "add_team",
+      "name": "Can add team"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 190,
+    "fields": {
+      "content_type": 14,
+      "codename": "change_team",
+      "name": "Can change team"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 191,
+    "fields": {
+      "content_type": 14,
+      "codename": "delete_team",
+      "name": "Can delete team"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 192,
+    "fields": {
+      "content_type": 14,
+      "codename": "view_team",
+      "name": "Can view team"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 193,
+    "fields": {
+      "content_type": 15,
+      "codename": "add_scoutschedule",
+      "name": "Can add scout schedule"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 194,
+    "fields": {
+      "content_type": 15,
+      "codename": "change_scoutschedule",
+      "name": "Can change scout schedule"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 195,
+    "fields": {
+      "content_type": 15,
+      "codename": "delete_scoutschedule",
+      "name": "Can delete scout schedule"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 196,
+    "fields": {
+      "content_type": 15,
+      "codename": "view_scoutschedule",
+      "name": "Can view scout schedule"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 197,
+    "fields": {
+      "content_type": 16,
+      "codename": "add_scoutquestion",
+      "name": "Can add scout question"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 198,
+    "fields": {
+      "content_type": 16,
+      "codename": "change_scoutquestion",
+      "name": "Can change scout question"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 199,
+    "fields": {
+      "content_type": 16,
+      "codename": "delete_scoutquestion",
+      "name": "Can delete scout question"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 200,
+    "fields": {
+      "content_type": 16,
+      "codename": "view_scoutquestion",
+      "name": "Can view scout question"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 201,
+    "fields": {
+      "content_type": 17,
+      "codename": "add_scoutpitanswer",
+      "name": "Can add scout pit answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 202,
+    "fields": {
+      "content_type": 17,
+      "codename": "change_scoutpitanswer",
+      "name": "Can change scout pit answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 203,
+    "fields": {
+      "content_type": 17,
+      "codename": "delete_scoutpitanswer",
+      "name": "Can delete scout pit answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 204,
+    "fields": {
+      "content_type": 17,
+      "codename": "view_scoutpitanswer",
+      "name": "Can view scout pit answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 205,
+    "fields": {
+      "content_type": 18,
+      "codename": "add_scoutfieldanswer",
+      "name": "Can add scout field answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 206,
+    "fields": {
+      "content_type": 18,
+      "codename": "change_scoutfieldanswer",
+      "name": "Can change scout field answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 207,
+    "fields": {
+      "content_type": 18,
+      "codename": "delete_scoutfieldanswer",
+      "name": "Can delete scout field answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 208,
+    "fields": {
+      "content_type": 18,
+      "codename": "view_scoutfieldanswer",
+      "name": "Can view scout field answer"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 209,
+    "fields": {
+      "content_type": 19,
+      "codename": "add_scoutauthgroups",
+      "name": "Can add scout auth groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 210,
+    "fields": {
+      "content_type": 19,
+      "codename": "change_scoutauthgroups",
+      "name": "Can change scout auth groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 211,
+    "fields": {
+      "content_type": 19,
+      "codename": "delete_scoutauthgroups",
+      "name": "Can delete scout auth groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 212,
+    "fields": {
+      "content_type": 19,
+      "codename": "view_scoutauthgroups",
+      "name": "Can view scout auth groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 213,
+    "fields": {
+      "content_type": 20,
+      "codename": "add_questionoptions",
+      "name": "Can add question options"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 214,
+    "fields": {
+      "content_type": 20,
+      "codename": "change_questionoptions",
+      "name": "Can change question options"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 215,
+    "fields": {
+      "content_type": 20,
+      "codename": "delete_questionoptions",
+      "name": "Can delete question options"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 216,
+    "fields": {
+      "content_type": 20,
+      "codename": "view_questionoptions",
+      "name": "Can view question options"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 217,
+    "fields": {
+      "content_type": 21,
+      "codename": "add_authgroup",
+      "name": "Can add auth group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 218,
+    "fields": {
+      "content_type": 21,
+      "codename": "change_authgroup",
+      "name": "Can change auth group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 219,
+    "fields": {
+      "content_type": 21,
+      "codename": "delete_authgroup",
+      "name": "Can delete auth group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 220,
+    "fields": {
+      "content_type": 21,
+      "codename": "view_authgroup",
+      "name": "Can view auth group"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 221,
+    "fields": {
+      "content_type": 22,
+      "codename": "add_authgrouppermissions",
+      "name": "Can add auth group permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 222,
+    "fields": {
+      "content_type": 22,
+      "codename": "change_authgrouppermissions",
+      "name": "Can change auth group permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 223,
+    "fields": {
+      "content_type": 22,
+      "codename": "delete_authgrouppermissions",
+      "name": "Can delete auth group permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 224,
+    "fields": {
+      "content_type": 22,
+      "codename": "view_authgrouppermissions",
+      "name": "Can view auth group permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 225,
+    "fields": {
+      "content_type": 23,
+      "codename": "add_authpermission",
+      "name": "Can add auth permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 226,
+    "fields": {
+      "content_type": 23,
+      "codename": "change_authpermission",
+      "name": "Can change auth permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 227,
+    "fields": {
+      "content_type": 23,
+      "codename": "delete_authpermission",
+      "name": "Can delete auth permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 228,
+    "fields": {
+      "content_type": 23,
+      "codename": "view_authpermission",
+      "name": "Can view auth permission"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 229,
+    "fields": {
+      "content_type": 24,
+      "codename": "add_authtokentoken",
+      "name": "Can add authtoken token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 230,
+    "fields": {
+      "content_type": 24,
+      "codename": "change_authtokentoken",
+      "name": "Can change authtoken token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 231,
+    "fields": {
+      "content_type": 24,
+      "codename": "delete_authtokentoken",
+      "name": "Can delete authtoken token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 232,
+    "fields": {
+      "content_type": 24,
+      "codename": "view_authtokentoken",
+      "name": "Can view authtoken token"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 233,
+    "fields": {
+      "content_type": 25,
+      "codename": "add_authuser",
+      "name": "Can add auth user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 234,
+    "fields": {
+      "content_type": 25,
+      "codename": "change_authuser",
+      "name": "Can change auth user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 235,
+    "fields": {
+      "content_type": 25,
+      "codename": "delete_authuser",
+      "name": "Can delete auth user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 236,
+    "fields": {
+      "content_type": 25,
+      "codename": "view_authuser",
+      "name": "Can view auth user"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 237,
+    "fields": {
+      "content_type": 26,
+      "codename": "add_authusergroups",
+      "name": "Can add auth user groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 238,
+    "fields": {
+      "content_type": 26,
+      "codename": "change_authusergroups",
+      "name": "Can change auth user groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 239,
+    "fields": {
+      "content_type": 26,
+      "codename": "delete_authusergroups",
+      "name": "Can delete auth user groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 240,
+    "fields": {
+      "content_type": 26,
+      "codename": "view_authusergroups",
+      "name": "Can view auth user groups"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 241,
+    "fields": {
+      "content_type": 27,
+      "codename": "add_authuseruserpermissions",
+      "name": "Can add auth user user permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 242,
+    "fields": {
+      "content_type": 27,
+      "codename": "change_authuseruserpermissions",
+      "name": "Can change auth user user permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 243,
+    "fields": {
+      "content_type": 27,
+      "codename": "delete_authuseruserpermissions",
+      "name": "Can delete auth user user permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 244,
+    "fields": {
+      "content_type": 27,
+      "codename": "view_authuseruserpermissions",
+      "name": "Can view auth user user permissions"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 245,
+    "fields": {
+      "content_type": 28,
+      "codename": "add_djangoadminlog",
+      "name": "Can add django admin log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 246,
+    "fields": {
+      "content_type": 28,
+      "codename": "change_djangoadminlog",
+      "name": "Can change django admin log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 247,
+    "fields": {
+      "content_type": 28,
+      "codename": "delete_djangoadminlog",
+      "name": "Can delete django admin log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 248,
+    "fields": {
+      "content_type": 28,
+      "codename": "view_djangoadminlog",
+      "name": "Can view django admin log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 249,
+    "fields": {
+      "content_type": 29,
+      "codename": "add_djangocontenttype",
+      "name": "Can add django content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 250,
+    "fields": {
+      "content_type": 29,
+      "codename": "change_djangocontenttype",
+      "name": "Can change django content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 251,
+    "fields": {
+      "content_type": 29,
+      "codename": "delete_djangocontenttype",
+      "name": "Can delete django content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 252,
+    "fields": {
+      "content_type": 29,
+      "codename": "view_djangocontenttype",
+      "name": "Can view django content type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 253,
+    "fields": {
+      "content_type": 30,
+      "codename": "add_djangomigrations",
+      "name": "Can add django migrations"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 254,
+    "fields": {
+      "content_type": 30,
+      "codename": "change_djangomigrations",
+      "name": "Can change django migrations"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 255,
+    "fields": {
+      "content_type": 30,
+      "codename": "delete_djangomigrations",
+      "name": "Can delete django migrations"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 256,
+    "fields": {
+      "content_type": 30,
+      "codename": "view_djangomigrations",
+      "name": "Can view django migrations"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 257,
+    "fields": {
+      "content_type": 31,
+      "codename": "add_djangosession",
+      "name": "Can add django session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 258,
+    "fields": {
+      "content_type": 31,
+      "codename": "change_djangosession",
+      "name": "Can change django session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 259,
+    "fields": {
+      "content_type": 31,
+      "codename": "delete_djangosession",
+      "name": "Can delete django session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 260,
+    "fields": {
+      "content_type": 31,
+      "codename": "view_djangosession",
+      "name": "Can view django session"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 261,
+    "fields": {
+      "content_type": 32,
+      "codename": "add_errorlog",
+      "name": "Can add error log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 262,
+    "fields": {
+      "content_type": 32,
+      "codename": "change_errorlog",
+      "name": "Can change error log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 263,
+    "fields": {
+      "content_type": 32,
+      "codename": "delete_errorlog",
+      "name": "Can delete error log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 264,
+    "fields": {
+      "content_type": 32,
+      "codename": "view_errorlog",
+      "name": "Can view error log"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 265,
+    "fields": {
+      "content_type": 33,
+      "codename": "add_phonetype",
+      "name": "Can add phone type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 266,
+    "fields": {
+      "content_type": 33,
+      "codename": "change_phonetype",
+      "name": "Can change phone type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 267,
+    "fields": {
+      "content_type": 33,
+      "codename": "delete_phonetype",
+      "name": "Can delete phone type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 268,
+    "fields": {
+      "content_type": 33,
+      "codename": "view_phonetype",
+      "name": "Can view phone type"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 269,
+    "fields": {
+      "content_type": 34,
+      "codename": "add_userlinks",
+      "name": "Can add user links"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 270,
+    "fields": {
+      "content_type": 34,
+      "codename": "change_userlinks",
+      "name": "Can change user links"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 271,
+    "fields": {
+      "content_type": 34,
+      "codename": "delete_userlinks",
+      "name": "Can delete user links"
+    }
+  },
+  {
+    "model": "authAPI.authpermission",
+    "pk": 272,
+    "fields": {
+      "content_type": 34,
+      "codename": "view_userlinks",
+      "name": "Can view user links"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": -1,
+    "fields": {
+      "app_label": "i dont use this",
+      "model": "i dont use this"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 1,
+    "fields": {
+      "app_label": "admin",
+      "model": "logentry"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 2,
+    "fields": {
+      "app_label": "auth",
+      "model": "permission"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 3,
+    "fields": {
+      "app_label": "auth",
+      "model": "group"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 4,
+    "fields": {
+      "app_label": "auth",
+      "model": "user"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 5,
+    "fields": {
+      "app_label": "contenttypes",
+      "model": "contenttype"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 6,
+    "fields": {
+      "app_label": "sessions",
+      "model": "session"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 7,
+    "fields": {
+      "app_label": "authtoken",
+      "model": "token"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 8,
+    "fields": {
+      "app_label": "api",
+      "model": "event"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 9,
+    "fields": {
+      "app_label": "api",
+      "model": "questiontype"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 10,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutfield"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 11,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutpit"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 12,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutquestiontype"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 13,
+    "fields": {
+      "app_label": "api",
+      "model": "season"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 14,
+    "fields": {
+      "app_label": "api",
+      "model": "team"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 15,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutschedule"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 16,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutquestion"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 17,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutpitanswer"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 18,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutfieldanswer"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 19,
+    "fields": {
+      "app_label": "api",
+      "model": "scoutauthgroups"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 20,
+    "fields": {
+      "app_label": "api",
+      "model": "questionoptions"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 21,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authgroup"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 22,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authgrouppermissions"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 23,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authpermission"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 24,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authtokentoken"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 25,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authuser"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 26,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authusergroups"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 27,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "authuseruserpermissions"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 28,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangoadminlog"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 29,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangocontenttype"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 30,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangomigrations"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 31,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "djangosession"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 32,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "errorlog"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 33,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "phonetype"
+    }
+  },
+  {
+    "model": "authAPI.djangocontenttype",
+    "pk": 34,
+    "fields": {
+      "app_label": "authAPI",
+      "model": "userlinks"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 1,
+    "fields": {
+      "app": "contenttypes",
+      "name": "0001_initial",
+      "applied": "2020-05-14T02:33:07.784Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 2,
+    "fields": {
+      "app": "auth",
+      "name": "0001_initial",
+      "applied": "2020-05-14T02:33:07.808Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 3,
+    "fields": {
+      "app": "admin",
+      "name": "0001_initial",
+      "applied": "2020-05-14T02:33:07.824Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 4,
+    "fields": {
+      "app": "admin",
+      "name": "0002_logentry_remove_auto_add",
+      "applied": "2020-05-14T02:33:07.836Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 5,
+    "fields": {
+      "app": "admin",
+      "name": "0003_logentry_add_action_flag_choices",
+      "applied": "2020-05-14T02:33:07.859Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 6,
+    "fields": {
+      "app": "contenttypes",
+      "name": "0002_remove_content_type_name",
+      "applied": "2020-05-14T02:33:07.902Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 7,
+    "fields": {
+      "app": "auth",
+      "name": "0002_alter_permission_name_max_length",
+      "applied": "2020-05-14T02:33:07.911Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 8,
+    "fields": {
+      "app": "auth",
+      "name": "0003_alter_user_email_max_length",
+      "applied": "2020-05-14T02:33:07.923Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 9,
+    "fields": {
+      "app": "auth",
+      "name": "0004_alter_user_username_opts",
+      "applied": "2020-05-14T02:33:07.951Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 10,
+    "fields": {
+      "app": "auth",
+      "name": "0005_alter_user_last_login_null",
+      "applied": "2020-05-14T02:33:07.977Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 11,
+    "fields": {
+      "app": "auth",
+      "name": "0006_require_contenttypes_0002",
+      "applied": "2020-05-14T02:33:07.984Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 12,
+    "fields": {
+      "app": "auth",
+      "name": "0007_alter_validators_add_error_messages",
+      "applied": "2020-05-14T02:33:07.997Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 13,
+    "fields": {
+      "app": "auth",
+      "name": "0008_alter_user_username_max_length",
+      "applied": "2020-05-14T02:33:08.023Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 14,
+    "fields": {
+      "app": "auth",
+      "name": "0009_alter_user_last_name_max_length",
+      "applied": "2020-05-14T02:33:08.049Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 15,
+    "fields": {
+      "app": "auth",
+      "name": "0010_alter_group_name_max_length",
+      "applied": "2020-05-14T02:33:08.069Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 16,
+    "fields": {
+      "app": "auth",
+      "name": "0011_update_proxy_permissions",
+      "applied": "2020-05-14T02:33:08.085Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 17,
+    "fields": {
+      "app": "api",
+      "name": "0001_initial",
+      "applied": "2020-05-14T02:33:08.296Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 19,
+    "fields": {
+      "app": "authtoken",
+      "name": "0001_initial",
+      "applied": "2020-05-14T02:33:08.386Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 20,
+    "fields": {
+      "app": "authtoken",
+      "name": "0002_auto_20160226_1747",
+      "applied": "2020-05-14T02:33:08.451Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 21,
+    "fields": {
+      "app": "sessions",
+      "name": "0001_initial",
+      "applied": "2020-05-14T02:33:08.457Z"
+    }
+  },
+  {
+    "model": "authAPI.djangomigrations",
+    "pk": 23,
+    "fields": {
+      "app": "authAPI",
+      "name": "0001_initial",
+      "applied": "2020-05-14T17:01:46.168Z"
+    }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 1,
+    "fields": {
+      "carrier": "AT&T",
+      "phone_type": "AT&T"
+    }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 2,
+    "fields": {
+      "carrier": "Verizon",
+      "phone_type": "Verizon"
+    }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 3,
+    "fields": {
+      "carrier": "T-Mobile",
+      "phone_type": "T-Mobile"
+    }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 4,
+    "fields": {
+      "carrier": "Sprint",
+      "phone_type": "@messaging.sprintpcs.com"
+    }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 5,
+    "fields": {
+      "carrier": "Boost Mobile",
+      "phone_type": "@sms.myboostmobile.com"
+    }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 6,
+    "fields": {
+      "carrier": "Cricket",
+      "phone_type": "@sms.mycricket.com"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 1,
+    "fields": {
+      "name": "Page: Scout Field",
+      "content_type": -1,
+      "codename": "scoutfield"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 2,
+    "fields": {
+      "name": "Page: Scout Admin",
+      "content_type": -1,
+      "codename": "scoutadmin"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 3,
+    "fields": {
+      "name": "Page: Scout Pit",
+      "content_type": -1,
+      "codename": "scoutpit"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 4,
+    "fields": {
+      "name": "Page: Scout Field Results",
+      "content_type": -1,
+      "codename": "scoutFieldResults"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 5,
+    "fields": {
+      "name": "Page: Scout Pit Results",
+      "content_type": -1,
+      "codename": "scoutPitResults"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 6,
+    "fields": {
+      "name": "Page: Scout Portal",
+      "content_type": -1,
+      "codename": "scoutPortal"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 137,
+    "fields": {
+      "name": "Can add log entry",
+      "content_type": 1,
+      "codename": "add_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 138,
+    "fields": {
+      "name": "Can change log entry",
+      "content_type": 1,
+      "codename": "change_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 139,
+    "fields": {
+      "name": "Can delete log entry",
+      "content_type": 1,
+      "codename": "delete_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 140,
+    "fields": {
+      "name": "Can view log entry",
+      "content_type": 1,
+      "codename": "view_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 141,
+    "fields": {
+      "name": "Can add permission",
+      "content_type": 2,
+      "codename": "add_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 142,
+    "fields": {
+      "name": "Can change permission",
+      "content_type": 2,
+      "codename": "change_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 143,
+    "fields": {
+      "name": "Can delete permission",
+      "content_type": 2,
+      "codename": "delete_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 144,
+    "fields": {
+      "name": "Can view permission",
+      "content_type": 2,
+      "codename": "view_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 145,
+    "fields": {
+      "name": "Can add group",
+      "content_type": 3,
+      "codename": "add_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 146,
+    "fields": {
+      "name": "Can change group",
+      "content_type": 3,
+      "codename": "change_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 147,
+    "fields": {
+      "name": "Can delete group",
+      "content_type": 3,
+      "codename": "delete_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 148,
+    "fields": {
+      "name": "Can view group",
+      "content_type": 3,
+      "codename": "view_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 149,
+    "fields": {
+      "name": "Can add user",
+      "content_type": 4,
+      "codename": "add_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 150,
+    "fields": {
+      "name": "Can change user",
+      "content_type": 4,
+      "codename": "change_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 151,
+    "fields": {
+      "name": "Can delete user",
+      "content_type": 4,
+      "codename": "delete_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 152,
+    "fields": {
+      "name": "Can view user",
+      "content_type": 4,
+      "codename": "view_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 153,
+    "fields": {
+      "name": "Can add content type",
+      "content_type": 5,
+      "codename": "add_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 154,
+    "fields": {
+      "name": "Can change content type",
+      "content_type": 5,
+      "codename": "change_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 155,
+    "fields": {
+      "name": "Can delete content type",
+      "content_type": 5,
+      "codename": "delete_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 156,
+    "fields": {
+      "name": "Can view content type",
+      "content_type": 5,
+      "codename": "view_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 157,
+    "fields": {
+      "name": "Can add session",
+      "content_type": 6,
+      "codename": "add_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 158,
+    "fields": {
+      "name": "Can change session",
+      "content_type": 6,
+      "codename": "change_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 159,
+    "fields": {
+      "name": "Can delete session",
+      "content_type": 6,
+      "codename": "delete_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 160,
+    "fields": {
+      "name": "Can view session",
+      "content_type": 6,
+      "codename": "view_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 161,
+    "fields": {
+      "name": "Can add Token",
+      "content_type": 7,
+      "codename": "add_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 162,
+    "fields": {
+      "name": "Can change Token",
+      "content_type": 7,
+      "codename": "change_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 163,
+    "fields": {
+      "name": "Can delete Token",
+      "content_type": 7,
+      "codename": "delete_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 164,
+    "fields": {
+      "name": "Can view Token",
+      "content_type": 7,
+      "codename": "view_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 165,
+    "fields": {
+      "name": "Can add event",
+      "content_type": 8,
+      "codename": "add_event"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 166,
+    "fields": {
+      "name": "Can change event",
+      "content_type": 8,
+      "codename": "change_event"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 167,
+    "fields": {
+      "name": "Can delete event",
+      "content_type": 8,
+      "codename": "delete_event"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 168,
+    "fields": {
+      "name": "Can view event",
+      "content_type": 8,
+      "codename": "view_event"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 169,
+    "fields": {
+      "name": "Can add question type",
+      "content_type": 9,
+      "codename": "add_questiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 170,
+    "fields": {
+      "name": "Can change question type",
+      "content_type": 9,
+      "codename": "change_questiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 171,
+    "fields": {
+      "name": "Can delete question type",
+      "content_type": 9,
+      "codename": "delete_questiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 172,
+    "fields": {
+      "name": "Can view question type",
+      "content_type": 9,
+      "codename": "view_questiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 173,
+    "fields": {
+      "name": "Can add scout field",
+      "content_type": 10,
+      "codename": "add_scoutfield"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 174,
+    "fields": {
+      "name": "Can change scout field",
+      "content_type": 10,
+      "codename": "change_scoutfield"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 175,
+    "fields": {
+      "name": "Can delete scout field",
+      "content_type": 10,
+      "codename": "delete_scoutfield"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 176,
+    "fields": {
+      "name": "Can view scout field",
+      "content_type": 10,
+      "codename": "view_scoutfield"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 177,
+    "fields": {
+      "name": "Can add scout pit",
+      "content_type": 11,
+      "codename": "add_scoutpit"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 178,
+    "fields": {
+      "name": "Can change scout pit",
+      "content_type": 11,
+      "codename": "change_scoutpit"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 179,
+    "fields": {
+      "name": "Can delete scout pit",
+      "content_type": 11,
+      "codename": "delete_scoutpit"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 180,
+    "fields": {
+      "name": "Can view scout pit",
+      "content_type": 11,
+      "codename": "view_scoutpit"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 181,
+    "fields": {
+      "name": "Can add scout question type",
+      "content_type": 12,
+      "codename": "add_scoutquestiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 182,
+    "fields": {
+      "name": "Can change scout question type",
+      "content_type": 12,
+      "codename": "change_scoutquestiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 183,
+    "fields": {
+      "name": "Can delete scout question type",
+      "content_type": 12,
+      "codename": "delete_scoutquestiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 184,
+    "fields": {
+      "name": "Can view scout question type",
+      "content_type": 12,
+      "codename": "view_scoutquestiontype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 185,
+    "fields": {
+      "name": "Can add season",
+      "content_type": 13,
+      "codename": "add_season"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 186,
+    "fields": {
+      "name": "Can change season",
+      "content_type": 13,
+      "codename": "change_season"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 187,
+    "fields": {
+      "name": "Can delete season",
+      "content_type": 13,
+      "codename": "delete_season"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 188,
+    "fields": {
+      "name": "Can view season",
+      "content_type": 13,
+      "codename": "view_season"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 189,
+    "fields": {
+      "name": "Can add team",
+      "content_type": 14,
+      "codename": "add_team"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 190,
+    "fields": {
+      "name": "Can change team",
+      "content_type": 14,
+      "codename": "change_team"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 191,
+    "fields": {
+      "name": "Can delete team",
+      "content_type": 14,
+      "codename": "delete_team"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 192,
+    "fields": {
+      "name": "Can view team",
+      "content_type": 14,
+      "codename": "view_team"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 193,
+    "fields": {
+      "name": "Can add scout schedule",
+      "content_type": 15,
+      "codename": "add_scoutschedule"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 194,
+    "fields": {
+      "name": "Can change scout schedule",
+      "content_type": 15,
+      "codename": "change_scoutschedule"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 195,
+    "fields": {
+      "name": "Can delete scout schedule",
+      "content_type": 15,
+      "codename": "delete_scoutschedule"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 196,
+    "fields": {
+      "name": "Can view scout schedule",
+      "content_type": 15,
+      "codename": "view_scoutschedule"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 197,
+    "fields": {
+      "name": "Can add scout question",
+      "content_type": 16,
+      "codename": "add_scoutquestion"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 198,
+    "fields": {
+      "name": "Can change scout question",
+      "content_type": 16,
+      "codename": "change_scoutquestion"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 199,
+    "fields": {
+      "name": "Can delete scout question",
+      "content_type": 16,
+      "codename": "delete_scoutquestion"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 200,
+    "fields": {
+      "name": "Can view scout question",
+      "content_type": 16,
+      "codename": "view_scoutquestion"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 201,
+    "fields": {
+      "name": "Can add scout pit answer",
+      "content_type": 17,
+      "codename": "add_scoutpitanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 202,
+    "fields": {
+      "name": "Can change scout pit answer",
+      "content_type": 17,
+      "codename": "change_scoutpitanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 203,
+    "fields": {
+      "name": "Can delete scout pit answer",
+      "content_type": 17,
+      "codename": "delete_scoutpitanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 204,
+    "fields": {
+      "name": "Can view scout pit answer",
+      "content_type": 17,
+      "codename": "view_scoutpitanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 205,
+    "fields": {
+      "name": "Can add scout field answer",
+      "content_type": 18,
+      "codename": "add_scoutfieldanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 206,
+    "fields": {
+      "name": "Can change scout field answer",
+      "content_type": 18,
+      "codename": "change_scoutfieldanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 207,
+    "fields": {
+      "name": "Can delete scout field answer",
+      "content_type": 18,
+      "codename": "delete_scoutfieldanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 208,
+    "fields": {
+      "name": "Can view scout field answer",
+      "content_type": 18,
+      "codename": "view_scoutfieldanswer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 209,
+    "fields": {
+      "name": "Can add scout auth groups",
+      "content_type": 19,
+      "codename": "add_scoutauthgroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 210,
+    "fields": {
+      "name": "Can change scout auth groups",
+      "content_type": 19,
+      "codename": "change_scoutauthgroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 211,
+    "fields": {
+      "name": "Can delete scout auth groups",
+      "content_type": 19,
+      "codename": "delete_scoutauthgroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 212,
+    "fields": {
+      "name": "Can view scout auth groups",
+      "content_type": 19,
+      "codename": "view_scoutauthgroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 213,
+    "fields": {
+      "name": "Can add question options",
+      "content_type": 20,
+      "codename": "add_questionoptions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 214,
+    "fields": {
+      "name": "Can change question options",
+      "content_type": 20,
+      "codename": "change_questionoptions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 215,
+    "fields": {
+      "name": "Can delete question options",
+      "content_type": 20,
+      "codename": "delete_questionoptions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 216,
+    "fields": {
+      "name": "Can view question options",
+      "content_type": 20,
+      "codename": "view_questionoptions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 217,
+    "fields": {
+      "name": "Can add auth group",
+      "content_type": 21,
+      "codename": "add_authgroup"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 218,
+    "fields": {
+      "name": "Can change auth group",
+      "content_type": 21,
+      "codename": "change_authgroup"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 219,
+    "fields": {
+      "name": "Can delete auth group",
+      "content_type": 21,
+      "codename": "delete_authgroup"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 220,
+    "fields": {
+      "name": "Can view auth group",
+      "content_type": 21,
+      "codename": "view_authgroup"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 221,
+    "fields": {
+      "name": "Can add auth group permissions",
+      "content_type": 22,
+      "codename": "add_authgrouppermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 222,
+    "fields": {
+      "name": "Can change auth group permissions",
+      "content_type": 22,
+      "codename": "change_authgrouppermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 223,
+    "fields": {
+      "name": "Can delete auth group permissions",
+      "content_type": 22,
+      "codename": "delete_authgrouppermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 224,
+    "fields": {
+      "name": "Can view auth group permissions",
+      "content_type": 22,
+      "codename": "view_authgrouppermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 225,
+    "fields": {
+      "name": "Can add auth permission",
+      "content_type": 23,
+      "codename": "add_authpermission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 226,
+    "fields": {
+      "name": "Can change auth permission",
+      "content_type": 23,
+      "codename": "change_authpermission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 227,
+    "fields": {
+      "name": "Can delete auth permission",
+      "content_type": 23,
+      "codename": "delete_authpermission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 228,
+    "fields": {
+      "name": "Can view auth permission",
+      "content_type": 23,
+      "codename": "view_authpermission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 229,
+    "fields": {
+      "name": "Can add authtoken token",
+      "content_type": 24,
+      "codename": "add_authtokentoken"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 230,
+    "fields": {
+      "name": "Can change authtoken token",
+      "content_type": 24,
+      "codename": "change_authtokentoken"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 231,
+    "fields": {
+      "name": "Can delete authtoken token",
+      "content_type": 24,
+      "codename": "delete_authtokentoken"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 232,
+    "fields": {
+      "name": "Can view authtoken token",
+      "content_type": 24,
+      "codename": "view_authtokentoken"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 233,
+    "fields": {
+      "name": "Can add auth user",
+      "content_type": 25,
+      "codename": "add_authuser"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 234,
+    "fields": {
+      "name": "Can change auth user",
+      "content_type": 25,
+      "codename": "change_authuser"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 235,
+    "fields": {
+      "name": "Can delete auth user",
+      "content_type": 25,
+      "codename": "delete_authuser"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 236,
+    "fields": {
+      "name": "Can view auth user",
+      "content_type": 25,
+      "codename": "view_authuser"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 237,
+    "fields": {
+      "name": "Can add auth user groups",
+      "content_type": 26,
+      "codename": "add_authusergroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 238,
+    "fields": {
+      "name": "Can change auth user groups",
+      "content_type": 26,
+      "codename": "change_authusergroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 239,
+    "fields": {
+      "name": "Can delete auth user groups",
+      "content_type": 26,
+      "codename": "delete_authusergroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 240,
+    "fields": {
+      "name": "Can view auth user groups",
+      "content_type": 26,
+      "codename": "view_authusergroups"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 241,
+    "fields": {
+      "name": "Can add auth user user permissions",
+      "content_type": 27,
+      "codename": "add_authuseruserpermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 242,
+    "fields": {
+      "name": "Can change auth user user permissions",
+      "content_type": 27,
+      "codename": "change_authuseruserpermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 243,
+    "fields": {
+      "name": "Can delete auth user user permissions",
+      "content_type": 27,
+      "codename": "delete_authuseruserpermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 244,
+    "fields": {
+      "name": "Can view auth user user permissions",
+      "content_type": 27,
+      "codename": "view_authuseruserpermissions"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 245,
+    "fields": {
+      "name": "Can add django admin log",
+      "content_type": 28,
+      "codename": "add_djangoadminlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 246,
+    "fields": {
+      "name": "Can change django admin log",
+      "content_type": 28,
+      "codename": "change_djangoadminlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 247,
+    "fields": {
+      "name": "Can delete django admin log",
+      "content_type": 28,
+      "codename": "delete_djangoadminlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 248,
+    "fields": {
+      "name": "Can view django admin log",
+      "content_type": 28,
+      "codename": "view_djangoadminlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 249,
+    "fields": {
+      "name": "Can add django content type",
+      "content_type": 29,
+      "codename": "add_djangocontenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 250,
+    "fields": {
+      "name": "Can change django content type",
+      "content_type": 29,
+      "codename": "change_djangocontenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 251,
+    "fields": {
+      "name": "Can delete django content type",
+      "content_type": 29,
+      "codename": "delete_djangocontenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 252,
+    "fields": {
+      "name": "Can view django content type",
+      "content_type": 29,
+      "codename": "view_djangocontenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 253,
+    "fields": {
+      "name": "Can add django migrations",
+      "content_type": 30,
+      "codename": "add_djangomigrations"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 254,
+    "fields": {
+      "name": "Can change django migrations",
+      "content_type": 30,
+      "codename": "change_djangomigrations"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 255,
+    "fields": {
+      "name": "Can delete django migrations",
+      "content_type": 30,
+      "codename": "delete_djangomigrations"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 256,
+    "fields": {
+      "name": "Can view django migrations",
+      "content_type": 30,
+      "codename": "view_djangomigrations"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 257,
+    "fields": {
+      "name": "Can add django session",
+      "content_type": 31,
+      "codename": "add_djangosession"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 258,
+    "fields": {
+      "name": "Can change django session",
+      "content_type": 31,
+      "codename": "change_djangosession"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 259,
+    "fields": {
+      "name": "Can delete django session",
+      "content_type": 31,
+      "codename": "delete_djangosession"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 260,
+    "fields": {
+      "name": "Can view django session",
+      "content_type": 31,
+      "codename": "view_djangosession"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 261,
+    "fields": {
+      "name": "Can add error log",
+      "content_type": 32,
+      "codename": "add_errorlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 262,
+    "fields": {
+      "name": "Can change error log",
+      "content_type": 32,
+      "codename": "change_errorlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 263,
+    "fields": {
+      "name": "Can delete error log",
+      "content_type": 32,
+      "codename": "delete_errorlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 264,
+    "fields": {
+      "name": "Can view error log",
+      "content_type": 32,
+      "codename": "view_errorlog"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 265,
+    "fields": {
+      "name": "Can add phone type",
+      "content_type": 33,
+      "codename": "add_phonetype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 266,
+    "fields": {
+      "name": "Can change phone type",
+      "content_type": 33,
+      "codename": "change_phonetype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 267,
+    "fields": {
+      "name": "Can delete phone type",
+      "content_type": 33,
+      "codename": "delete_phonetype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 268,
+    "fields": {
+      "name": "Can view phone type",
+      "content_type": 33,
+      "codename": "view_phonetype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 269,
+    "fields": {
+      "name": "Can add user links",
+      "content_type": 34,
+      "codename": "add_userlinks"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 270,
+    "fields": {
+      "name": "Can change user links",
+      "content_type": 34,
+      "codename": "change_userlinks"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 271,
+    "fields": {
+      "name": "Can delete user links",
+      "content_type": 34,
+      "codename": "delete_userlinks"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 272,
+    "fields": {
+      "name": "Can view user links",
+      "content_type": 34,
+      "codename": "view_userlinks"
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "sysadmin",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 2,
+    "fields": {
+      "name": "lead_scout",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 3,
+    "fields": {
+      "name": "field_scout",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 4,
+    "fields": {
+      "name": "pit_scout",
+      "permissions": []
+    }
+  },
+  {
+    "model": "api.scoutauthgroups",
+    "pk": 1,
+    "fields": {
+      "auth_group_id": 2
+    }
+  },
+  {
+    "model": "api.scoutauthgroups",
+    "pk": 2,
+    "fields": {
+      "auth_group_id": 3
+    }
+  },
+  {
+    "model": "api.scoutauthgroups",
+    "pk": 3,
+    "fields": {
+      "auth_group_id": 4
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 1,
+    "fields": {
+      "permission": 1,
+      "menu_name": "SCOUT FIELD",
+      "routerlink": "scout-field",
+      "order": 200
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 2,
+    "fields": {
+      "permission": 2,
+      "menu_name": "SCOUT ADMIN",
+      "routerlink": "scout-admin",
+      "order": 100
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 3,
+    "fields": {
+      "permission": 3,
+      "menu_name": "SCOUT PIT",
+      "routerlink": "scout-pit",
+      "order": 400
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 4,
+    "fields": {
+      "permission": 4,
+      "menu_name": "FIELD RESULTS",
+      "routerlink": "scout-field-results",
+      "order": 300
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 5,
+    "fields": {
+      "permission": 5,
+      "menu_name": "PIT RESULTS",
+      "routerlink": "scout-pit-results",
+      "order": 500
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 6,
+    "fields": {
+      "permission": 6,
+      "menu_name": "SCOUT PORTAL",
+      "routerlink": "scout-portal",
+      "order": 50
+    }
+  }
+]

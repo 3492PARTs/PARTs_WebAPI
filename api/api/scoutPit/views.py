@@ -1,7 +1,7 @@
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from api.api.serializers import *
 from api.api.models import *
+from .serializers import *
 from rest_framework.views import APIView
 from api.auth.security import *
 import cloudinary
@@ -11,7 +11,7 @@ import cloudinary.api
 auth_obj = 3
 
 
-class GetScoutPitInputs(APIView):
+class GetQuestions(APIView):
     """
     API endpoint to get scout pit inputs
     """
@@ -63,22 +63,26 @@ class GetScoutPitInputs(APIView):
 
         teams = []
         try:
-            teams = Team.objects.filter(
-                Q(team_no__in=list(EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True))) &
-                ~Q(team_no__in=(list(ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n')).values_list('team_no', flat=True))))
-            ).order_by('team_no')
-
+            '''
+            teams = Team.objects.filter(Q(event=current_event) &
+                                        ~Q(team_no__in=(
+                                            list(ScoutPit.objects.filter(
+                                                Q(event=current_event) & Q(void_ind='n')
+                                            ).values_list('team_no', flat=True))))
+                                        ).order_by('team_no')
+            '''
+            teams = Team.objects.filter(Q(event=current_event) &
+                                        ~Q(team_no__in=(
+                                            ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n'))))
+                                        ).order_by('team_no')
         except Exception as e:
             teams.append(Team())
 
         comp_teams = []
         try:
             comp_teams = Team.objects.filter(
-                Q(team_no__in=list(
-                    EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True))) &
-                Q(team_no__in=(list(
-                    ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n')).values_list('team_no',
-                                                                                                  flat=True))))
+                Q(event=current_event) &
+                Q(team_no__in=(ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n'))))
             ).order_by('team_no')
 
         except Exception as e:
@@ -90,7 +94,11 @@ class GetScoutPitInputs(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_questions()
-                serializer = ScoutPitInitSerializer(req)
+
+                if type(req) == Response:
+                    return req
+
+                serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message('An error occurred while initializing.', True, 'GetScoutPitInputs',
@@ -99,7 +107,7 @@ class GetScoutPitInputs(APIView):
             return ret_message('You do not have access.', True, 'GetScoutPitInputs', request.user.id)
 
 
-class PostScoutPitSaveAnswers(APIView):
+class PostSaveAnswers(APIView):
     """
     API endpoint to save scout pit answers
     """
@@ -150,7 +158,7 @@ class PostScoutPitSaveAnswers(APIView):
             return ret_message('You do not have access.', True, 'PostScoutAdminSaveAnswers', request.user.id)
 
 
-class PostScoutPitSavePicture(APIView):
+class PostSavePicture(APIView):
     """
     API endpoint to save a robot picture
     """
@@ -198,7 +206,7 @@ class PostScoutPitSavePicture(APIView):
             return ret_message('You do not have access.', True, 'PostScoutPitSavePicture', request.user.id)
 
 
-class GetScoutPitResultInit(APIView):
+class GetResultsInit(APIView):
     """
     API endpoint to get the teams who have already been scouted
     """
@@ -220,8 +228,10 @@ class GetScoutPitResultInit(APIView):
         teams = []
         try:
             teams = Team.objects.filter(
-                Q(team_no__in=list(EventTeamXref.objects.filter(event=current_event).values_list('team_no', flat=True))) &
-                Q(team_no__in=(list(ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n')).values_list('team_no', flat=True))))
+                Q(event=current_event) &
+                Q(team_no__in=(list(
+                    ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n')).values_list('team_no',
+                                                                                                  flat=True))))
             ).order_by('team_no')
 
         except Exception as e:
@@ -242,7 +252,7 @@ class GetScoutPitResultInit(APIView):
             return ret_message('You do not have access.', True, 'GetScoutPitResultsInit', request.user.id)
 
 
-class PostScoutPitGetResults(APIView):
+class PostGetResults(APIView):
     """
     API endpoint to get scout pit results for the selected teams
     """
@@ -264,7 +274,12 @@ class PostScoutPitGetResults(APIView):
         for t in teams:
             if t.get('checked', False):
                 team = Team.objects.get(team_no=t['team_no'])
-                sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(event=current_event) & Q(void_ind='n'))
+                try:
+                    sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(event=current_event) & Q(void_ind='n'))
+                except Exception as e:
+                    return ret_message('No pit data for team.', True, 'PostScoutPitGetResults',
+                                       self.request.user.id, e)
+
                 spas = ScoutPitAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n'))
 
                 tmp = {
@@ -277,7 +292,7 @@ class PostScoutPitGetResults(APIView):
                 for spa in spas:
                     sq = ScoutQuestion.objects.get(sq_id=spa.sq_id)
                     tmp_questions.append({
-                        'question':  sq.question,
+                        'question': sq.question,
                         'answer': spa.answer
                     })
 
@@ -295,6 +310,10 @@ class PostScoutPitGetResults(APIView):
                                        serializer.errors)
 
                 ret = self.get_results(serializer.data)
+
+                if type(ret) == Response:
+                    return ret
+
                 serializer = ScoutPitResultsSerializer(ret, many=True)
                 return Response(serializer.data)
             except Exception as e:
@@ -304,7 +323,7 @@ class PostScoutPitGetResults(APIView):
             return ret_message('You do not have access.', True, 'PostScoutPitGetResults', request.user.id)
 
 
-class GetScoutPitLoadTeamData(APIView):
+class GetTeamData(APIView):
     """
     API endpoint to get scout pit team data
     """
@@ -358,7 +377,6 @@ class GetScoutPitLoadTeamData(APIView):
         except Exception as e:
             x = 1
 
-
         return scout_questions
 
     def get(self, request, format=None):
@@ -372,7 +390,6 @@ class GetScoutPitLoadTeamData(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'GetScoutPitInputs', request.user.id)
-
 
 
 def allowed_file(filename):

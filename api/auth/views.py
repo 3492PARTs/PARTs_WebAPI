@@ -115,7 +115,8 @@ class GetUserData(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_user(self):
-        user = self.request.user
+        user = User.objects.select_related('profile').get(id=self.request.user.id)
+
         return user
 
     def get(self, request, format=None):
@@ -132,8 +133,10 @@ class GetUserLinks(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_links(self):
+        permissions = get_user_permissions(self.request.user.id)
+
         user_links = UserLinks.objects.filter(
-            permission__in=[per.id for per in get_user_permissions(self.request.user.id)]).order_by('order')
+            permission__in=[per.id for per in permissions]).order_by('order')
 
         req = []
 
@@ -160,7 +163,7 @@ class GetUserGroups(APIView):
 
     def get(self, request, format=None):
         req = self.get_groups(request.query_params.get('user_id', None))
-        serializer = AuthGroupSerializer(req, many=True)
+        serializer = GroupSerializer(req, many=True)
         return Response(serializer.data)
 
 
@@ -187,7 +190,7 @@ class HTMLPasswordResetForm(PasswordResetForm):
         :param **kwargs:
         """
         email = self.cleaned_data["email"]
-        user = AuthUser.objects.get(
+        user = User.objects.get(
             email__iexact=email, is_active=True)
 
         if not domain_override:
