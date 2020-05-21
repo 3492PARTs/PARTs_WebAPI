@@ -23,7 +23,7 @@ class GetQuestions(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'GetScoutPitInputs', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPit/GetQuestions', self.request.user.id, e)
 
         scout_questions = []
         try:
@@ -59,18 +59,10 @@ class GetQuestions(APIView):
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('No event set, see an admin.', True, 'GetScoutPitInputs', self.request.user.id, e)
+            return ret_message('No event set, see an admin.', True, 'api/scoutPit/GetQuestions', self.request.user.id, e)
 
         teams = []
         try:
-            '''
-            teams = Team.objects.filter(Q(event=current_event) &
-                                        ~Q(team_no__in=(
-                                            list(ScoutPit.objects.filter(
-                                                Q(event=current_event) & Q(void_ind='n')
-                                            ).values_list('team_no', flat=True))))
-                                        ).order_by('team_no')
-            '''
             teams = Team.objects.filter(Q(event=current_event) &
                                         ~Q(team_no__in=(
                                             ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n'))))
@@ -101,10 +93,10 @@ class GetQuestions(APIView):
                 serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutPitInputs',
+                return ret_message('An error occurred while initializing.', True, 'api/scoutPit/GetQuestions',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutPitInputs', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutPit/GetQuestions', request.user.id)
 
 
 class PostSaveAnswers(APIView):
@@ -118,12 +110,12 @@ class PostSaveAnswers(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'PostScoutPitSaveAnswers', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPit/PostSaveAnswers', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('No event set, see an admin', True, 'PostScoutPitSaveAnswers', self.request.user.id, e)
+            return ret_message('No event set, see an admin', True, 'api/scoutPit/PostSaveAnswers', self.request.user.id, e)
 
         try:
             sp = ScoutPit.objects.get(team_no_id=data['team'])
@@ -145,17 +137,17 @@ class PostSaveAnswers(APIView):
     def post(self, request, format=None):
         serializer = ScoutAnswerSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminSaveAnswers', request.user.id, serializer.errors)
+            return ret_message('Invalid data', True, 'api/scoutPit/PostSaveAnswers', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_answers(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving answers.', True, 'PostScoutAdminSaveAnswers',
+                return ret_message('An error occurred while saving answers.', True, 'api/scoutPit/PostSaveAnswers',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutAdminSaveAnswers', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutPit/PostSaveAnswers', request.user.id)
 
 
 class PostSavePicture(APIView):
@@ -170,15 +162,15 @@ class PostSavePicture(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'PostScoutPitSavePicture', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPit/PostSavePicture', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('No event set, see an admin.', True, 'PostScoutPitSavePicture', self.request.user.id, e)
+            return ret_message('No event set, see an admin.', True, 'api/scoutPit/PostSavePicture', self.request.user.id, e)
 
         if not allowed_file(file.name):
-            return ret_message('Invalid file type.', True, 'PostScoutPitSavePicture', self.request.user.id)
+            return ret_message('Invalid file type.', True, 'api/scoutPit/PostSavePicture', self.request.user.id)
 
         try:
             response = cloudinary.uploader.upload(file)
@@ -188,7 +180,7 @@ class PostSavePicture(APIView):
             sp.img_ver = str(response['version'])
             sp.save()
         except Exception as e:
-            return ret_message('An error occurred while saving the image.', True, 'PostScoutPitSavePicture',
+            return ret_message('An error occurred while saving the image.', True, 'api/scoutPit/PostSavePicture',
                                self.request.user.id, e)
 
         return ret_message('Save Image Successfully.')
@@ -200,10 +192,10 @@ class PostSavePicture(APIView):
                 ret = self.save_file(file_obj, request.data.get('team_no', ''))
                 return ret
             except Exception as e:
-                return ret_message('An error occurred while saving robot picture.', True, 'PostScoutPitSavePicture',
+                return ret_message('An error occurred while saving robot picture.', True, 'api/scoutPit/PostSavePicture',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutPitSavePicture', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutPit/PostSavePicture', request.user.id)
 
 
 class GetResultsInit(APIView):
@@ -218,12 +210,12 @@ class GetResultsInit(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'GetScoutPitResultsInit', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPit/GetResultsInit', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('No event set, see an admin.', True, 'GetScoutPitResultsInit', self.request.user.id, e)
+            return ret_message('No event set, see an admin.', True, 'api/scoutPit/GetResultsInit', self.request.user.id, e)
 
         teams = []
         try:
@@ -246,10 +238,10 @@ class GetResultsInit(APIView):
                 serializer = TeamSerializer(req, many=True)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutPitResultsInit',
+                return ret_message('An error occurred while initializing.', True, 'api/scoutPit/GetResultsInit',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutPitResultsInit', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutPit/GetResultsInit', request.user.id)
 
 
 class PostGetResults(APIView):
@@ -263,12 +255,12 @@ class PostGetResults(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'PostScoutPitGetResults', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPit/PostGetResults', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('No event set, see an admin', True, 'PostScoutPitGetResults', self.request.user.id, e)
+            return ret_message('No event set, see an admin', True, 'api/scoutPit/PostGetResults', self.request.user.id, e)
 
         results = []
         for t in teams:
@@ -277,7 +269,7 @@ class PostGetResults(APIView):
                 try:
                     sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(event=current_event) & Q(void_ind='n'))
                 except Exception as e:
-                    return ret_message('No pit data for team.', True, 'PostScoutPitGetResults',
+                    return ret_message('No pit data for team.', True, 'api/scoutPit/PostGetResults',
                                        self.request.user.id, e)
 
                 spas = ScoutPitAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n'))
@@ -306,7 +298,7 @@ class PostGetResults(APIView):
             try:
                 serializer = TeamSerializer(data=request.data, many=True)
                 if not serializer.is_valid():
-                    return ret_message('Invalid data', True, 'PostScoutPitGetResults', request.user.id,
+                    return ret_message('Invalid data', True, 'api/scoutPit/PostGetResults', request.user.id,
                                        serializer.errors)
 
                 ret = self.get_results(serializer.data)
@@ -317,10 +309,10 @@ class PostGetResults(APIView):
                 serializer = ScoutPitResultsSerializer(ret, many=True)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while getting pit results.', True, 'PostScoutPitGetResults',
+                return ret_message('An error occurred while getting pit results.', True, 'api/scoutPit/PostGetResults',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutPitGetResults', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutPit/PostGetResults', request.user.id)
 
 
 class GetTeamData(APIView):
@@ -335,7 +327,7 @@ class GetTeamData(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'GetScoutPitInputs', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPit/GetTeamData', self.request.user.id, e)
 
         scout_questions = []
         try:
@@ -386,10 +378,10 @@ class GetTeamData(APIView):
                 serializer = ScoutQuestionSerializer(req, many=True)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutPitInputs',
+                return ret_message('An error occurred while getting team data.', True, 'api/scoutPit/GetTeamData',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutPitInputs', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutPit/GetTeamData', request.user.id)
 
 
 def allowed_file(filename):

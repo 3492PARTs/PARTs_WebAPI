@@ -55,6 +55,13 @@ def ret_message(message, error=False, path='', user_id=0, exception=None):
         print('Exception: ')
         print(exception)
         print('----------ERROR END----------')
-        ErrorLog(user=user, path=path, message=message, exception=exception,
-                 time=timezone.now(), void_ind='n').save()
+        try:
+            ErrorLog(user=user, path=path, message=message, exception=exception,
+                     time=timezone.now(), void_ind='n').save()
+        except Exception as e:
+            ErrorLog(user=0, path=path, message=message, exception=exception,
+                     time=timezone.now(), void_ind='n').save()
+            message += "\nCritical Error: please email the team admin at team3492@gmail.com\nSend them this message:\n"
+            message += e
+            return Response(RetMessageSerializer({'retMessage': message, 'error': error}).data)
     return Response(RetMessageSerializer({'retMessage': message, 'error': error}).data)

@@ -390,10 +390,10 @@ class GetQuestionInit(APIView):
                 serializer = ScoutAdminQuestionInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutAdminQuestionInit',
+                return ret_message('An error occurred while initializing.', True, 'api/scoutAdmin/GetQuestionInit',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutAdminQuestionInit', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/GetQuestionInit', request.user.id)
 
 
 class PostSaveScoutQuestion(APIView):
@@ -407,7 +407,7 @@ class PostSaveScoutQuestion(APIView):
             try:
                 current_season = Season.objects.get(current='y')
             except Exception as e:
-                return ret_message('No season set, see an admin.', True, 'PostScoutAdminSaveQuestion',
+                return ret_message('No season set, see an admin.', True, 'api/ScoutAdmin/PostSaveScoutQuestion',
                                    self.request.user.id, e)
 
             sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'],  sq_typ_id=data['sq_typ'],
@@ -434,12 +434,12 @@ class PostSaveScoutQuestion(APIView):
 
             return ret_message('Saved question successfully.')
         except Exception as e:
-            return ret_message('Couldn\'t save question', True, 'PostScoutAdminSaveQuestion', self.request.user.id, e)
+            return ret_message('Couldn\'t save question', True, 'api/ScoutAdmin/PostSaveScoutQuestion', self.request.user.id, e)
 
     def post(self, request, format=None):
         serializer = ScoutQuestionSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutQuestion', request.user.id,
+            return ret_message('Invalid data', True, 'api/ScoutAdmin/PostSaveScoutQuestion', request.user.id,
                                serializer.errors)
 
         if has_access(request.user.id, auth_obj):
@@ -448,9 +448,9 @@ class PostSaveScoutQuestion(APIView):
                 return req
             except Exception as e:
                 return ret_message('An error occurred while saving the question.', True,
-                                   'PostScoutAdminSaveScoutQuestion', request.user.id, e)
+                                   'api/ScoutAdmin/PostSaveScoutQuestion', request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutAdminSaveScoutQuestion', request.user.id)
+            return ret_message('You do not have access.', True, 'api/ScoutAdmin/PostSaveScoutQuestion', request.user.id)
 
 
 class PostUpdateScoutQuestion(APIView):
@@ -481,7 +481,7 @@ class PostUpdateScoutQuestion(APIView):
     def post(self, request, format=None):
         serializer = ScoutQuestionSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminUpdateScoutQuestion', request.user.id,
+            return ret_message('Invalid data', True, 'api/scoutAdmin/PostUpdateScoutQuestion', request.user.id,
                                serializer.errors)
 
         if has_access(request.user.id, auth_obj):
@@ -490,9 +490,9 @@ class PostUpdateScoutQuestion(APIView):
                 return req
             except Exception as e:
                 return ret_message('An error occurred while updating the question.', True,
-                                   'PostScoutAdminUpdateScoutQuestion', request.user.id, e)
+                                   'api/scoutAdmin/PostUpdateScoutQuestion', request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutAdminUpdateScoutQuestion', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/PostUpdateScoutQuestion', request.user.id)
 
 
 class GetToggleScoutQuestion(APIView):
@@ -521,9 +521,9 @@ class GetToggleScoutQuestion(APIView):
                 return req
             except Exception as e:
                 return ret_message('An error occurred while toggling the scout question.', True,
-                                   'GetScoutAdminToggleScoutQuestion', request.user.id, e)
+                                   'api/scoutAdmin/GetToggleScoutQuestion', request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutAdminToggleScoutQuestion', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/GetToggleScoutQuestion', request.user.id)
 
 
 class GetToggleOption(APIView):
@@ -551,10 +551,10 @@ class GetToggleOption(APIView):
                 req = self.toggle(request.query_params.get('q_opt_id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while toggling the option.', True, 'GetScoutAdminToggleOption',
+                return ret_message('An error occurred while toggling the option.', True, 'api/scoutAdmin/GetToggleOption',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutAdminToggleOption', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/GetToggleOption', request.user.id)
 
 
 class PostSaveScoutScheduleEntry(APIView):
@@ -577,11 +577,11 @@ class PostSaveScoutScheduleEntry(APIView):
         end_utc_dt = local_dt
 
         if st_utc_dt <= timezone.now():
-            return ret_message('Start time can\'t be in the past.', True, 'PostScoutAdminSaveScoutScheduleEntry',
+            return ret_message('Start time can\'t be in the past.', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry',
                                self.request.user.id)
 
         if end_utc_dt <= st_utc_dt:
-            return ret_message('End time can\'t come before start.', True, 'PostScoutAdminSaveScoutScheduleEntry',
+            return ret_message('End time can\'t come before start.', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry',
                                self.request.user.id)
 
         if data.get('scout_sch_id', None) is None:
@@ -604,7 +604,7 @@ class PostSaveScoutScheduleEntry(APIView):
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminSaveScoutScheduleEntry', request.user.id,
+            return ret_message('Invalid data', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry', request.user.id,
                                serializer.errors)
 
         if has_access(request.user.id, auth_obj):
@@ -613,9 +613,9 @@ class PostSaveScoutScheduleEntry(APIView):
                 return req
             except Exception as e:
                 return ret_message('An error occurred while saving the schedule entry.', True,
-                                   'PostScoutAdminSaveScoutScheduleEntry', request.user.id, e)
+                                   'api/scoutAdmin/PostSaveScoutScheduleEntry', request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutAdminSaveScoutScheduleEntry', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry', request.user.id)
 
 
 class PostNotifyUser(APIView):
@@ -650,22 +650,22 @@ class PostNotifyUser(APIView):
                 scout_sch.notified = 'y'
                 scout_sch.save()
 
-        return ret_message('Successfully notified selected users')
+        return ret_message('Successfully notified selected user(s)')
 
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data, many=True)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminNotifyUser', request.user.id, serializer.errors)
+            return ret_message('Invalid data', True, 'api/scoutAdmin/PostNotifyUser', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.notify_user(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while notifying user.', True, 'PostScoutAdminNotifyUser',
+                return ret_message('An error occurred while notifying user.', True, 'api/scoutAdmin/PostNotifyUser',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutAdminNotifyUser', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/PostNotifyUser', request.user.id)
 
 
 class PostSavePhoneType(APIView):
@@ -689,14 +689,14 @@ class PostSavePhoneType(APIView):
     def post(self, request, format=None):
         serializer = PhoneTypeSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutAdminAddPhoneType', request.user.id, serializer.errors)
+            return ret_message('Invalid data', True, 'api/scoutAdmin/PostSavePhoneType', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_phone_type(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving phone type.', True, 'PostScoutAdminAddPhoneType',
+                return ret_message('An error occurred while saving phone type.', True, 'api/scoutAdmin/PostSavePhoneType',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutAdminAddPhoneType', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/PostSavePhoneType', request.user.id)

@@ -21,7 +21,7 @@ class GetInit(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'api/scoutAdmin/GetInit', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPortal/GetInit', self.request.user.id, e)
 
         time = timezone.now()
         fieldSchedule = []
@@ -93,7 +93,7 @@ class GetInit(APIView):
                 serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutPortalInit',
+                return ret_message('An error occurred while initializing.', True, 'api/scoutPortal/GetInit',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access,', True, 'GetScoutPortalInit', request.user.id)
+            return ret_message('You do not have access,', True, 'api/scoutPortal/GetInit', request.user.id)

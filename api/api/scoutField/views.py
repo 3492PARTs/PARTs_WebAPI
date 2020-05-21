@@ -20,7 +20,7 @@ class GetQuestions(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'GetScoutFieldInputs', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutField/GetQuestions', self.request.user.id, e)
 
         scout_questions = []
         try:
@@ -56,7 +56,7 @@ class GetQuestions(APIView):
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('No event set, see an admin.', True, 'GetScoutFieldInputs', self.request.user.id, e)
+            return ret_message('No event set, see an admin.', True, 'api/scoutField/GetQuestions', self.request.user.id, e)
 
         teams = []
         try:
@@ -78,10 +78,10 @@ class GetQuestions(APIView):
                 serializer = ScoutFieldSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutFieldInputs',
+                return ret_message('An error occurred while initializing.', True, 'api/scoutField/GetQuestions',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutFieldInputs', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutField/GetQuestions', request.user.id)
 
 
 class PostSaveAnswers(APIView):
@@ -95,12 +95,12 @@ class PostSaveAnswers(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'PostScoutFieldSaveAnswers', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutField/PostSaveAnswers', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
         except Exception as e:
-            return ret_message('No event set, see an admin', True, 'PostScoutFieldSaveAnswers', self.request.user.id, e)
+            return ret_message('No event set, see an admin', True, 'api/scoutField/PostSaveAnswers', self.request.user.id, e)
 
         sf = ScoutField(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
         sf.save()
@@ -114,17 +114,17 @@ class PostSaveAnswers(APIView):
     def post(self, request, format=None):
         serializer = ScoutFieldSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'PostScoutFieldSaveAnswers', request.user.id, serializer.errors)
+            return ret_message('Invalid data', True, 'api/scoutField/PostSaveAnswers', request.user.id, serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.save_answers(serializer.data)
                 return req
             except Exception as e:
-                return ret_message('An error occurred while saving answers.', True, 'PostScoutFieldSaveAnswers',
+                return ret_message('An error occurred while saving answers.', True, 'api/scoutField/PostSaveAnswers',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'PostScoutFieldSaveAnswers', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutField/PostSaveAnswers', request.user.id)
 
 
 class GetResults(APIView):
@@ -139,12 +139,12 @@ class GetResults(APIView):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'GetScoutFieldQuery', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutField/GetResults', self.request.user.id, e)
 
         try:
             current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
-            return ret_message('No event set, see an admin.', True, 'GetScoutFieldQuery', self.request.user.id, e)
+            return ret_message('No event set, see an admin.', True, 'api/scoutField/GetResults', self.request.user.id, e)
 
         scout_cols = [{
                     'PropertyName': 'team',
@@ -202,7 +202,7 @@ class GetResults(APIView):
                 serializer = ScoutFieldResultsSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutFieldQuery',
+                return ret_message('An error occurred while initializing.', True, 'api/scoutField/GetResults',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'GetScoutFieldQuery', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutField/GetResults', request.user.id)

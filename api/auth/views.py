@@ -1,30 +1,19 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.core import signing
 from django import forms
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
-from django.template import Context
-from django.core.mail import EmailMultiAlternatives
+from django.shortcuts import render
+from django.contrib.auth import login
 from django.contrib.auth.forms import PasswordResetForm
 
-from api import settings
 from . import send_email
 from .forms import SignupForm, ResendActivationEmailForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.template.loader import render_to_string, get_template
 from .tokens import account_activation_token
-from django.core.mail import EmailMessage
-from django.contrib.auth.models import User
-from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from .models import *
 from .serializers import *
-from rest_framework.response import Response
 from .security import *
 
 
@@ -120,9 +109,13 @@ class GetUserData(APIView):
         return user
 
     def get(self, request, format=None):
-        req = self.get_user()
-        serializer = UserSerializer(req)
-        return Response(serializer.data)
+        try:
+            req = self.get_user()
+            serializer = UserSerializer(req)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user data.', True, 'auth/GetUserData',
+                               request.user.id, e)
 
 
 class GetUserLinks(APIView):
@@ -146,9 +139,13 @@ class GetUserLinks(APIView):
         return req
 
     def get(self, request, format=None):
-        req = self.get_links()
-        serializer = UserLinksSerializer(req, many=True)
-        return Response(serializer.data)
+        try:
+            req = self.get_links()
+            serializer = UserLinksSerializer(req, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user links.', True, 'auth/GetUserLinks',
+                               request.user.id, e)
 
 
 class GetUserGroups(APIView):
@@ -162,9 +159,13 @@ class GetUserGroups(APIView):
         return get_user_groups(user_id)
 
     def get(self, request, format=None):
-        req = self.get_groups(request.query_params.get('user_id', None))
-        serializer = GroupSerializer(req, many=True)
-        return Response(serializer.data)
+        try:
+            req = self.get_groups(request.query_params.get('user_id', None))
+            serializer = GroupSerializer(req, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user groups.', True, 'auth/GetUserGroups',
+                               request.user.id, e)
 
 
 class HTMLPasswordResetForm(PasswordResetForm):
