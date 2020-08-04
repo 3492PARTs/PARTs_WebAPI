@@ -10,11 +10,12 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .tokens import account_activation_token
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from .serializers import *
 from .security import *
+
 
 
 def register(request):
@@ -100,7 +101,7 @@ class GetUserData(APIView):
     """
     API endpoint
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_user(self):
@@ -122,7 +123,7 @@ class GetUserLinks(APIView):
     """
     API endpoint to get links a user has based on permissions
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_links(self):
@@ -152,7 +153,7 @@ class GetUserGroups(APIView):
     """
     API endpoint to get groups a user has based on permissions
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_groups(self, user_id):

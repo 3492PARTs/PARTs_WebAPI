@@ -1,5 +1,5 @@
 import pytz
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import *
@@ -14,7 +14,7 @@ class GetInit(APIView):
     """
     API endpoint to get the init values for the scout portal
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_init(self, user_id):

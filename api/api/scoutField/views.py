@@ -1,4 +1,4 @@
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from api.api.models import *
 from rest_framework.views import APIView
@@ -12,7 +12,7 @@ class GetQuestions(APIView):
     """
     API endpoint to get scout field inputs
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_questions(self):
@@ -88,7 +88,7 @@ class PostSaveAnswers(APIView):
     """
     API endpoint to save scout field answers
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_answers(self, data):
@@ -131,7 +131,7 @@ class GetResults(APIView):
     """
     API endpoint to get the results of field scouting
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_answers(self, team):

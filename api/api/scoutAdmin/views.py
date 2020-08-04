@@ -2,7 +2,7 @@ import datetime
 
 import pytz
 from django.db import IntegrityError
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 from django.contrib.auth.models import User
@@ -22,7 +22,7 @@ class GetInit(APIView):
     """
     API endpoint to get all the init values for the scout admin screen
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_init(self):
@@ -133,7 +133,7 @@ class GetSyncSeason(APIView):
     """
     API endpoint to sync a season
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def sync_season(self, season_id):
@@ -221,7 +221,7 @@ class GetSetSeason(APIView):
     """
     API endpoint to set the season
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def set(self, season_id, event_id):
@@ -258,7 +258,7 @@ class GetAddSeason(APIView):
     """
     API endpoint to add a season
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def add(self, season):
@@ -287,7 +287,7 @@ class GetDeleteSeason(APIView):
     """
     API endpoint to delete a season
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def delete(self, season_id):
@@ -339,7 +339,7 @@ class GetQuestionInit(APIView):
     """
     API endpoint to get the question init values for the scout admin screen
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_init(self, question_type):
@@ -399,7 +399,7 @@ class GetQuestionInit(APIView):
 class PostSaveScoutQuestion(APIView):
     """API endpoint to save new questions"""
 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_question(self, data):
@@ -456,7 +456,7 @@ class PostSaveScoutQuestion(APIView):
 class PostUpdateScoutQuestion(APIView):
     """API endpoint to update questions"""
 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def update_question(self, data):
@@ -499,7 +499,7 @@ class GetToggleScoutQuestion(APIView):
     """
     API endpoint to toggle a scout field question
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def toggle(self, sq_id):
@@ -530,7 +530,7 @@ class GetToggleOption(APIView):
     """
     API endpoint to toggle a question option
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def toggle(self, q_opt_id):
@@ -560,7 +560,7 @@ class GetToggleOption(APIView):
 class PostSaveScoutScheduleEntry(APIView):
     """API endpoint to save scout schedule entry"""
 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_scout_schedule(self, data):
@@ -621,7 +621,7 @@ class PostSaveScoutScheduleEntry(APIView):
 class PostNotifyUser(APIView):
     """API endpoint to notify users"""
 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def notify_user(self, data):
@@ -671,7 +671,7 @@ class PostNotifyUser(APIView):
 class PostSavePhoneType(APIView):
     """API endpoint to save phone types"""
 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_phone_type(self, data):

@@ -1,4 +1,4 @@
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from api.api.models import *
 from .serializers import *
@@ -15,7 +15,7 @@ class GetQuestions(APIView):
     """
     API endpoint to get scout pit inputs
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_questions(self):
@@ -103,7 +103,7 @@ class PostSaveAnswers(APIView):
     """
     API endpoint to save scout pit answers
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_answers(self, data):
@@ -154,7 +154,7 @@ class PostSavePicture(APIView):
     """
     API endpoint to save a robot picture
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_file(self, file, team_no):
@@ -202,7 +202,7 @@ class GetResultsInit(APIView):
     """
     API endpoint to get the teams who have already been scouted
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_teams(self):
@@ -248,7 +248,7 @@ class PostGetResults(APIView):
     """
     API endpoint to get scout pit results for the selected teams
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_results(self, teams):
@@ -319,7 +319,7 @@ class GetTeamData(APIView):
     """
     API endpoint to get scout pit team data
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_questions(self, team_num):
