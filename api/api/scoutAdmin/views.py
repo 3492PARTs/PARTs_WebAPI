@@ -184,7 +184,7 @@ class GetSyncSeason(APIView):
             event = Event.objects.get(event_cd=e['event_cd'])
             teams = Team.objects.filter(~Q(team_no__in=e['teams_to_keep']) & Q(event=event))
             for team in teams:
-                team.remove(event)
+                team.event_set.remove(event)
 
             for t in e['teams']:
 
