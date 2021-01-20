@@ -11,3 +11,6 @@ six~=1.14.0
 wheel
 djangorestframework_simplejwt
 cryptography
+uwsgi
+dj-database-url
+psycopg2>=2.8,<2.9
