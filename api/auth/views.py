@@ -17,7 +17,6 @@ from .serializers import *
 from .security import *
 
 
-
 def register(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
@@ -38,7 +37,8 @@ def register(request):
 
                 to_email = form.cleaned_data.get('email')
 
-                send_email.send_message(to_email, mail_subject, 'acc_active_email', cntx)
+                send_email.send_message(
+                    to_email, mail_subject, 'acc_active_email', cntx)
                 return render(request, 'registration/register_complete.html')
             except Exception as e:
                 print(e)
@@ -47,7 +47,8 @@ def register(request):
                 return render(request, 'registration/register_fail.html')
     else:
         form = SignupForm()
-    return render(request, 'registration/register.html', {'form': form})  # TODO maybe check email here and yeah
+    # TODO maybe check email here and yeah
+    return render(request, 'registration/register.html', {'form': form})
 
 
 def resend_activation_email(request):
@@ -71,7 +72,8 @@ def resend_activation_email(request):
             }
             mail_subject = 'Activate your PARTs account.'
 
-            send_email.send_message(to_email, mail_subject, 'acc_active_email', cntx)
+            send_email.send_message(
+                to_email, mail_subject, 'acc_active_email', cntx)
             return render(request, 'registration/register_complete.html')
 
     if not form:
@@ -105,7 +107,8 @@ class GetUserData(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_user(self):
-        user = User.objects.select_related('profile').get(id=self.request.user.id)
+        user = User.objects.select_related(
+            'profile').get(id=self.request.user.id)
 
         return user
 
@@ -135,7 +138,8 @@ class GetUserLinks(APIView):
         req = []
 
         for link in user_links:
-            req.append({'MenuName': link.menu_name, 'RouterLink': link.routerlink})
+            req.append({'MenuName': link.menu_name,
+                        'RouterLink': link.routerlink})
 
         return req
 
@@ -210,4 +214,5 @@ class HTMLPasswordResetForm(PasswordResetForm):
             'token': token_generator.make_token(user),
             'protocol': 'https' if use_https else 'http',
         }
-        send_email.send_message(email, 'PARTs Password Reset', 'password_reset_email', c)
+        send_email.send_message(
+            email, 'PARTs Password Reset', 'password_reset_email', c)

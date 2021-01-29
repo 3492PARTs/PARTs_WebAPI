@@ -11,8 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-import pymysql
-#import django_heroku
+from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,13 +20,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'aNOTsoSECRETkey'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 DEBUG_PROPAGATE_EXCEPTIONS = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['parts.bduke.dev', '192.168.1.41']
 
 # Application definition
 
@@ -58,7 +57,8 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_WHITELIST = [
     'http://parts3492.org',
-    'https://parts3492.org'
+    'https://parts3492.org',
+    'http://192.168.1.41:49156'
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -81,21 +81,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'api.wsgi.application'
 
-# Fake PyMySQL's version and install as MySQLdb
-# https://adamj.eu/tech/2020/02/04/how-to-use-pymysql-with-django/
-pymysql.version_info = (1, 4, 2, "final", 0)
-pymysql.install_as_MySQLdb()
-
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-"""
 DATABASES = {
     'default': {
-       'ENGINE': 'django.db.backends.sqlite3',
-       'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-   }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
+    }
 }
-"""
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -117,8 +114,34 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    'ALGORITHM': 'RS512',
+    'SIGNING_KEY': open('keys/jwt-key').read(),
+    'VERIFYING_KEY': open('keys/jwt-key.pub').read(),
+    'AUDIENCE': None,
+    'ISSUER': None,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+
+    'JTI_CLAIM': 'jti',
+
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 # Internationalization
@@ -138,31 +161,22 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/staticfiles/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = (
-    (os.path.join(BASE_DIR, 'staticfiles')),
-)
+#STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# STATICFILES_DIRS = (
+#    (os.path.join(BASE_DIR, 'staticfiles')),
+# )
 
 # Email and SMTP settings
-DEFAULT_FROM_EMAIL = 'team3492@gmail.com'
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_FROM')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = os.environ.get("SENDGRID_USERNAME")
-EMAIL_HOST_PASSWORD = os.environ.get("SENDGRID_PASSWORD")
-EMAIL_PORT = 587
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
 
 # URLs
 LOGIN_URL = '/auth/login/'
 
-DATABASES = {
-    'default': {
-        'OPTIONS': {
-            'sslmode': 'no'
-        }
-    }
-}
-# Activate Django-Heroku.
-#django_heroku.settings(locals())
-#del DATABASES['default']['OPTIONS']['sslmode']
-print('settings')
+# Cloudinary
+os.environ["CLOUDINARY_URL"] = os.getenv('CLOUDINARY_URL')

@@ -51,7 +51,8 @@ def ret_message(message, error=False, path='', user_id=0, exception=None):
         print('----------ERROR START----------')
         print('Error in: ' + path)
         print('Message: ' + message)
-        print('Error by: ' + user.username + ' ' + user.first_name + ' ' + user.last_name)
+        print('Error by: ' + user.username + ' ' +
+              user.first_name + ' ' + user.last_name)
         print('Exception: ')
         print(exception)
         print('----------ERROR END----------')
