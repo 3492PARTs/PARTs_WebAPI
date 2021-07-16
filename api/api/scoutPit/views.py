@@ -8,7 +8,7 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-auth_obj = 3
+auth_obj = 3 + 48
 
 
 class GetQuestions(APIView):
@@ -57,7 +57,8 @@ class GetQuestions(APIView):
             x = 1
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
         except Exception as e:
             return ret_message('No event set, see an admin.', True, 'api/scoutPit/GetQuestions', self.request.user.id, e)
 
@@ -74,7 +75,8 @@ class GetQuestions(APIView):
         try:
             comp_teams = Team.objects.filter(
                 Q(event=current_event) &
-                Q(team_no__in=(ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n'))))
+                Q(team_no__in=(ScoutPit.objects.filter(
+                    Q(event=current_event) & Q(void_ind='n'))))
             ).order_by('team_no')
 
         except Exception as e:
@@ -113,19 +115,22 @@ class PostSaveAnswers(APIView):
             return ret_message('No season set, see an admin.', True, 'api/scoutPit/PostSaveAnswers', self.request.user.id, e)
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
         except Exception as e:
             return ret_message('No event set, see an admin', True, 'api/scoutPit/PostSaveAnswers', self.request.user.id, e)
 
         try:
             sp = ScoutPit.objects.get(team_no_id=data['team'])
         except Exception as e:
-            sp = ScoutPit(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
+            sp = ScoutPit(
+                event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
             sp.save()
 
         for d in data['scoutQuestions']:
             try:
-                spa = ScoutPitAnswer.objects.get(Q(scout_pit=sp) & Q(sq_id=d['sq_id']))
+                spa = ScoutPitAnswer.objects.get(
+                    Q(scout_pit=sp) & Q(sq_id=d['sq_id']))
                 spa.answer = d.get('answer', '')
             except Exception as e:
                 spa = ScoutPitAnswer(scout_pit=sp, sq_id=d['sq_id'],
@@ -165,7 +170,8 @@ class PostSavePicture(APIView):
             return ret_message('No season set, see an admin.', True, 'api/scoutPit/PostSavePicture', self.request.user.id, e)
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
         except Exception as e:
             return ret_message('No event set, see an admin.', True, 'api/scoutPit/PostSavePicture', self.request.user.id, e)
 
@@ -174,7 +180,8 @@ class PostSavePicture(APIView):
 
         try:
             response = cloudinary.uploader.upload(file)
-            sp = ScoutPit.objects.get(Q(event=current_event) & Q(team_no_id=team_no))
+            sp = ScoutPit.objects.get(
+                Q(event=current_event) & Q(team_no_id=team_no))
 
             sp.img_id = response['public_id']
             sp.img_ver = str(response['version'])
@@ -213,7 +220,8 @@ class GetResultsInit(APIView):
             return ret_message('No season set, see an admin.', True, 'api/scoutPit/GetResultsInit', self.request.user.id, e)
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
         except Exception as e:
             return ret_message('No event set, see an admin.', True, 'api/scoutPit/GetResultsInit', self.request.user.id, e)
 
@@ -258,7 +266,8 @@ class PostGetResults(APIView):
             return ret_message('No season set, see an admin.', True, 'api/scoutPit/PostGetResults', self.request.user.id, e)
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
         except Exception as e:
             return ret_message('No event set, see an admin', True, 'api/scoutPit/PostGetResults', self.request.user.id, e)
 
@@ -267,12 +276,14 @@ class PostGetResults(APIView):
             if t.get('checked', False):
                 team = Team.objects.get(team_no=t['team_no'])
                 try:
-                    sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(event=current_event) & Q(void_ind='n'))
+                    sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(
+                        event=current_event) & Q(void_ind='n'))
                 except Exception as e:
                     return ret_message('No pit data for team.', True, 'api/scoutPit/PostGetResults',
                                        self.request.user.id, e)
 
-                spas = ScoutPitAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n'))
+                spas = ScoutPitAnswer.objects.filter(
+                    Q(scout_pit=sp) & Q(void_ind='n'))
 
                 tmp = {
                     'teamNo': team.team_no,
@@ -338,7 +349,8 @@ class GetTeamData(APIView):
                 try:
                     sp = ScoutPit.objects.get(team_no=team_num)
 
-                    spa = ScoutPitAnswer.objects.get(Q(scout_pit=sp) & Q(sq=sq))
+                    spa = ScoutPitAnswer.objects.get(
+                        Q(scout_pit=sp) & Q(sq=sq))
                 except Exception as e:
                     spa = ScoutPitAnswer(answer='')
 
@@ -374,7 +386,8 @@ class GetTeamData(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.get_questions(request.query_params.get('team_num', None))
+                req = self.get_questions(
+                    request.query_params.get('team_num', None))
                 serializer = ScoutQuestionSerializer(req, many=True)
                 return Response(serializer.data)
             except Exception as e:

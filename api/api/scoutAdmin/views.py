@@ -15,7 +15,7 @@ from rest_framework.views import APIView
 from api.auth.security import *
 import requests
 
-auth_obj = 2
+auth_obj = 2 + 48
 
 
 class GetInit(APIView):
@@ -35,21 +35,25 @@ class GetInit(APIView):
             current_season = Season()
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
             current_event = Event()
 
-        users = User.objects.filter(Q(is_active=True) & Q(date_joined__isnull=False) & ~Q(groups__name__in=['Adminn']))
+        users = User.objects.filter(Q(is_active=True) & Q(
+            date_joined__isnull=False) & ~Q(groups__name__in=['Adminn']))
 
         user_groups = []
         try:
-            user_groups = Group.objects.filter(id__in=list(ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True)))
+            user_groups = Group.objects.filter(id__in=list(
+                ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True)))
         except Exception as e:
             user_groups = []
 
         phone_types = PhoneType.objects.all()
 
-        time = timezone.now()  # datetime.now() - timedelta(hours=5) # datetime.now(pytz.timezone('US/Eastern'))
+        # datetime.now() - timedelta(hours=5) # datetime.now(pytz.timezone('US/Eastern'))
+        time = timezone.now()
         fieldSchedule = []
         sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
                                            (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
@@ -93,7 +97,8 @@ class GetInit(APIView):
             })
 
         pastSchedule = []
-        sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) & Q(void_ind='n')).order_by('st_time', 'user')
+        sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) & Q(
+            void_ind='n')).order_by('st_time', 'user')
         for ss in sss:
             pastSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -178,25 +183,31 @@ class GetSyncSeason(APIView):
                       event_cd=e['event_cd'], current='n', void_ind='n').save(force_insert=True)
                 messages += "(ADD) Added event: " + e['event_cd'] + '\n'
             except IntegrityError:
-                messages += "(NO ADD) Already have event: " + e['event_cd'] + '\n'
+                messages += "(NO ADD) Already have event: " + \
+                    e['event_cd'] + '\n'
 
             # remove teams that have been removed from an event
             event = Event.objects.get(event_cd=e['event_cd'])
-            teams = Team.objects.filter(~Q(team_no__in=e['teams_to_keep']) & Q(event=event))
+            teams = Team.objects.filter(
+                ~Q(team_no__in=e['teams_to_keep']) & Q(event=event))
             for team in teams:
                 team.event_set.remove(event)
 
             for t in e['teams']:
 
                 try:
-                    Team(team_no=t['team_no'], team_nm=t['team_nm']).save(force_insert=True)
-                    messages += "(ADD) Added team: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
+                    Team(team_no=t['team_no'], team_nm=t['team_nm']).save(
+                        force_insert=True)
+                    messages += "(ADD) Added team: " + \
+                        str(t['team_no']) + " " + t['team_nm'] + '\n'
                 except IntegrityError:
-                    messages += "(NO ADD) Already have team: " + str(t['team_no']) + " " + t['team_nm'] + '\n'
+                    messages += "(NO ADD) Already have team: " + \
+                        str(t['team_no']) + " " + t['team_nm'] + '\n'
 
                 try:
                     team = Team.objects.get(team_no=t['team_no'])
-                    team.event_set.add(Event.objects.get(event_cd=e['event_cd']))
+                    team.event_set.add(
+                        Event.objects.get(event_cd=e['event_cd']))
                     messages += "(ADD) Added team: " + str(t['team_no']) + " " + t['team_nm'] + " to event: " + e[
                         'event_cd'] + '\n'
                 except IntegrityError:
@@ -208,7 +219,8 @@ class GetSyncSeason(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.sync_season(request.query_params.get('season_id', None))
+                req = self.sync_season(
+                    request.query_params.get('season_id', None))
                 return ret_message(req)
             except Exception as e:
                 return ret_message('An error occurred while syncing teams.', True, 'GetScoutAdminSyncSeason',
@@ -245,7 +257,8 @@ class GetSetSeason(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.set(request.query_params.get('season_id', None), request.query_params.get('event_id', None))
+                req = self.set(request.query_params.get(
+                    'season_id', None), request.query_params.get('event_id', None))
                 return req
             except Exception as e:
                 return ret_message('An error occurred while setting the season.', True, 'GetScoutAdminSetSeason',
@@ -352,7 +365,8 @@ class GetQuestionInit(APIView):
 
         scout_questions = []
         try:
-            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id=question_type))
+            sqs = ScoutQuestion.objects.filter(
+                Q(season=current_season) & Q(sq_typ_id=question_type))
             for sq in sqs:
                 ops = QuestionOptions.objects.filter(sq=sq)
                 options = []
@@ -419,18 +433,18 @@ class PostSaveScoutQuestion(APIView):
                 questions_answered = ScoutField.objects.filter(void_ind='n')
 
                 for qa in questions_answered:
-                    ScoutFieldAnswer(scout_field=qa, sq=sq, answer='!EXIST', void_ind='n').save()
+                    ScoutFieldAnswer(scout_field=qa, sq=sq,
+                                     answer='!EXIST', void_ind='n').save()
             elif data['sq_typ'] == 'pit':
                 questions_answered = ScoutPit.objects.filter(void_ind='n')
 
                 for qa in questions_answered:
-                    ScoutPitAnswer(scout_pit=qa, sq=sq, answer='!EXIST', void_ind='n').save()
-
-
-
+                    ScoutPitAnswer(scout_pit=qa, sq=sq,
+                                   answer='!EXIST', void_ind='n').save()
 
             for op in data['options']:
-                QuestionOptions(option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
+                QuestionOptions(
+                    option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
 
             return ret_message('Saved question successfully.')
         except Exception as e:
@@ -474,7 +488,8 @@ class PostUpdateScoutQuestion(APIView):
                 o.active = op['active']
                 o.save()
             else:
-                QuestionOptions(option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
+                QuestionOptions(
+                    option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
 
         return ret_message('Question saved successfully')
 
@@ -566,12 +581,14 @@ class PostSaveScoutScheduleEntry(APIView):
     def save_scout_schedule(self, data):
         #local = pytz.timezone('US/Eastern')
         local = pytz.utc
-        native = datetime.datetime.strptime(data['st_time'].replace('T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
+        native = datetime.datetime.strptime(data['st_time'].replace(
+            'T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
         local_dt = local.localize(native, is_dst=None)
         #st_utc_dt = local_dt.astimezone(pytz.utc)
         st_utc_dt = local_dt
 
-        native = datetime.datetime.strptime(data['end_time'].replace('T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
+        native = datetime.datetime.strptime(data['end_time'].replace(
+            'T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
         local_dt = local.localize(native, is_dst=None)
         #end_utc_dt = local_dt.astimezone(pytz.utc)
         end_utc_dt = local_dt
@@ -598,8 +615,6 @@ class PostSaveScoutScheduleEntry(APIView):
             ss.void_ind = data['void_ind']
             ss.save()
             return ret_message('Updated schedule entry successfully')
-
-
 
     def post(self, request, format=None):
         serializer = ScoutScheduleSerializer(data=request.data)
@@ -646,7 +661,8 @@ class PostNotifyUser(APIView):
                 send_email.send_message(user.phone + user.phone_type.phone_type, 'Time to Scout!', 'notify_scout',
                                         data)
 
-                scout_sch = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
+                scout_sch = ScoutSchedule.objects.get(
+                    scout_sch_id=d['scout_sch_id'])
                 scout_sch.notified = 'y'
                 scout_sch.save()
 
@@ -682,7 +698,8 @@ class PostSavePhoneType(APIView):
             pt.carrier = data['carrier']
             pt.save()
         else:
-            PhoneType(phone_type=data['phone_type'], carrier=data['carrier']).save()
+            PhoneType(phone_type=data['phone_type'],
+                      carrier=data['carrier']).save()
 
         return ret_message('Successfully saved phone type.')
 

@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from api.auth.security import *
 from django.contrib.auth.models import User, Group
 
-auth_obj = 7
-auth_obj_save_user = 8
+auth_obj = 7 + 48
+auth_obj_save_user = 8 + 48
 
 
 class GetInit(APIView):

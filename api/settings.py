@@ -58,6 +58,8 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     'http://parts3492.org',
     'https://parts3492.org',
+    'http://parts3492.org/',
+    'https://parts3492.org/',
     'http://192.168.1.41:49156'
 ]
 
@@ -85,7 +87,7 @@ WSGI_APPLICATION = 'api.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),

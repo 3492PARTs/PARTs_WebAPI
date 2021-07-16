@@ -7,7 +7,7 @@ from api.api.models import *
 from rest_framework.views import APIView
 from api.auth.security import *
 
-auth_obj = 6
+auth_obj = 6 + 48
 
 
 class GetInit(APIView):

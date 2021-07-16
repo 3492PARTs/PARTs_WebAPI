@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from api.auth.security import *
 from .serializers import *
 
-auth_obj = 1
+auth_obj = 1 + 48
 
 
 class GetQuestions(APIView):
@@ -54,13 +54,15 @@ class GetQuestions(APIView):
             x = 1
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
         except Exception as e:
             return ret_message('No event set, see an admin.', True, 'api/scoutField/GetQuestions', self.request.user.id, e)
 
         teams = []
         try:
-            teams = Team.objects.filter(event=current_event).order_by('team_no')
+            teams = Team.objects.filter(
+                event=current_event).order_by('team_no')
 
         except Exception as e:
             x = 1
@@ -98,15 +100,18 @@ class PostSaveAnswers(APIView):
             return ret_message('No season set, see an admin.', True, 'api/scoutField/PostSaveAnswers', self.request.user.id, e)
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
         except Exception as e:
             return ret_message('No event set, see an admin', True, 'api/scoutField/PostSaveAnswers', self.request.user.id, e)
 
-        sf = ScoutField(event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
+        sf = ScoutField(
+            event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
         sf.save()
 
         for d in data['scoutQuestions']:
-            sfa = ScoutFieldAnswer(scout_field=sf, sq_id=d['sq_id'], answer=d.get('answer', ''), void_ind='n')
+            sfa = ScoutFieldAnswer(
+                scout_field=sf, sq_id=d['sq_id'], answer=d.get('answer', ''), void_ind='n')
             sfa.save()
 
         return ret_message('Question saved successfully')
@@ -142,18 +147,20 @@ class GetResults(APIView):
             return ret_message('No season set, see an admin.', True, 'api/scoutField/GetResults', self.request.user.id, e)
 
         try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
             return ret_message('No event set, see an admin.', True, 'api/scoutField/GetResults', self.request.user.id, e)
 
         scout_cols = [{
-                    'PropertyName': 'team',
-                    'ColLabel': 'Team No',
-                    'order': 0
-                }]
+            'PropertyName': 'team',
+            'ColLabel': 'Team No',
+            'order': 0
+        }]
         scout_answers = []
         try:
-            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('order')
+            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(
+                sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('order')
             for sq in sqs:
                 scout_cols.append({
                     'PropertyName': 'ans' + str(sq.sq_id),
@@ -171,10 +178,12 @@ class GetResults(APIView):
                 sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n'))\
                     .order_by('scout_field_id')
             else:
-                sfs = ScoutField.objects.filter(Q(event=current_event) & Q(void_ind='n')).order_by('scout_field_id')
+                sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
+                    void_ind='n')).order_by('scout_field_id')
 
             for sf in sfs:
-                sfas = ScoutFieldAnswer.objects.filter(Q(scout_field=sf) & Q(void_ind='n'))
+                sfas = ScoutFieldAnswer.objects.filter(
+                    Q(scout_field=sf) & Q(void_ind='n'))
 
                 sa_obj = {}
                 for sfa in sfas:
