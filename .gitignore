@@ -1,4 +1,5 @@
 api/settings_dev.py
+keys/
 
 .DS_Store
 
