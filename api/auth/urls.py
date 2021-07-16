@@ -26,7 +26,8 @@ urlpatterns = [
     path('resend_activation/', views.resend_activation_email),
     path('user_data/', views.GetUserData.as_view()),
     path('user_links/', views.GetUserLinks.as_view()),
-    path('get_user_groups/', views.GetUserGroups.as_view())
+    path('get_user_groups/', views.GetUserGroups.as_view()),
+    path('api_status/', views.GetAPIStatus.as_view())
 ]
 
 # TODO Proper git ignore

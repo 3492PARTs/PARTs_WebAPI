@@ -172,6 +172,14 @@ class GetUserGroups(APIView):
             return ret_message('An error occurred while getting user groups.', True, 'auth/GetUserGroups',
                                request.user.id, e)
 
+class GetAPIStatus(APIView):
+    """
+    API endpoint to get if the api is available
+    """
+
+    def get(self, request, format=None):
+        return Response(200)
+
 
 class HTMLPasswordResetForm(PasswordResetForm):
     """
