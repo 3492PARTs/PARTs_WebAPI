@@ -1,30 +1,19 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.core import signing
 from django import forms
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
-from django.template import Context
-from django.core.mail import EmailMultiAlternatives
+from django.shortcuts import render
+from django.contrib.auth import login
 from django.contrib.auth.forms import PasswordResetForm
 
-from api import settings
 from . import send_email
 from .forms import SignupForm, ResendActivationEmailForm
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.template.loader import render_to_string, get_template
 from .tokens import account_activation_token
-from django.core.mail import EmailMessage
-from django.contrib.auth.models import User
-from rest_framework import viewsets
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from .models import *
 from .serializers import *
-from rest_framework.response import Response
 from .security import *
 
 
@@ -48,7 +37,8 @@ def register(request):
 
                 to_email = form.cleaned_data.get('email')
 
-                send_email.send_message(to_email, mail_subject, 'acc_active_email', cntx)
+                send_email.send_message(
+                    to_email, mail_subject, 'acc_active_email', cntx)
                 return render(request, 'registration/register_complete.html')
             except Exception as e:
                 print(e)
@@ -57,7 +47,8 @@ def register(request):
                 return render(request, 'registration/register_fail.html')
     else:
         form = SignupForm()
-    return render(request, 'registration/register.html', {'form': form})  # TODO maybe check email here and yeah
+    # TODO maybe check email here and yeah
+    return render(request, 'registration/register.html', {'form': form})
 
 
 def resend_activation_email(request):
@@ -81,7 +72,8 @@ def resend_activation_email(request):
             }
             mail_subject = 'Activate your PARTs account.'
 
-            send_email.send_message(to_email, mail_subject, 'acc_active_email', cntx)
+            send_email.send_message(
+                to_email, mail_subject, 'acc_active_email', cntx)
             return render(request, 'registration/register_complete.html')
 
     if not form:
@@ -111,25 +103,30 @@ class GetUserData(APIView):
     """
     API endpoint
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_user(self):
-        user = User.objects.select_related('profile').get(id=self.request.user.id)
+        user = User.objects.select_related(
+            'profile').get(id=self.request.user.id)
 
         return user
 
     def get(self, request, format=None):
-        req = self.get_user()
-        serializer = UserSerializer(req)
-        return Response(serializer.data)
+        try:
+            req = self.get_user()
+            serializer = UserSerializer(req)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user data.', True, 'auth/GetUserData',
+                               request.user.id, e)
 
 
 class GetUserLinks(APIView):
     """
     API endpoint to get links a user has based on permissions
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_links(self):
@@ -141,30 +138,39 @@ class GetUserLinks(APIView):
         req = []
 
         for link in user_links:
-            req.append({'MenuName': link.menu_name, 'RouterLink': link.routerlink})
+            req.append({'MenuName': link.menu_name,
+                        'RouterLink': link.routerlink})
 
         return req
 
     def get(self, request, format=None):
-        req = self.get_links()
-        serializer = UserLinksSerializer(req, many=True)
-        return Response(serializer.data)
+        try:
+            req = self.get_links()
+            serializer = UserLinksSerializer(req, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user links.', True, 'auth/GetUserLinks',
+                               request.user.id, e)
 
 
 class GetUserGroups(APIView):
     """
     API endpoint to get groups a user has based on permissions
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_groups(self, user_id):
         return get_user_groups(user_id)
 
     def get(self, request, format=None):
-        req = self.get_groups(request.query_params.get('user_id', None))
-        serializer = GroupSerializer(req, many=True)
-        return Response(serializer.data)
+        try:
+            req = self.get_groups(request.query_params.get('user_id', None))
+            serializer = GroupSerializer(req, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user groups.', True, 'auth/GetUserGroups',
+                               request.user.id, e)
 
 
 class HTMLPasswordResetForm(PasswordResetForm):
@@ -208,4 +214,5 @@ class HTMLPasswordResetForm(PasswordResetForm):
             'token': token_generator.make_token(user),
             'protocol': 'https' if use_https else 'http',
         }
-        send_email.send_message(email, 'PARTs Password Reset', 'password_reset_email', c)
+        send_email.send_message(
+            email, 'PARTs Password Reset', 'password_reset_email', c)

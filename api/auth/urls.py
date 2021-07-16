@@ -2,14 +2,18 @@ from django.urls import path, include
 from django.conf.urls import url
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework import routers
+from rest_framework_simplejwt import views as jwt_views
 from django.contrib.auth import views as auth_views
 from api.auth import views
 
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
+    path('token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
+    path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'), # TODO Maybe remove
     path('login/', auth_views.LoginView.as_view(), name='login'),
-    url(r'^get_token/', ObtainAuthToken.as_view()),
+    #url(r'^get_token/', ObtainAuthToken.as_view()),
     path('register/', views.register, name='register'),
     path(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
          views.activate, name='activate'),

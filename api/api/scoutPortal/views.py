@@ -1,5 +1,5 @@
 import pytz
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import *
@@ -7,21 +7,21 @@ from api.api.models import *
 from rest_framework.views import APIView
 from api.auth.security import *
 
-auth_obj = 6
+auth_obj = 6 + 48
 
 
 class GetInit(APIView):
     """
     API endpoint to get the init values for the scout portal
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_init(self, user_id):
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'api/scoutAdmin/GetInit', self.request.user.id, e)
+            return ret_message('No season set, see an admin.', True, 'api/scoutPortal/GetInit', self.request.user.id, e)
 
         time = timezone.now()
         fieldSchedule = []
@@ -93,7 +93,7 @@ class GetInit(APIView):
                 serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'GetScoutPortalInit',
+                return ret_message('An error occurred while initializing.', True, 'api/scoutPortal/GetInit',
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access,', True, 'GetScoutPortalInit', request.user.id)
+            return ret_message('You do not have access,', True, 'api/scoutPortal/GetInit', request.user.id)

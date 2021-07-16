@@ -1,5 +1,4 @@
-
-from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
@@ -9,15 +8,15 @@ from rest_framework.views import APIView
 from api.auth.security import *
 from django.contrib.auth.models import User, Group
 
-auth_obj = 7
-auth_obj_save_user = 8
+auth_obj = 7 + 48
+auth_obj_save_user = 8 + 48
 
 
 class GetInit(APIView):
     """
     API endpoint to get all the init values for the admin screen
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_init(self):
@@ -46,7 +45,7 @@ class GetInit(APIView):
 class PostSaveUser(APIView):
     """API endpoint to save user data"""
 
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def save_user(self, data):
@@ -96,7 +95,7 @@ class GetErrorLog(APIView):
     """
     API endpoint to get errors for the admin screen
     """
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_errors(self, pg):
