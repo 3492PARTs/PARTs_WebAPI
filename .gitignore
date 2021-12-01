@@ -120,4 +120,4 @@ GitHub.sublime-settings
 !.vscode/extensions.json 
 .history
 
-docker-compose.yaml
+.env

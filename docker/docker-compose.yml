@@ -1,0 +1,23 @@
+version: "2"
+
+services:
+  app:
+    environment:
+      DJANGO_MANAGEPY_MIGRATE: "on"
+      SECRET_KEY: ${SECRET_KEY}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      EMAIL_PORT: ${EMAIL_PORT}
+      CLOUDINARY_URL: ${CLOUDINARY_URL}
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "8069:9090"

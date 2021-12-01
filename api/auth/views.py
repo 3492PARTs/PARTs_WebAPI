@@ -22,7 +22,7 @@ def register(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False  # TODO on error delete user
+            user.is_active = False
             user.save()
 
             try:
@@ -42,7 +42,8 @@ def register(request):
                 return render(request, 'registration/register_complete.html')
             except Exception as e:
                 print(e)
-                # TODO ret_message('An error occurred while creating a user.', True, 'register', e)
+                ret_message(
+                    'An error occurred while creating a user.', True, 'register', e)
                 user.delete()
                 return render(request, 'registration/register_fail.html')
     else:
@@ -171,6 +172,7 @@ class GetUserGroups(APIView):
         except Exception as e:
             return ret_message('An error occurred while getting user groups.', True, 'auth/GetUserGroups',
                                request.user.id, e)
+
 
 class GetAPIStatus(APIView):
     """
