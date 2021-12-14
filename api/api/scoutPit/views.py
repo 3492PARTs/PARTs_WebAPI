@@ -66,7 +66,7 @@ class GetQuestions(APIView):
         try:
             teams = Team.objects.filter(Q(event=current_event) &
                                         ~Q(team_no__in=(
-                                            ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n'))))
+                                            ScoutPit.objects.filter(Q(event=current_event) & Q(void_ind='n')).values_list('team_no', flat=True)))
                                         ).order_by('team_no')
         except Exception as e:
             teams.append(Team())
@@ -76,9 +76,8 @@ class GetQuestions(APIView):
             comp_teams = Team.objects.filter(
                 Q(event=current_event) &
                 Q(team_no__in=(ScoutPit.objects.filter(
-                    Q(event=current_event) & Q(void_ind='n'))))
+                    Q(event=current_event) & Q(void_ind='n')).values_list('team_no', flat=True)))
             ).order_by('team_no')
-
         except Exception as e:
             comp_teams.append(Team())
 

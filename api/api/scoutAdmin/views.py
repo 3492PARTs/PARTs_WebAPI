@@ -429,6 +429,7 @@ class PostSaveScoutQuestion(APIView):
 
             sq.save()
 
+            # If adding a new question we need to make a null answer for it for all questions already answered
             if data['sq_typ'] == 'field':
                 questions_answered = ScoutField.objects.filter(void_ind='n')
 
