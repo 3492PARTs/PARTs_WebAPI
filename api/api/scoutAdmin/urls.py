@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.urls import include
 from django.urls import path
 from rest_framework import routers
 from .views import *
@@ -19,4 +19,4 @@ urlpatterns = [
     path('PostSaveScoutScheduleEntry/', PostSaveScoutScheduleEntry.as_view()),
     path('PostNotifyUser/', PostNotifyUser.as_view()),
     path('PostSavePhoneType/', PostSavePhoneType.as_view()),
-    ]
+]

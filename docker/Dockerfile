@@ -1,4 +1,4 @@
-FROM python:3.7-slim
+FROM python:3.10.2-slim
 
 # Create a group and user to run our app
 ARG APP_USER=appuser
@@ -42,7 +42,7 @@ RUN set -ex \
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 RUN mkdir /code/
 WORKDIR /code/
-ADD . /code/
+ADD ./ /code/
 
 # uWSGI will listen on this port
 EXPOSE 9090

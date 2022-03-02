@@ -1,7 +1,7 @@
 version: "2"
 
 services:
-  app:
+  parts_webapi:
     environment:
       DJANGO_MANAGEPY_MIGRATE: "on"
       SECRET_KEY: ${SECRET_KEY}
@@ -17,7 +17,7 @@ services:
       EMAIL_PORT: ${EMAIL_PORT}
       CLOUDINARY_URL: ${CLOUDINARY_URL}
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ../
+      dockerfile: ./docker/Dockerfile
     ports:
       - "8069:9090"
