@@ -26,6 +26,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = False
 DEBUG_PROPAGATE_EXCEPTIONS = True
 
+FRONTEND_ADDRESS = 'https://parts3492.org/'
+
 ALLOWED_HOSTS = ['parts.bduke.dev', '192.168.1.41']
 
 # Application definition
@@ -125,6 +127,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
 
     'ALGORITHM': 'RS512',
     'SIGNING_KEY': open('keys/jwt-key').read(),

@@ -1,6 +1,8 @@
+import ast
+from datetime import timedelta
 from django.contrib.auth.tokens import default_token_generator
 from django import forms
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib.auth import login
 from django.contrib.auth.forms import PasswordResetForm
 
@@ -15,6 +17,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from .serializers import *
 from .security import *
+
+from rest_framework import viewsets
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from rest_framework.decorators import action
+from django.core.exceptions import ObjectDoesNotExist
+import secrets
+from django.conf import settings
+import pytz
 
 
 def register(request):
@@ -226,3 +238,315 @@ class HTMLPasswordResetForm(PasswordResetForm):
         }
         send_email.send_message(
             email, 'PARTs Password Reset', 'password_reset_email', c)
+
+
+# New user management
+class UserProfileView(APIView):
+    """
+    Handles registering new users and management of user profiles.
+    """
+    #queryset = UserProfile.objects.all().order_by('-id')
+    #permission_classes = [UserPermission]
+    #serializer_class = UserProfileSerializer
+    #parser_classes = [JSONParser, FormParser, MultiPartParser]
+
+    def put(self, request):
+        try:
+            serialized = UserCreationSerializer(data=request.data)
+            if serialized.is_valid():
+                #user_confirm_hash = abs(hash(serialized.data.date_joined))
+                if serialized.data.get('password1', 't') != serialized.data.get('password2', 'y'):
+                    return ret_message('Passwords don\'t match.', True, 'auth/profile', 0)
+
+                user_data = serialized.validated_data
+                user = User(username=user_data.get('username'), email=user_data.get('email'), first_name=user_data.get('first_name'),
+                            last_name=user_data.get('last_name'), date_joined=timezone.now())
+
+                #user = form.save(commit=False)
+                user.is_active = False
+                user.set_password(user_data.get('password1'))
+                user.save()
+
+                current_site = get_current_site(request)
+
+                user_confirm_hash = abs(hash(user.date_joined))
+
+                cntx = {
+                    'user': user,
+                    'url': request.scheme + '://' + current_site.domain + '/auth/confirm/?pk={}&confirm={}'.format(user.username, user_confirm_hash)
+                }
+
+                send_mail(
+                    subject="Activate your PARTs account.",
+                    message=render_to_string(
+                        "email_templates/acc_active_email.txt", cntx).strip(),
+                    html_message=render_to_string(
+                        "email_templates/acc_active_email.html", cntx).strip(),
+                    from_email="team3492@gmail.com",
+                    recipient_list=[user.email]
+                )
+
+                return ret_message('User created')
+            else:
+                ed = serialized._errors.get('password1').get('password')
+                error_list = ast.literal_eval(ed.title())
+                error_str = ''
+                for e in error_list:
+                    error_str += '\n' + e
+                return ret_message('An error occurred while creating user.' + error_str, True, 'auth/profile',
+                                   0, serialized._errors)
+        except Exception as e:
+            error_string = str(e)
+            if error_string == 'UNIQUE constraint failed: auth_user.username':
+                error_string = 'A user with that username already exists.'
+            else:
+                error_string = None
+            return ret_message('An error occurred while creating user.' + ('\n' + error_string if error_string is not None else None), True, 'auth/profile', exception=e)
+
+    # TODO Add auth
+    def update(self, request, pk=None):
+        user = self.queryset.filter(id=pk).first()
+        if user is None:
+            return ret_message('An error occurred while updating user data.', True, 'auth/profile',
+                               0)
+        self.check_object_permissions(request, user)
+        serializer = UserUpdateSerializer(data=request.data, partial=True)
+        # flag used to email user the user's old email about the change in the event that both the email and password are updated
+        password_changed = False
+        if serializer.is_valid():
+            if "password" in serializer.validated_data:
+                try:
+                    validate_password(
+                        serializer.validated_data["password"], user=request.user, password_validators=get_default_password_validators())
+                except ValidationError as e:
+                    return ret_message('An error occurred changing password.', True, 'auth/user',
+                                       request.user.id, e)
+                password_changed = True
+                user.set_password(serializer.validated_data["password"])
+                cntx = {'user': user,
+                        'message': 'Your password has been updated. If you did not do this, please secure your account by requesting a password reset as soon as possible.'}
+
+                send_mail(
+                    subject="Password Change",
+                    message=render_to_string(
+                        'email_templates/generic_email.txt', cntx).strip(),
+                    html_message=render_to_string(
+                        'email_templates/generic_email.html', cntx).strip(),
+                    from_email='team3492@gmail.com',
+                    recipient_list=[user.email]
+                )
+            if "email" in serializer.validated_data and user.email != serializer.validated_data["email"]:
+                old_email = user.email
+                user.email = serializer.validated_data["email"]
+                user.save()  # checks for db violations, unique constraints and such
+                cntx = {'user': user,
+                        'message': 'Your email has been updated to "{}", if you did not do this, please secure your account by changing your password as soon as possible.'.format(user.email)}
+                send_mail(
+                    subject="Email Updated",
+                    message=render_to_string(
+                        'email_templates/generic_email.txt', cntx).strip(),
+                    html_message=render_to_string(
+                        'email_templates/generic_email.html', cntx).strip(),
+                    from_email='team3492@gmail.com',
+                    recipient_list=[user.email, old_email]
+                )
+                if password_changed:
+                    cntx = {'user': user,
+                            'message': 'Your password has been updated. If you did not do this, please secure your account by requesting a password reset as soon as possible.'}
+                    send_mail(
+                        subject="Password Changed",
+                        message=render_to_string(
+                            'email_templates/generic_email.txt', cntx).strip(),
+                        html_message=render_to_string(
+                            'email_templates/generic_email.html', cntx).strip(),
+                        from_email='team3492@gmail.com',
+                        recipient_list=[user.email]
+                    )
+            if "first_name" in serializer.validated_data:
+                user.first_name = serializer.validated_data["first_name"]
+            if "last_name" in serializer.validated_data:
+                user.last_name = serializer.validated_data["last_name"]
+            if "image" in serializer.validated_data:
+                user.image = serializer.validated_data["image"]
+            if request.user.is_superuser:  # only allow role editing if admin
+                if "is_staff" in serializer.validated_data:
+                    user.is_staff = serializer.validated_data["is_staff"]
+                if "is_active" in serializer.validated_data:
+                    user.is_active = serializer.validated_data["is_active"]
+                if "is_superuser" in serializer.validated_data:
+                    user.is_superuser = serializer.validated_data["is_superuser"]
+            user.save()
+            serializer = UserProfileSerializer(instance=user)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        else:
+            return ret_message('An error occurred while updating user data.', True, 'auth/user',
+                               user.id, serializer.errors)
+
+    # there should be no path to this, but leave it here just in case
+    """
+    def partial_update(self, request, pk=None):
+        message = ResponseMessage("Not implemented", rep_status.success)
+        return Response(data=message.jsonify(), status=status.HTTP_200_OK)
+
+    def destroy(self, request, pk=None):
+        self.check_object_permissions(request, self.queryset.get(id=pk))
+        message = ResponseMessage("Not implemented", rep_status.success)
+        # TODO work out later
+        return Response(data=message.jsonify(), status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        pk = int(pk)
+        self.check_object_permissions(request, self.queryset.get(id=pk))
+        if request.user.is_superuser and (request.user.id != pk):
+            # don't show admins the user's secrets.
+            serializer = UserProfileSerializer
+        else:
+            serializer = CompleteUserProfileSerializer
+        profile = self.queryset.get(id=pk)
+        if profile is not None:
+            serialized = serializer(instance=profile)
+            return Response(data=serialized.data, status=status.HTTP_200_OK)
+        else:
+            return Response(ResponseMessage("User does not exist", rep_status.not_found).jsonify(), status=status.HTTP_404_NOT_FOUND)
+    """
+
+
+class UserEmailConfirmation(APIView):
+    def get(self, request):
+        try:
+            req = self.confirm_email(request)
+            return req
+        except Exception as e:
+            return ret_message('Failed to activate user\'s account.', True,
+                               'auth/activate', exception=e)
+
+    def confirm_email(self, request, pk=None):
+        """
+        Confirms the user's email by checking the user provided hash with the server calculated one. Allows user to login if 
+        successful.
+        """
+        try:
+            user = User.objects.get(username=request.GET.get('pk'))
+            user_confirm_hash = abs(hash(user.date_joined))
+
+            if int(request.GET.get('confirm')) == user_confirm_hash:
+                user.is_active = True
+                user.save()
+                return redirect(settings.FRONTEND_ADDRESS + "/login?page=activationConfirm")
+            else:
+                ret_message('An error occurred while confirming the user\'s account.', True, 'auth/activate',
+                            user.id)
+                return redirect(settings.FRONTEND_ADDRESS + "/login?page=activationFail")
+        except ObjectDoesNotExist as o:
+            ret_message(
+                'An error occurred while confirming the user\'s account.', True, 'auth/activate', o)
+            return redirect(settings.FRONTEND_ADDRESS + "/login?page=activationFail")
+
+
+class UserEmailResendConfirmation(APIView):
+    def post(self, request):
+        try:
+            req = self.resend_confirmation_email(request)
+            return req
+        except Exception as e:
+            return ret_message('Failed to resend user confirmation email.', True,
+                               'auth/confirm/resend/', exception=e)
+
+    def resend_confirmation_email(self, request):
+        user = User.objects.get(email=request.data['email'])
+        current_site = get_current_site(request)
+
+        user_confirm_hash = abs(hash(user.date_joined))
+
+        cntx = {
+            'user': user,
+            'url': request.scheme + '://' + current_site.domain + '/auth/confirm/?pk={}&confirm={}'.format(user.username, user_confirm_hash)
+        }
+
+        send_mail(
+            subject="Activate your PARTs account.",
+            message=render_to_string(
+                "email_templates/acc_active_email.txt", cntx).strip(),
+            html_message=render_to_string(
+                "email_templates/acc_active_email.html", cntx).strip(),
+            from_email="team3492@gmail.com",
+            recipient_list=[user.email]
+        )
+        return ret_message('If a matching user was found you will receive an email shortly.')
+
+
+class UserRequestPasswordReset(APIView):
+    def post(self, request):
+        try:
+            req = self.request_reset_password(request)
+            return req
+        except Exception as e:
+            return ret_message('Failed to request password reset.', True,
+                               'auth/request_reset_password', exception=e)
+
+    def request_reset_password(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            if user.is_active:  # if the user has confirmed their email
+                user.reset_token = secrets.token_urlsafe(24)
+                user.reset_requested_at = timezone.now()
+                user.save()
+
+                current_site = get_current_site(request)
+                cntx = {
+                    'user': user,
+                    'url': settings.FRONTEND_ADDRESS + 'login/?page=resetConfirm&user={}&confirm={}'.format(
+                        user.username, user.reset_token)
+                }
+
+            send_mail(
+                subject="Password Reset Requested",
+                message=render_to_string(
+                    "email_templates/password_reset_email.txt", cntx).strip(),
+                html_message=render_to_string(
+                    "email_templates/password_reset_email.html", cntx).strip(),
+                from_email="team3492@gmail.com",
+                recipient_list=[user.email]
+            )
+        except Exception as e:
+            ret_message('Failed user reset attempt', True,
+                        'auth/profile/request_reset_password', exception=e)
+        # regardless if we find a user or not, send back the same info. Prevents probing for user emails.
+        return ret_message('If a matching user was found you will receive an email shortly.')
+
+
+class UserPasswordReset(APIView):
+    def post(self, request):
+        try:
+            req = self.reset_password(request)
+            return req
+        except Exception as e:
+            return ret_message('Failed to reset password.', True,
+                               'auth/reset_password', exception=e)
+
+    def reset_password(self, request):
+        try:
+            username = request.data['username']
+            confirm = request.data['confirm']
+            password = request.data['password']
+
+            user = User.objects.filter(username=username)[0]
+            if confirm == None:  # prevents
+                return ret_message('Reset token required.', True, 'auth/reset_password', exception=request.data['email'])
+            if (confirm == user.reset_token) and ((user.reset_requested_at + timedelta(hours=1)) > timezone.now()):
+                try:
+                    validate_password(password, UserProfile.objects.get(
+                        username=username), password_validators=get_default_password_validators())
+                except ValidationError as e:
+                    return ret_message('Password invalid' + str(e), True, 'auth/reset_password', user.id, e)
+                user.reset_token = None  # wipe the token so it can't be used twice
+                user.set_password(password)
+                user.save()
+                return ret_message('Password updated successfully.')
+            else:
+                return ret_message('Invalid token or request timed out.', True, 'auth/reset_password', user.id)
+        except KeyError as e:
+            e = str(e)
+            e = e.strip("'")
+            return ret_message(e + " missing from request but is required", True, 'auth/reset_password', exception=e)
