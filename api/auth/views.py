@@ -26,6 +26,7 @@ from rest_framework.decorators import action
 from django.core.exceptions import ObjectDoesNotExist
 import secrets
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 import pytz
 
 
@@ -304,6 +305,7 @@ class UserProfileView(APIView):
             return ret_message('An error occurred while creating user.' + ('\n' + error_string if error_string is not None else None), True, 'auth/profile', exception=e)
 
     # TODO Add auth
+    """
     def update(self, request, pk=None):
         user = self.queryset.filter(id=pk).first()
         if user is None:
@@ -381,7 +383,7 @@ class UserProfileView(APIView):
         else:
             return ret_message('An error occurred while updating user data.', True, 'auth/user',
                                user.id, serializer.errors)
-
+    """
     # there should be no path to this, but leave it here just in case
     """
     def partial_update(self, request, pk=None):
@@ -493,11 +495,10 @@ class UserRequestPasswordReset(APIView):
                 user.reset_requested_at = timezone.now()
                 user.save()
 
-                current_site = get_current_site(request)
                 cntx = {
                     'user': user,
-                    'url': settings.FRONTEND_ADDRESS + 'login/?page=resetConfirm&user={}&confirm={}'.format(
-                        user.username, user.reset_token)
+                    'url': settings.FRONTEND_ADDRESS + 'login/?page=resetConfirm&uuid={}&token={}'.format(
+                        urlsafe_base64_encode(force_bytes(user.pk)), default_token_generator.make_token(user))
                 }
 
             send_mail(
@@ -527,20 +528,23 @@ class UserPasswordReset(APIView):
 
     def reset_password(self, request):
         try:
-            username = request.data['username']
-            confirm = request.data['confirm']
+            #username = request.data['username']
+            uuid = request.data['uuid']
+            token = request.data['token']
             password = request.data['password']
 
-            user = User.objects.filter(username=username)[0]
-            if confirm == None:  # prevents
+            user_id = urlsafe_base64_decode(uuid)
+
+            user = User.objects.get(id=user_id)
+            if token == None or uuid == None:  # prevents
                 return ret_message('Reset token required.', True, 'auth/reset_password', exception=request.data['email'])
-            if (confirm == user.reset_token) and ((user.reset_requested_at + timedelta(hours=1)) > timezone.now()):
+            # TODO Add time component back and ((user.reset_requested_at + timedelta(hours=1)) > timezone.now()):
+            if (default_token_generator.check_token(user, token)):
                 try:
-                    validate_password(password, UserProfile.objects.get(
-                        username=username), password_validators=get_default_password_validators())
+                    validate_password(
+                        password, user, password_validators=get_default_password_validators())
                 except ValidationError as e:
                     return ret_message('Password invalid' + str(e), True, 'auth/reset_password', user.id, e)
-                user.reset_token = None  # wipe the token so it can't be used twice
                 user.set_password(password)
                 user.save()
                 return ret_message('Password updated successfully.')
