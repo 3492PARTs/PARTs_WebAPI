@@ -138,10 +138,34 @@ class ScoutAuthGroups(models.Model):
         return str(self.scout_group) + ' auth group: ' + str(self.auth_group_id)
 
 
-class ScoutSchedule(models.Model):
-    scout_sch_id = models.AutoField(primary_key=True)
+class ScoutFieldSchedule(models.Model):
+    scout_field_sch_id = models.AutoField(primary_key=True)
+    event = models.ForeignKey(Event, models.PROTECT)
+    red_one = models.ForeignKey(
+        User, models.PROTECT, related_name='red_one_user', null=True)
+    red_two = models.ForeignKey(
+        User, models.PROTECT, related_name='red_two_user', null=True)
+    red_three = models.ForeignKey(
+        User, models.PROTECT, related_name='red_three_user', null=True)
+    blue_one = models.ForeignKey(
+        User, models.PROTECT, related_name='blue_one_user', null=True)
+    blue_two = models.ForeignKey(
+        User, models.PROTECT, related_name='blue_two_user', null=True)
+    blue_three = models.ForeignKey(
+        User, models.PROTECT, related_name='blue_three_user', null=True)
+    st_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    notified = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return self.scout_sch_id + ' time: ' + self.st_time + ' - ' + self.end_time
+
+
+class ScoutPitSchedule(models.Model):
+    scout_pit_sch_id = models.AutoField(primary_key=True)
+    event = models.ForeignKey(Event, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
-    sq_typ = models.ForeignKey(ScoutQuestionType, models.PROTECT)
     st_time = models.DateTimeField()
     end_time = models.DateTimeField()
     notified = models.CharField(max_length=1, default='n')

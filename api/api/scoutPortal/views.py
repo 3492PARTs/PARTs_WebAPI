@@ -25,9 +25,8 @@ class GetInit(APIView):
 
         time = timezone.now()
         fieldSchedule = []
-        sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
-                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
-                                           Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
+        sss = ScoutFieldSchedule.objects.filter((Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
+                                                Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
         for ss in sss:
             fieldSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -44,9 +43,8 @@ class GetInit(APIView):
             })
 
         pitSchedule = []
-        sss = ScoutSchedule.objects.filter(Q(sq_typ_id='pit') &
-                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
-                                           Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
+        sss = ScoutPitSchedule.objects.filter((Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
+                                              Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
         for ss in sss:
             pitSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -62,6 +60,7 @@ class GetInit(APIView):
                 'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
 
+        """
         pastSchedule = []
         sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) &
                                            Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
@@ -79,8 +78,8 @@ class GetInit(APIView):
                 'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
-
-        return {'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule, 'pastSchedule': pastSchedule}
+        """
+        return {'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):

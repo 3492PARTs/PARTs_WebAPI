@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.api.models import Season, Event, QuestionType, ScoutQuestionType
+from api.api.models import ScoutFieldSchedule, ScoutPitSchedule, Season, Event, QuestionType, ScoutQuestionType
 from api.auth.serializers import UserSerializer, GroupSerializer, PhoneTypeSerializer
 
 
@@ -21,20 +21,16 @@ class QuestionTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ScoutScheduleSerializer(serializers.Serializer):
-    scout_sch_id = serializers.IntegerField(required=False)
-    user = serializers.CharField(required=False, allow_blank=True)
-    user_id = serializers.IntegerField()
-    sq_typ = serializers.CharField()
-    sq_nm = serializers.CharField(required=False)
-    st_time = serializers.DateTimeField()
-    end_time = serializers.DateTimeField()
-    notified = serializers.CharField(required=False)
-    notify = serializers.CharField(required=False)
-    void_ind = serializers.CharField()
+class ScoutFieldScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutFieldSchedule
+        fields = '__all__'
 
-    st_time_str = serializers.CharField(required=False)
-    end_time_str = serializers.CharField(required=False)
+
+class ScoutPitScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoutPitSchedule
+        fields = '__all__'
 
 
 class ScoutQuestionTypeSerializer(serializers.ModelSerializer):
@@ -61,7 +57,8 @@ class ScoutQuestionSerializer(serializers.Serializer):
     active = serializers.CharField(required=False)
     void_ind = serializers.CharField(required=False)
     options = QuestionOptionsSerializer(many=True)
-    answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    answer = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True)
 
 
 class ScoutAdminQuestionInitSerializer(serializers.Serializer):
@@ -77,7 +74,7 @@ class InitSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     userGroups = GroupSerializer(many=True)
     phoneTypes = PhoneTypeSerializer(many=True)
-    fieldSchedule = ScoutScheduleSerializer(many=True)
-    pitSchedule = ScoutScheduleSerializer(many=True)
-    pastSchedule = ScoutScheduleSerializer(many=True)
+    fieldSchedule = ScoutFieldScheduleSerializer(many=True)
+    pitSchedule = ScoutPitScheduleSerializer(many=True)
+    #pastSchedule = ScoutScheduleSerializer(many=True)
     scoutQuestionType = ScoutQuestionTypeSerializer(many=True)

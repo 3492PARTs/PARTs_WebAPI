@@ -41,7 +41,7 @@ class GetInit(APIView):
             current_event = Event()
 
         users = User.objects.filter(Q(is_active=True) & Q(
-            date_joined__isnull=False) & ~Q(groups__name__in=['Adminn']))
+            date_joined__isnull=False) & ~Q(groups__name__in=['Admin']))
 
         user_groups = []
         try:
@@ -52,50 +52,15 @@ class GetInit(APIView):
 
         phone_types = PhoneType.objects.all()
 
-        # datetime.now() - timedelta(hours=5) # datetime.now(pytz.timezone('US/Eastern'))
-        time = timezone.now()
         fieldSchedule = []
-        sss = ScoutSchedule.objects.filter(Q(sq_typ_id='field') &
-                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
-                                           Q(void_ind='n')
-                                           )\
-            .order_by('st_time', 'user')
-        for ss in sss:
-            fieldSchedule.append({
-                'scout_sch_id': ss.scout_sch_id,
-                'user': ss.user.first_name + ' ' + ss.user.last_name,
-                'user_id': ss.user.id,
-                'sq_typ': ss.sq_typ_id,
-                'sq_nm': ss.sq_typ.sq_nm,
-                'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'notified': ss.notified,
-                'void_ind': ss.void_ind,
-                'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-            })
 
-        pitSchedule = []
-        sss = ScoutSchedule.objects.filter(Q(sq_typ_id='pit') &
-                                           (Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
-                                           Q(void_ind='n')
-                                           )\
-            .order_by('st_time', 'user')
-        for ss in sss:
-            pitSchedule.append({
-                'scout_sch_id': ss.scout_sch_id,
-                'user': ss.user.first_name + ' ' + ss.user.last_name,
-                'user_id': ss.user.id,
-                'sq_typ': ss.sq_typ_id,
-                'sq_nm': ss.sq_typ.sq_nm,
-                'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'notified': ss.notified,
-                'void_ind': ss.void_ind,
-                'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-            })
+        fieldSchedule = ScoutFieldSchedule.objects.filter(
+            event=current_event, void_ind='n').order_by('st_time')
 
+        pitSchedule = ScoutPitSchedule.objects.filter(
+            event=current_event, void_ind='n').order_by('st_time')
+
+        """
         pastSchedule = []
         sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) & Q(
             void_ind='n')).order_by('st_time', 'user')
@@ -113,12 +78,12 @@ class GetInit(APIView):
                 'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
                 'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
-
+        """
         scoutQuestionType = ScoutQuestionType.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
                 'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
-                'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule, 'pastSchedule': pastSchedule,
+                'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule,
                 'scoutQuestionType': scoutQuestionType}
 
     def get(self, request, format=None):
@@ -326,7 +291,7 @@ class GetDeleteSeason(APIView):
 
             sqs = ScoutQuestion.objects.filter(season=season)
 
-            #QuestionOptions.objects.filter(sq__in=list(sqs.values_list('user_id', flat=True)))
+            # QuestionOptions.objects.filter(sq__in=list(sqs.values_list('user_id', flat=True)))
             QuestionOptions.objects.filter(sq__in=sqs).delete()
             sqs.delete()
 
@@ -580,18 +545,18 @@ class PostSaveScoutScheduleEntry(APIView):
     permission_classes = (IsAuthenticated,)
 
     def save_scout_schedule(self, data):
-        #local = pytz.timezone('US/Eastern')
+        # local = pytz.timezone('US/Eastern')
         local = pytz.utc
         native = datetime.datetime.strptime(data['st_time'].replace(
             'T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
         local_dt = local.localize(native, is_dst=None)
-        #st_utc_dt = local_dt.astimezone(pytz.utc)
+        # st_utc_dt = local_dt.astimezone(pytz.utc)
         st_utc_dt = local_dt
 
         native = datetime.datetime.strptime(data['end_time'].replace(
             'T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
         local_dt = local.localize(native, is_dst=None)
-        #end_utc_dt = local_dt.astimezone(pytz.utc)
+        # end_utc_dt = local_dt.astimezone(pytz.utc)
         end_utc_dt = local_dt
 
         if st_utc_dt <= timezone.now():

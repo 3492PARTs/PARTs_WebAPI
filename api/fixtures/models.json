@@ -1,0 +1,211 @@
+[
+  {
+    "model": "auth.permission",
+    "pk": 49,
+    "fields": {
+      "name": "Page: Scout Field",
+      "content_type": -1,
+      "codename": "scoutfield"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 50,
+    "fields": {
+      "name": "Page: Scout Admin",
+      "content_type": -1,
+      "codename": "scoutadmin"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 51,
+    "fields": {
+      "name": "Page: Scout Pit",
+      "content_type": -1,
+      "codename": "scoutpit"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 52,
+    "fields": {
+      "name": "Page: Scout Field Results",
+      "content_type": -1,
+      "codename": "scoutFieldResults"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 53,
+    "fields": {
+      "name": "Page: Scout Pit Results",
+      "content_type": -1,
+      "codename": "scoutPitResults"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 54,
+    "fields": {
+      "name": "Page: Scout Portal",
+      "content_type": -1,
+      "codename": "scoutPortal"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 55,
+    "fields": { "name": "Page: Admin", "content_type": -1, "codename": "admin" }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 56,
+    "fields": {
+      "name": "Ability to save user data",
+      "content_type": -1,
+      "codename": "save_user"
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "Admin",
+      "permissions": [55, 56, 50, 49, 52, 51, 53, 54]
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 2,
+    "fields": { "name": "Lead Scout", "permissions": [50, 49, 52, 51, 53, 54] }
+  },
+  {
+    "model": "auth.group",
+    "pk": 3,
+    "fields": { "name": "Field Scout", "permissions": [49, 52, 53, 54] }
+  },
+  {
+    "model": "auth.group",
+    "pk": 4,
+    "fields": { "name": "Pit Scout", "permissions": [52, 51, 53, 54] }
+  },
+  {
+    "model": "auth.group",
+    "pk": 5,
+    "fields": { "name": "Scout", "permissions": [49, 52, 51, 53, 54] }
+  },
+  {
+    "model": "auth.user",
+    "pk": 0,
+    "fields": {
+      "password": "!null",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "system",
+      "first_name": "system",
+      "last_name": "system",
+      "email": "system",
+      "is_staff": false,
+      "is_active": false,
+      "date_joined": "2022-03-03T21:54:12.251Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": -1,
+    "fields": { "app_label": "all", "model": "all" }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 1,
+    "fields": {
+      "permission": 49,
+      "menu_name": "SCOUT FIELD",
+      "routerlink": "scout/scout-field",
+      "order": 200
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 2,
+    "fields": {
+      "permission": 50,
+      "menu_name": "SCOUT ADMIN",
+      "routerlink": "scout/scout-admin",
+      "order": 50
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 7,
+    "fields": {
+      "permission": 51,
+      "menu_name": "SCOUT PIT",
+      "routerlink": "scout/scout-pit",
+      "order": 400
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 8,
+    "fields": {
+      "permission": 52,
+      "menu_name": "FIELD RESULTS",
+      "routerlink": "scout/scout-field-results",
+      "order": 300
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 9,
+    "fields": {
+      "permission": 53,
+      "menu_name": "PIT RESULTS",
+      "routerlink": "scout/scout-pit-results",
+      "order": 500
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 10,
+    "fields": {
+      "permission": 54,
+      "menu_name": "SCOUT PORTAL",
+      "routerlink": "scout/scout-portal",
+      "order": 100
+    }
+  },
+  {
+    "model": "authAPI.userlinks",
+    "pk": 11,
+    "fields": {
+      "permission": 55,
+      "menu_name": "ADMIN",
+      "routerlink": "admin",
+      "order": 40
+    }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 1,
+    "fields": { "carrier": "AT&T", "phone_type": "@txt.att.net" }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 2,
+    "fields": { "carrier": "Verizon", "phone_type": "@vtext.com" }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 3,
+    "fields": { "carrier": "T-Mobile", "phone_type": "@tmomail.net" }
+  },
+  {
+    "model": "authAPI.phonetype",
+    "pk": 4,
+    "fields": { "carrier": "Sprint", "phone_type": "@messaging.sprintpcs.com" }
+  }
+]
