@@ -538,65 +538,50 @@ class GetToggleOption(APIView):
             return ret_message('You do not have access.', True, 'api/scoutAdmin/GetToggleOption', request.user.id)
 
 
-class PostSaveScoutScheduleEntry(APIView):
+class PostSaveScoutFieldScheduleEntry(APIView):
     """API endpoint to save scout schedule entry"""
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def save_scout_schedule(self, data):
-        # local = pytz.timezone('US/Eastern')
-        local = pytz.utc
-        native = datetime.datetime.strptime(data['st_time'].replace(
-            'T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
-        local_dt = local.localize(native, is_dst=None)
-        # st_utc_dt = local_dt.astimezone(pytz.utc)
-        st_utc_dt = local_dt
-
-        native = datetime.datetime.strptime(data['end_time'].replace(
-            'T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S')
-        local_dt = local.localize(native, is_dst=None)
-        # end_utc_dt = local_dt.astimezone(pytz.utc)
-        end_utc_dt = local_dt
-
-        if st_utc_dt <= timezone.now():
-            return ret_message('Start time can\'t be in the past.', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry',
+    def save_scout_schedule(self, serializer):
+        if serializer.validated_data['st_time'] <= timezone.now():
+            return ret_message('Start time can\'t be in the past.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry',
                                self.request.user.id)
 
-        if end_utc_dt <= st_utc_dt:
-            return ret_message('End time can\'t come before start.', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry',
+        if serializer.validated_data['end_time'] <= serializer.validated_data['st_time']:
+            return ret_message('End time can\'t come before start.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry',
                                self.request.user.id)
 
-        if data.get('scout_sch_id', None) is None:
-            ScoutSchedule(user_id=data['user_id'], sq_typ_id=data['sq_typ'], st_time=st_utc_dt, end_time=end_utc_dt,
-                          notified='n', void_ind='n').save()
+        if serializer.validated_data.get('scout_sch_id', None) is None:
+            serializer.save()
             return ret_message('Saved schedule entry successfully')
         else:
-            ss = ScoutSchedule.objects.get(scout_sch_id=data['scout_sch_id'])
-            ss.user_id = data['user_id']
-            ss.sq_typ_id = data['sq_typ']
+            ss = ScoutFieldSchedule.objects.get(
+                scout_sch_id=serializer.validated_data['scout_sch_id'])
+            ss.user_id = serializer.validated_data['user_id']
             ss.st_time = st_utc_dt
             ss.end_time = end_utc_dt
             ss.notified = 'n'
-            ss.void_ind = data['void_ind']
+            ss.void_ind = serializer.validated_data['void_ind']
             ss.save()
             return ret_message('Updated schedule entry successfully')
 
     def post(self, request, format=None):
-        serializer = ScoutScheduleSerializer(data=request.data)
+        serializer = ScoutFieldScheduleSerializer(data=request.data)
         if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry', request.user.id,
+            return ret_message('Invalid data', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', request.user.id,
                                serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.save_scout_schedule(serializer.data)
+                req = self.save_scout_schedule(serializer)
                 return req
             except Exception as e:
                 return ret_message('An error occurred while saving the schedule entry.', True,
-                                   'api/scoutAdmin/PostSaveScoutScheduleEntry', request.user.id, e)
+                                   'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'api/scoutAdmin/PostSaveScoutScheduleEntry', request.user.id)
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', request.user.id)
 
 
 class PostNotifyUser(APIView):

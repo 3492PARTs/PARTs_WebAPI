@@ -16,7 +16,8 @@ urlpatterns = [
     path('PostUpdateScoutQuestion/', PostUpdateScoutQuestion.as_view()),
     path('GetToggleScoutQuestion/', GetToggleScoutQuestion.as_view()),
     path('GetToggleOption/', GetToggleOption.as_view()),
-    path('PostSaveScoutScheduleEntry/', PostSaveScoutScheduleEntry.as_view()),
+    path('PostSaveScoutFieldScheduleEntry/',
+         PostSaveScoutFieldScheduleEntry.as_view()),
     path('PostNotifyUser/', PostNotifyUser.as_view()),
     path('PostSavePhoneType/', PostSavePhoneType.as_view()),
 ]
