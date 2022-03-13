@@ -29,7 +29,7 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 import pytz
 
-
+"""
 def register(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
@@ -111,6 +111,7 @@ def activate(request, uidb64, token):
         return render(request, 'registration/activate_complete.html')
     else:
         return render(request, 'registration/activate_incomplete.html')
+"""
 
 
 class GetUserData(APIView):
@@ -196,16 +197,17 @@ class GetAPIStatus(APIView):
         return Response(200)
 
 
+"""
 class HTMLPasswordResetForm(PasswordResetForm):
-    """
+    
     Override the password reset form to send html emails
-    """
+    
     email = forms.EmailField(label=("Email"), max_length=254)
 
     def save(self, domain_override=None, subject_template_name='registration/password_reset_subject.txt',
              email_template_name='registration/password_reset_email.html', use_https=False,
              token_generator=default_token_generator, from_email=None, request=None, **kwargs):
-        """
+        
         Generates a one-use only link for resetting password and sends to the
         user.
         :param from_email:
@@ -217,7 +219,7 @@ class HTMLPasswordResetForm(PasswordResetForm):
         :param email_template_name:
         :param **kwargs:
         :param **kwargs:
-        """
+        
         email = self.cleaned_data["email"]
         user = User.objects.get(
             email__iexact=email, is_active=True)
@@ -239,9 +241,11 @@ class HTMLPasswordResetForm(PasswordResetForm):
         }
         send_email.send_message(
             email, 'PARTs Password Reset', 'password_reset_email', c)
-
+"""
 
 # New user management
+
+
 class UserProfileView(APIView):
     """
     Handles registering new users and management of user profiles.

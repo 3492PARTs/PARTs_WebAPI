@@ -14,6 +14,7 @@ from api.auth import send_email
 from rest_framework.views import APIView
 from api.auth.security import *
 import requests
+from django.conf import settings
 
 auth_obj = 2 + 48
 
@@ -112,7 +113,7 @@ class GetSyncSeason(APIView):
         insert = []
 
         r = requests.get("https://www.thebluealliance.com/api/v3/team/frc3492/events/" + str(season.season),
-                         headers={"X-TBA-Auth-Key": "vOi134WDqMjUjGslV08r9ElOGoiWAU8LtSMxMBPziTVertNPmsdUqBOY8cYnyb7u"})
+                         headers={"X-TBA-Auth-Key": settings.TBA_KEY})
         r = json.loads(r.text)
 
         for e in r:

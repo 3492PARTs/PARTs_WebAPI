@@ -187,3 +187,5 @@ LOGIN_URL = '/auth/login/'
 
 # Cloudinary
 os.environ["CLOUDINARY_URL"] = os.getenv('CLOUDINARY_URL')
+
+TBA_KEY = 'vOi134WDqMjUjGslV08r9ElOGoiWAU8LtSMxMBPziTVertNPmsdUqBOY8cYnyb7u'
