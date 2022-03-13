@@ -3,6 +3,6 @@ from api.api.scoutAdmin.serializers import ScoutFieldScheduleSerializer, ScoutPi
 
 
 class InitSerializer(serializers.Serializer):
-    fieldSchedule = ScoutFieldScheduleSerializer(many=True)
-    pitSchedule = ScoutPitScheduleSerializer(many=True)
+    fieldSchedule = ScoutFieldScheduleSerializer(many=True, required=False)
+    pitSchedule = ScoutPitScheduleSerializer(many=True, required=False)
     #pastSchedule = ScoutScheduleSerializer(many=True)

@@ -17,16 +17,20 @@ class GetInit(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def get_init(self, user_id):
+    def get_init(self):
+        user = self.request.user
+
         try:
             current_season = Season.objects.get(current='y')
         except Exception as e:
             return ret_message('No season set, see an admin.', True, 'api/scoutPortal/GetInit', self.request.user.id, e)
 
-        time = timezone.now()
         fieldSchedule = []
-        sss = ScoutFieldSchedule.objects.filter((Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) &
-                                                Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
+        sfs = ScoutFieldSchedule.objects.filter(Q(end_time__gte=timezone.now()) & Q(void_ind='n') & Q(Q(red_one=user) | Q(
+            red_two=user) | Q(red_three=user) | Q(blue_one=user) | Q(blue_two=user) | Q(blue_three=user))).order_by('st_time')
+
+        # TODO REmove sss = ScoutFieldSchedule.objects.filter((Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) & Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
+        """
         for ss in sss:
             fieldSchedule.append({
                 'scout_sch_id': ss.scout_sch_id,
@@ -60,7 +64,7 @@ class GetInit(APIView):
                 'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
 
-        """
+        
         pastSchedule = []
         sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) &
                                            Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
@@ -79,12 +83,12 @@ class GetInit(APIView):
                 'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
             })
         """
-        return {'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule}
+        return {'fieldSchedule': sfs}  # , 'pitSchedule': pitSchedule}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.get_init(request.user.id)
+                req = self.get_init()
 
                 if isinstance(req, Response):
                     return req
