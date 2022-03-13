@@ -42,6 +42,32 @@ class Event(models.Model):
         return str(self.event_id) + ' ' + self.event_nm
 
 
+class Match(models.Model):
+    match_id = models.AutoField(primary_key=True)
+    match_number = models.IntegerField()
+    event = models.ForeignKey(Event, models.PROTECT)
+    red_one = models.ForeignKey(
+        Team, models.PROTECT, related_name='red_one_team', null=True)
+    red_two = models.ForeignKey(
+        Team, models.PROTECT, related_name='red_two_team', null=True)
+    red_three = models.ForeignKey(
+        Team, models.PROTECT, related_name='red_three_team', null=True)
+    blue_one = models.ForeignKey(
+        Team, models.PROTECT, related_name='blue_one_team', null=True)
+    blue_two = models.ForeignKey(
+        Team, models.PROTECT, related_name='blue_two_team', null=True)
+    blue_three = models.ForeignKey(
+        Team, models.PROTECT, related_name='blue_three_team', null=True)
+    red_score = models.IntegerField(null=True)
+    blue_score = models.IntegerField(null=True)
+    comp_level = models.CharField(max_length=25)
+    time = models.DateTimeField()
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return 'match: ' + self.event.event_nm + ' ' + self.comp_level + ' match no: ' + self.match_number
+
+
 class QuestionType(models.Model):
     question_typ = models.CharField(primary_key=True, max_length=50)
     question_typ_nm = models.CharField(max_length=255)

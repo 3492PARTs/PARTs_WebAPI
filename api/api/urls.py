@@ -12,5 +12,7 @@ urlpatterns = [
     # Scout Portal Endpoints
     re_path(r'^scoutPortal/', include('api.api.scoutPortal.urls')),
     # Admin Endpoints
-    re_path(r'^admin/', include('api.api.admin.urls'))
+    re_path(r'^admin/', include('api.api.admin.urls')),
+    # Admin Endpoints
+    #re_path(r'^tba/', include('api.api.tba.urls'))
 ]

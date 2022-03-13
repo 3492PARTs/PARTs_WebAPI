@@ -1,7 +1,9 @@
 import datetime
+from webbrowser import get
 
 import pytz
 from django.db import IntegrityError
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
@@ -128,7 +130,7 @@ class GetSyncSeason(APIView):
 
             s = requests.get("https://www.thebluealliance.com/api/v3/event/" + e['key'] + "/teams",
                              headers={
-                                 "X-TBA-Auth-Key": "vOi134WDqMjUjGslV08r9ElOGoiWAU8LtSMxMBPziTVertNPmsdUqBOY8cYnyb7u"})
+                                 "X-TBA-Auth-Key": settings.TBA_KEY})
             s = json.loads(s.text)
 
             for t in s:
@@ -193,6 +195,81 @@ class GetSyncSeason(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'GetScoutAdminSyncSeason', request.user.id)
+
+
+class SyncMatches(APIView):
+    """
+    API endpoint to sync a season
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def sync_matches(self):
+        event = Event.objects.get(current='y')
+
+        insert = []
+        messages = ''
+        r = requests.get("https://www.thebluealliance.com/api/v3/event/" +
+                         event.event_cd + "/matches", headers={"X-TBA-Auth-Key": settings.TBA_KEY})
+        r = json.loads(r.text)
+
+        for e in r:
+            match_number = e.get('match_number', 0)
+            red_one = Team.objects.get(
+                Q(team_no=e['alliances']['red']['team_keys'][0].replace('frc', '')) & Q(void_ind='n'))
+            red_two = Team.objects.get(
+                Q(team_no=e['alliances']['red']['team_keys'][1].replace('frc', '')) & Q(void_ind='n'))
+            red_three = Team.objects.get(
+                Q(team_no=e['alliances']['red']['team_keys'][2].replace('frc', '')) & Q(void_ind='n'))
+            blue_one = Team.objects.get(
+                Q(team_no=e['alliances']['blue']['team_keys'][0].replace('frc', '')) & Q(void_ind='n'))
+            blue_two = Team.objects.get(
+                Q(team_no=e['alliances']['blue']['team_keys'][1].replace('frc', '')) & Q(void_ind='n'))
+            blue_three = Team.objects.get(
+                Q(team_no=e['alliances']['blue']['team_keys'][2].replace('frc', '')) & Q(void_ind='n'))
+            red_score = e['alliances']['red'].get('score', None)
+            blue_score = e['alliances']['blue'].get('score', None)
+            comp_level = e.get('comp_level', ' ')
+            time = datetime.datetime.fromtimestamp(
+                e['time'], pytz.timezone('America/New_York'))
+
+            try:
+                match = Match.objects.get(
+                    Q(match_number=match_number) & Q(event=event) & Q(comp_level=comp_level) & Q(void_ind='n'))
+
+                match.red_one = red_one
+                match.red_two = red_two
+                match.red_three = red_three
+                match.blue_one = blue_one
+                match.blue_two = blue_two
+                match.blue_three = blue_three
+                match.red_score = red_score
+                match.blue_score = blue_score
+                match.comp_level = comp_level
+                match.time = time
+
+                match.save()
+                messages += '(UPDATE) ' + event.event_nm + \
+                    ' ' + comp_level + ' ' + str(match_number) + '\n'
+            except ObjectDoesNotExist as odne:
+                match = Match(match_number=match_number, event=event, red_one=red_one, red_two=red_two, red_three=red_three, blue_one=blue_one,
+                              blue_two=blue_two, blue_three=blue_three, red_score=red_score, blue_score=blue_score, comp_level=comp_level, time=time, void_ind='n')
+                match.save()
+                messages += '(ADD) ' + event.event_nm + \
+                    ' ' + comp_level + ' ' + str(match_number) + '\n'
+
+        return messages
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.sync_matches()
+                return ret_message(req)
+            except Exception as e:
+                return ret_message('An error occurred while syncing matches.', True, 'GetSyncMatches',
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, 'GetSyncMatches', request.user.id)
 
 
 class GetSetSeason(APIView):
