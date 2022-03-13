@@ -18,6 +18,6 @@ urlpatterns = [
     path('GetToggleOption/', GetToggleOption.as_view()),
     path('PostSaveScoutFieldScheduleEntry/',
          PostSaveScoutFieldScheduleEntry.as_view()),
-    path('PostNotifyUser/', PostNotifyUser.as_view()),
+    path('NotifyUsers/', NotifyUsers.as_view()),
     path('PostSavePhoneType/', PostSavePhoneType.as_view()),
 ]

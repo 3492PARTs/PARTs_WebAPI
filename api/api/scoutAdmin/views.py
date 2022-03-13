@@ -589,52 +589,52 @@ class PostSaveScoutFieldScheduleEntry(APIView):
             return ret_message('You do not have access.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', request.user.id)
 
 
-class PostNotifyUser(APIView):
+class NotifyUsers(APIView):
     """API endpoint to notify users"""
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def notify_user(self, data):
-        for d in data:
-            if d.get('notify', 'n') == 'y':
-                user = User.objects.get(id=d['user_id'])
-                ss = ScoutSchedule.objects.get(scout_sch_id=d['scout_sch_id'])
-                st_time = ss.st_time
-                st_time = st_time.astimezone(pytz.timezone('US/Eastern'))
-                st_time = st_time.strftime('%m/%d/%Y %I:%M %p')
+    def notify_users(self, id):
+        sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=id)
+        data = {
+            'scout_location': 'Field',
+            'scout_time_st': sfs.st_time,
+            'scout_time_end': sfs.end_time,
+            'lead_scout': self.request.user.first_name + ' ' + self.request.user.last_name
+        }
+        if sfs.red_one:
+            send_email.send_message(
+                sfs.red_one.profile.phone + sfs.red_one.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+        if sfs.red_two:
+            send_email.send_message(
+                sfs.red_two.profile.phone + sfs.red_two.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+        if sfs.red_three:
+            send_email.send_message(
+                sfs.red_three.profile.phone + sfs.red_three.phone_type.profile.phone_type, 'Time to Scout!', 'notify_scout', data)
+        if sfs.blue_one:
+            send_email.send_message(
+                sfs.blue_one.profile.phone + sfs.blue_one.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+        if sfs.blue_two:
+            send_email.send_message(
+                sfs.blue_two.profile.phone + sfs.blue_two.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+        if sfs.blue_three:
+            send_email.send_message(
+                sfs.blue_three.profile.phone + sfs.blue_three.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
 
-                end_time = ss.end_time
-                end_time = end_time.astimezone(pytz.timezone('US/Eastern'))
-                end_time = end_time.strftime('%m/%d/%Y %I:%M %p')
+        sfs.notified = 'y'
+        sfs.save()
 
-                data = {
-                    'scout_location': d['sq_typ'],
-                    'scout_time_st': st_time,
-                    'scout_time_end': end_time,
-                    'lead_scout': self.request.user.first_name + ' ' + self.request.user.last_name
-                }
-                send_email.send_message(user.phone + user.phone_type.phone_type, 'Time to Scout!', 'notify_scout',
-                                        data)
+        return ret_message('Successfully notified users!')
 
-                scout_sch = ScoutSchedule.objects.get(
-                    scout_sch_id=d['scout_sch_id'])
-                scout_sch.notified = 'y'
-                scout_sch.save()
-
-        return ret_message('Successfully notified selected user(s)')
-
-    def post(self, request, format=None):
-        serializer = ScoutScheduleSerializer(data=request.data, many=True)
-        if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'api/scoutAdmin/PostNotifyUser', request.user.id, serializer.errors)
-
+    def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.notify_user(serializer.data)
+                req = self.notify_users(request.query_params.get(
+                    'id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while notifying user.', True, 'api/scoutAdmin/PostNotifyUser',
+                return ret_message('An error occurred while notifying the.', True, 'api/scoutAdmin/PostNotifyUser',
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'api/scoutAdmin/PostNotifyUser', request.user.id)

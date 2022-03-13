@@ -1,4 +1,4 @@
 Your scout time is coming up.
-You are scheduled to scout {{ scout_location }} from: {{ scout_time_st  }} to {{ scout_time_end }}.
+You are scheduled to scout from: {{ scout_time_st  }} to {{ scout_time_end }}.
 Than you,
 {{ lead_scout }}
