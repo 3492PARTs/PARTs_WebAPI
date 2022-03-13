@@ -54,7 +54,7 @@ class GetInit(APIView):
 
         fieldSchedule = []
 
-        fieldSchedule = ScoutFieldSchedule.objects.filter(
+        fieldSchedule = ScoutFieldSchedule.objects.select_related('red_one', 'red_two', 'red_three', 'blue_one', 'blue_two', 'blue_three').filter(
             event=current_event, void_ind='n').order_by('st_time')
 
         pitSchedule = ScoutPitSchedule.objects.filter(
@@ -553,22 +553,27 @@ class PostSaveScoutFieldScheduleEntry(APIView):
             return ret_message('End time can\'t come before start.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry',
                                self.request.user.id)
 
-        if serializer.validated_data.get('scout_sch_id', None) is None:
+        if serializer.validated_data.get('scout_field_sch_id', None) is None:
             serializer.save()
             return ret_message('Saved schedule entry successfully')
         else:
-            ss = ScoutFieldSchedule.objects.get(
-                scout_sch_id=serializer.validated_data['scout_sch_id'])
-            ss.user_id = serializer.validated_data['user_id']
-            ss.st_time = st_utc_dt
-            ss.end_time = end_utc_dt
-            ss.notified = 'n'
-            ss.void_ind = serializer.validated_data['void_ind']
-            ss.save()
+            sfs = ScoutFieldSchedule.objects.get(
+                scout_field_sch_id=serializer.validated_data['scout_field_sch_id'])
+            sfs.red_one = serializer.validated_data.get('red_one', None)
+            sfs.red_two = serializer.validated_data.get('red_two', None)
+            sfs.red_three = serializer.validated_data.get('red_three', None)
+            sfs.blue_one = serializer.validated_data.get('blue_one', None)
+            sfs.blue_two = serializer.validated_data.get('blue_two', None)
+            sfs.blue_three = serializer.validated_data.get('blue_three', None)
+            sfs.st_time = serializer.validated_data['st_time']
+            sfs.end_time = serializer.validated_data['end_time']
+            sfs.notified = 'n'
+            sfs.void_ind = serializer.validated_data['void_ind']
+            sfs.save()
             return ret_message('Updated schedule entry successfully')
 
     def post(self, request, format=None):
-        serializer = ScoutFieldScheduleSerializer(data=request.data)
+        serializer = ScoutFieldScheduleSaveSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', request.user.id,
                                serializer.errors)

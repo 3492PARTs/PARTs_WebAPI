@@ -22,6 +22,25 @@ class QuestionTypeSerializer(serializers.ModelSerializer):
 
 
 class ScoutFieldScheduleSerializer(serializers.ModelSerializer):
+    scout_field_sch_id = serializers.IntegerField(
+        required=False, allow_null=True)
+    red_one = UserSerializer(required=False, allow_null=True, read_only=True)
+    red_two = UserSerializer(required=False, allow_null=True, read_only=True)
+    red_three = UserSerializer(required=False, allow_null=True, read_only=True)
+    blue_one = UserSerializer(required=False, allow_null=True, read_only=True)
+    blue_two = UserSerializer(required=False, allow_null=True, read_only=True)
+    blue_three = UserSerializer(
+        required=False, allow_null=True, read_only=True)
+
+    class Meta:
+        model = ScoutFieldSchedule
+        fields = '__all__'
+
+
+class ScoutFieldScheduleSaveSerializer(serializers.ModelSerializer):
+    scout_field_sch_id = serializers.IntegerField(
+        required=False, allow_null=True)
+
     class Meta:
         model = ScoutFieldSchedule
         fields = '__all__'
