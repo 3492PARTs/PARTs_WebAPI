@@ -545,9 +545,11 @@ class PostSaveScoutFieldScheduleEntry(APIView):
     permission_classes = (IsAuthenticated,)
 
     def save_scout_schedule(self, serializer):
+        """
         if serializer.validated_data['st_time'] <= timezone.now():
             return ret_message('Start time can\'t be in the past.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry',
                                self.request.user.id)
+        """
 
         if serializer.validated_data['end_time'] <= serializer.validated_data['st_time']:
             return ret_message('End time can\'t come before start.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry',

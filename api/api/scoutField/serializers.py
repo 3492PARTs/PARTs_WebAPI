@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.api.scoutAdmin.serializers import ScoutQuestionSerializer
+from api.api.scoutAdmin.serializers import ScoutFieldScheduleSerializer, ScoutQuestionSerializer
 
 
 class TeamSerializer(serializers.Serializer):
@@ -13,6 +13,7 @@ class ScoutFieldSerializer(serializers.Serializer):
     scoutQuestions = ScoutQuestionSerializer(many=True)
     teams = TeamSerializer(many=True, required=False)
     team = serializers.CharField(required=False)
+    scoutFieldSchedule = ScoutFieldScheduleSerializer(required=False)
 
 
 class ScoutColSerializer(serializers.Serializer):

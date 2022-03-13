@@ -67,7 +67,14 @@ class GetQuestions(APIView):
         except Exception as e:
             x = 1
 
-        return {'scoutQuestions': scout_questions, 'teams': teams}
+        sfss = ScoutFieldSchedule.objects.filter(Q(st_time__lte=timezone.now()) & Q(
+            end_time__gte=timezone.now()) & Q(void_ind='n'))
+
+        sfs = None
+        for s in sfss:
+            sfs = s
+
+        return {'scoutQuestions': scout_questions, 'teams': teams, 'scoutFieldSchedule': sfs}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
