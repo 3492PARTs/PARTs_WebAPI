@@ -310,6 +310,39 @@ class GetSetSeason(APIView):
             return ret_message('You do not have access.', True, 'GetScoutAdminSetSeason', request.user.id)
 
 
+class ToggleCompetitionPage(APIView):
+    """
+    API endpoint to toggle a scout field question
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def toggle(self, sq_id):
+        try:
+            event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
+
+            if event.competition_page_active == 'no':
+                event.competition_page_active = 'yes'
+            else:
+                event.competition_page_active = 'no'
+            event.save()
+        except ObjectDoesNotExist as odne:
+            return ret_message('No active event, can\'t activate competition page', True, 'api/scoutAdmin/ToggleCompetitionPage', self.request.user.id, odne)
+
+        return ret_message('Successfully  activated competition page.')
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.toggle(request.query_params.get('sq_id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while toggling the competition page.', True,
+                                   'api/scoutAdmin/ToggleCompetitionPage', request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, 'api/scoutAdmin/ToggleCompetitionPage', request.user.id)
+
+
 class GetAddSeason(APIView):
     """
     API endpoint to add a season

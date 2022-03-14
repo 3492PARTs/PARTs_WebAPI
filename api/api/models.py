@@ -36,6 +36,7 @@ class Event(models.Model):
     event_cd = models.CharField(unique=True, max_length=10)
     date_end = models.DateTimeField()
     current = models.CharField(max_length=1, default='n')
+    competition_page_active = models.CharField(max_length=3, default='no')
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):

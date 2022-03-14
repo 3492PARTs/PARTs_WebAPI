@@ -9,6 +9,7 @@ urlpatterns = [
     path('GetInit/', GetInit.as_view()),
     path('GetSyncSeason/', GetSyncSeason.as_view()),
     path('GetSetSeason/', GetSetSeason.as_view()),
+    path('ToggleCompetitionPage/', ToggleCompetitionPage.as_view()),
     path('SyncMatches/', SyncMatches.as_view()),
     path('GetAddSeason/', GetAddSeason.as_view()),
     path('GetDeleteSeason/', GetDeleteSeason.as_view()),
