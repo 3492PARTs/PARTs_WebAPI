@@ -119,11 +119,21 @@ class GetSyncSeason(APIView):
         r = json.loads(r.text)
 
         for e in r:
+            time_zone = e.get('timezone', 'America/New_York')
             event_ = {
                 'event_nm': e['name'],
-                'date_st': datetime.datetime.strptime(e['start_date'], '%Y-%m-%d').astimezone(pytz.utc),
-                'date_end': datetime.datetime.strptime(e['end_date'], '%Y-%m-%d').astimezone(pytz.utc),
+                'date_st': datetime.datetime.strptime(e['start_date'], '%Y-%m-%d').astimezone(pytz.timezone(time_zone)),
+                'date_end': datetime.datetime.strptime(e['end_date'], '%Y-%m-%d').astimezone(pytz.timezone(time_zone)),
                 'event_cd': e['key'],
+                'event_url': e.get('event_url', None),
+                'gmaps_url': e['gmaps_url'],
+                'address': e['address'],
+                'city': e['city'],
+                'state_prov': e['state_prov'],
+                'postal_code': e['postal_code'],
+                'location_name': e['location_name'],
+                'webcast_url': e['webcasts'][0]['channel'],
+                'city': e['city'],
                 'teams': [],
                 'teams_to_keep': []
             }
@@ -148,9 +158,23 @@ class GetSyncSeason(APIView):
 
             try:
                 Event(season=season, event_nm=e['event_nm'], date_st=e['date_st'], date_end=e['date_end'],
-                      event_cd=e['event_cd'], current='n', void_ind='n').save(force_insert=True)
+                      event_cd=e['event_cd'], event_url=e['event_url'], address=e['address'], city=e['city'], state_prov=e['state_prov'], postal_code=e['postal_code'], location_name=e['location_name'], gmaps_url=e['gmaps_url'], webcast_url=e['webcast_url'], current='n', competition_page_active='n', void_ind='n').save(force_insert=True)
                 messages += "(ADD) Added event: " + e['event_cd'] + '\n'
             except IntegrityError:
+                event = Event.objects.get(
+                    Q(event_cd=e['event_cd']) & Q(void_ind='n'))
+                event.date_st = e['date_st']
+                event.event_url = e['event_url']
+                event.address = e['address']
+                event.city = e['city']
+                event.state_prov = e['state_prov']
+                event.postal_code = e['postal_code']
+                event.location_name = e['location_name']
+                event.gmaps_url = e['gmaps_url']
+                event.webcast_url = e['webcast_url']
+                event.date_end = e['date_end']
+                event.save()
+
                 messages += "(NO ADD) Already have event: " + \
                     e['event_cd'] + '\n'
 
@@ -164,7 +188,7 @@ class GetSyncSeason(APIView):
             for t in e['teams']:
 
                 try:
-                    Team(team_no=t['team_no'], team_nm=t['team_nm']).save(
+                    Team(team_no=t['team_no'], team_nm=t['team_nm'], void_ind='n').save(
                         force_insert=True)
                     messages += "(ADD) Added team: " + \
                         str(t['team_no']) + " " + t['team_nm'] + '\n'
@@ -172,7 +196,7 @@ class GetSyncSeason(APIView):
                     messages += "(NO ADD) Already have team: " + \
                         str(t['team_no']) + " " + t['team_nm'] + '\n'
 
-                try:
+                try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
                     team = Team.objects.get(team_no=t['team_no'])
                     team.event_set.add(
                         Event.objects.get(event_cd=e['event_cd']))
@@ -229,7 +253,8 @@ class SyncMatches(APIView):
                 Q(team_no=e['alliances']['blue']['team_keys'][2].replace('frc', '')) & Q(void_ind='n'))
             red_score = e['alliances']['red'].get('score', None)
             blue_score = e['alliances']['blue'].get('score', None)
-            comp_level = e.get('comp_level', ' ')
+            comp_level = CompetitionLevel.objects.get(Q(
+                comp_lvl_typ=e.get('comp_level', ' ')) & Q(void_ind='n'))
             time = datetime.datetime.fromtimestamp(
                 e['time'], pytz.timezone('America/New_York'))
 
@@ -250,13 +275,15 @@ class SyncMatches(APIView):
 
                 match.save()
                 messages += '(UPDATE) ' + event.event_nm + \
-                    ' ' + comp_level + ' ' + str(match_number) + '\n'
+                    ' ' + comp_level.comp_lvl_typ_nm + \
+                    ' ' + str(match_number) + '\n'
             except ObjectDoesNotExist as odne:
                 match = Match(match_number=match_number, event=event, red_one=red_one, red_two=red_two, red_three=red_three, blue_one=blue_one,
                               blue_two=blue_two, blue_three=blue_three, red_score=red_score, blue_score=blue_score, comp_level=comp_level, time=time, void_ind='n')
                 match.save()
                 messages += '(ADD) ' + event.event_nm + \
-                    ' ' + comp_level + ' ' + str(match_number) + '\n'
+                    ' ' + comp_level.comp_lvl_typ_nm + \
+                    ' ' + str(match_number) + '\n'
 
         return messages
 
@@ -289,7 +316,8 @@ class GetSetSeason(APIView):
         msg = "Successfully set the season to: " + season.season
 
         if event_id is not None:
-            Event.objects.filter(current='y').update(current='n')
+            Event.objects.filter(current='y').update(
+                current='n', competition_page_active='n')
             event = Event.objects.get(event_id=event_id)
             event.current = 'y'
             event.save()

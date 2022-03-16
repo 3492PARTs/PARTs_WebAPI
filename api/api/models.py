@@ -34,6 +34,14 @@ class Event(models.Model):
     event_nm = models.CharField(max_length=255)
     date_st = models.DateTimeField()
     event_cd = models.CharField(unique=True, max_length=10)
+    event_url = models.CharField(max_length=255, null=True)
+    address = models.CharField(max_length=255, null=True)
+    city = models.CharField(max_length=255, null=True)
+    state_prov = models.CharField(max_length=255, null=True)
+    postal_code = models.CharField(max_length=255, null=True)
+    location_name = models.CharField(max_length=255, null=True)
+    gmaps_url = models.CharField(max_length=255, null=True)
+    webcast_url = models.CharField(max_length=255, null=True)
     date_end = models.DateTimeField()
     current = models.CharField(max_length=1, default='n')
     competition_page_active = models.CharField(max_length=3, default='no')
@@ -41,6 +49,16 @@ class Event(models.Model):
 
     def __str__(self):
         return str(self.event_id) + ' ' + self.event_nm
+
+
+class CompetitionLevel(models.Model):
+    comp_lvl_typ = models.CharField(primary_key=True, max_length=50)
+    comp_lvl_typ_nm = models.CharField(max_length=255)
+    comp_lvl_order = models.IntegerField()
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return self.question_typ + ' ' + self.question_typ_nm
 
 
 class Match(models.Model):
@@ -61,8 +79,8 @@ class Match(models.Model):
         Team, models.PROTECT, related_name='blue_three_team', null=True)
     red_score = models.IntegerField(null=True)
     blue_score = models.IntegerField(null=True)
-    comp_level = models.CharField(max_length=25)
-    time = models.DateTimeField()
+    comp_level = models.ForeignKey(CompetitionLevel, models.PROTECT)
+    time = models.DateTimeField(null=True)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):

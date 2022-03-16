@@ -15,4 +15,6 @@ urlpatterns = [
     re_path(r'^admin/', include('api.api.admin.urls')),
     # Admin Endpoints
     #re_path(r'^tba/', include('api.api.tba.urls'))
+    # Competition Endpoints
+    re_path(r'^competition/', include('api.api.competition.urls'))
 ]

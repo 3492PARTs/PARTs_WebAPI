@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.api.models import ScoutFieldSchedule, ScoutPitSchedule, Season, Event, QuestionType, ScoutQuestionType
+from api.api.models import CompetitionLevel, Match, ScoutFieldSchedule, ScoutPitSchedule, Season, Event, QuestionType, ScoutQuestionType
 from api.auth.serializers import UserSerializer, GroupSerializer, PhoneTypeSerializer
 
 
@@ -12,6 +12,20 @@ class SeasonSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
+        fields = '__all__'
+
+
+class CompetitionLevelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompetitionLevel
+        fields = '__all__'
+
+
+class MatchSerializer(serializers.ModelSerializer):
+    comp_level = CompetitionLevelSerializer(read_only=True)
+
+    class Meta:
+        model = Match
         fields = '__all__'
 
 
