@@ -23,12 +23,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-DEBUG_PROPAGATE_EXCEPTIONS = True
+DEBUG = os.getenv('DEBUG')
+DEBUG_PROPAGATE_EXCEPTIONS = os.getenv('DEBUG')
 
-FRONTEND_ADDRESS = 'https://parts3492.org/'
+FRONTEND_ADDRESS = os.getenv('FRONTEND_ADDRESS')
 
-ALLOWED_HOSTS = ['parts.bduke.dev', '192.168.1.41']
+ALLOWED_HOSTS = ['parts.bduke.dev', '192.168.1.41', 'partsuat.bduke.dev']
 
 # Application definition
 
@@ -60,6 +60,7 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     'http://parts3492.org',
     'https://parts3492.org',
+    'https://parts3492uat.bduke.dev',
     # 'http://parts3492.org/',
     # 'https://parts3492.org/',
     'http://192.168.1.41:49156'

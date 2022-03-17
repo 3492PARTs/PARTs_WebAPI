@@ -2,6 +2,7 @@ version: "2"
 
 services:
   parts_webapi:
+    container_name: ${CONTAINER_NAME}
     environment:
       DJANGO_MANAGEPY_MIGRATE: "on"
       SECRET_KEY: ${SECRET_KEY}
@@ -16,8 +17,11 @@ services:
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
       EMAIL_PORT: ${EMAIL_PORT}
       CLOUDINARY_URL: ${CLOUDINARY_URL}
+      FRONTEND_ADDRESS: ${FRONTEND_ADDRESS}
+      DEBUG: ${DEBUG}
     build:
       context: ../
       dockerfile: ./docker/Dockerfile
     ports:
-      - "8069:9090"
+      - "${API_PORT}:9090"
+    restart: always
