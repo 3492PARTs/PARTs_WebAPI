@@ -132,7 +132,7 @@ class GetSyncSeason(APIView):
                 'state_prov': e['state_prov'],
                 'postal_code': e['postal_code'],
                 'location_name': e['location_name'],
-                'webcast_url': e['webcasts'][0]['channel'],
+                'webcast_url':  e['webcasts'][0]['channel'] if len(e['webcasts']) > 0 else '',
                 'city': e['city'],
                 'teams': [],
                 'teams_to_keep': []
