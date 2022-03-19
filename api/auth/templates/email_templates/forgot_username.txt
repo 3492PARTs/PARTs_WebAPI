@@ -1,0 +1,6 @@
+Hi {{ user.first_name }} {{ user.last_name }},
+
+Your username is {{ user.get_username }}.
+
+Sincerely,
+PARTs

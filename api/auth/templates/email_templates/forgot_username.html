@@ -1,0 +1,13 @@
+{% extends './base.html' %}
+{% block content %}
+<p>
+    Hi {{ user.first_name }} {{ user.last_name }},
+</p>
+<p>
+    Your username is {{ user.get_username }}.
+</p>
+<p> Sincerely,
+<p>
+<p>PARTs</p>
+
+{% endblock %}

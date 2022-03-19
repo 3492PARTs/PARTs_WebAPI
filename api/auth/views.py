@@ -29,90 +29,6 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 import pytz
 
-"""
-def register(request):
-    if request.method == 'POST':
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False
-            user.save()
-
-            try:
-                current_site = get_current_site(request)
-                cntx = {
-                    'user': user,
-                    'domain': current_site.domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': account_activation_token.make_token(user),
-                }
-                mail_subject = 'Activate your PARTs account.'
-
-                to_email = form.cleaned_data.get('email')
-
-                send_email.send_message(
-                    to_email, mail_subject, 'acc_active_email', cntx)
-                return render(request, 'registration/register_complete.html')
-            except Exception as e:
-                print(e)
-                ret_message(
-                    'An error occurred while creating a user.', True, 'register', e)
-                user.delete()
-                return render(request, 'registration/register_fail.html')
-    else:
-        form = SignupForm()
-    # TODO maybe check email here and yeah
-    return render(request, 'registration/register.html', {'form': form})
-
-
-def resend_activation_email(request):
-    email_body_template = 'registration/activation_email.txt'
-    email_subject_template = 'registration/activation_email_subject.txt'
-
-    context = {}
-
-    form = None
-    if request.method == 'POST':
-        form = ResendActivationEmailForm(request.POST)
-        if form.is_valid():
-            to_email = form.cleaned_data["email"]
-            user = User.objects.get(email=to_email, is_active=0)
-            current_site = get_current_site(request)
-            cntx = {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': account_activation_token.make_token(user),
-            }
-            mail_subject = 'Activate your PARTs account.'
-
-            send_email.send_message(
-                to_email, mail_subject, 'acc_active_email', cntx)
-            return render(request, 'registration/register_complete.html')
-
-    if not form:
-        form = ResendActivationEmailForm()
-
-    context.update({"form": form})
-    return render(request, 'registration/resend_activation_email_form.html', context)
-
-
-def activate(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
-    if user is not None and account_activation_token.check_token(user, token):
-        user.is_active = True
-        user.save()
-        login(request, user)
-        # return redirect('home')
-        return render(request, 'registration/activate_complete.html')
-    else:
-        return render(request, 'registration/activate_incomplete.html')
-"""
-
 
 class GetUserData(APIView):
     """
@@ -197,55 +113,6 @@ class GetAPIStatus(APIView):
         return Response(200)
 
 
-"""
-class HTMLPasswordResetForm(PasswordResetForm):
-    
-    Override the password reset form to send html emails
-    
-    email = forms.EmailField(label=("Email"), max_length=254)
-
-    def save(self, domain_override=None, subject_template_name='registration/password_reset_subject.txt',
-             email_template_name='registration/password_reset_email.html', use_https=False,
-             token_generator=default_token_generator, from_email=None, request=None, **kwargs):
-        
-        Generates a one-use only link for resetting password and sends to the
-        user.
-        :param from_email:
-        :param request:
-        :param use_https:
-        :param domain_override:
-        :param subject_template_name:
-        :param token_generator:
-        :param email_template_name:
-        :param **kwargs:
-        :param **kwargs:
-        
-        email = self.cleaned_data["email"]
-        user = User.objects.get(
-            email__iexact=email, is_active=True)
-
-        if not domain_override:
-            current_site = get_current_site(request)
-            site_name = current_site.name
-            domain = current_site.domain
-        else:
-            site_name = domain = domain_override
-        c = {
-            'email': user.email,
-            'domain': domain,
-            'site_name': site_name,
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'user': user,
-            'token': token_generator.make_token(user),
-            'protocol': 'https' if use_https else 'http',
-        }
-        send_email.send_message(
-            email, 'PARTs Password Reset', 'password_reset_email', c)
-"""
-
-# New user management
-
-
 class UserProfileView(APIView):
     """
     Handles registering new users and management of user profiles.
@@ -264,7 +131,15 @@ class UserProfileView(APIView):
                     return ret_message('Passwords don\'t match.', True, 'auth/profile', 0)
 
                 user_data = serialized.validated_data
-                user = User(username=user_data.get('username'), email=user_data.get('email'), first_name=user_data.get('first_name'),
+
+                try:
+                    user = User.objects.get(
+                        email=user_data.get('email').lower())
+                    return ret_message('User already exists with that email.', True, 'auth/profile', 0)
+                except ObjectDoesNotExist as odne:
+                    x = 0
+
+                user = User(username=user_data.get('username').lower(), email=user_data.get('email').lower(), first_name=user_data.get('first_name'),
                             last_name=user_data.get('last_name'), date_joined=timezone.now())
 
                 #user = form.save(commit=False)
@@ -459,7 +334,7 @@ class UserEmailResendConfirmation(APIView):
                                'auth/confirm/resend/', exception=e)
 
     def resend_confirmation_email(self, request):
-        user = User.objects.get(email=request.data['email'])
+        user = User.objects.get(email=request.data['email'].lower())
         current_site = get_current_site(request)
 
         user_confirm_hash = abs(hash(user.date_joined))
@@ -493,7 +368,7 @@ class UserRequestPasswordReset(APIView):
     def request_reset_password(self, request):
         email = request.data.get('email')
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email=email.lower())
             if user.is_active:  # if the user has confirmed their email
                 user.reset_token = secrets.token_urlsafe(24)
                 user.reset_requested_at = timezone.now()
@@ -558,3 +433,38 @@ class UserPasswordReset(APIView):
             e = str(e)
             e = e.strip("'")
             return ret_message(e + " missing from request but is required", True, 'auth/reset_password', exception=e)
+
+
+class UserRequestUsername(APIView):
+    def post(self, request):
+        try:
+            req = self.forgot_username(request)
+            return req
+        except Exception as e:
+            return ret_message('Failed to request username.', True,
+                               'auth/request_username', exception=e)
+
+    def forgot_username(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email.lower())
+            if user.is_active:  # if the user has confirmed their email
+
+                cntx = {
+                    'user': user
+                }
+
+            send_mail(
+                subject="Username Requested",
+                message=render_to_string(
+                    "email_templates/forgot_username.txt", cntx).strip(),
+                html_message=render_to_string(
+                    "email_templates/forgot_username.html", cntx).strip(),
+                from_email="team3492@gmail.com",
+                recipient_list=[user.email]
+            )
+        except Exception as e:
+            ret_message('Failed to request username.', True,
+                        'auth/request_username', exception=e)
+        # regardless if we find a user or not, send back the same info. Prevents probing for user emails.
+        return ret_message('If a matching user was found you will receive an email shortly.')

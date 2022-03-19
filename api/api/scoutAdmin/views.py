@@ -17,6 +17,8 @@ from rest_framework.views import APIView
 from api.auth.security import *
 import requests
 from django.conf import settings
+from django.db.models.functions import Lower
+
 
 auth_obj = 2 + 48
 
@@ -29,8 +31,9 @@ class GetInit(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get_init(self):
-        seasons = Season.objects.all()
-        events = Event.objects.filter(void_ind='n')
+        seasons = Season.objects.all().order_by('season')
+        events = Event.objects.filter(void_ind='n').order_by(
+            'season__season', Lower('event_nm'))
 
         try:
             current_season = Season.objects.get(current='y')
@@ -44,16 +47,16 @@ class GetInit(APIView):
             current_event = Event()
 
         users = User.objects.filter(Q(is_active=True) & Q(
-            date_joined__isnull=False) & ~Q(groups__name__in=['Admin']))
+            date_joined__isnull=False) & ~Q(groups__name__in=['Admin'])).order_by(Lower('first_name'), Lower('last_name'))
 
         user_groups = []
         try:
             user_groups = Group.objects.filter(id__in=list(
-                ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True)))
+                ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True))).order_by('name')
         except Exception as e:
             user_groups = []
 
-        phone_types = PhoneType.objects.all()
+        phone_types = PhoneType.objects.all().order_by(Lower('carrier'))
 
         fieldSchedule = []
 
@@ -119,21 +122,21 @@ class GetSyncSeason(APIView):
         r = json.loads(r.text)
 
         for e in r:
-            time_zone = e.get('timezone', 'America/New_York')
+            time_zone = e.get('timezone') if e.get(
+                'timezone', None) is not None else 'America/New_York'
             event_ = {
                 'event_nm': e['name'],
                 'date_st': datetime.datetime.strptime(e['start_date'], '%Y-%m-%d').astimezone(pytz.timezone(time_zone)),
                 'date_end': datetime.datetime.strptime(e['end_date'], '%Y-%m-%d').astimezone(pytz.timezone(time_zone)),
                 'event_cd': e['key'],
                 'event_url': e.get('event_url', None),
-                'gmaps_url': e['gmaps_url'],
-                'address': e['address'],
-                'city': e['city'],
-                'state_prov': e['state_prov'],
-                'postal_code': e['postal_code'],
-                'location_name': e['location_name'],
+                'gmaps_url': e.get('gmaps_url', None),
+                'address': e.get('address', None),
+                'city': e.get('city', None),
+                'state_prov': e.get('state_prov', None),
+                'postal_code': e.get('postal_code', None),
+                'location_name': e.get('location_name', None),
                 'webcast_url':  e['webcasts'][0]['channel'] if len(e['webcasts']) > 0 else '',
-                'city': e['city'],
                 'teams': [],
                 'teams_to_keep': []
             }
@@ -215,7 +218,7 @@ class GetSyncSeason(APIView):
                     request.query_params.get('season_id', None))
                 return ret_message(req)
             except Exception as e:
-                return ret_message('An error occurred while syncing teams.', True, 'GetScoutAdminSyncSeason',
+                return ret_message('An error occurred while syncing the season/event/teams.', True, 'GetScoutAdminSyncSeason',
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'GetScoutAdminSyncSeason', request.user.id)
@@ -256,11 +259,14 @@ class SyncMatches(APIView):
             comp_level = CompetitionLevel.objects.get(Q(
                 comp_lvl_typ=e.get('comp_level', ' ')) & Q(void_ind='n'))
             time = datetime.datetime.fromtimestamp(
-                e['time'], pytz.timezone('America/New_York'))
+                e['time'], pytz.timezone('America/New_York')) if e['time'] else None
+            match_key = e['key']
 
             try:
+                if (comp_level.comp_lvl_typ == 'qf'):
+                    print(e)
                 match = Match.objects.get(
-                    Q(match_number=match_number) & Q(event=event) & Q(comp_level=comp_level) & Q(void_ind='n'))
+                    Q(match_id=match_key) & Q(void_ind='n'))
 
                 match.red_one = red_one
                 match.red_two = red_two
@@ -276,14 +282,14 @@ class SyncMatches(APIView):
                 match.save()
                 messages += '(UPDATE) ' + event.event_nm + \
                     ' ' + comp_level.comp_lvl_typ_nm + \
-                    ' ' + str(match_number) + '\n'
+                    ' ' + str(match_number) + ' ' + match_key + '\n'
             except ObjectDoesNotExist as odne:
-                match = Match(match_number=match_number, event=event, red_one=red_one, red_two=red_two, red_three=red_three, blue_one=blue_one,
+                match = Match(match_id=match_key, match_number=match_number, event=event, red_one=red_one, red_two=red_two, red_three=red_three, blue_one=blue_one,
                               blue_two=blue_two, blue_three=blue_three, red_score=red_score, blue_score=blue_score, comp_level=comp_level, time=time, void_ind='n')
                 match.save()
                 messages += '(ADD) ' + event.event_nm + \
                     ' ' + comp_level.comp_lvl_typ_nm + \
-                    ' ' + str(match_number) + '\n'
+                    ' ' + str(match_number) + ' ' + match_key + '\n'
 
         return messages
 
@@ -349,10 +355,10 @@ class ToggleCompetitionPage(APIView):
         try:
             event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
 
-            if event.competition_page_active == 'no':
-                event.competition_page_active = 'yes'
+            if event.competition_page_active == 'n':
+                event.competition_page_active = 'y'
             else:
-                event.competition_page_active = 'no'
+                event.competition_page_active = 'n'
             event.save()
         except ObjectDoesNotExist as odne:
             return ret_message('No active event, can\'t activate competition page', True, 'api/scoutAdmin/ToggleCompetitionPage', self.request.user.id, odne)

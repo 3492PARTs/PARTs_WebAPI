@@ -44,7 +44,7 @@ class Event(models.Model):
     webcast_url = models.CharField(max_length=255, null=True)
     date_end = models.DateTimeField()
     current = models.CharField(max_length=1, default='n')
-    competition_page_active = models.CharField(max_length=3, default='no')
+    competition_page_active = models.CharField(max_length=1, default='n')
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
@@ -58,11 +58,11 @@ class CompetitionLevel(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return self.question_typ + ' ' + self.question_typ_nm
+        return self.comp_lvl_typ + ' ' + self.comp_lvl_typ_nm
 
 
 class Match(models.Model):
-    match_id = models.AutoField(primary_key=True)
+    match_id = models.CharField(primary_key=True, max_length=50)
     match_number = models.IntegerField()
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(

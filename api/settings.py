@@ -60,7 +60,9 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     'http://parts3492.org',
     'https://parts3492.org',
+    'https://www.parts3492.org',
     'https://parts3492uat.bduke.dev',
+    'https://www.parts3492uat.bduke.dev',
     # 'http://parts3492.org/',
     # 'https://parts3492.org/',
     'http://192.168.1.41:49156'

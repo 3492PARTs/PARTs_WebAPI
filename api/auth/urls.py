@@ -42,7 +42,8 @@ urlpatterns = [
     path('confirm/', views.UserEmailConfirmation.as_view()),
     path('confirm/resend/', views.UserEmailResendConfirmation.as_view()),
     path('request_reset_password/', views.UserRequestPasswordReset.as_view()),
-    path('reset_password/', views.UserPasswordReset.as_view())
+    path('reset_password/', views.UserPasswordReset.as_view()),
+    path('request_username/', views.UserRequestUsername.as_view())
 ]
 
 # TODO Proper git ignore

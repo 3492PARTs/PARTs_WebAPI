@@ -14,7 +14,7 @@ class CompetitionInit(APIView):
 
     def get_competition_information(self):
         event = Event.objects.get(Q(current='y') & Q(
-            competition_page_active='yes') & Q(void_ind='n'))
+            competition_page_active='y') & Q(void_ind='n'))
         team3492 = Team.objects.get(team_no=3492)
 
         matches = Match.objects.filter(Q(event=event) & Q(void_ind='n') & Q(Q(red_one=team3492) | Q(red_two=team3492) | Q(
@@ -29,4 +29,4 @@ class CompetitionInit(APIView):
             return Response(serializer.data)
         except Exception as e:
             return ret_message('An error occurred while getting competition page information.', True,
-                               'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', exception=e)
+                               'api/competition/CompetitionInit', exception=e)
