@@ -104,10 +104,21 @@ class ScoutQuestionType(models.Model):
         return self.sq_typ + ' ' + self.sq_nm
 
 
+class ScoutQuestionSubType(models.Model):
+    sq_sub_typ = models.CharField(primary_key=True, max_length=10)
+    sq_sub_nm = models.CharField(max_length=255)
+    sq_typ = models.ForeignKey(ScoutQuestionType, models.PROTECT)
+
+    def __str__(self):
+        return self.sq_sub_typ + ' ' + self.sq_sub_nm
+
+
 class ScoutQuestion(models.Model):
     sq_id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, models.DO_NOTHING)
     sq_typ = models.ForeignKey(ScoutQuestionType, models.PROTECT)
+    sq_sub_typ = models.ForeignKey(
+        ScoutQuestionSubType, models.PROTECT, null=True)
     question_typ = models.ForeignKey(QuestionType, models.PROTECT)
     question = models.CharField(max_length=1000)
     order = models.IntegerField()

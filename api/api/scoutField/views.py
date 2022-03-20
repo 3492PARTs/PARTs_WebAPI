@@ -25,7 +25,7 @@ class GetQuestions(APIView):
         scout_questions = []
         try:
             sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
-                                               Q(void_ind='n')).order_by('order')
+                                               Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
 
             for sq in sqs:
                 ops = QuestionOptions.objects.filter(sq=sq)
@@ -43,6 +43,7 @@ class GetQuestions(APIView):
                     'sq_id': sq.sq_id,
                     'season': sq.season_id,
                     'sq_typ': sq.sq_typ_id,
+                    'sq_sub_typ': sq.sq_sub_typ_id,
                     'question_typ': sq.question_typ_id,
                     'question': sq.question,
                     'order': sq.order,

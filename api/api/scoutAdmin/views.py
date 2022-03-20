@@ -1,4 +1,5 @@
 import datetime
+from email import message
 from webbrowser import get
 
 import pytz
@@ -417,28 +418,44 @@ class GetDeleteSeason(APIView):
         season = Season.objects.get(season_id=season_id)
 
         events = Event.objects.filter(season=season)
-
         for e in events:
-            Team.objects.filter(event=e).remove(e)
-            # EventTeamXref.objects.filter(event=e).delete()
+            teams_at_event = Team.objects.filter(event=e)
+            for t in teams_at_event:
+                t.event_set.remove(e)
 
             scout_fields = ScoutField.objects.filter(event=e)
-
             for sf in scout_fields:
-                ScoutFieldAnswer.objects.filter(scout_field=sf).delete()
+                scout_field_answers = ScoutFieldAnswer.objects.filter(
+                    scout_field=sf)
+                for sfa in scout_field_answers:
+                    sfa.delete()
                 sf.delete()
 
             scout_pits = ScoutPit.objects.filter(event=e)
-
             for sp in scout_pits:
-                ScoutPitAnswer.objects.filter(scout_pit=sp).delete()
+                scout_pit_answers = ScoutPitAnswer.objects.filter(scout_pit=sp)
+                for spa in scout_pit_answers:
+                    spa.delete()
                 sp.delete()
 
-            sqs = ScoutQuestion.objects.filter(season=season)
+            scout_questions = ScoutQuestion.objects.filter(season=season)
+            for sq in scout_questions:
+                question_options = QuestionOptions.objects.filter(sq=sq)
+                for qo in question_options:
+                    qo.delete()
+                sq.delete()
 
-            # QuestionOptions.objects.filter(sq__in=list(sqs.values_list('user_id', flat=True)))
-            QuestionOptions.objects.filter(sq__in=sqs).delete()
-            sqs.delete()
+            matches = Match.objects.filter(event=e)
+            for m in matches:
+                m.delete()
+
+            scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
+            for sfs in scout_field_schedules:
+                sfs.delete()
+
+            scout_pit_schedules = ScoutPitSchedule.objects.filter(event=e)
+            for sps in scout_pit_schedules:
+                sps.delete()
 
             e.delete()
 
@@ -473,6 +490,9 @@ class GetQuestionInit(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, 'GetScoutAdminQuestionInit', self.request.user.id, e)
 
+        scout_question_sub_types = ScoutQuestionSubType.objects.filter(
+            sq_typ_id=question_type).order_by('sq_sub_nm')
+
         scout_questions = []
         try:
             sqs = ScoutQuestion.objects.filter(
@@ -493,6 +513,7 @@ class GetQuestionInit(APIView):
                     'sq_id': sq.sq_id,
                     'season': sq.season_id,
                     'sq_typ': sq.sq_typ_id,
+                    'sq_sub_typ': sq.sq_sub_typ_id,
                     'question_typ': sq.question_typ_id,
                     'question': sq.question,
                     'order': sq.order,
@@ -503,7 +524,7 @@ class GetQuestionInit(APIView):
         except Exception as e:
             scout_questions = []
 
-        return {'questionTypes': question_types, 'scoutQuestions': scout_questions}
+        return {'questionTypes': question_types, 'scoutQuestions': scout_questions, 'scoutQuestionSubTypes': scout_question_sub_types}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -535,23 +556,24 @@ class PostSaveScoutQuestion(APIView):
                                    self.request.user.id, e)
 
             sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'],  sq_typ_id=data['sq_typ'],
+                               sq_sub_typ_id=data.get('sq_sub_typ', None),
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
             sq.save()
 
             # If adding a new question we need to make a null answer for it for all questions already answered
-            if data['sq_typ'] == 'field':
-                questions_answered = ScoutField.objects.filter(void_ind='n')
-
-                for qa in questions_answered:
-                    ScoutFieldAnswer(scout_field=qa, sq=sq,
-                                     answer='!EXIST', void_ind='n').save()
-            elif data['sq_typ'] == 'pit':
+            if data['sq_typ'] == 'pit':
                 questions_answered = ScoutPit.objects.filter(void_ind='n')
 
                 for qa in questions_answered:
                     ScoutPitAnswer(scout_pit=qa, sq=sq,
                                    answer='!EXIST', void_ind='n').save()
+            else:
+                questions_answered = ScoutField.objects.filter(void_ind='n')
+
+                for qa in questions_answered:
+                    ScoutFieldAnswer(scout_field=qa, sq=sq,
+                                     answer='!EXIST', void_ind='n').save()
 
             for op in data['options']:
                 QuestionOptions(
@@ -589,6 +611,7 @@ class PostUpdateScoutQuestion(APIView):
 
         sq.question = data['question']
         sq.order = data['order']
+        sq.sq_sub_typ_id = data.get('sq_sub_typ', None)
         sq.question_typ_id = data['question_typ']
         sq.save()
 
@@ -750,29 +773,48 @@ class NotifyUsers(APIView):
             'scout_time_end': sfs.end_time,
             'lead_scout': self.request.user.first_name + ' ' + self.request.user.last_name
         }
-        if sfs.red_one:
+        message = ''
+        try:
             send_email.send_message(
                 sfs.red_one.profile.phone + sfs.red_one.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-        if sfs.red_two:
+            message += 'Notified: ' + sfs.red_one.first_name + '\n'
+        except Exception as e:
+            message += 'Unable to notify: ' + sfs.red_one.first_name + '\n'
+        try:
             send_email.send_message(
                 sfs.red_two.profile.phone + sfs.red_two.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-        if sfs.red_three:
+            message += 'Notified: ' + sfs.red_two.first_name + '\n'
+        except Exception as e:
+            message += 'Unable to notify: ' + sfs.red_two.first_name + '\n'
+        try:
             send_email.send_message(
-                sfs.red_three.profile.phone + sfs.red_three.phone_type.profile.phone_type, 'Time to Scout!', 'notify_scout', data)
-        if sfs.blue_one:
+                sfs.red_three.profile.phone + sfs.red_three.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+            message += 'Notified: ' + sfs.red_three.first_name + '\n'
+        except Exception as e:
+            message += 'Unable to notify: ' + sfs.red_three.first_name + '\n'
+        try:
             send_email.send_message(
                 sfs.blue_one.profile.phone + sfs.blue_one.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-        if sfs.blue_two:
+            message += 'Notified: ' + sfs.blue_one.first_name + '\n'
+        except Exception as e:
+            message += 'Unable to notify: ' + sfs.blue_one.first_name + '\n'
+        try:
             send_email.send_message(
                 sfs.blue_two.profile.phone + sfs.blue_two.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-        if sfs.blue_three:
+            message += 'Notified: ' + sfs.blue_two.first_name + '\n'
+        except Exception as e:
+            message += 'Unable to notify: ' + sfs.blue_two.first_name + '\n'
+        try:
             send_email.send_message(
                 sfs.blue_three.profile.phone + sfs.blue_three.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+            message += 'Notified: ' + sfs.blue_three.first_name + '\n'
+        except Exception as e:
+            message += 'Unable to notify: ' + sfs.blue_three.first_name + '\n'
 
         sfs.notified = 'y'
         sfs.save()
 
-        return ret_message('Successfully notified users!')
+        return ret_message(message)
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -781,7 +823,7 @@ class NotifyUsers(APIView):
                     'id', None))
                 return req
             except Exception as e:
-                return ret_message('An error occurred while notifying the.', True, 'api/scoutAdmin/PostNotifyUser',
+                return ret_message('An error occurred while notifying the users.', True, 'api/scoutAdmin/PostNotifyUser',
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, 'api/scoutAdmin/PostNotifyUser', request.user.id)

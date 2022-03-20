@@ -19,14 +19,12 @@ class GetInit(APIView):
 
     def get_init(self):
         user = self.request.user
-
         try:
-            current_season = Season.objects.get(current='y')
+            current_event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
         except Exception as e:
-            return ret_message('No season set, see an admin.', True, 'api/scoutPortal/GetInit', self.request.user.id, e)
+            return ret_message('No event set, see an admin.', True, 'api/scoutPortal/GetInit', self.request.user.id, e)
 
-        fieldSchedule = []
-        sfs = ScoutFieldSchedule.objects.filter(Q(end_time__gte=timezone.now()) & Q(void_ind='n') & Q(Q(red_one=user) | Q(
+        sfs = ScoutFieldSchedule.objects.filter(Q(event=current_event) & Q(end_time__gte=timezone.now()) & Q(void_ind='n') & Q(Q(red_one=user) | Q(
             red_two=user) | Q(red_three=user) | Q(blue_one=user) | Q(blue_two=user) | Q(blue_three=user))).order_by('st_time')
 
         # TODO REmove sss = ScoutFieldSchedule.objects.filter((Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) & Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
