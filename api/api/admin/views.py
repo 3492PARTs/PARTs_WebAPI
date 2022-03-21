@@ -54,6 +54,7 @@ class PostSaveUser(APIView):
             user = User.objects.get(username=data['user']['username'])
             user.first_name = data['user']['first_name']
             user.last_name = data['user']['last_name']
+            user.email = data['user']['email'].lower()
             user.profile.phone = data['user']['profile']['phone']
             user.profile.phone_type_id = data['user']['profile']['phone_type']
             user.save()
