@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from api.auth.security import *
 from django.contrib.auth.models import User, Group
 
-auth_obj = 7 + 48
-auth_obj_save_user = 8 + 48
+auth_obj = 55
+auth_obj_save_user = 56
 
 
 class GetInit(APIView):
@@ -23,9 +23,9 @@ class GetInit(APIView):
         users = User.objects.select_related('profile').filter(
             Q(is_active=True) & Q(date_joined__isnull=False))  # & ~Q(id=self.request.user.id))
 
-        user_groups = Group.objects.all()
+        user_groups = Group.objects.all().order_by('name')
 
-        phone_types = PhoneType.objects.all()
+        phone_types = PhoneType.objects.all().order_by('carrier')
 
         return {'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types}
 

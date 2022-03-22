@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from api.auth.security import *
 from .serializers import *
 
-auth_obj = 1 + 48
+auth_obj = 49
+auth_view_obj = 52
 
 
 class GetQuestions(APIView):
@@ -209,7 +210,7 @@ class GetResults(APIView):
         return {'scoutCols': scout_cols, 'scoutAnswers': scout_answers}
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, auth_obj) or has_access(request.user.id, auth_view_obj):
             try:
                 req = self.get_answers(request.query_params.get('team', None))
 

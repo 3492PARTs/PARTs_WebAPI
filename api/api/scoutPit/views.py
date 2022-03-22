@@ -8,7 +8,8 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-auth_obj = 3 + 48
+auth_obj = 51
+auth_view_obj = 53
 
 
 class GetQuestions(APIView):
@@ -239,7 +240,7 @@ class GetResultsInit(APIView):
         return teams
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, auth_obj) or has_access(request.user.id, auth_view_obj):
             try:
                 req = self.get_teams()
                 serializer = TeamSerializer(req, many=True)
@@ -304,7 +305,7 @@ class PostGetResults(APIView):
         return results
 
     def post(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, auth_obj) or has_access(request.user.id, auth_view_obj):
             try:
                 serializer = TeamSerializer(data=request.data, many=True)
                 if not serializer.is_valid():
