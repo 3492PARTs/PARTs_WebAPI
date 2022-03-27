@@ -169,7 +169,7 @@ class GetResults(APIView):
         scout_answers = []
         try:
             sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(
-                sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('order')
+                sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
             for sq in sqs:
                 scout_cols.append({
                     'PropertyName': 'ans' + str(sq.sq_id),
