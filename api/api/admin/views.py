@@ -7,6 +7,7 @@ from api.auth.serializers import PhoneTypeSerializer, ErrorLogSerializer
 from rest_framework.views import APIView
 from api.auth.security import *
 from django.contrib.auth.models import User, Group
+from django.db.models.functions import Lower
 
 auth_obj = 55
 auth_obj_save_user = 56
@@ -21,7 +22,7 @@ class GetInit(APIView):
 
     def get_init(self):
         users = User.objects.select_related('profile').filter(
-            Q(is_active=True) & Q(date_joined__isnull=False))  # & ~Q(id=self.request.user.id))
+            Q(date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))  # & ~Q(id=self.request.user.id))
 
         user_groups = Group.objects.all().order_by('name')
 
@@ -57,6 +58,7 @@ class PostSaveUser(APIView):
             user.email = data['user']['email'].lower()
             user.profile.phone = data['user']['profile']['phone']
             user.profile.phone_type_id = data['user']['profile']['phone_type']
+            user.is_active = data['user']['is_active']
             user.save()
 
             for d in data['groups']:
