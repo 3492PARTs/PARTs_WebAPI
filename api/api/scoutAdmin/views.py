@@ -62,10 +62,10 @@ class GetInit(APIView):
         fieldSchedule = []
 
         fieldSchedule = ScoutFieldSchedule.objects.select_related('red_one', 'red_two', 'red_three', 'blue_one', 'blue_two', 'blue_three').filter(
-            event=current_event, void_ind='n').order_by('st_time')
+            event=current_event, void_ind='n').order_by('-st_time')
 
         pitSchedule = ScoutPitSchedule.objects.filter(
-            event=current_event, void_ind='n').order_by('st_time')
+            event=current_event, void_ind='n').order_by('-st_time')
 
         """
         pastSchedule = []
@@ -137,6 +137,7 @@ class GetSyncSeason(APIView):
                 'state_prov': e.get('state_prov', None),
                 'postal_code': e.get('postal_code', None),
                 'location_name': e.get('location_name', None),
+                'timezone': e.get('timezone', 'America/New_York'),
                 'webcast_url':  e['webcasts'][0]['channel'] if len(e['webcasts']) > 0 else '',
                 'teams': [],
                 'teams_to_keep': []
@@ -162,7 +163,7 @@ class GetSyncSeason(APIView):
 
             try:
                 Event(season=season, event_nm=e['event_nm'], date_st=e['date_st'], date_end=e['date_end'],
-                      event_cd=e['event_cd'], event_url=e['event_url'], address=e['address'], city=e['city'], state_prov=e['state_prov'], postal_code=e['postal_code'], location_name=e['location_name'], gmaps_url=e['gmaps_url'], webcast_url=e['webcast_url'], current='n', competition_page_active='n', void_ind='n').save(force_insert=True)
+                      event_cd=e['event_cd'], event_url=e['event_url'], address=e['address'], city=e['city'], state_prov=e['state_prov'], postal_code=e['postal_code'], location_name=e['location_name'], gmaps_url=e['gmaps_url'], webcast_url=e['webcast_url'], timezone=e['timezone'], current='n', competition_page_active='n', void_ind='n').save(force_insert=True)
                 messages += "(ADD) Added event: " + e['event_cd'] + '\n'
             except IntegrityError:
                 event = Event.objects.get(
@@ -177,6 +178,7 @@ class GetSyncSeason(APIView):
                 event.gmaps_url = e['gmaps_url']
                 event.webcast_url = e['webcast_url']
                 event.date_end = e['date_end']
+                event.timezone = e['timezone']
                 event.save()
 
                 messages += "(NO ADD) Already have event: " + \
@@ -766,11 +768,18 @@ class NotifyUsers(APIView):
     permission_classes = (IsAuthenticated,)
 
     def notify_users(self, id):
+        event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
         sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=id)
+        date_st_utc = sfs.st_time.astimezone(pytz.utc)
+        date_end_utc = sfs.end_time.astimezone(pytz.utc)
+        date_st_local = date_st_utc.astimezone(pytz.timezone(event.timezone))
+        date_end_local = date_end_utc.astimezone(pytz.timezone(event.timezone))
+        date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
+        date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
         data = {
             'scout_location': 'Field',
-            'scout_time_st': sfs.st_time,
-            'scout_time_end': sfs.end_time,
+            'scout_time_st': date_st_str,
+            'scout_time_end': date_end_str,
             'lead_scout': self.request.user.first_name + ' ' + self.request.user.last_name
         }
         message = ''

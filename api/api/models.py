@@ -43,6 +43,7 @@ class Event(models.Model):
     gmaps_url = models.CharField(max_length=255, null=True)
     webcast_url = models.CharField(max_length=255, null=True)
     date_end = models.DateTimeField()
+    timezone = models.CharField(max_length=255, null=True)
     current = models.CharField(max_length=1, default='n')
     competition_page_active = models.CharField(max_length=1, default='n')
     void_ind = models.CharField(max_length=1, default='n')
