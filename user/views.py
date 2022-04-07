@@ -401,8 +401,7 @@ class UserData(APIView):
     endpoint = 'user-data/'
 
     def get_user(self):
-        user = User.objects.select_related(
-            'profile').get(id=self.request.user.id)
+        user = User.objects.get(id=self.request.user.id)
 
         return user
 
@@ -416,7 +415,7 @@ class UserData(APIView):
                                request.user.id, e)
 
 
-class UserLinks(APIView):
+class UserLinksView(APIView):
     """
     API endpoint to get links a user has based on permissions
     """

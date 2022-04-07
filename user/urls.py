@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
-from .views import UserData, UserLinks, UserGroups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, UserRequestPasswordReset, UserPasswordReset, UserRequestUsername
+from .views import UserData, UserLinksView, UserGroups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, UserRequestPasswordReset, UserPasswordReset, UserRequestUsername
 
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -9,7 +9,7 @@ urlpatterns = [
          name='token_obtain_pair'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('user-data/', UserData.as_view()),
-    path('user-links/', UserLinks.as_view()),
+    path('user-links/', UserLinksView.as_view()),
     path('user-groups/', UserGroups.as_view()),
     path('profile/', UserProfile.as_view()),
     path('confirm/', UserEmailConfirmation.as_view()),

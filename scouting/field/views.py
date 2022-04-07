@@ -6,7 +6,7 @@ from general.security import ret_message, has_access
 from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer
 from django.db.models import Q
 from rest_framework.response import Response
-from pytz import timezone
+from django.utils import timezone
 
 auth_obj = 49
 auth_view_obj = 52

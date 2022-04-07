@@ -7,10 +7,11 @@ from .serializers import ErrorLogSerializer, InitSerializer, SaveUserSerializer
 from .models import ErrorLog
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.db.models.functions import Lower
 from rest_framework.response import Response
 from django.db.models import Q
+from user.models import User
 
 auth_obj = 55
 auth_obj_save_user = 56
@@ -26,7 +27,7 @@ class Init(APIView):
     endpoint = 'init/'
 
     def get_init(self):
-        users = User.objects.select_related('profile').filter(
+        users = User.objects.filter(
             Q(date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))  # & ~Q(id=self.request.user.id))
 
         user_groups = Group.objects.all().order_by('name')
@@ -100,7 +101,7 @@ class SaveUser(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
-class ErrorLog(APIView):
+class ErrorLogView(APIView):
     """
     API endpoint to get errors for the admin screen
     """

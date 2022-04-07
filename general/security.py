@@ -1,9 +1,9 @@
-from pytz import timezone
+from django.utils import timezone
 
 from admin.models import ErrorLog
 from user.serializers import RetMessageSerializer
 from rest_framework.response import Response
-from django.contrib.auth.models import User
+from user.models import User
 
 
 def has_access(user_id, sec_permission):

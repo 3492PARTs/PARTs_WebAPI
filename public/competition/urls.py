@@ -4,5 +4,5 @@ from .views import *
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path('competition-init/', CompetitionInit.as_view())
+    path('init/', Init.as_view())
 ]

@@ -10,9 +10,9 @@ from general.security import ret_message
 app_url = 'public/competition/'
 
 
-class CompetitionInit(APIView):
+class Init(APIView):
     """API endpoint to tell the frontend if the competition page is active and its information"""
-    endpoint = 'competition-init/'
+    endpoint = 'init/'
 
     def get_competition_information(self):
         event = Event.objects.get(Q(current='y') & Q(

@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
-from django.contrib.auth.models import User
+from user.models import User
 
 from .serializers import InitSerializer, ScoutAdminQuestionInitSerializer, ScoutFieldScheduleSaveSerializer, ScoutQuestionSerializer
 from user.serializers import PhoneTypeSerializer, Group, PhoneType
