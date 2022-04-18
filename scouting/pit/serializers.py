@@ -15,10 +15,9 @@ class ScoutAnswerSerializer(serializers.Serializer):
     team = serializers.CharField(required=False)
 
 
-class ScoutPitResultAnswerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ScoutPitAnswer
-        fields = '__all__'
+class ScoutPitResultAnswerSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    answer = serializers.CharField(required=False, allow_null=True)
 
 
 class ScoutPitResultsSerializer(serializers.Serializer):
@@ -26,3 +25,8 @@ class ScoutPitResultsSerializer(serializers.Serializer):
     teamNm = serializers.CharField()
     pic = serializers.CharField()
     results = ScoutPitResultAnswerSerializer(many=True)
+
+
+class PitTeamDataSerializer(serializers.Serializer):
+    questions = ScoutQuestionSerializer(required=False, many=True)
+    pic = serializers.CharField()

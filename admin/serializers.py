@@ -10,7 +10,7 @@ class InitSerializer(serializers.Serializer):
 
 
 class SaveUserSerializer(serializers.Serializer):
-    user = UserSerializer(read_only=False)
+    user = UserSerializer()
     groups = GroupSerializer(many=True)
 
 

@@ -63,8 +63,8 @@ class SaveUser(APIView):
             user.first_name = data['user']['first_name']
             user.last_name = data['user']['last_name']
             user.email = data['user']['email'].lower()
-            user.profile.phone = data['user']['profile']['phone']
-            user.profile.phone_type_id = data['user']['profile']['phone_type']
+            user.phone = data['user']['phone']
+            user.phone_type_id = data['user'].get('phone_type_id', None)
             user.is_active = data['user']['is_active']
             user.save()
 
@@ -92,7 +92,7 @@ class SaveUser(APIView):
 
         if has_access(request.user.id, auth_obj_save_user):
             try:
-                req = self.save_user(serializer.data)
+                req = self.save_user(serializer.validated_data)
                 return req
             except Exception as e:
                 return ret_message('An error occurred while saving the user.', True, app_url + self.endpoint,

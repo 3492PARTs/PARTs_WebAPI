@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from scouting.models import CompetitionLevel, Match, QuestionOptions, ScoutFieldSchedule, ScoutPitSchedule, ScoutQuestion, ScoutQuestionSubType, Season, Event, QuestionType, ScoutQuestionType
+from scouting.models import CompetitionLevel, Match, QuestionOptions, ScoutFieldSchedule, ScoutPitAnswer, ScoutPitSchedule, ScoutQuestion, ScoutQuestionSubType, Season, Event, QuestionType, ScoutQuestionType
 from user.serializers import UserSerializer, GroupSerializer, PhoneTypeSerializer
 
 
@@ -79,12 +79,24 @@ class ScoutQuestionSubTypeSerializer(serializers.ModelSerializer):
 
 
 class QuestionOptionsSerializer(serializers.ModelSerializer):
+    q_opt_id = serializers.IntegerField(required=False, allow_null=True)
+
     class Meta:
         model = QuestionOptions
         fields = '__all__'
+        extra_kwargs = {'sq': {'required': False}}
 
 
 class ScoutQuestionSerializer(serializers.ModelSerializer):
+    sq_id = serializers.IntegerField(required=False, allow_null=True)
+    season = serializers.CharField(required=False, allow_null=True)
+    questionoptions_set = QuestionOptionsSerializer(
+        required=False, allow_null=True, many=True)
+
+    answer = serializers.CharField(required=False, allow_null=True)
+
+    answer = serializers.CharField(required=False, allow_null=True)
+
     class Meta:
         model = ScoutQuestion
         fields = '__all__'

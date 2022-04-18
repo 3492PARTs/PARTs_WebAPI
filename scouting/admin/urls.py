@@ -16,7 +16,7 @@ urlpatterns = [
     path('scout-question-init/', QuestionInit.as_view()),
     path('save-scout-question/', SaveScoutQuestion.as_view()),
     path('update-scout-question/', UpdateScoutQuestion.as_view()),
-    path('toggle-scout-option/', ToggleScoutQuestion.as_view()),
+    path('toggle-scout-question/', ToggleScoutQuestion.as_view()),
     path('toggle-option/', ToggleOption.as_view()),
     path('save-scout-field-schedule-entry/',
          SaveScoutFieldScheduleEntry.as_view()),

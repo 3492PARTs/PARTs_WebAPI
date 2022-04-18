@@ -505,9 +505,10 @@ class QuestionInit(APIView):
 
         scout_questions = []
         try:
-            sqs = ScoutQuestion.objects.filter(
-                Q(season=current_season) & Q(sq_typ_id=question_type))
-            for sq in sqs:
+            scout_questions = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
+                Q(season=current_season) & Q(sq_typ_id=question_type)).order_by('sq_sub_typ_id', 'order')
+            '''
+            for sq in scout_questions:
                 ops = QuestionOptions.objects.filter(sq=sq)
                 options = []
                 for op in ops:
@@ -518,7 +519,7 @@ class QuestionInit(APIView):
                         'active': op.active,
                         'void_ind': op.void_ind
                     })
-
+                
                 scout_questions.append({
                     'sq_id': sq.sq_id,
                     'season': sq.season_id,
@@ -531,6 +532,7 @@ class QuestionInit(APIView):
                     'void_ind': sq.void_ind,
                     'options': options
                 })
+                '''
         except Exception as e:
             scout_questions = []
 
@@ -556,7 +558,7 @@ class SaveScoutQuestion(APIView):
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'save-scout-questions/'
+    endpoint = 'save-scout-question/'
 
     def save_question(self, data):
         try:
@@ -566,8 +568,8 @@ class SaveScoutQuestion(APIView):
                 return ret_message('No season set, see an admin.', True, app_url + self.endpoint,
                                    self.request.user.id, e)
 
-            sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'],  sq_typ_id=data['sq_typ'],
-                               sq_sub_typ_id=data.get('sq_sub_typ', None),
+            sq = ScoutQuestion(season=current_season, question_typ=data['question_typ'],  sq_typ=data['sq_typ'],
+                               sq_sub_typ=data.get('sq_sub_typ', None),
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
             sq.save()
@@ -586,7 +588,10 @@ class SaveScoutQuestion(APIView):
                     ScoutFieldAnswer(scout_field=qa, sq=sq,
                                      answer='!EXIST', void_ind='n').save()
 
-            for op in data['options']:
+            if data['sq_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
+                raise Exception('Select questions must have options.')
+
+            for op in data.get('questionoptions_set', []):
                 QuestionOptions(
                     option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
 
@@ -602,7 +607,7 @@ class SaveScoutQuestion(APIView):
 
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.save_question(serializer.data)
+                req = self.save_question(serializer.validated_data)
                 return req
             except Exception as e:
                 return ret_message('An error occurred while saving the question.', True,
@@ -627,7 +632,10 @@ class UpdateScoutQuestion(APIView):
         sq.question_typ_id = data['question_typ']
         sq.save()
 
-        for op in data['options']:
+        if data['sq_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
+            raise Exception('Select questions must have options.')
+
+        for op in data.get('questionoptions_set', []):
             if op.get('q_opt_id', None) is not None:
                 o = QuestionOptions.objects.get(q_opt_id=op['q_opt_id'])
                 o.option = op['option']
@@ -647,7 +655,7 @@ class UpdateScoutQuestion(APIView):
 
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.update_question(serializer.data)
+                req = self.update_question(serializer.validated_data)
                 return req
             except Exception as e:
                 return ret_message('An error occurred while updating the question.', True,
@@ -885,7 +893,7 @@ class SavePhoneType(APIView):
 
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.save_phone_type(serializer.data)
+                req = self.save_phone_type(serializer.validated_data)
                 return req
             except Exception as e:
                 return ret_message('An error occurred while saving phone type.', True, app_url + self.endpoint,

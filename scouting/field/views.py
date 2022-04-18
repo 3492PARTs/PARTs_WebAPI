@@ -30,33 +30,8 @@ class Questions(APIView):
 
         scout_questions = []
         try:
-            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
-                                               Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
-
-            for sq in sqs:
-                ops = QuestionOptions.objects.filter(sq=sq)
-                options = []
-                for op in ops:
-                    options.append({
-                        'q_opt_id': op.q_opt_id,
-                        'option': op.option,
-                        'sq': op.sq_id,
-                        'active': op.active,
-                        'void_ind': op.void_ind
-                    })
-
-                scout_questions.append({
-                    'sq_id': sq.sq_id,
-                    'season': sq.season_id,
-                    'sq_typ': sq.sq_typ_id,
-                    'sq_sub_typ': sq.sq_sub_typ_id,
-                    'question_typ': sq.question_typ_id,
-                    'question': sq.question,
-                    'order': sq.order,
-                    'active': sq.active,
-                    'void_ind': sq.void_ind,
-                    'options': options
-                })
+            scout_questions = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
+                                                                                                   Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
         except Exception as e:
             x = 1
 
@@ -129,7 +104,7 @@ class SaveAnswers(APIView):
                 scout_field=sf, sq_id=d['sq_id'], answer=d.get('answer', ''), void_ind='n')
             sfa.save()
 
-        return ret_message('Question saved successfully')
+        return ret_message('Response saved successfully')
 
     def post(self, request, format=None):
         serializer = ScoutFieldSerializer(data=request.data)

@@ -35,14 +35,18 @@ class PhoneTypeSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(many=True, required=False)
-    phone_type = PhoneTypeSerializer(required=False)
+    phone_type = PhoneTypeSerializer(required=False, allow_null=True)
+    phone_type_id = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name',
-                  'last_name', 'groups', 'is_active', 'phone', 'phone_type')
+                  'last_name', 'groups', 'is_active', 'phone', 'phone_type', 'phone_type_id')
         extra_kwargs = {
             'username': {
+                'validators': [],
+            },
+            'email': {
                 'validators': [],
             },
             'groups': {
