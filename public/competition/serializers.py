@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from scouting.admin.serializers import EventSerializer, MatchSerializer
+from scouting.admin.serializers import Event2Serializer, MatchSerializer
 
 
 class CompetitionInformationSerializer(serializers.Serializer):
-    event = EventSerializer()
+    event = Event2Serializer()
     matches = MatchSerializer(many=True, required=False)
