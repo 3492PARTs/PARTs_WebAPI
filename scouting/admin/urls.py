@@ -15,6 +15,7 @@ urlpatterns = [
     path('delete-season/', DeleteSeason.as_view()),
     path('add-event/', AddEvent.as_view()),
     path('add-team/', AddTeam.as_view()),
+    path('delete-event/', DeleteEvent.as_view()),
     path('add-team-to-event/', AddTeamToEvent.as_view()),
     path('scout-question-init/', QuestionInit.as_view()),
     path('save-scout-question/', SaveScoutQuestion.as_view()),
