@@ -23,7 +23,22 @@ class TeamSerializer(serializers.ModelSerializer):
         }
 
 
+class Team2Serializer(serializers.ModelSerializer):
+    # this is bc i need a default checked team serializer
+    checked = serializers.BooleanField(default=True)
+
+    class Meta:
+        model = Team
+        fields = '__all__'
+        extra_kwargs = {
+            'team_no': {
+                'validators': [],
+            },
+        }
+
+
 class EventSerializer(serializers.ModelSerializer):
+    # TODO Why did i do this??????? Why is there only one team here?
     team_no = TeamSerializer(required=False)
     checked = serializers.BooleanField(required=False)
 
@@ -37,6 +52,21 @@ class Event2Serializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+
+
+class Event3Serializer(serializers.ModelSerializer):
+    event_id = serializers.IntegerField(
+        required=False, allow_null=True)
+    team_no = Team2Serializer(required=False, many=True)
+
+    class Meta:
+        model = Event
+        fields = '__all__'
+        extra_kwargs = {
+            'event_cd': {
+                'validators': [],
+            },
+        }
 
 
 class CompetitionLevelSerializer(serializers.ModelSerializer):
@@ -140,7 +170,7 @@ class EventToTeamsSerializer(serializers.Serializer):
 
 class InitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
-    events = Event2Serializer(many=True)
+    events = Event3Serializer(many=True)
     currentSeason = SeasonSerializer(required=False)
     currentEvent = Event2Serializer(required=False)
     users = UserSerializer(many=True)

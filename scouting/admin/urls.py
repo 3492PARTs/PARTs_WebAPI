@@ -17,6 +17,7 @@ urlpatterns = [
     path('add-team/', AddTeam.as_view()),
     path('delete-event/', DeleteEvent.as_view()),
     path('add-team-to-event/', AddTeamToEvent.as_view()),
+    path('remove-team-to-event/', RemoveTeamToEvent.as_view()),
     path('scout-question-init/', QuestionInit.as_view()),
     path('save-scout-question/', SaveScoutQuestion.as_view()),
     path('update-scout-question/', UpdateScoutQuestion.as_view()),
