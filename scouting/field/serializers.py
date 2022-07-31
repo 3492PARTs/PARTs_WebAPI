@@ -1,20 +1,6 @@
 from rest_framework import serializers
 
-from scouting.admin.serializers import ScoutFieldScheduleSerializer, ScoutQuestionSerializer
-from scouting.models import Team
-
-
-class TeamSerializer(serializers.ModelSerializer):
-    checked = serializers.BooleanField(required=False)
-
-    class Meta:
-        model = Team
-        fields = '__all__'
-        extra_kwargs = {
-            'team_no': {
-                'validators': [],
-            },
-        }
+from scouting.admin.serializers import ScoutFieldScheduleSerializer, ScoutQuestionSerializer, TeamSerializer
 
 
 class ScoutFieldSerializer(serializers.Serializer):

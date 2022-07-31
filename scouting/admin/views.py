@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 from user.models import User
 
-from .serializers import InitSerializer, ScoutAdminQuestionInitSerializer, ScoutFieldScheduleSaveSerializer, ScoutQuestionSerializer
+from .serializers import Event3Serializer, EventSerializer, EventToTeamsSerializer, InitSerializer, ScoutAdminQuestionInitSerializer, ScoutFieldScheduleSaveSerializer, ScoutQuestionSerializer, TeamSerializer
 from user.serializers import PhoneTypeSerializer, Group, PhoneType
 from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutPitSchedule, ScoutQuestionType, Team, CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, ScoutQuestionSubType, QuestionOptions, QuestionType
 from general import send_email
@@ -68,6 +68,8 @@ class Init(APIView):
         pitSchedule = ScoutPitSchedule.objects.filter(
             event=current_event, void_ind='n').order_by('-st_time')
 
+        teams = Team.objects.filter(void_ind='n').order_by('team_no')
+
         """
         pastSchedule = []
         sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) & Q(
@@ -92,7 +94,7 @@ class Init(APIView):
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
                 'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
                 'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule,
-                'scoutQuestionType': scoutQuestionType}
+                'scoutQuestionType': scoutQuestionType, 'teams': teams}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -187,7 +189,7 @@ class SyncSeason(APIView):
                     e['event_cd'] + '\n'
 
             # remove teams that have been removed from an event
-            event = Event.objects.get(event_cd=e['event_cd'])
+            event = Event.objects.get(event_cd=e['event_cd'], void_ind='n')
             teams = Team.objects.filter(
                 ~Q(team_no__in=e['teams_to_keep']) & Q(event=event))
             for team in teams:
@@ -207,7 +209,7 @@ class SyncSeason(APIView):
                 try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
                     team = Team.objects.get(team_no=t['team_no'])
                     team.event_set.add(
-                        Event.objects.get(event_cd=e['event_cd']))
+                        Event.objects.get(event_cd=e['event_cd'], void_ind='n'))
                     messages += "(ADD) Added team: " + str(t['team_no']) + " " + t['team_nm'] + " to event: " + e[
                         'event_cd'] + '\n'
                 except IntegrityError:
@@ -411,6 +413,200 @@ class AddSeason(APIView):
             except Exception as e:
                 return ret_message('An error occurred while setting the season.', True, app_url + self.endpoint,
                                    request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class AddEvent(APIView):
+    """
+    API endpoint to add a event
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'add-event/'
+
+    def post(self, request, format=None):
+        serializer = EventSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
+                               serializer.errors)
+
+        if has_access(request.user.id, auth_obj):
+            try:
+                serializer.save()
+                return ret_message('Successfully added the event.')
+            except Exception as e:
+                return ret_message('An error occurred while saving the event.', True,
+                                   app_url + self.endpoint, request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class DeleteEvent(APIView):
+    """
+    API endpoint to delete an event
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'delete-event/'
+
+    def delete(self, event_id):
+        e = Event.objects.get(event_id=event_id)
+
+        teams_at_event = Team.objects.filter(event=e)
+        for t in teams_at_event:
+            t.event_set.remove(e)
+
+        scout_fields = ScoutField.objects.filter(event=e)
+        for sf in scout_fields:
+            scout_field_answers = ScoutFieldAnswer.objects.filter(
+                scout_field=sf)
+            for sfa in scout_field_answers:
+                sfa.delete()
+            sf.delete()
+
+        scout_pits = ScoutPit.objects.filter(event=e)
+        for sp in scout_pits:
+            scout_pit_answers = ScoutPitAnswer.objects.filter(scout_pit=sp)
+            for spa in scout_pit_answers:
+                spa.delete()
+            sp.delete()
+
+        matches = Match.objects.filter(event=e)
+        for m in matches:
+            m.delete()
+
+        scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
+        for sfs in scout_field_schedules:
+            sfs.delete()
+
+        scout_pit_schedules = ScoutPitSchedule.objects.filter(event=e)
+        for sps in scout_pit_schedules:
+            sps.delete()
+
+        e.delete()
+
+        return ret_message('Successfully deleted event: ' + e.event_nm)
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.delete(request.query_params.get('event_id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while deleting the event.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class AddTeam(APIView):
+    """
+    API endpoint to add a event
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'add-team/'
+
+    def post(self, request, format=None):
+        serializer = TeamSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
+                               serializer.errors)
+
+        if has_access(request.user.id, auth_obj):
+            try:
+                serializer.save()
+                return ret_message('Successfully added the team.')
+            except Exception as e:
+                return ret_message('An error occurred while saving the team.', True,
+                                   app_url + self.endpoint, request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class AddTeamToEvent(APIView):
+    """
+    API endpoint to add a team to an event
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'add-team-to-event/'
+
+    def link(self, data):
+        messages = ''
+
+        for t in data.get('teams', []):
+            try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
+                if t.get('checked', False):
+                    team = Team.objects.get(team_no=t['team_no'], void_ind='n')
+                    e = Event.objects.get(
+                        event_id=data['event_id'], void_ind='n')
+                    team.event_set.add(e)
+                    messages += "(ADD) Added team: " + str(
+                        t['team_no']) + " " + t['team_nm'] + " to event: " + e.event_cd + '\n'
+            except IntegrityError:
+                messages += "(NO ADD) Team: " + str(t['team_no']) + " " + t['team_nm'] + " already at event: " + \
+                            e.event_cd + '\n'
+
+        return messages
+
+    def post(self, request, format=None):
+        serializer = EventToTeamsSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
+                               serializer.errors)
+
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.link(serializer.validated_data)
+                return ret_message(req)
+            except Exception as e:
+                return ret_message('An error occurred while saving the team.', True,
+                                   app_url + self.endpoint, request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class RemoveTeamToEvent(APIView):
+    """
+    API endpoint to remove a team from an event
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'remove-team-to-event/'
+
+    def link(self, data):
+        messages = ''
+
+        for t in data.get('team_no', []):
+            try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
+                if not t.get('checked', True):
+                    team = Team.objects.get(team_no=t['team_no'], void_ind='n')
+                    e = Event.objects.get(
+                        event_id=data['event_id'], void_ind='n')
+                    team.event_set.remove(e)
+                    messages += "(REMOVE) Removed team: " + str(
+                        t['team_no']) + " " + t['team_nm'] + " from event: " + e.event_cd + '\n'
+            except IntegrityError:
+                messages += "(NO REMOVE) Team: " + str(t['team_no']) + " " + t['team_nm'] + " from event: " + \
+                            e.event_cd + '\n'
+
+        return messages
+
+    def post(self, request, format=None):
+        serializer = Event3Serializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
+                               serializer.errors)
+
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.link(serializer.validated_data)
+                return ret_message(req)
+            except Exception as e:
+                return ret_message('An error occurred while removing the team.', True,
+                                   app_url + self.endpoint, request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 

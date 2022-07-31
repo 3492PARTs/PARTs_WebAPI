@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from scouting.models import CompetitionLevel, Match, QuestionOptions, ScoutFieldSchedule, ScoutPitAnswer, ScoutPitSchedule, ScoutQuestion, ScoutQuestionSubType, Season, Event, QuestionType, ScoutQuestionType
 from user.serializers import UserSerializer, GroupSerializer, PhoneTypeSerializer
+from scouting.models import Team
 
 
 class SeasonSerializer(serializers.ModelSerializer):
@@ -9,10 +10,63 @@ class SeasonSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TeamSerializer(serializers.ModelSerializer):
+    checked = serializers.BooleanField(required=False)
+
+    class Meta:
+        model = Team
+        fields = '__all__'
+        extra_kwargs = {
+            'team_no': {
+                'validators': [],
+            },
+        }
+
+
+class Team2Serializer(serializers.ModelSerializer):
+    # this is bc i need a default checked team serializer
+    checked = serializers.BooleanField(default=True)
+
+    class Meta:
+        model = Team
+        fields = '__all__'
+        extra_kwargs = {
+            'team_no': {
+                'validators': [],
+            },
+        }
+
+
 class EventSerializer(serializers.ModelSerializer):
+    # TODO Why did i do this??????? Why is there only one team here?
+    team_no = TeamSerializer(required=False)
+    checked = serializers.BooleanField(required=False)
+
     class Meta:
         model = Event
         fields = '__all__'
+
+
+class Event2Serializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+
+class Event3Serializer(serializers.ModelSerializer):
+    event_id = serializers.IntegerField(
+        required=False, allow_null=True)
+    team_no = Team2Serializer(required=False, many=True)
+
+    class Meta:
+        model = Event
+        fields = '__all__'
+        extra_kwargs = {
+            'event_cd': {
+                'validators': [],
+            },
+        }
 
 
 class CompetitionLevelSerializer(serializers.ModelSerializer):
@@ -109,11 +163,16 @@ class ScoutAdminQuestionInitSerializer(serializers.Serializer):
     scoutQuestions = ScoutQuestionSerializer(many=True)
 
 
+class EventToTeamsSerializer(serializers.Serializer):
+    event_id = serializers.IntegerField()
+    teams = TeamSerializer(many=True)
+
+
 class InitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
-    events = EventSerializer(many=True)
+    events = Event3Serializer(many=True)
     currentSeason = SeasonSerializer(required=False)
-    currentEvent = EventSerializer(required=False)
+    currentEvent = Event2Serializer(required=False)
     users = UserSerializer(many=True)
     userGroups = GroupSerializer(many=True)
     phoneTypes = PhoneTypeSerializer(many=True)
@@ -121,3 +180,4 @@ class InitSerializer(serializers.Serializer):
     pitSchedule = ScoutPitScheduleSerializer(many=True)
     #pastSchedule = ScoutScheduleSerializer(many=True)
     scoutQuestionType = ScoutQuestionTypeSerializer(many=True)
+    teams = TeamSerializer(many=True)
