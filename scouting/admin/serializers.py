@@ -37,6 +37,17 @@ class Team2Serializer(serializers.ModelSerializer):
         }
 
 
+class Team3Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = '__all__'
+        extra_kwargs = {
+            'team_no': {
+                'validators': [],
+            },
+        }
+
+
 class EventSerializer(serializers.ModelSerializer):
     # TODO Why did i do this??????? Why is there only one team here?
     team_no = TeamSerializer(required=False)

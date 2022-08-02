@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 from user.models import User
 
-from .serializers import Event3Serializer, EventSerializer, EventToTeamsSerializer, InitSerializer, ScoutAdminQuestionInitSerializer, ScoutFieldScheduleSaveSerializer, ScoutQuestionSerializer, TeamSerializer
+from .serializers import Event3Serializer, EventSerializer, EventToTeamsSerializer, InitSerializer, ScoutAdminQuestionInitSerializer, ScoutFieldScheduleSaveSerializer, ScoutQuestionSerializer, Team3Serializer
 from user.serializers import PhoneTypeSerializer, Group, PhoneType
 from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutPitSchedule, ScoutQuestionType, Team, CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, ScoutQuestionSubType, QuestionOptions, QuestionType
 from general import send_email
@@ -509,7 +509,7 @@ class AddTeam(APIView):
     endpoint = 'add-team/'
 
     def post(self, request, format=None):
-        serializer = TeamSerializer(data=request.data)
+        serializer = Team3Serializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
