@@ -65,6 +65,14 @@ class Event2Serializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class EventCreateSerializer(serializers.ModelSerializer):
+    team_no = serializers.ListField(required=False)
+
+    class Meta:
+        model = Event
+        fields = '__all__'
+
+
 class Event3Serializer(serializers.ModelSerializer):
     event_id = serializers.IntegerField(
         required=False, allow_null=True)
