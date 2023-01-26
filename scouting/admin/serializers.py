@@ -166,9 +166,7 @@ class ScoutQuestionSerializer(serializers.ModelSerializer):
     questionoptions_set = QuestionOptionsSerializer(
         required=False, allow_null=True, many=True)
 
-    answer = serializers.CharField(required=False, allow_null=True)
-
-    answer = serializers.CharField(required=False, allow_null=True)
+    answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = ScoutQuestion
