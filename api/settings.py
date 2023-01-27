@@ -97,6 +97,11 @@ DATABASES = {
     }
 }
 
+"""
+sequence reset for postgres
+    python3 manage.py sqlsequencereset user
+"""
+
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 

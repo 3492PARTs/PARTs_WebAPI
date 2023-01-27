@@ -772,13 +772,19 @@ class SaveScoutQuestion(APIView):
 
             # If adding a new question we need to make a null answer for it for all questions already answered
             if data['sq_typ'] == 'pit':
-                questions_answered = ScoutPit.objects.filter(void_ind='n')
+                questions_answered = ScoutPit.objects.filter(Q(void_ind='n') &
+                                                             Q(event__in=Event.objects.filter(Q(void_ind='n') &
+                                                                                              Q(season=current_season)
+                                                                                              )))
 
                 for qa in questions_answered:
                     ScoutPitAnswer(scout_pit=qa, sq=sq,
                                    answer='!EXIST', void_ind='n').save()
             else:
-                questions_answered = ScoutField.objects.filter(void_ind='n')
+                questions_answered = ScoutField.objects.filter(Q(void_ind='n') &
+                                                               Q(event__in=Event.objects.filter(Q(void_ind='n') &
+                                                                                                Q(season=current_season)
+                                                                                                )))
 
                 for qa in questions_answered:
                     ScoutFieldAnswer(scout_field=qa, sq=sq,
