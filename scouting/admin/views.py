@@ -702,7 +702,7 @@ class QuestionInit(APIView):
         scout_questions = []
         try:
             scout_questions = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
-                Q(season=current_season) & Q(sq_typ_id=question_type)).order_by('sq_sub_typ_id', 'order')
+                Q(season=current_season) & Q(sq_typ_id=question_type) & Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
             '''
             for sq in scout_questions:
                 ops = QuestionOptions.objects.filter(sq=sq)
