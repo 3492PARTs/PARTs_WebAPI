@@ -161,7 +161,7 @@ class QuestionOptionsSerializer(serializers.ModelSerializer):
 
 
 class ScoutQuestionSerializer(serializers.ModelSerializer):
-    sq_id = serializers.IntegerField(required=False, allow_null=True)
+    sq_id = serializers.IntegerField(read_only=True)
     season = serializers.CharField(required=False, allow_null=True)
     questionoptions_set = QuestionOptionsSerializer(
         required=False, allow_null=True, many=True)
