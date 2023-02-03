@@ -26,9 +26,9 @@ class Init(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = 'init/'
 
-    def get_init(self):
+    def init(self):
         users = User.objects.filter(
-            Q(date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))  # & ~Q(id=self.request.user.id))
+            Q(date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
 
         user_groups = Group.objects.all().order_by('name')
 
@@ -39,7 +39,7 @@ class Init(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.get_init()
+                req = self.init()
                 serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
