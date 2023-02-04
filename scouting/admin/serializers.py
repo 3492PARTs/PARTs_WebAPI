@@ -1,53 +1,42 @@
 from rest_framework import serializers
 from scouting.models import CompetitionLevel, Match, QuestionOptions, ScoutFieldSchedule, ScoutPitAnswer, ScoutPitSchedule, ScoutQuestion, ScoutQuestionSubType, Season, Event, QuestionType, ScoutQuestionType
-from user.serializers import UserSerializer, GroupSerializer, PhoneTypeSerializer
 from scouting.models import Team
 
 
-class SeasonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Season
-        fields = '__all__'
+class SeasonSerializer(serializers.Serializer):
+    season_id = serializers.IntegerField(read_only=True)
+    season = serializers.CharField()
+    current = serializers.CharField()
 
 
-class TeamSerializer(serializers.ModelSerializer):
+class TeamSerializer(serializers.Serializer):
+    team_no = serializers.IntegerField(read_only=True)
+    team_nm = serializers.CharField()
+
     checked = serializers.BooleanField(required=False)
 
-    class Meta:
-        model = Team
-        fields = '__all__'
-        extra_kwargs = {
-            'team_no': {
-                'validators': [],
-            },
-        }
 
 
-class Team2Serializer(serializers.ModelSerializer):
-    # this is bc i need a default checked team serializer
+class TeamCheckedSerializer(serializers.Serializer):
+    team_no = serializers.IntegerField(read_only=True)
+    team_nm = serializers.CharField()
+
+    # this is bc I need a default checked team serializer
     checked = serializers.BooleanField(default=True)
 
-    class Meta:
-        model = Team
-        fields = '__all__'
-        extra_kwargs = {
-            'team_no': {
-                'validators': [],
-            },
-        }
+
+class TeamCreateSerializer(serializers.Serializer):
+    team_no = serializers.CharField()
+    team_nm = serializers.CharField()
+    void_ind = serializers.CharField(default='n')
+
+    def create(self, validated_data):
+        t = Team(team_no=validated_data['team_no'], team_nm=validated_data['team_nm'], void_ind=validated_data['void_ind'])
+        t.save()
+        return t
 
 
-class Team3Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Team
-        fields = '__all__'
-        extra_kwargs = {
-            'team_no': {
-                'validators': [],
-            },
-        }
-
-
+'''
 class EventSerializer(serializers.ModelSerializer):
     # TODO Why did i do this??????? Why is there only one team here?
     team_no = TeamSerializer(required=False)
@@ -56,13 +45,26 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
+'''
 
-
-class Event2Serializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Event
-        fields = '__all__'
+class EventSerializer(serializers.Serializer):
+    event_id = serializers.IntegerField(read_only=True)
+    season_id = serializers.IntegerField(read_only=True)
+    event_nm = serializers.CharField()
+    date_st = serializers.DateTimeField()
+    date_end = serializers.DateTimeField()
+    event_cd = serializers.CharField()
+    event_url = serializers.CharField()
+    address = serializers.CharField()
+    city = serializers.CharField()
+    state_prov = serializers.CharField()
+    postal_code = serializers.CharField()
+    location_name = serializers.CharField()
+    gmaps_url = serializers.CharField()
+    webcast_url = serializers.CharField()
+    timezone = serializers.CharField()
+    current = serializers.CharField()
+    competition_page_active = serializers.CharField()
 
 
 class EventCreateSerializer(serializers.ModelSerializer):
@@ -73,19 +75,27 @@ class EventCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class Event3Serializer(serializers.ModelSerializer):
-    event_id = serializers.IntegerField(
-        required=False, allow_null=True)
-    team_no = Team2Serializer(required=False, many=True)
+class EventTeamSerializer(serializers.Serializer):
+    event_id = serializers.IntegerField(read_only=True)
+    season_id = serializers.IntegerField(read_only=True)
+    event_nm = serializers.CharField()
+    date_st = serializers.DateTimeField()
+    date_end = serializers.DateTimeField()
+    event_cd = serializers.CharField()
+    event_url = serializers.CharField()
+    address = serializers.CharField()
+    city = serializers.CharField()
+    state_prov = serializers.CharField()
+    postal_code = serializers.CharField()
+    location_name = serializers.CharField()
+    gmaps_url = serializers.CharField()
+    webcast_url = serializers.CharField()
+    timezone = serializers.CharField()
+    current = serializers.CharField()
+    competition_page_active = serializers.CharField()
 
-    class Meta:
-        model = Event
-        fields = '__all__'
-        extra_kwargs = {
-            'event_cd': {
-                'validators': [],
-            },
-        }
+    team_no = TeamCheckedSerializer(required=False, many=True)
+
 
 
 class CompetitionLevelSerializer(serializers.ModelSerializer):
@@ -108,9 +118,46 @@ class QuestionTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ScoutFieldScheduleSerializer(serializers.ModelSerializer):
-    scout_field_sch_id = serializers.IntegerField(
-        required=False, allow_null=True)
+class PermissionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField()
+    content_type_id = serializers.IntegerField(read_only=True)
+    codename = serializers.CharField()
+
+
+class GroupSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField()
+    permissions = PermissionSerializer(many=True, required=False)
+
+
+class PhoneTypeSerializer(serializers.Serializer):
+    phone_type_id = serializers.IntegerField(read_only=True)
+    carrier = serializers.CharField()
+    phone_type = serializers.CharField()
+
+
+class UserSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField()
+    email = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    is_active = serializers.BooleanField()
+    phone = serializers.CharField()
+
+    groups = GroupSerializer(many=True, required=False)
+    phone_type = PhoneTypeSerializer(required=False, allow_null=True)
+    phone_type_id = serializers.IntegerField(required=False, allow_null=True)
+
+
+class ScoutFieldScheduleSerializer(serializers.Serializer):
+    scout_field_sch_id = serializers.IntegerField(read_only=True)
+    event_id = serializers.IntegerField(read_only=True)
+    st_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+    notified = serializers.CharField()
+
     red_one = UserSerializer(required=False, allow_null=True, read_only=True)
     red_two = UserSerializer(required=False, allow_null=True, read_only=True)
     red_three = UserSerializer(required=False, allow_null=True, read_only=True)
@@ -118,10 +165,6 @@ class ScoutFieldScheduleSerializer(serializers.ModelSerializer):
     blue_two = UserSerializer(required=False, allow_null=True, read_only=True)
     blue_three = UserSerializer(
         required=False, allow_null=True, read_only=True)
-
-    class Meta:
-        model = ScoutFieldSchedule
-        fields = '__all__'
 
 
 class ScoutFieldScheduleSaveSerializer(serializers.ModelSerializer):
@@ -133,16 +176,19 @@ class ScoutFieldScheduleSaveSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ScoutPitScheduleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ScoutPitSchedule
-        fields = '__all__'
+class ScoutPitScheduleSerializer(serializers.Serializer):
+    scout_pit_sch_id = serializers.IntegerField(read_only=True)
+    user_id = serializers.IntegerField()
+    event_id = serializers.IntegerField(read_only=True)
+    st_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+    notified = serializers.CharField()
 
 
-class ScoutQuestionTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ScoutQuestionType
-        fields = '__all__'
+
+class ScoutQuestionTypeSerializer(serializers.Serializer):
+    sq_typ = serializers.CharField(read_only=True)
+    sq_nm = serializers.CharField()
 
 
 class ScoutQuestionSubTypeSerializer(serializers.ModelSerializer):
@@ -187,9 +233,9 @@ class EventToTeamsSerializer(serializers.Serializer):
 
 class InitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
-    events = Event3Serializer(many=True)
+    events = EventTeamSerializer(many=True)
     currentSeason = SeasonSerializer(required=False)
-    currentEvent = Event2Serializer(required=False)
+    currentEvent = EventSerializer(required=False)
     users = UserSerializer(many=True)
     userGroups = GroupSerializer(many=True)
     phoneTypes = PhoneTypeSerializer(many=True)
