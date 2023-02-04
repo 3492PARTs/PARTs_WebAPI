@@ -18,7 +18,7 @@ class TeamSerializer(serializers.Serializer):
 
 
 class TeamCheckedSerializer(serializers.Serializer):
-    team_no = serializers.IntegerField(read_only=True)
+    team_no = serializers.IntegerField()
     team_nm = serializers.CharField()
 
     # this is bc I need a default checked team serializer
@@ -76,7 +76,7 @@ class EventCreateSerializer(serializers.ModelSerializer):
 
 
 class EventTeamSerializer(serializers.Serializer):
-    event_id = serializers.IntegerField(read_only=True)
+    event_id = serializers.IntegerField()
     season_id = serializers.IntegerField(read_only=True)
     event_nm = serializers.CharField()
     date_st = serializers.DateTimeField()
@@ -112,10 +112,9 @@ class MatchSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class QuestionTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = QuestionType
-        fields = '__all__'
+class QuestionTypeSerializer(serializers.Serializer):
+    question_typ = serializers.CharField()
+    question_typ_nm = serializers.CharField()
 
 
 class PermissionSerializer(serializers.Serializer):
@@ -167,13 +166,19 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
         required=False, allow_null=True, read_only=True)
 
 
-class ScoutFieldScheduleSaveSerializer(serializers.ModelSerializer):
-    scout_field_sch_id = serializers.IntegerField(
-        required=False, allow_null=True)
-
-    class Meta:
-        model = ScoutFieldSchedule
-        fields = '__all__'
+class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
+    scout_field_sch_id = serializers.IntegerField(read_only=True)
+    event_id = serializers.IntegerField(read_only=True)
+    st_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+    notified = serializers.CharField()
+    red_one_id = serializers.IntegerField()
+    red_two_id = serializers.IntegerField()
+    red_three_id = serializers.IntegerField()
+    blue_one_id = serializers.IntegerField()
+    blue_two_id = serializers.IntegerField()
+    blue_three_id = serializers.IntegerField()
+    void_ind = serializers.CharField(default='n')
 
 
 class ScoutPitScheduleSerializer(serializers.Serializer):
@@ -191,32 +196,35 @@ class ScoutQuestionTypeSerializer(serializers.Serializer):
     sq_nm = serializers.CharField()
 
 
-class ScoutQuestionSubTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ScoutQuestionSubType
-        fields = '__all__'
+class ScoutQuestionSubTypeSerializer(serializers.Serializer):
+    sq_sub_typ = serializers.CharField()
+    sq_sub_nm = serializers.CharField()
+    sq_typ_id = serializers.CharField()
 
 
-class QuestionOptionsSerializer(serializers.ModelSerializer):
+class QuestionOptionsSerializer(serializers.Serializer):
     q_opt_id = serializers.IntegerField(required=False, allow_null=True)
-
-    class Meta:
-        model = QuestionOptions
-        fields = '__all__'
-        extra_kwargs = {'sq': {'required': False}}
+    sq_id = serializers.IntegerField()
+    option = serializers.CharField()
+    active = serializers.CharField()
 
 
-class ScoutQuestionSerializer(serializers.ModelSerializer):
+class ScoutQuestionSerializer(serializers.Serializer):
     sq_id = serializers.IntegerField(read_only=True)
-    season = serializers.CharField(required=False, allow_null=True)
+    season_id = serializers.IntegerField(read_only=True)
+
+    question = serializers.CharField()
+    order = serializers.IntegerField()
+    active = serializers.CharField()
+    question_typ = serializers.CharField()
+    sq_sub_typ = serializers.CharField(required=False, allow_blank=True)
+    sq_typ = serializers.CharField()
+
     questionoptions_set = QuestionOptionsSerializer(
         required=False, allow_null=True, many=True)
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    class Meta:
-        model = ScoutQuestion
-        fields = '__all__'
 
 
 class ScoutAdminQuestionInitSerializer(serializers.Serializer):

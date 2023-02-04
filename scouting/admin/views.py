@@ -595,7 +595,7 @@ class RemoveTeamToEvent(APIView):
         return messages
 
     def post(self, request, format=None):
-        serializer = Event3Serializer(data=request.data)
+        serializer = EventTeamSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
@@ -703,32 +703,7 @@ class QuestionInit(APIView):
         try:
             scout_questions = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
                 Q(season=current_season) & Q(sq_typ_id=question_type) & Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
-            '''
-            for sq in scout_questions:
-                ops = QuestionOptions.objects.filter(sq=sq)
-                options = []
-                for op in ops:
-                    options.append({
-                        'q_opt_id': op.q_opt_id,
-                        'option': op.option,
-                        'sq': op.sq_id,
-                        'active': op.active,
-                        'void_ind': op.void_ind
-                    })
-                
-                scout_questions.append({
-                    'sq_id': sq.sq_id,
-                    'season': sq.season_id,
-                    'sq_typ': sq.sq_typ_id,
-                    'sq_sub_typ': sq.sq_sub_typ_id,
-                    'question_typ': sq.question_typ_id,
-                    'question': sq.question,
-                    'order': sq.order,
-                    'active': sq.active,
-                    'void_ind': sq.void_ind,
-                    'options': options
-                })
-                '''
+
         except Exception as e:
             scout_questions = []
 
@@ -764,8 +739,8 @@ class SaveScoutQuestion(APIView):
                 return ret_message('No season set, see an admin.', True, app_url + self.endpoint,
                                    self.request.user.id, e)
 
-            sq = ScoutQuestion(season=current_season, question_typ=data['question_typ'],  sq_typ=data['sq_typ'],
-                               sq_sub_typ=data.get('sq_sub_typ', None),
+            sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'],  sq_typ_id=data['sq_typ'],
+                               sq_sub_typ_id=data.get('sq_sub_typ', None),
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
             sq.save()
