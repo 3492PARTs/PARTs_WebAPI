@@ -204,20 +204,22 @@ class ScoutQuestionSubTypeSerializer(serializers.Serializer):
 
 class QuestionOptionsSerializer(serializers.Serializer):
     q_opt_id = serializers.IntegerField(required=False, allow_null=True)
-    sq_id = serializers.IntegerField()
+    sq_id = serializers.IntegerField(read_only=True)
     option = serializers.CharField()
     active = serializers.CharField()
 
 
 class ScoutQuestionSerializer(serializers.Serializer):
-    sq_id = serializers.IntegerField(read_only=True)
+    sq_id = serializers.IntegerField(required=False)
     season_id = serializers.IntegerField(read_only=True)
 
     question = serializers.CharField()
     order = serializers.IntegerField()
     active = serializers.CharField()
     question_typ = serializers.CharField()
+    question_typ_nm = serializers.CharField()
     sq_sub_typ = serializers.CharField(required=False, allow_blank=True)
+    sq_sub_nm = serializers.CharField(required=False, allow_blank=True)
     sq_typ = serializers.CharField()
 
     questionoptions_set = QuestionOptionsSerializer(

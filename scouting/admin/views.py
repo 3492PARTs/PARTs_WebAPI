@@ -701,8 +701,23 @@ class QuestionInit(APIView):
 
         scout_questions = []
         try:
-            scout_questions = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
+            sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
                 Q(season=current_season) & Q(sq_typ_id=question_type) & Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
+
+            for sq in sqs:
+                scout_questions.append({
+                    'sq_id': sq.sq_id,
+                    'season_id': sq.season_id,
+                    'question': sq.question,
+                    'order': sq.order,
+                    'active': sq.active,
+                    'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
+                    'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
+                    'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
+                    'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
+                    'sq_typ': sq.sq_typ,
+                    'questionoptions_set': sq.questionoptions_set
+                })
 
         except Exception as e:
             scout_questions = []
