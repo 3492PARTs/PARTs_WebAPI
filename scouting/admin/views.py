@@ -62,8 +62,23 @@ class Init(APIView):
 
         fieldSchedule = []
 
-        fieldSchedule = ScoutFieldSchedule.objects.select_related('red_one', 'red_two', 'red_three', 'blue_one', 'blue_two', 'blue_three').filter(
+        fsf = ScoutFieldSchedule.objects.select_related('red_one', 'red_two', 'red_three', 'blue_one', 'blue_two', 'blue_three').filter(
             event=current_event, void_ind='n').order_by('-st_time')
+
+        for fs in fsf:
+            fieldSchedule.append({
+                'scout_field_sch_id': fs.scout_field_sch_id,
+                'event_id': fs.event_id,
+                'st_time': fs.st_time,
+                'end_time': fs.end_time,
+                'notified': fs.notified,
+                'red_one_id': fs.red_one,
+                'red_two_id': fs.red_two,
+                'red_three_id': fs.red_three,
+                'blue_one_id': fs.blue_one,
+                'blue_two_id': fs.blue_two,
+                'blue_three_id': fs.blue_three
+            })
 
         pitSchedule = ScoutPitSchedule.objects.filter(
             event=current_event, void_ind='n').order_by('-st_time')
@@ -426,7 +441,7 @@ class AddEvent(APIView):
     endpoint = 'add-event/'
 
     def post(self, request, format=None):
-        serializer = EventCreateSerializer(data=request.data)
+        serializer = EventSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
@@ -944,12 +959,12 @@ class SaveScoutFieldScheduleEntry(APIView):
         else:
             sfs = ScoutFieldSchedule.objects.get(
                 scout_field_sch_id=serializer.validated_data['scout_field_sch_id'])
-            sfs.red_one = serializer.validated_data.get('red_one', None)
-            sfs.red_two = serializer.validated_data.get('red_two', None)
-            sfs.red_three = serializer.validated_data.get('red_three', None)
-            sfs.blue_one = serializer.validated_data.get('blue_one', None)
-            sfs.blue_two = serializer.validated_data.get('blue_two', None)
-            sfs.blue_three = serializer.validated_data.get('blue_three', None)
+            sfs.red_one_id = serializer.validated_data.get('red_one_id', None)
+            sfs.red_two_id = serializer.validated_data.get('red_two_id', None)
+            sfs.red_three_id = serializer.validated_data.get('red_three_id', None)
+            sfs.blue_one_id = serializer.validated_data.get('blue_one_id', None)
+            sfs.blue_two_id = serializer.validated_data.get('blue_two_id', None)
+            sfs.blue_three_id = serializer.validated_data.get('blue_three_id', None)
             sfs.st_time = serializer.validated_data['st_time']
             sfs.end_time = serializer.validated_data['end_time']
             sfs.notified = 'n'
