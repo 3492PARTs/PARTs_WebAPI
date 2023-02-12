@@ -1,58 +1,40 @@
-from django.contrib.auth.models import User, Group, Permission
 from rest_framework import serializers
-from .models import *
 
 from django.contrib.auth.password_validation import validate_password, get_default_password_validators
-from django.core.validators import EmailValidator, ValidationError
+from django.core.validators import ValidationError
 
 
-class PermissionSerializer(serializers.ModelSerializer):
-    def get_unique_together_validators(self):
-        """Overriding method to disable unique together checks"""
-        return []
-
-    class Meta:
-        model = Permission
-        fields = '__all__'
+class PermissionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField()
+    content_type_id = serializers.IntegerField(read_only=True)
+    codename = serializers.CharField()
 
 
-class GroupSerializer(serializers.ModelSerializer):
+class GroupSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField()
     permissions = PermissionSerializer(many=True, required=False)
 
-    class Meta:
-        model = Group
-        fields = '__all__'
-        extra_kwargs = {
-            'name': {'validators': []},
-        }
+
+class PhoneTypeSerializer(serializers.Serializer):
+    phone_type_id = serializers.IntegerField(read_only=True)
+    carrier = serializers.CharField()
+    phone_type = serializers.CharField()
 
 
-class PhoneTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PhoneType
-        fields = '__all__'
+class UserSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField()
+    email = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    is_active = serializers.BooleanField()
+    phone = serializers.CharField()
 
-
-class UserSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(many=True, required=False)
     phone_type = PhoneTypeSerializer(required=False, allow_null=True)
     phone_type_id = serializers.IntegerField(required=False, allow_null=True)
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'email', 'first_name',
-                  'last_name', 'groups', 'is_active', 'phone', 'phone_type', 'phone_type_id')
-        extra_kwargs = {
-            'username': {
-                'validators': [],
-            },
-            'email': {
-                'validators': [],
-            },
-            'groups': {
-                'validators': [],
-            }
-        }
 
 
 class UserCreationSerializer(serializers.Serializer):
@@ -80,9 +62,9 @@ class UserCreationSerializer(serializers.Serializer):
         return validated_data
 
 
+"""
 class UserUpdateSerializer(serializers.ModelSerializer):
-    """
-    """
+
     class Meta:
         model = User
         fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name',
@@ -92,12 +74,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'email': {'validators': [EmailValidator, ]},
             'password': {'write_only': True},
         }
+"""
 
-
-class UserLinksSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserLinks
-        fields = '__all__'
+class UserLinksSerializer(serializers.Serializer):
+    user_links_id = serializers.IntegerField(read_only=True)
+    permission = PermissionSerializer()
+    menu_name = serializers.CharField()
+    routerlink = serializers.CharField()
+    order = serializers.IntegerField()
 
 
 class RetMessageSerializer(serializers.Serializer):
