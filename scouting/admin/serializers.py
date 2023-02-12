@@ -200,7 +200,7 @@ class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
         sfs.save()
         return sfs
 
-    scout_field_sch_id = serializers.IntegerField(allow_null=True)
+    scout_field_sch_id = serializers.IntegerField(required=False, allow_null=True)
     event_id = serializers.IntegerField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()

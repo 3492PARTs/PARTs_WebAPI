@@ -1,9 +1,8 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from scouting.models import ScoutQuestion, QuestionOptions, Season, Team, Event, ScoutPit, ScoutPitAnswer
-from .serializers import InitSerializer, PitTeamDataSerializer, ScoutAnswerSerializer, ScoutPitResultsSerializer
-from scouting.admin.serializers import ScoutQuestionSerializer
-from scouting.field.serializers import TeamSerializer
+from scouting.models import ScoutQuestion, Season, Team, Event, ScoutPit, ScoutPitAnswer
+from .serializers import InitSerializer, PitTeamDataSerializer, ScoutAnswerSerializer, ScoutPitResultsSerializer, \
+    TeamSerializer
 from rest_framework.views import APIView
 from general.security import ret_message,  has_access
 import cloudinary
@@ -34,8 +33,23 @@ class Questions(APIView):
 
         scout_questions = []
         try:
-            scout_questions = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
+            sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
                 Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
+
+            for sq in sqs:
+                scout_questions.append({
+                    'sq_id': sq.sq_id,
+                    'season_id': sq.season_id,
+                    'question': sq.question,
+                    'order': sq.order,
+                    'active': sq.active,
+                    'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
+                    'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
+                    'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
+                    'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
+                    'sq_typ': sq.sq_typ,
+                    'questionoptions_set': sq.questionoptions_set
+                })
         except Exception as e:
             x = 1
 
@@ -345,13 +359,15 @@ class TeamData(APIView):
 
             scout_questions.append({
                 'sq_id': sq.sq_id,
-                'season': sq.season,
-                'sq_typ': sq.sq_typ,
-                'question_typ': sq.question_typ,
+                'season_id': sq.season_id,
                 'question': sq.question,
                 'order': sq.order,
                 'active': sq.active,
-                'void_ind': sq.void_ind,
+                'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
+                'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
+                'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
+                'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
+                'sq_typ': sq.sq_typ,
                 'questionoptions_set': sq.questionoptions_set,
                 'answer': spa.answer
             })

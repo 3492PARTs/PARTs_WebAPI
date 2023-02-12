@@ -28,9 +28,24 @@ class Init(APIView):
         except Exception as e:
             return ret_message('No event set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        sfs = ScoutFieldSchedule.objects.filter(Q(event=current_event) & Q(end_time__gte=timezone.now()) & Q(void_ind='n') & Q(Q(red_one=user) | Q(
+        sfss = ScoutFieldSchedule.objects.filter(Q(event=current_event) & Q(end_time__gte=timezone.now()) & Q(void_ind='n') & Q(Q(red_one=user) | Q(
             red_two=user) | Q(red_three=user) | Q(blue_one=user) | Q(blue_two=user) | Q(blue_three=user))).order_by('st_time')
 
+        sfs = []
+        for s in sfss:
+            sfs.append({
+                'scout_field_sch_id': s.scout_field_sch_id,
+                'event_id': s.event_id,
+                'st_time': s.st_time,
+                'end_time': s.end_time,
+                'notified': s.notified,
+                'red_one_id': s.red_one,
+                'red_two_id': s.red_two,
+                'red_three_id': s.red_three,
+                'blue_one_id': s.blue_one,
+                'blue_two_id': s.blue_two,
+                'blue_three_id': s.blue_three
+            })
         # TODO REmove sss = ScoutFieldSchedule.objects.filter((Q(st_time__gte=time) | (Q(st_time__lte=time) & Q(end_time__gte=time))) & Q(user_id=user_id) & Q(void_ind='n')).order_by('st_time', 'user')
         """
         for ss in sss:

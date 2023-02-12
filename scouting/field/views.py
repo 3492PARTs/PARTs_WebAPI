@@ -30,8 +30,23 @@ class Questions(APIView):
 
         scout_questions = []
         try:
-            scout_questions = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
+            sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
                                                                                                    Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
+
+            for sq in sqs:
+                scout_questions.append({
+                    'sq_id': sq.sq_id,
+                    'season_id': sq.season_id,
+                    'question': sq.question,
+                    'order': sq.order,
+                    'active': sq.active,
+                    'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
+                    'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
+                    'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
+                    'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
+                    'sq_typ': sq.sq_typ,
+                    'questionoptions_set': sq.questionoptions_set
+                })
         except Exception as e:
             x = 1
 
@@ -54,7 +69,19 @@ class Questions(APIView):
 
         sfs = None
         for s in sfss:
-            sfs = s
+            sfs = {
+                'scout_field_sch_id': s.scout_field_sch_id,
+                'event_id': s.event_id,
+                'st_time': s.st_time,
+                'end_time': s.end_time,
+                'notified': s.notified,
+                'red_one_id': s.red_one,
+                'red_two_id': s.red_two,
+                'red_three_id': s.red_three,
+                'blue_one_id': s.blue_one,
+                'blue_two_id': s.blue_two,
+                'blue_three_id': s.blue_three
+            }
 
         return {'scoutQuestions': scout_questions, 'teams': teams, 'scoutFieldSchedule': sfs}
 
