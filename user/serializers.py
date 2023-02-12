@@ -76,6 +76,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         }
 """
 
+
 class UserLinksSerializer(serializers.Serializer):
     user_links_id = serializers.IntegerField(read_only=True)
     permission = PermissionSerializer()

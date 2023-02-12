@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from api.api.scoutAdmin.serializers import ScoutFieldScheduleSerializer, ScoutPitScheduleSerializer
 
 
 class EventUpdatedMessageSerializer(serializers.Serializer):

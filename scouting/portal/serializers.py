@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+
 class ScoutPitScheduleSerializer(serializers.Serializer):
     scout_pit_sch_id = serializers.IntegerField(read_only=True)
     user_id = serializers.IntegerField()
