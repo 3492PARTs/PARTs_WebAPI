@@ -1014,42 +1014,42 @@ class NotifyUsers(APIView):
         message = ''
         try:
             send_email.send_message(
-                sfs.red_one.profile.phone + sfs.red_one.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                sfs.red_one.phone + sfs.red_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_one.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.red_one.first_name if sfs.red_one is not None else "red one") + '\n'
         try:
             send_email.send_message(
-                sfs.red_two.profile.phone + sfs.red_two.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                sfs.red_two.phone + sfs.red_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_two.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.red_two.first_name if sfs.red_two is not None else "red two") + '\n'
         try:
             send_email.send_message(
-                sfs.red_three.profile.phone + sfs.red_three.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                sfs.red_three.phone + sfs.red_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_three.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.red_three.first_name if sfs.red_three is not None else "red three") + '\n'
         try:
             send_email.send_message(
-                sfs.blue_one.profile.phone + sfs.blue_one.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                sfs.blue_one.phone + sfs.blue_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_one.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.blue_one.first_name if sfs.blue_one is not None else "blue one") + '\n'
         try:
             send_email.send_message(
-                sfs.blue_two.profile.phone + sfs.blue_two.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                sfs.blue_two.phone + sfs.blue_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_two.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.blue_two.first_name if sfs.blue_two is not None else "blue two") + '\n'
         try:
             send_email.send_message(
-                sfs.blue_three.profile.phone + sfs.blue_three.profile.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                sfs.blue_three.phone + sfs.blue_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_three.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
