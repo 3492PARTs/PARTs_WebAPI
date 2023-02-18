@@ -1,11 +1,13 @@
 import ast
+import datetime
+
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import redirect
 
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from pytz import timezone
+from pytz import timezone, utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -52,7 +54,7 @@ class UserProfile(APIView):
                     x = 0
 
                 user = User(username=user_data.get('username').lower(), email=user_data.get('email').lower(), first_name=user_data.get('first_name'),
-                            last_name=user_data.get('last_name'), date_joined=timezone.now())
+                            last_name=user_data.get('last_name'), date_joined=datetime.utcnow().replace(tzinfo=utc))
 
                 #user = form.save(commit=False)
                 user.is_active = False
