@@ -93,7 +93,7 @@ class UserProfile(APIView):
                 error_string = 'A user with that username already exists.'
             else:
                 error_string = None
-            return ret_message('An error occurred while creating user.' + ('\n' + error_string if error_string is not None else None), True, app_url + self.endpoint, exception=e)
+            return ret_message('An error occurred while creating user.' + ('\n' + error_string if error_string is not None else ''), True, app_url + self.endpoint, exception=e)
 
     # TODO Add auth
     """
