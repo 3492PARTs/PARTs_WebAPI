@@ -54,7 +54,7 @@ class UserProfile(APIView):
                     x = 0
 
                 user = User(username=user_data.get('username').lower(), email=user_data.get('email').lower(), first_name=user_data.get('first_name'),
-                            last_name=user_data.get('last_name'), date_joined=datetime.utcnow().replace(tzinfo=utc))
+                            last_name=user_data.get('last_name'), date_joined=datetime.datetime.utcnow().replace(tzinfo=utc))
 
                 #user = form.save(commit=False)
                 user.is_active = False
