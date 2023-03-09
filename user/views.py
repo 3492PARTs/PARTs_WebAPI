@@ -291,7 +291,7 @@ class UserRequestPasswordReset(APIView):
             user = User.objects.get(email=email.lower())
             if user.is_active:  # if the user has confirmed their email
                 user.reset_token = secrets.token_urlsafe(24)
-                user.reset_requested_at = timezone.now()
+                user.reset_requested_at = datetime.datetime.utcnow().replace(tzinfo=utc)
                 user.save()
 
                 cntx = {
