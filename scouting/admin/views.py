@@ -49,7 +49,7 @@ class Init(APIView):
             current_event = Event()
 
         users = User.objects.filter(Q(is_active=True) & Q(
-            date_joined__isnull=False) & ~Q(groups__name__in=['Admin'])).order_by(Lower('first_name'), Lower('last_name'))
+            date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
 
         user_groups = []
         try:
