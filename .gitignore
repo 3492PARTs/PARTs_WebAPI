@@ -1,6 +1,7 @@
 dump.json
 api/settings_dev.py
 keys/
+logs/
 
 .DS_Store
 
