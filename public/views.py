@@ -96,8 +96,6 @@ class NotifyUsers(APIView):
         return ret_message(message)
 
     def get(self, request, format=None):
-        req = self.notify_users()
-        return req
         try:
             req = self.notify_users()
             return req
