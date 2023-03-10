@@ -25,8 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG')
-DEBUG_PROPAGATE_EXCEPTIONS = os.getenv('DEBUG')
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
+DEBUG_PROPAGATE_EXCEPTIONS = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
 ALLOWED_HOSTS = ['parts.bduke.dev', '192.168.1.41', 'partsuat.bduke.dev']
 
