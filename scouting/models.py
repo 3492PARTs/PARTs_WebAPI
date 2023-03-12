@@ -213,7 +213,9 @@ class ScoutFieldSchedule(models.Model):
         User, models.PROTECT, related_name='blue_three_user', null=True)
     st_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    notified = models.CharField(max_length=1, default='n')
+    notification1 = models.BooleanField(default=False)
+    notification2 = models.BooleanField(default=False)
+    notification3 = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):

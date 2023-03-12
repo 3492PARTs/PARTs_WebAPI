@@ -27,15 +27,38 @@ class NotifyUsers(APIView):
     endpoint = 'notify-users/'
 
     def notify_users(self):
-        message = 'No notifications'
+        message = ''
         event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
         curr_time = datetime.datetime.utcnow().astimezone(pytz.timezone(event.timezone))
-        sfs = ScoutFieldSchedule.objects.annotate(diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField()))\
-            .filter(diff__lte=datetime.timedelta(1/48))\
-            .filter(Q(event=event) & Q(notified='n') & Q(void_ind='n'))
-        for sf in sfs:
-            date_st_utc = sf.st_time.astimezone(pytz.utc)
-            date_end_utc = sf.end_time.astimezone(pytz.utc)
+        sfss_15 = ScoutFieldSchedule.objects.annotate(
+            diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField()))\
+            .filter(diff__lte=datetime.timedelta(minutes=15))\
+            .filter(Q(event=event) & Q(notification1=False) & Q(void_ind='n'))
+
+        sfss_5 = ScoutFieldSchedule.objects.annotate(
+            diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
+            .filter(diff__lte=datetime.timedelta(minutes=5)) \
+            .filter(Q(event=event) & Q(notification2=False) & Q(void_ind='n'))
+
+        sfss_now = ScoutFieldSchedule.objects.annotate(
+            diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
+            .filter(diff__lt=datetime.timedelta(minutes=5)) \
+            .filter(Q(event=event) & Q(notification3=False) & Q(void_ind='n'))
+
+        message += self.send_scout_notification(1, sfss_15, event)
+        message += self.send_scout_notification(2, sfss_5, event)
+        message += self.send_scout_notification(3, sfss_now, event)
+
+        if message is '':
+            message = 'No notifications'
+
+        return ret_message(message)
+
+    def send_scout_notification(self, notification, sfss, event):
+        message = ''
+        for sfs in sfss:
+            date_st_utc = sfs.st_time.astimezone(pytz.utc)
+            date_end_utc = sfs.end_time.astimezone(pytz.utc)
             date_st_local = date_st_utc.astimezone(pytz.timezone(event.timezone))
             date_end_local = date_end_utc.astimezone(pytz.timezone(event.timezone))
             date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
@@ -44,57 +67,61 @@ class NotifyUsers(APIView):
                 'scout_location': 'Field',
                 'scout_time_st': date_st_str,
                 'scout_time_end': date_end_str,
-                'lead_scout': 'system_message'
+                'lead_scout': 'automated_message'
             }
-            message = ''
             try:
                 send_email.send_message(
-                    sf.red_one.phone + sf.red_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-                message += 'Notified: ' + sf.red_one.first_name + '\n'
+                    sfs.red_one.phone + sfs.red_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                message += 'Notified: ' + sfs.red_one.first_name + '\n'
             except Exception as e:
                 message += 'Unable to notify: ' + \
-                    (sf.red_one.first_name if sf.red_one is not None else "red one") + '\n'
+                           (sfs.red_one.first_name if sfs.red_one is not None else "red one") + '\n'
             try:
                 send_email.send_message(
-                    sf.red_two.phone + sf.red_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-                message += 'Notified: ' + sf.red_two.first_name + '\n'
+                    sfs.red_two.phone + sfs.red_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                message += 'Notified: ' + sfs.red_two.first_name + '\n'
             except Exception as e:
                 message += 'Unable to notify: ' + \
-                    (sf.red_two.first_name if sf.red_two is not None else "red two") + '\n'
+                           (sfs.red_two.first_name if sfs.red_two is not None else "red two") + '\n'
             try:
                 send_email.send_message(
-                    sf.red_three.phone + sf.red_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-                message += 'Notified: ' + sf.red_three.first_name + '\n'
+                    sfs.red_three.phone + sfs.red_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                message += 'Notified: ' + sfs.red_three.first_name + '\n'
             except Exception as e:
                 message += 'Unable to notify: ' + \
-                    (sf.red_three.first_name if sf.red_three is not None else "red three") + '\n'
+                           (sfs.red_three.first_name if sfs.red_three is not None else "red three") + '\n'
             try:
                 send_email.send_message(
-                    sf.blue_one.phone + sf.blue_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-                message += 'Notified: ' + sf.blue_one.first_name + '\n'
+                    sfs.blue_one.phone + sfs.blue_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                message += 'Notified: ' + sfs.blue_one.first_name + '\n'
             except Exception as e:
                 message += 'Unable to notify: ' + \
-                    (sf.blue_one.first_name if sf.blue_one is not None else "blue one") + '\n'
+                           (sfs.blue_one.first_name if sfs.blue_one is not None else "blue one") + '\n'
             try:
                 send_email.send_message(
-                    sf.blue_two.phone + sf.blue_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-                message += 'Notified: ' + sf.blue_two.first_name + '\n'
+                    sfs.blue_two.phone + sfs.blue_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                message += 'Notified: ' + sfs.blue_two.first_name + '\n'
             except Exception as e:
                 message += 'Unable to notify: ' + \
-                    (sf.blue_two.first_name if sf.blue_two is not None else "blue two") + '\n'
+                           (sfs.blue_two.first_name if sfs.blue_two is not None else "blue two") + '\n'
             try:
                 send_email.send_message(
-                    sf.blue_three.phone + sf.blue_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
-                message += 'Notified: ' + sf.blue_three.first_name + '\n'
+                    sfs.blue_three.phone + sfs.blue_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
+                message += 'Notified: ' + sfs.blue_three.first_name + '\n'
             except Exception as e:
                 message += 'Unable to notify: ' + \
-                    (sf.blue_three.first_name if sf.blue_three is not None else "blue three") + '\n'
+                           (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
 
-            sf.notified = 'y'
-            sf.save()
+            match notification:
+                case 1:
+                    sfs.notification1 = True
+                case 2:
+                    sfs.notification2 = True
+                case 3:
+                    sfs.notification3 = True
+            sfs.save()
 
-        return ret_message(message)
-
+        return message
     def get(self, request, format=None):
         try:
             req = self.notify_users()

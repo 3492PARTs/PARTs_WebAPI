@@ -71,7 +71,9 @@ class Init(APIView):
                 'event_id': fs.event_id,
                 'st_time': fs.st_time,
                 'end_time': fs.end_time,
-                'notified': fs.notified,
+                'notification1': fs.notification1,
+                'notification2': fs.notification2,
+                'notification3': fs.notification3,
                 'red_one_id': fs.red_one,
                 'red_two_id': fs.red_two,
                 'red_three_id': fs.red_three,
@@ -967,7 +969,6 @@ class SaveScoutFieldScheduleEntry(APIView):
             sfs.blue_three_id = serializer.validated_data.get('blue_three_id', None)
             sfs.st_time = serializer.validated_data['st_time']
             sfs.end_time = serializer.validated_data['end_time']
-            sfs.notified = 'n'
             sfs.void_ind = serializer.validated_data['void_ind']
             sfs.save()
             return ret_message('Updated schedule entry successfully')
@@ -1055,7 +1056,6 @@ class NotifyUsers(APIView):
             message += 'Unable to notify: ' + \
                 (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
 
-        sfs.notified = 'y'
         sfs.save()
 
         return ret_message(message)

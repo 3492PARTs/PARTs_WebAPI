@@ -175,7 +175,9 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     event_id = serializers.IntegerField(read_only=True)
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
-    notified = serializers.CharField()
+    notification1 = serializers.BooleanField(read_only=True)
+    notification2 = serializers.BooleanField(read_only=True)
+    notification3 = serializers.BooleanField(read_only=True)
 
     red_one_id = UserSerializer(required=False, allow_null=True, read_only=True)
     red_two_id = UserSerializer(required=False, allow_null=True, read_only=True)
@@ -189,7 +191,7 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
 class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
     def create(self, validated_data):
         sfs = ScoutFieldSchedule(event_id=validated_data['event_id'], st_time=validated_data['st_time'],
-                                 end_time=validated_data['end_time'], notified=validated_data['notified'],
+                                 end_time=validated_data['end_time'],
                                  red_one_id=validated_data.get('red_one_id', None),
                                  red_two_id=validated_data.get('red_two_id', None),
                                  red_three_id=validated_data.get('red_three_id', None),
