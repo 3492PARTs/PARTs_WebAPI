@@ -343,7 +343,7 @@ class UserPasswordReset(APIView):
             if (default_token_generator.check_token(user, token)):
                 try:
                     validate_password(
-                        password, user, password_validators=AUTH_PASSWORD_VALIDATORS)
+                        password, user)
                 except ValidationError as e:
                     return ret_message('Password invalid' + str(e), True, app_url + self.endpoint, user.id, e)
                 user.set_password(password)
