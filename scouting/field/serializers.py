@@ -24,7 +24,6 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     event_id = serializers.IntegerField(read_only=True)
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
-    notified = serializers.CharField()
 
     red_one_id = UserSerializer(required=False, allow_null=True, read_only=True)
     red_two_id = UserSerializer(required=False, allow_null=True, read_only=True)

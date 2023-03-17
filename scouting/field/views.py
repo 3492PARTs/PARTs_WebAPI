@@ -74,7 +74,6 @@ class Questions(APIView):
                 'event_id': s.event_id,
                 'st_time': s.st_time,
                 'end_time': s.end_time,
-                'notified': s.notified,
                 'red_one_id': s.red_one,
                 'red_two_id': s.red_two,
                 'red_three_id': s.red_three,
