@@ -32,12 +32,12 @@ class NotifyUsers(APIView):
         curr_time = datetime.datetime.utcnow().astimezone(pytz.timezone(event.timezone))
         sfss_15 = ScoutFieldSchedule.objects.annotate(
             diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField()))\
-            .filter(diff__lte=datetime.timedelta(minutes=16))\
+            .filter(diff__lte=datetime.timedelta(minutes=17))\
             .filter(Q(event=event) & Q(notification1=False) & Q(void_ind='n'))
 
         sfss_5 = ScoutFieldSchedule.objects.annotate(
             diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
-            .filter(diff__lte=datetime.timedelta(minutes=6)) \
+            .filter(diff__lte=datetime.timedelta(minutes=7)) \
             .filter(Q(event=event) & Q(notification2=False) & Q(void_ind='n'))
 
         sfss_now = ScoutFieldSchedule.objects.annotate(
