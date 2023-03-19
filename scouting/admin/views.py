@@ -9,7 +9,9 @@ from rest_framework.utils import json
 from user.models import User, PhoneType
 
 from .serializers import *
-from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutQuestionType, Team, CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, ScoutQuestionSubType, QuestionOptions, QuestionType
+from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutQuestionType, Team, \
+    CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, \
+    ScoutQuestionSubType, QuestionOptions, QuestionType, EventTeamInfo
 from general import send_email
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
@@ -331,6 +333,69 @@ class SyncMatches(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
+class SyncEventTeamInfo(APIView):
+    """
+    API endpoint to sync the info for a teams at an event
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'sync-event-team-info/'
+
+    def sync_event_team_info(self):
+        event = Event.objects.get(current='y')
+
+        insert = []
+        messages = ''
+        r = requests.get("https://www.thebluealliance.com/api/v3/event/" +
+                         event.event_cd + "/rankings", headers={"X-TBA-Auth-Key": settings.TBA_KEY})
+        r = json.loads(r.text)
+
+        for e in r:
+            matches_played = e.get('matches_played', 0)
+            qual_average = e.get('qual_average', 0)
+            losses = e.get('record', 0).get('losses', 0)
+            wins = e.get('record', 0).get('wins', 0)
+            ties = e.get('record', 0).get('ties', 0)
+            rank = e.get('rank', 0)
+            dq = e.get('dq', 0)
+            team = Team.objects.get(
+                Q(team_no=e['team_key'].replace('frc', '')) & Q(void_ind='n'))
+
+
+            try:
+                eti = EventTeamInfo.objects.get(
+                    Q(event=event) & Q(team_no=team) & Q(void_ind='n'))
+
+                eti.matches_played = matches_played
+                eti.qual_average = qual_average
+                eti.losses = losses
+                eti.wins = wins
+                eti.ties = ties
+                eti.rank = rank
+                eti.dq = dq
+
+                eti.save()
+                messages += '(UPDATE) ' + event.event_nm + \
+                    ' ' + team.team_no + '\n'
+            except ObjectDoesNotExist as odne:
+                eti = EventTeamInfo(event=event, team_no=team, matches_played=matches_played, qual_average=qual_average,
+                                    losses=losses, wins=wins, ties=ties, rank=rank, dq=dq)
+                eti.save()
+                messages += '(ADD) ' + event.event_nm + \
+                    ' ' + team.team_no + '\n'
+
+        return messages
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.sync_event_team_info()
+                return ret_message(req)
+            except Exception as e:
+                return ret_message('An error occurred while syncing event team info.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 class SetSeason(APIView):
     """
