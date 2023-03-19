@@ -118,7 +118,7 @@ class SaveAnswers(APIView):
             return ret_message('No event set, see an admin', True, app_url + self.endpoint, self.request.user.id, e)
 
         try:
-            sp = ScoutPit.objects.get(team_no_id=data['team'])
+            sp = ScoutPit.objects.get(Q(team_no_id=data['team']) & Q(void_ind='n'))
         except Exception as e:
             sp = ScoutPit(
                 event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
@@ -127,7 +127,7 @@ class SaveAnswers(APIView):
         for d in data['scoutQuestions']:
             try:
                 spa = ScoutPitAnswer.objects.get(
-                    Q(scout_pit=sp) & Q(sq_id=d['sq_id']))
+                    Q(scout_pit=sp) & Q(sq_id=d['sq_id']) & Q(void_ind='n'))
                 spa.answer = d.get('answer', '')
             except Exception as e:
                 spa = ScoutPitAnswer(scout_pit=sp, sq_id=d['sq_id'],
