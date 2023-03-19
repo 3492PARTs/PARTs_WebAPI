@@ -5,8 +5,13 @@
 #   * Make sure each ForeignKey has `on_delete` set to the desired behavior.
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
+import datetime
+
+import django
 from django.db import models
 from django.contrib.auth.models import Group
+from pytz import utc
+
 from user.models import User
 
 
@@ -166,6 +171,7 @@ class ScoutField(models.Model):
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
+    time = models.DateTimeField(default=django.utils.timezone.now)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):

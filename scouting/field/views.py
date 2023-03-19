@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team, ScoutFieldSchedule, ScoutField, ScoutFieldAnswer
@@ -122,7 +125,8 @@ class SaveAnswers(APIView):
             return ret_message('No event set, see an admin', True, app_url + self.endpoint, self.request.user.id, e)
 
         sf = ScoutField(
-            event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
+            event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n',
+            time=datetime.datetime.utcnow().replace(tzinfo=utc))
         sf.save()
 
         for d in data['scoutQuestions']:
