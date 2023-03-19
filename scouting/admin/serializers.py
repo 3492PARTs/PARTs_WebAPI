@@ -283,7 +283,7 @@ class InitSerializer(serializers.Serializer):
     userGroups = GroupSerializer(many=True)
     phoneTypes = PhoneTypeSerializer(many=True)
     fieldSchedule = ScoutFieldScheduleSerializer(many=True)
-    pitSchedule = ScoutPitScheduleSerializer(many=True)
+    # pitSchedule = ScoutPitScheduleSerializer(many=True)
     # pastSchedule = ScoutScheduleSerializer(many=True)
     scoutQuestionType = ScoutQuestionTypeSerializer(many=True)
     teams = TeamSerializer(many=True)

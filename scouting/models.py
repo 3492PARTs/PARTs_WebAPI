@@ -56,20 +56,20 @@ class Event(models.Model):
 class EventTeamInfo(models.Model):
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
-    matches_played = models.IntegerField()
-    qual_average = models.IntegerField()
-    losses = models.IntegerField()
-    wins = models.IntegerField()
-    ties = models.IntegerField()
-    rank = models.IntegerField()
-    dq = models.IntegerField()
+    matches_played = models.IntegerField(null=True)
+    qual_average = models.IntegerField(null=True)
+    losses = models.IntegerField(null=True)
+    wins = models.IntegerField(null=True)
+    ties = models.IntegerField(null=True)
+    rank = models.IntegerField(null=True)
+    dq = models.IntegerField(null=True)
     void_ind = models.CharField(max_length=1, default='n')
 
     class Meta:
-        unique_together = (('event_id', 'team_no'),)
+        unique_together = (('event', 'team_no'),)
 
     def __str__(self):
-        return str(self.event_id) + ' ' + self.team_no
+        return str(self.event.event_id) + ' ' + self.team_no.team_no
 
 
 class CompetitionLevel(models.Model):

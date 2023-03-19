@@ -350,7 +350,7 @@ class SyncEventTeamInfo(APIView):
                          event.event_cd + "/rankings", headers={"X-TBA-Auth-Key": settings.TBA_KEY})
         r = json.loads(r.text)
 
-        for e in r:
+        for e in r.get('rankings', []):
             matches_played = e.get('matches_played', 0)
             qual_average = e.get('qual_average', 0)
             losses = e.get('record', 0).get('losses', 0)
@@ -376,13 +376,13 @@ class SyncEventTeamInfo(APIView):
 
                 eti.save()
                 messages += '(UPDATE) ' + event.event_nm + \
-                    ' ' + team.team_no + '\n'
+                    ' ' + str(team.team_no) + '\n'
             except ObjectDoesNotExist as odne:
                 eti = EventTeamInfo(event=event, team_no=team, matches_played=matches_played, qual_average=qual_average,
                                     losses=losses, wins=wins, ties=ties, rank=rank, dq=dq)
                 eti.save()
                 messages += '(ADD) ' + event.event_nm + \
-                    ' ' + team.team_no + '\n'
+                    ' ' + str(team.team_no) + '\n'
 
         return messages
 
