@@ -9,7 +9,7 @@ from rest_framework.utils import json
 from user.models import User, PhoneType
 
 from .serializers import *
-from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutPitSchedule, ScoutQuestionType, Team, CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, ScoutQuestionSubType, QuestionOptions, QuestionType
+from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutQuestionType, Team, CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, ScoutQuestionSubType, QuestionOptions, QuestionType
 from general import send_email
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
@@ -82,8 +82,10 @@ class Init(APIView):
                 'blue_three_id': fs.blue_three
             })
 
+        """
         pitSchedule = ScoutPitSchedule.objects.filter(
             event=current_event, void_ind='n').order_by('-st_time')
+        """
 
         teams = Team.objects.filter(void_ind='n').order_by('team_no')
 
@@ -110,7 +112,7 @@ class Init(APIView):
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
                 'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
-                'fieldSchedule': fieldSchedule, 'pitSchedule': pitSchedule,
+                'fieldSchedule': fieldSchedule, #'pitSchedule': pitSchedule,
                 'scoutQuestionType': scoutQuestionType, 'teams': teams}
 
     def get(self, request, format=None):
@@ -496,11 +498,11 @@ class DeleteEvent(APIView):
         scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
         for sfs in scout_field_schedules:
             sfs.delete()
-
+        """
         scout_pit_schedules = ScoutPitSchedule.objects.filter(event=e)
         for sps in scout_pit_schedules:
             sps.delete()
-
+        """
         e.delete()
 
         return ret_message('Successfully deleted event: ' + e.event_nm)
@@ -674,11 +676,11 @@ class DeleteSeason(APIView):
             scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
             for sfs in scout_field_schedules:
                 sfs.delete()
-
+            """
             scout_pit_schedules = ScoutPitSchedule.objects.filter(event=e)
             for sps in scout_pit_schedules:
                 sps.delete()
-
+            """
             e.delete()
 
         season.delete()

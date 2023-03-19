@@ -53,6 +53,25 @@ class Event(models.Model):
         return str(self.event_id) + ' ' + self.event_nm
 
 
+class EventTeamInfo(models.Model):
+    event_id = models.ForeignKey(Event, on_delete=models.PROTECT)
+    team_no = models.ForeignKey(Team, on_delete=models.PROTECT)
+    matches_played = models.IntegerField()
+    qual_average = models.IntegerField()
+    losses = models.IntegerField()
+    wins = models.IntegerField()
+    ties = models.IntegerField()
+    rank = models.IntegerField()
+    dq = models.IntegerField()
+    void_ind = models.CharField(max_length=1, default='n')
+
+    class Meta:
+        unique_together = (('event_id', 'team_no'),)
+
+    def __str__(self):
+        return str(self.event_id) + ' ' + self.team_no
+
+
 class CompetitionLevel(models.Model):
     comp_lvl_typ = models.CharField(primary_key=True, max_length=50)
     comp_lvl_typ_nm = models.CharField(max_length=255)
@@ -219,11 +238,20 @@ class ScoutFieldSchedule(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return self.scout_sch_id + ' time: ' + self.st_time + ' - ' + self.end_time
+        return self.scout_field_sch_id + ' time: ' + self.st_time + ' - ' + self.end_time
 
 
-class ScoutPitSchedule(models.Model):
-    scout_pit_sch_id = models.AutoField(primary_key=True)
+class ScheduleType(models.Model):
+    sch_typ = models.CharField(primary_key=True, max_length=10)
+    sch_nm = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.sch_typ + ' ' + self.sch_nm
+
+
+class Schedule(models.Model):
+    sch_id = models.AutoField(primary_key=True)
+    sch_typ = models.ForeignKey(ScheduleType, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
     st_time = models.DateTimeField()
