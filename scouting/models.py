@@ -54,8 +54,8 @@ class Event(models.Model):
 
 
 class EventTeamInfo(models.Model):
-    event_id = models.ForeignKey(Event, on_delete=models.PROTECT)
-    team_no = models.ForeignKey(Team, on_delete=models.PROTECT)
+    event = models.ForeignKey(Event, models.PROTECT)
+    team_no = models.ForeignKey(Team, models.PROTECT)
     matches_played = models.IntegerField()
     qual_average = models.IntegerField()
     losses = models.IntegerField()
