@@ -3,7 +3,8 @@ from datetime import datetime
 from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team, ScoutFieldSchedule, ScoutField, ScoutFieldAnswer
+from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team, ScoutFieldSchedule, ScoutField, \
+    ScoutFieldAnswer, EventTeamInfo
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
 from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer
@@ -177,7 +178,12 @@ class Results(APIView):
             'PropertyName': 'team',
             'ColLabel': 'Team No',
             'order': 0
+        }, {
+            'PropertyName': 'rank',
+            'ColLabel': 'Rank',
+            'order': 1
         }]
+
         scout_answers = []
         try:
             sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(
@@ -194,13 +200,18 @@ class Results(APIView):
                 'ColLabel': 'Scout',
                 'order': 9999999999
             })
+            scout_cols.append({
+                'PropertyName': 'time',
+                'ColLabel': 'Time',
+                'order': 99999999999
+            })
 
             if team is not None:
                 sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n'))\
-                    .order_by('scout_field_id')
+                    .order_by('-time', '-scout_field_id')
             else:
                 sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
-                    void_ind='n')).order_by('scout_field_id')
+                    void_ind='n')).order_by('-time', '-scout_field_id')
 
             for sf in sfs:
                 sfas = ScoutFieldAnswer.objects.filter(
@@ -211,8 +222,13 @@ class Results(APIView):
                     sa_obj['ans' + str(sfa.sq_id)] = sfa.answer
 
                 sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name
+                sa_obj['time'] = sf.time
                 sa_obj['user_id'] = sf.user.id
                 sa_obj['team'] = sf.team_no_id
+
+                eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind='n'))
+                sa_obj['rank'] = eti.rank
+
                 scout_answers.append(sa_obj)
 
         except Exception as e:
