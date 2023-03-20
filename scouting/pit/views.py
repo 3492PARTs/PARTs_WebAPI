@@ -1,6 +1,6 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from scouting.models import ScoutQuestion, Season, Team, Event, ScoutPit, ScoutPitAnswer
+from scouting.models import ScoutQuestion, Season, Team, Event, ScoutPit, ScoutPitAnswer, EventTeamInfo
 from .serializers import InitSerializer, PitTeamDataSerializer, ScoutAnswerSerializer, ScoutPitResultsSerializer, \
     TeamSerializer
 from rest_framework.views import APIView
@@ -292,6 +292,13 @@ class Results(APIView):
                 }
 
                 tmp_questions = []
+
+                eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=team.team_no) & Q(void_ind='n'))
+                tmp_questions.append({
+                    'question': 'Rank',
+                    'answer': eti.rank
+                })
+
                 for spa in spas:
                     sq = ScoutQuestion.objects.get(sq_id=spa.sq_id)
                     tmp_questions.append({
