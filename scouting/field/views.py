@@ -184,55 +184,60 @@ class Results(APIView):
         }]
 
         scout_answers = []
-        try:
-            sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(
-                sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
+        sqsa = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
+                                            Q(sq_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
+
+        sqst = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
+                                            Q(sq_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n'))\
+            .order_by('order')
+
+        sqso = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
+                                            Q(sq_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n'))\
+            .order_by('order')
+
+        for sqs in [sqsa, sqst, sqso]:
             for sq in sqs:
                 scout_cols.append({
                     'PropertyName': 'ans' + str(sq.sq_id),
-                    'ColLabel': sq.question,
+                    'ColLabel': ('' if sq.sq_sub_typ is None else sq.sq_sub_typ.sq_sub_typ[0:1].upper() + ': ') + sq.question,
                     'order': sq.order
                 })
 
-            scout_cols.append({
-                'PropertyName': 'user',
-                'ColLabel': 'Scout',
-                'order': 9999999999
-            })
-            scout_cols.append({
-                'PropertyName': 'time',
-                'ColLabel': 'Time',
-                'order': 99999999999
-            })
+        scout_cols.append({
+            'PropertyName': 'user',
+            'ColLabel': 'Scout',
+            'order': 9999999999
+        })
+        scout_cols.append({
+            'PropertyName': 'time',
+            'ColLabel': 'Time',
+            'order': 99999999999
+        })
 
-            if team is not None:
-                sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n'))\
-                    .order_by('-time', '-scout_field_id')
-            else:
-                sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
-                    void_ind='n')).order_by('-time', '-scout_field_id')
+        if team is not None:
+            sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n')) \
+                .order_by('-time', '-scout_field_id')
+        else:
+            sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
+                void_ind='n')).order_by('-time', '-scout_field_id')
 
-            for sf in sfs:
-                sfas = ScoutFieldAnswer.objects.filter(
-                    Q(scout_field=sf) & Q(void_ind='n'))
+        for sf in sfs:
+            sfas = ScoutFieldAnswer.objects.filter(
+                Q(scout_field=sf) & Q(void_ind='n'))
 
-                sa_obj = {}
-                for sfa in sfas:
-                    sa_obj['ans' + str(sfa.sq_id)] = sfa.answer
+            sa_obj = {}
+            for sfa in sfas:
+                sa_obj['ans' + str(sfa.sq_id)] = sfa.answer
 
-                sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name
-                sa_obj['time'] = sf.time
-                sa_obj['user_id'] = sf.user.id
-                sa_obj['team'] = sf.team_no_id
+            sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name
+            sa_obj['time'] = sf.time
+            sa_obj['user_id'] = sf.user.id
+            sa_obj['team'] = sf.team_no_id
 
-                eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind='n'))
-                sa_obj['rank'] = eti.rank
+            eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind='n'))
+            sa_obj['rank'] = eti.rank
 
-                scout_answers.append(sa_obj)
-
-        except Exception as e:
-            scout_cols = []
-            scout_answers = []
+            scout_answers.append(sa_obj)
 
         return {'scoutCols': scout_cols, 'scoutAnswers': scout_answers}
 
