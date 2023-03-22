@@ -1,4 +1,8 @@
+from django.db.models import Q
 from rest_framework import serializers
+
+from scouting.models import Schedule, Event
+
 
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
@@ -20,6 +24,7 @@ class ScheduleSerializer(serializers.Serializer):
     end_time = serializers.DateTimeField()
     notified = serializers.CharField()
     user = UserSerializer(required=False, allow_null=True, read_only=True)
+    user_name = serializers.CharField(read_only=True)
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):
@@ -52,3 +57,24 @@ class InitSerializer(serializers.Serializer):
     allSchedule = ScheduleSerializer(many=True, required=False)
     users = UserSerializer(many=True, required=False)
     scheduleTypes = ScheduleTypeSerializer(many=True, required=False)
+
+
+class ScheduleSaveSerializer(serializers.Serializer):
+    def create(self, validated_data):
+        event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
+
+        s = Schedule(event=event, st_time=validated_data['st_time'],
+                     end_time=validated_data['end_time'],
+                     user_id=validated_data.get('user', None),
+                     sch_typ_id=validated_data.get('sch_typ', None),
+                     void_ind=validated_data['void_ind'])
+        s.save()
+        return s
+
+    sch_id = serializers.IntegerField(required=False, allow_null=True)
+    sch_typ = serializers.CharField()
+    st_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+    notified = serializers.CharField(default='n')
+    user = serializers.IntegerField(allow_null=True)
+    void_ind = serializers.CharField(default='n')

@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from user.models import User
-from .serializers import InitSerializer
+from .serializers import InitSerializer, ScheduleSaveSerializer
 from scouting.models import ScoutFieldSchedule, Event, Schedule, ScheduleType
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
@@ -42,14 +42,15 @@ class Init(APIView):
                 date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
 
             all_sfs = ScoutFieldSchedule.objects.filter(
-                Q(event=current_event) & Q(void_ind='n'))\
+                Q(event=current_event) & Q(void_ind='n')) \
                 .order_by('notification3', 'st_time')
 
             all_sfs_parsed = []
             for s in all_sfs:
                 all_sfs_parsed.append(self.parse_sfs(s))
 
-            all_sch = Schedule.objects.filter(Q(event=current_event) & Q(void_ind='n')).order_by('sch_typ', 'notified', 'st_time')
+            all_sch = Schedule.objects.filter(Q(event=current_event) & Q(void_ind='n')).order_by('sch_typ', 'notified',
+                                                                                                 'st_time')
             all_sch_parsed = []
             for s in all_sch:
                 all_sch_parsed.append(self.parse_sch(s))
@@ -57,7 +58,7 @@ class Init(APIView):
             schedule_types = ScheduleType.objects.all().order_by('sch_nm')
 
         sfs = ScoutFieldSchedule.objects.filter(Q(event=current_event) &
-                                                Q(end_time__gte=(timezone.now() + datetime.timedelta(hours=1))) &
+                                                Q(end_time__gte=(timezone.now() - datetime.timedelta(hours=1))) &
                                                 Q(void_ind='n') &
                                                 Q(Q(red_one=user) | Q(red_two=user) | Q(red_three=user) |
                                                   Q(blue_one=user) | Q(blue_two=user) | Q(blue_three=user))
@@ -68,7 +69,7 @@ class Init(APIView):
             sfs_parsed.append(self.parse_sfs(s))
 
         sch = Schedule.objects.filter(Q(event=current_event) & Q(user=user) &
-                                      Q(end_time__gte=(timezone.now() + datetime.timedelta(hours=1))) & Q(void_ind='n'))\
+                                      Q(end_time__gte=(timezone.now() - datetime.timedelta(hours=1))) & Q(void_ind='n')) \
             .order_by('notified', 'st_time')
 
         sch_parsed = []
@@ -80,32 +81,33 @@ class Init(APIView):
 
     def parse_sfs(self, s):
         return {
-                'scout_field_sch_id': s.scout_field_sch_id,
-                'event_id': s.event_id,
-                'st_time': s.st_time,
-                'end_time': s.end_time,
-                'notification1': s.notification1,
-                'notification2': s.notification2,
-                'notification3': s.notification3,
-                'red_one_id': s.red_one,
-                'red_two_id': s.red_two,
-                'red_three_id': s.red_three,
-                'blue_one_id': s.blue_one,
-                'blue_two_id': s.blue_two,
-                'blue_three_id': s.blue_three
-            }
+            'scout_field_sch_id': s.scout_field_sch_id,
+            'event_id': s.event_id,
+            'st_time': s.st_time,
+            'end_time': s.end_time,
+            'notification1': s.notification1,
+            'notification2': s.notification2,
+            'notification3': s.notification3,
+            'red_one_id': s.red_one,
+            'red_two_id': s.red_two,
+            'red_three_id': s.red_three,
+            'blue_one_id': s.blue_one,
+            'blue_two_id': s.blue_two,
+            'blue_three_id': s.blue_three
+        }
 
     def parse_sch(self, s):
         return {
-                'sch_id': s.scout_field_sch_id,
-                'sch_typ': s.sch_typ.sch_typ,
-                'sch_nm': s.sch_typ.sch_nm,
-                'event_id': s.event_id,
-                'st_time': s.st_time,
-                'end_time': s.end_time,
-                'notified': s.notification1,
-                'user': s.user,
-            }
+            'sch_id': s.sch_id,
+            'sch_typ': s.sch_typ.sch_typ,
+            'sch_nm': s.sch_typ.sch_nm,
+            'event_id': s.event_id,
+            'st_time': s.st_time,
+            'end_time': s.end_time,
+            'notified': s.notified,
+            'user': s.user,
+            'user_name': s.user.first_name + ' ' + s.user.last_name
+        }
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -122,3 +124,52 @@ class Init(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access,', True, app_url + self.endpoint, request.user.id)
+
+
+class SaveScheduleEntry(APIView):
+    """API endpoint to save a schedule entry"""
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'save-schedule-entry/'
+
+    def save_schedule(self, serializer):
+        """
+        if serializer.validated_data['st_time'] <= timezone.now():
+            return ret_message('Start time can\'t be in the past.', True, app_url + self.endpoint,
+                               self.request.user.id)
+        """
+
+        if serializer.validated_data['end_time'] <= serializer.validated_data['st_time']:
+            return ret_message('End time can\'t come before start.', True, app_url + self.endpoint,
+                               self.request.user.id)
+
+        if serializer.validated_data.get('sch_id', None) is None:
+            serializer.save()
+            return ret_message('Saved schedule entry successfully')
+        else:
+            s = Schedule.objects.get(
+                sch_id=serializer.validated_data['sch_id'])
+            s.user_id = serializer.validated_data.get('user', None)
+            s.sch_typ_id = serializer.validated_data.get('sch_typ', None)
+            s.st_time = serializer.validated_data['st_time']
+            s.end_time = serializer.validated_data['end_time']
+            s.void_ind = serializer.validated_data['void_ind']
+            s.save()
+            return ret_message('Updated schedule entry successfully')
+
+    def post(self, request, format=None):
+        serializer = ScheduleSaveSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
+                               serializer.errors)
+
+        if has_access(request.user.id, scheduling_auth_obj):
+            try:
+                req = self.save_schedule(serializer)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while saving the schedule entry.', True,
+                                   app_url + self.endpoint, request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
