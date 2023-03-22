@@ -1,15 +1,5 @@
 from rest_framework import serializers
 
-
-class ScoutPitScheduleSerializer(serializers.Serializer):
-    scout_pit_sch_id = serializers.IntegerField(read_only=True)
-    user_id = serializers.IntegerField()
-    event_id = serializers.IntegerField(read_only=True)
-    st_time = serializers.DateTimeField()
-    end_time = serializers.DateTimeField()
-    notified = serializers.CharField()
-
-
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
@@ -19,6 +9,17 @@ class UserSerializer(serializers.Serializer):
     is_active = serializers.BooleanField()
     phone = serializers.CharField()
     phone_type_id = serializers.IntegerField(required=False, allow_null=True)
+
+
+class ScheduleSerializer(serializers.Serializer):
+    sch_id = serializers.IntegerField()
+    sch_typ = serializers.CharField()
+    sch_nm = serializers.CharField()
+    event_id = serializers.IntegerField(read_only=True)
+    st_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+    notified = serializers.CharField()
+    user = UserSerializer(required=False, allow_null=True, read_only=True)
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):
@@ -39,7 +40,15 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
         required=False, allow_null=True, read_only=True)
 
 
+class ScheduleTypeSerializer(serializers.Serializer):
+    sch_typ = serializers.CharField()
+    sch_nm = serializers.CharField()
+
+
 class InitSerializer(serializers.Serializer):
     fieldSchedule = ScoutFieldScheduleSerializer(many=True, required=False)
-    pitSchedule = ScoutPitScheduleSerializer(many=True, required=False)
-    #pastSchedule = ScoutScheduleSerializer(many=True)
+    schedule = ScheduleSerializer(many=True, required=False)
+    allFieldSchedule = ScoutFieldScheduleSerializer(many=True, required=False)
+    allSchedule = ScheduleSerializer(many=True, required=False)
+    users = UserSerializer(many=True, required=False)
+    scheduleTypes = ScheduleTypeSerializer(many=True, required=False)
