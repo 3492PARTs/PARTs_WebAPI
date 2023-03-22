@@ -43,6 +43,7 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     blue_two_id = UserSerializer(required=False, allow_null=True, read_only=True)
     blue_three_id = UserSerializer(
         required=False, allow_null=True, read_only=True)
+    scouts = serializers.CharField(read_only=True)
 
 
 class ScheduleTypeSerializer(serializers.Serializer):
