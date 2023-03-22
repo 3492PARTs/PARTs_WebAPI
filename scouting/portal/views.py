@@ -62,7 +62,7 @@ class Init(APIView):
                                                 Q(void_ind='n') &
                                                 Q(Q(red_one=user) | Q(red_two=user) | Q(red_three=user) |
                                                   Q(blue_one=user) | Q(blue_two=user) | Q(blue_three=user))
-                                                ).order_by('notification3', 'st_time')
+                                                ).order_by('notification3', '-st_time')
 
         sfs_parsed = []
         for s in sfs:
@@ -93,7 +93,19 @@ class Init(APIView):
             'red_three_id': s.red_three,
             'blue_one_id': s.blue_one,
             'blue_two_id': s.blue_two,
-            'blue_three_id': s.blue_three
+            'blue_three_id': s.blue_three,
+            'scouts': 'R1: ' +
+                      ('' if s.red_one is None else s.red_one.first_name + ' ' + s.red_one.last_name[0:1]) +
+                      '\nR2: ' +
+                      ('' if s.red_two is None else s.red_two.first_name + ' ' + s.red_two.last_name[0:1]) +
+                      '\nR3: ' +
+                      ('' if s.red_three is None else s.red_three.first_name + ' ' + s.red_three.last_name[0:1]) +
+                      '\nB1: ' +
+                      ('' if s.blue_one is None else s.blue_one.first_name + ' ' + s.blue_one.last_name[0:1]) +
+                      '\nB2: ' +
+                      ('' if s.blue_two is None else s.blue_two.first_name + ' ' + s.blue_two.last_name[0:1]) +
+                      '\nB3: ' +
+                      ('' if s.blue_three is None else s.blue_three.first_name + ' ' + s.blue_three.last_name[0:1])
         }
 
     def parse_sch(self, s):
