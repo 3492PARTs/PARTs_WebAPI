@@ -65,7 +65,7 @@ class Init(APIView):
         fieldSchedule = []
 
         fsf = ScoutFieldSchedule.objects.select_related('red_one', 'red_two', 'red_three', 'blue_one', 'blue_two', 'blue_three').filter(
-            event=current_event, void_ind='n').order_by('notification3', '-st_time')
+            event=current_event, void_ind='n').order_by('notification3', 'st_time')
 
         for fs in fsf:
             fieldSchedule.append({

@@ -62,7 +62,7 @@ class Init(APIView):
                                                 Q(void_ind='n') &
                                                 Q(Q(red_one=user) | Q(red_two=user) | Q(red_three=user) |
                                                   Q(blue_one=user) | Q(blue_two=user) | Q(blue_three=user))
-                                                ).order_by('notification3', '-st_time')
+                                                ).order_by('notification3', 'st_time')
 
         sfs_parsed = []
         for s in sfs:
