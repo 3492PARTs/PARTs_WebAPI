@@ -69,7 +69,7 @@ class NotifyUsers(APIView):
             }
             try:
                 send_email.send_message(
-                    sch.user.phone + sch.user.phone_type.phone_type, 'Pit time!', 'notify_scout', data)
+                    sch.user.phone + sch.user.phone_type.phone_type, 'Pit time!', 'notify_schedule', data)
                 message += 'Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
 
                 sch.notified = True
