@@ -71,6 +71,9 @@ class NotifyUsers(APIView):
                 send_email.send_message(
                     sch.user.phone + sch.user.phone_type.phone_type, 'Pit time!', 'notify_scout', data)
                 message += 'Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
+
+                sch.notified = True
+                sch.save()
             except Exception as e:
                 message += 'Unable to notify: ' + \
                            (sch.user.first_name if sch.user is not None else "pit time user missing") + '\n'
