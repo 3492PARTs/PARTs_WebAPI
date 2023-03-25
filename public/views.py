@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from general import send_email
 from general.security import ret_message
-from scouting.models import Event, ScoutFieldSchedule
+from scouting.models import Event, ScoutFieldSchedule, Schedule
 
 app_url = 'public/'
 
@@ -48,6 +48,32 @@ class NotifyUsers(APIView):
         message += self.send_scout_notification(1, sfss_15, event)
         message += self.send_scout_notification(2, sfss_5, event)
         message += self.send_scout_notification(3, sfss_now, event)
+
+        schs = Schedule.objects.annotate(
+            diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
+            .filter(diff__lt=datetime.timedelta(minutes=5)) \
+            .filter(Q(event=event) & Q(notified=False) & Q(void_ind='n'))
+
+        for sch in schs:
+            date_st_utc = sch.st_time.astimezone(pytz.utc)
+            date_end_utc = sch.end_time.astimezone(pytz.utc)
+            date_st_local = date_st_utc.astimezone(pytz.timezone(event.timezone))
+            date_end_local = date_end_utc.astimezone(pytz.timezone(event.timezone))
+            date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
+            date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
+            data = {
+                'location': sch.sch_typ.sch_nm,
+                'scout_time_st': date_st_str,
+                'scout_time_end': date_end_str,
+                'lead_scout': 'automated_message'
+            }
+            try:
+                send_email.send_message(
+                    sch.user.phone + sch.user.phone_type.phone_type, 'Pit time!', 'notify_scout', data)
+                message += 'Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
+            except Exception as e:
+                message += 'Unable to notify: ' + \
+                           (sch.user.first_name if sch.user is not None else "pit time user missing") + '\n'
 
         if message is '':
             message = 'No notifications'

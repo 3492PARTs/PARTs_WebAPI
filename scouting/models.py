@@ -262,7 +262,7 @@ class Schedule(models.Model):
     user = models.ForeignKey(User, models.PROTECT)
     st_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    notified = models.CharField(max_length=1, default='n')
+    notified = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):

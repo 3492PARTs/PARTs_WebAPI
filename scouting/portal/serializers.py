@@ -22,7 +22,7 @@ class ScheduleSerializer(serializers.Serializer):
     event_id = serializers.IntegerField(read_only=True)
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
-    notified = serializers.CharField()
+    notified = serializers.BooleanField()
     user = UserSerializer(required=False, allow_null=True, read_only=True)
     user_name = serializers.CharField(read_only=True)
 
@@ -76,6 +76,6 @@ class ScheduleSaveSerializer(serializers.Serializer):
     sch_typ = serializers.CharField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
-    notified = serializers.CharField(default='n')
+    notified = serializers.BooleanField(default=False)
     user = serializers.IntegerField(allow_null=True)
     void_ind = serializers.CharField(default='n')
