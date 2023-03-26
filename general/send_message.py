@@ -14,7 +14,7 @@ def send_email(to_email: str, subject: str, template: str, cntx: dict):
     email = EmailMultiAlternatives(
         subject, text_content, 'team3492@gmail.com', [to_email])
     email.attach_alternative(html_content, "text/html")
-    #email.send()
+    email.send()
 
 
 def send_discord_notification(message: str):
