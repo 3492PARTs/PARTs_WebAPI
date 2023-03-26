@@ -4,9 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from general.security import ret_message, has_access
-from scouting.matchplanning.serializers import InitSerializer, SaveTeamNoteSerializer
+from scouting.field.views import get_field_results
+from scouting.matchplanning.serializers import InitSerializer, SaveTeamNoteSerializer, MatchPlanningSerializer, \
+    TeamSerializer
 from scouting.models import Event, Team, Match, ScoutPit, ScoutPitAnswer, ScoutQuestion, Season, ScoutField, \
     ScoutFieldAnswer, TeamNotes
+from scouting.pit.views import get_pit_results
 
 auth_obj = 49
 app_url = 'scouting/match-planning/'
@@ -23,7 +26,7 @@ class Init(APIView):
         matches = Match.objects.filter(Q(event=current_event) & Q(void_ind='n') &
                                        Q(Q(red_one=team3492) | Q(red_two=team3492) |
                                          Q(red_three=team3492) | Q(blue_one=team3492) | Q(blue_two=team3492) |
-                                         Q(blue_three=team3492)))\
+                                         Q(blue_three=team3492))) \
             .order_by('comp_level__comp_lvl_order', 'match_number')
 
         teams = Team.objects.filter(event=current_event).order_by('team_no')
@@ -90,86 +93,35 @@ class PlanMatch(APIView):
 
         teams = [match.red_one, match.red_two, match.red_three, match.blue_one, match.blue_two, match.blue_three]
 
-        team_info = []
+        results = []
 
         for t in teams:
-            #Pit Data
-            team = Team.objects.get(team_no=t['team_no'])
-            try:
-                sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(
-                    event=current_event) & Q(void_ind='n'))
-            except Exception as e:
-                return ret_message('No pit data for team.', True, app_url + self.endpoint,
-                                   self.request.user.id, e)
+            # Pit Data
+            st = TeamSerializer(t).data
+            pit = get_pit_results([st], self.endpoint, self.request)
 
-            spas = ScoutPitAnswer.objects.filter(
-                Q(scout_pit=sp) & Q(void_ind='n'))
+            if pit.data.get('error', False):
+                pit = None
 
-            pit = {
-                'teamNo': team.team_no,
-                'teamNm': team.team_nm,
-                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(),
-            }
+            # Field Data
+            team_results = get_field_results(t, self.endpoint, self.request)
+            field_cols = team_results['scoutCols']
+            field_answers = team_results['scoutAnswers']
 
-            tmp_questions = []
-            for spa in spas:
-                sq = ScoutQuestion.objects.get(sq_id=spa.sq_id)
-                tmp_questions.append({
-                    'question': sq.question,
-                    'answer': spa.answer
-                })
+            # notes
+            notes = TeamNotes.objects.filter(Q(void_ind='n') & Q(team_no=t)).order_by('-time')
 
-            pit['results'] = tmp_questions
-
-            #Field Data
-            field_cols = [{
-                'PropertyName': 'team',
-                'ColLabel': 'Team No',
-                'order': 0
-            }]
-            field_answers = []
-            try:
-                sqs = ScoutQuestion.objects.filter(Q(season=current_season) & Q(
-                    sq_typ_id='field') & Q(active='y') & Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
-                for sq in sqs:
-                    field_cols.append({
-                        'PropertyName': 'ans' + str(sq.sq_id),
-                        'ColLabel': sq.question,
-                        'order': sq.order
-                    })
-
-                field_cols.append({
-                    'PropertyName': 'user',
-                    'ColLabel': 'Scout',
-                    'order': 9999999999
-                })
-
-                sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n')) \
-                    .order_by('-time')
-
-                for sf in sfs:
-                    sfas = ScoutFieldAnswer.objects.filter(
-                        Q(scout_field=sf) & Q(void_ind='n'))
-
-                    sa_obj = {}
-                    for sfa in sfas:
-                        sa_obj['ans' + str(sfa.sq_id)] = sfa.answer
-
-                    sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name
-                    sa_obj['user_id'] = sf.user.id
-                    sa_obj['team'] = sf.team_no_id
-                    field_answers.append(sa_obj)
-
-            except Exception as e:
-                field_cols = []
-                field_answers = []
-
-            results.append(tmp)
+            results.append({'team': t,
+                            'pitData': pit,
+                            'fieldCols': field_cols,
+                            'fieldAnswers': field_answers,
+                            'notes': notes})
+        return results
 
     def get(self, request, format=None):
         try:
             req = self.get_match_information(request.query_params.get('match_id', None))
-            serializer = CompetitionInformationSerializer(req)
+            serializer = MatchPlanningSerializer(req, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message('An error occurred while getting match information.', True,

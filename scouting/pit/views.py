@@ -260,56 +260,8 @@ class Results(APIView):
     endpoint = 'results/'
 
     def get_results(self, teams):
-        try:
-            current_season = Season.objects.get(current='y')
-        except Exception as e:
-            return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        try:
-            current_event = Event.objects.get(
-                Q(season=current_season) & Q(current='y'))
-        except Exception as e:
-            return ret_message('No event set, see an admin', True, app_url + self.endpoint, self.request.user.id, e)
-
-        results = []
-        for t in teams:
-            if t.get('checked', False):
-                team = Team.objects.get(team_no=t['team_no'])
-                try:
-                    sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(
-                        event=current_event) & Q(void_ind='n'))
-                except Exception as e:
-                    return ret_message('No pit data for team.', True, app_url + self.endpoint,
-                                       self.request.user.id, e)
-
-                spas = ScoutPitAnswer.objects.filter(
-                    Q(scout_pit=sp) & Q(void_ind='n'))
-
-                tmp = {
-                    'teamNo': team.team_no,
-                    'teamNm': team.team_nm,
-                    'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(),
-                }
-
-                tmp_questions = []
-
-                eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=team.team_no) & Q(void_ind='n'))
-                tmp_questions.append({
-                    'question': 'Rank',
-                    'answer': eti.rank
-                })
-
-                for spa in spas:
-                    sq = ScoutQuestion.objects.get(sq_id=spa.sq_id)
-                    tmp_questions.append({
-                        'question': sq.question,
-                        'answer': spa.answer
-                    })
-
-                tmp['results'] = tmp_questions
-                results.append(tmp)
-
-        return results
+        return get_pit_results(teams, self.endpoint, self.request)
 
     def post(self, request, format=None):
         if has_access(request.user.id, auth_obj) or has_access(request.user.id, auth_view_obj):
@@ -333,9 +285,62 @@ class Results(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
+def get_pit_results(teams, endpoint, request):
+    try:
+        current_season = Season.objects.get(current='y')
+    except Exception as e:
+        return ret_message('No season set, see an admin.', True, app_url + endpoint, request.user.id, e)
+
+    try:
+        current_event = Event.objects.get(
+            Q(season=current_season) & Q(current='y'))
+    except Exception as e:
+        return ret_message('No event set, see an admin', True, app_url + endpoint, request.user.id, e)
+
+    results = []
+    for t in teams:
+        if t.get('checked', True):
+            team = Team.objects.get(team_no=t['team_no'])
+            try:
+                sp = ScoutPit.objects.get(Q(team_no_id=t['team_no']) & Q(
+                    event=current_event) & Q(void_ind='n'))
+            except Exception as e:
+                return ret_message('No pit data for team.', True, app_url + endpoint,
+                                   request.user.id, e)
+
+            spas = ScoutPitAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n') & Q(sq__void_ind='n'))\
+                .order_by('sq__order')
+
+            tmp = {
+                'teamNo': team.team_no,
+                'teamNm': team.team_nm,
+                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(),
+            }
+
+            tmp_questions = []
+
+            eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=team.team_no) & Q(void_ind='n'))
+            tmp_questions.append({
+                'question': 'Rank',
+                'answer': eti.rank
+            })
+
+            for spa in spas:
+                tmp_questions.append({
+                    'question': spa.sq.question,
+                    'answer': spa.answer
+                })
+
+            tmp['results'] = tmp_questions
+            results.append(tmp)
+
+    return results
+
+
 class TeamData(APIView):
     """
     API endpoint to get scout pit team data
+    for an individual team, used to get the data for the scouting screen not results screen
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)

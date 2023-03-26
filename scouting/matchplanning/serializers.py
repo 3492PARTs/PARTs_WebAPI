@@ -67,8 +67,41 @@ class ScoutPitResultsSerializer(serializers.Serializer):
     results = ScoutPitResultAnswerSerializer(many=True)
 
 
+class ScoutPitResultAnswerSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    answer = serializers.CharField(required=False, allow_null=True)
+
+
+class ScoutPitResultsSerializer(serializers.Serializer):
+    pic = serializers.CharField()
+    results = ScoutPitResultAnswerSerializer(many=True)
+
+
+class ScoutColSerializer(serializers.Serializer):
+    PropertyName = serializers.CharField()
+    ColLabel = serializers.CharField()
+    order = serializers.CharField()
+
+
+class ScoutResultAnswerSerializer(serializers.BaseSerializer):
+    def to_representation(self, instance):
+        return instance
+
+
+class TeamNoteSerializer(serializers.Serializer):
+    team_note_id = serializers.IntegerField(read_only=True)
+    team_no = TeamSerializer()
+    match = serializers.IntegerField(read_only=True)
+    note = serializers.CharField()
+    time = serializers.DateTimeField()
+
+
 class MatchPlanningSerializer(serializers.Serializer):
-    teamNo = serializers.CharField()
+    team = TeamSerializer()
+    pitData = ScoutPitResultsSerializer()
+    fieldCols = ScoutColSerializer(many=True)
+    fieldAnswers = ScoutResultAnswerSerializer(many=True)
+    notes = TeamNoteSerializer(many=True)
 
 
 class SaveTeamNoteSerializer(serializers.Serializer):
