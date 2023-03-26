@@ -6,13 +6,14 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
+
+from general import send_message
 from user.models import User, PhoneType
 
 from .serializers import *
 from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutQuestionType, Team, \
     CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, \
     ScoutQuestionSubType, QuestionOptions, QuestionType, EventTeamInfo
-from general import send_email
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
 import requests
@@ -345,6 +346,7 @@ class SyncMatches(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
+
 class SyncEventTeamInfo(APIView):
     """
     API endpoint to sync the info for a teams at an event
@@ -408,6 +410,7 @@ class SyncEventTeamInfo(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
 
 class SetSeason(APIView):
     """
@@ -1093,47 +1096,70 @@ class NotifyUsers(APIView):
         }
         message = ''
         try:
-            send_email.send_message(
+            send_message.send_email(
                 sfs.red_one.phone + sfs.red_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_one.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.red_one.first_name if sfs.red_one is not None else "red one") + '\n'
         try:
-            send_email.send_message(
+            send_message.send_email(
                 sfs.red_two.phone + sfs.red_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_two.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.red_two.first_name if sfs.red_two is not None else "red two") + '\n'
         try:
-            send_email.send_message(
+            send_message.send_email(
                 sfs.red_three.phone + sfs.red_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_three.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.red_three.first_name if sfs.red_three is not None else "red three") + '\n'
         try:
-            send_email.send_message(
+            send_message.send_email(
                 sfs.blue_one.phone + sfs.blue_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_one.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.blue_one.first_name if sfs.blue_one is not None else "blue one") + '\n'
         try:
-            send_email.send_message(
+            send_message.send_email(
                 sfs.blue_two.phone + sfs.blue_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_two.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.blue_two.first_name if sfs.blue_two is not None else "blue two") + '\n'
         try:
-            send_email.send_message(
+            send_message.send_email(
                 sfs.blue_three.phone + sfs.blue_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_three.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
                 (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
+
+        discord_message = f'Scheduled time for scouting from ' \
+                          f'{date_st_str} to {date_end_str} : '
+
+        discord_message += ((f'<@{sfs.red_one.discord_user_id}>' if sfs.red_one.discord_user_id is not None
+                             else sfs.red_one.first_name) if sfs.red_one is not None else "red one") + ', '
+
+        discord_message += ((f'<@{sfs.red_two.discord_user_id}>' if sfs.red_two.discord_user_id is not None
+                             else sfs.red_two.first_name) if sfs.red_two is not None else "red two") + ', '
+
+        discord_message += ((f'<@{sfs.red_three.discord_user_id}>' if sfs.red_three.discord_user_id is not None
+                             else sfs.red_three.first_name) if sfs.red_three is not None else "red three") + ', '
+
+        discord_message += ((f'<@{sfs.blue_one.discord_user_id}>' if sfs.blue_one.discord_user_id is not None
+                             else sfs.blue_one.first_name) if sfs.blue_one is not None else "blue one") + ', '
+
+        discord_message += ((f'<@{sfs.blue_two.discord_user_id}>' if sfs.blue_two.discord_user_id is not None
+                             else sfs.blue_two.first_name) if sfs.blue_two is not None else "blue two") + ', '
+
+        discord_message += ((f'<@{sfs.blue_three.discord_user_id}>' if sfs.blue_three.discord_user_id is not None
+                             else sfs.blue_three.first_name) if sfs.blue_three is not None else "blue three")
+
+        send_message.send_discord_notification(discord_message)
 
         sfs.save()
 

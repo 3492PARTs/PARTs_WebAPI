@@ -1,10 +1,12 @@
 import datetime
 
+import pytz
 from django.db.models.functions import Lower
 from django.utils import timezone
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from general import send_message
 from user.models import User
 from .serializers import InitSerializer, ScheduleSaveSerializer
 from scouting.models import ScoutFieldSchedule, Event, Schedule, ScheduleType
@@ -183,5 +185,60 @@ class SaveScheduleEntry(APIView):
             except Exception as e:
                 return ret_message('An error occurred while saving the schedule entry.', True,
                                    app_url + self.endpoint, request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class NotifyUser(APIView):
+    """API endpoint to notify users"""
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'notify-user/'
+
+    def notify_user(self, id):
+        message = ''
+        event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
+        sch = Schedule.objects.get(sch_id=id)
+        date_st_utc = sch.st_time.astimezone(pytz.utc)
+        date_end_utc = sch.end_time.astimezone(pytz.utc)
+        date_st_local = date_st_utc.astimezone(pytz.timezone(event.timezone))
+        date_end_local = date_end_utc.astimezone(pytz.timezone(event.timezone))
+        date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
+        date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
+
+        try:
+            send_message.send_email(
+                sch.user.phone + sch.user.phone_type.phone_type, 'Pit time!', 'notify_schedule', data)
+            message += 'Phone Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
+            sch.notified = True
+            sch.save()
+        except Exception as e:
+            message += 'Phone unable to notify: ' + \
+                       (sch.user.first_name if sch.user is not None else "pit time user missing") + '\n'
+
+        discord_message = f'Scheduled time in the pit, for {sch.sch_typ.sch_nm} from ' \
+                          f'{date_st_str} to {date_end_str} : '
+
+        discord_message += (f'<@{sch.user.discord_user_id}>' if sch.user.discord_user_id is not None
+                            else sch.user.first_name)
+
+        message += 'Discord Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
+
+        send_message.send_discord_notification(discord_message)
+
+        sch.save()
+
+        return ret_message(message)
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, scheduling_auth_obj):
+            try:
+                req = self.notify_user(request.query_params.get(
+                    'id', None))
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while notifying the user.', True, app_url + self.endpoint,
+                                   request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)

@@ -63,6 +63,7 @@ class SaveUser(APIView):
             user.first_name = data['user']['first_name']
             user.last_name = data['user']['last_name']
             user.email = data['user']['email'].lower()
+            user.discord_user_id = data['user']['discord_user_id']
             user.phone = data['user']['phone']
             user.phone_type_id = data['user'].get('phone_type_id', None)
             user.is_active = data['user']['is_active']
