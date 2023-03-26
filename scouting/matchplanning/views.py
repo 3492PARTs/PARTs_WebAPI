@@ -3,11 +3,12 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from general.security import ret_message
-from scouting.matchPlanning.serializers import InitSerializer
+from general.security import ret_message, has_access
+from scouting.matchplanning.serializers import InitSerializer, SaveTeamNoteSerializer
 from scouting.models import Event, Team, Match, ScoutPit, ScoutPitAnswer, ScoutQuestion, Season, ScoutField, \
-    ScoutFieldAnswer
+    ScoutFieldAnswer, TeamNotes
 
+auth_obj = 49
 app_url = 'scouting/match-planning/'
 
 
@@ -16,18 +17,18 @@ class Init(APIView):
     endpoint = 'init/'
 
     def get_competition_information(self):
-        try:
-            event = Event.objects.get(Q(current='y') & Q(
-                competition_page_active='y') & Q(void_ind='n'))
-            team3492 = Team.objects.get(team_no=3492)
+        current_event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
+        team3492 = Team.objects.get(team_no=3492)
 
-            matches = Match.objects.filter(Q(event=event) & Q(void_ind='n') & Q(Q(red_one=team3492) | Q(red_two=team3492) | Q(
-                red_three=team3492) | Q(blue_one=team3492) | Q(blue_two=team3492) | Q(blue_three=team3492))).order_by('comp_level__comp_lvl_order', 'match_number')
-        except Exception as e:
-            event = None
-            matches = None
+        matches = Match.objects.filter(Q(event=current_event) & Q(void_ind='n') &
+                                       Q(Q(red_one=team3492) | Q(red_two=team3492) |
+                                         Q(red_three=team3492) | Q(blue_one=team3492) | Q(blue_two=team3492) |
+                                         Q(blue_three=team3492)))\
+            .order_by('comp_level__comp_lvl_order', 'match_number')
 
-        return {'event': event, 'matches': matches}
+        teams = Team.objects.filter(event=current_event).order_by('team_no')
+
+        return {'event': current_event, 'matches': matches, 'teams': teams}
 
     def get(self, request, format=None):
         try:
@@ -37,6 +38,36 @@ class Init(APIView):
         except Exception as e:
             return ret_message('An error occurred while getting match information.', True,
                                app_url + self.endpoint, exception=e)
+
+
+class SaveNote(APIView):
+    """API endpoint to tell the frontend if the competition page is active and its information"""
+    endpoint = 'save-note/'
+
+    def save_note(self, data):
+        current_event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
+
+        note = TeamNotes(event=current_event, team_no_id=data['team_no'], match_id=data.get('match', None),
+                         user=self.request.user, note=data['note'])
+
+        note.save()
+
+        return ret_message('Note saved successfully')
+
+    def post(self, request, format=None):
+        serializer = SaveTeamNoteSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.save_note(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message('An error occurred while saving note.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class PlanMatch(APIView):

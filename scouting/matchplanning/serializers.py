@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
 
+class TeamSerializer(serializers.Serializer):
+    team_no = serializers.IntegerField()
+    team_nm = serializers.CharField()
+
+
 class EventSerializer(serializers.Serializer):
     event_id = serializers.IntegerField(read_only=True)
     season_id = serializers.IntegerField(read_only=True)
@@ -47,6 +52,7 @@ class MatchSerializer(serializers.Serializer):
 class InitSerializer(serializers.Serializer):
     event = EventSerializer()
     matches = MatchSerializer(many=True, required=False)
+    teams = TeamSerializer(many=True, required=False)
 
 
 class ScoutPitResultAnswerSerializer(serializers.Serializer):
@@ -60,5 +66,13 @@ class ScoutPitResultsSerializer(serializers.Serializer):
     pic = serializers.CharField()
     results = ScoutPitResultAnswerSerializer(many=True)
 
+
 class MatchPlanningSerializer(serializers.Serializer):
     teamNo = serializers.CharField()
+
+
+class SaveTeamNoteSerializer(serializers.Serializer):
+    team_note_id = serializers.IntegerField(read_only=True)
+    team_no = serializers.IntegerField()
+    match = serializers.IntegerField(allow_null=True, required=False)
+    note = serializers.CharField()
