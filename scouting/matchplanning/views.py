@@ -1,7 +1,9 @@
 from cloudinary.templatetags import cloudinary
 from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from general.security import ret_message, has_access
 from scouting.field.views import get_field_results
@@ -11,13 +13,16 @@ from scouting.models import Event, Team, Match, ScoutPit, ScoutPitAnswer, ScoutQ
     ScoutFieldAnswer, TeamNotes
 from scouting.pit.views import get_pit_results
 
-auth_obj = 49
+auth_obj = 58
+auth_view_obj_scout_field = 52
 app_url = 'scouting/match-planning/'
 
 
 class Init(APIView):
     """API endpoint to tell the frontend if the competition page is active and its information"""
     endpoint = 'init/'
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get_competition_information(self):
         current_event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
@@ -34,18 +39,24 @@ class Init(APIView):
         return {'event': current_event, 'matches': matches, 'teams': teams}
 
     def get(self, request, format=None):
-        try:
-            req = self.get_competition_information()
-            serializer = InitSerializer(req)
-            return Response(serializer.data)
-        except Exception as e:
-            return ret_message('An error occurred while getting match information.', True,
-                               app_url + self.endpoint, exception=e)
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.get_competition_information()
+                serializer = InitSerializer(req)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting match information.', True,
+                                   app_url + self.endpoint, exception=e)
+
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class SaveNote(APIView):
     """API endpoint to tell the frontend if the competition page is active and its information"""
     endpoint = 'save-note/'
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def save_note(self, data):
         current_event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
@@ -76,6 +87,8 @@ class SaveNote(APIView):
 class PlanMatch(APIView):
     """API endpoint to tell the frontend if the competition page is active and its information"""
     endpoint = 'plan-match/'
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get_match_information(self, match_id):
         try:
@@ -99,8 +112,10 @@ class PlanMatch(APIView):
             # Pit Data
             st = TeamSerializer(t).data
             pit = get_pit_results([st], self.endpoint, self.request)
-
-            if pit.data.get('error', False):
+            if type(pit) is list:
+                pit = pit[0]
+            #if pit.data.get('error', False):
+            else:
                 pit = None
 
             # Field Data
@@ -119,18 +134,23 @@ class PlanMatch(APIView):
         return results
 
     def get(self, request, format=None):
-        try:
-            req = self.get_match_information(request.query_params.get('match_id', None))
-            serializer = MatchPlanningSerializer(req, many=True)
-            return Response(serializer.data)
-        except Exception as e:
-            return ret_message('An error occurred while getting match information.', True,
-                               app_url + self.endpoint, exception=e)
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.get_match_information(request.query_params.get('match_id', None))
+                serializer = MatchPlanningSerializer(req, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting match information.', True,
+                                   app_url + self.endpoint, exception=e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class LoadTeamNotes(APIView):
     """API endpoint to get team notes"""
     endpoint = 'load-team-notes/'
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get_team_notes(self, team_no):
         try:
@@ -150,10 +170,14 @@ class LoadTeamNotes(APIView):
         return notes
 
     def get(self, request, format=None):
-        try:
-            req = self.get_team_notes(request.query_params.get('team_no', None))
-            serializer = TeamNoteSerializer(req, many=True)
-            return Response(serializer.data)
-        except Exception as e:
-            return ret_message('An error occurred while getting team notes.', True,
-                               app_url + self.endpoint, exception=e)
+        if has_access(request.user.id, auth_obj) or has_access(request.user.id, auth_view_obj_scout_field):
+            try:
+                req = self.get_team_notes(request.query_params.get('team_no', None))
+                serializer = TeamNoteSerializer(req, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting team notes.', True,
+                                   app_url + self.endpoint, exception=e)
+
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
