@@ -5,4 +5,5 @@ urlpatterns = [
     path('init/', Init.as_view()),
     path('save-note/', SaveNote.as_view()),
     path('plan-match/', PlanMatch.as_view()),
+    path('load-team-notes/', LoadTeamNotes.as_view()),
 ]
