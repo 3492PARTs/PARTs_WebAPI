@@ -33,26 +33,23 @@ class Questions(APIView):
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
         scout_questions = []
-        try:
-            sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
-                                                                                                   Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
+        sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
+                                                                                               Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
 
-            for sq in sqs:
-                scout_questions.append({
-                    'sq_id': sq.sq_id,
-                    'season_id': sq.season_id,
-                    'question': sq.question,
-                    'order': sq.order,
-                    'active': sq.active,
-                    'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
-                    'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
-                    'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
-                    'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
-                    'sq_typ': sq.sq_typ,
-                    'questionoptions_set': sq.questionoptions_set
-                })
-        except Exception as e:
-            x = 1
+        for sq in sqs:
+            scout_questions.append({
+                'sq_id': sq.sq_id,
+                'season_id': sq.season_id,
+                'question': sq.question,
+                'order': sq.order,
+                'active': sq.active,
+                'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
+                'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
+                'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
+                'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
+                'sq_typ': sq.sq_typ,
+                'questionoptions_set': sq.questionoptions_set
+            })
 
         try:
             current_event = Event.objects.get(
@@ -61,12 +58,8 @@ class Questions(APIView):
             return ret_message('No event set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
         teams = []
-        try:
-            teams = Team.objects.filter(
-                event=current_event).order_by('team_no')
-
-        except Exception as e:
-            x = 1
+        teams = Team.objects.filter(
+            event=current_event).order_by('team_no')
 
         sfss = ScoutFieldSchedule.objects.filter(Q(st_time__lte=timezone.now()) & Q(
             end_time__gte=timezone.now()) & Q(void_ind='n'))

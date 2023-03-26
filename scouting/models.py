@@ -267,3 +267,15 @@ class Schedule(models.Model):
 
     def __str__(self):
         return self.user.first_name + ' ' + self.user.last_name + ' time: ' + self.st_time + ' - ' + self.end_time
+
+
+class TeamNotes(models.Model):
+    team_note_id = models.AutoField(primary_key=True)
+    event = models.ForeignKey(Event, models.PROTECT)
+    team_no = models.ForeignKey(Team, models.PROTECT)
+    match = models.ForeignKey(Match, models.PROTECT, null=True)
+    user = models.ForeignKey(User, models.PROTECT)
+    note = models.TextField()
+    time = models.DateTimeField(default=django.utils.timezone.now)
+    void_ind = models.CharField(max_length=1, default='n')
+
