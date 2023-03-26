@@ -364,6 +364,9 @@ class SyncEventTeamInfo(APIView):
                          event.event_cd + "/rankings", headers={"X-TBA-Auth-Key": settings.TBA_KEY})
         r = json.loads(r.text)
 
+        if r is None:
+            return 'Nothing to sync'
+
         for e in r.get('rankings', []):
             matches_played = e.get('matches_played', 0)
             qual_average = e.get('qual_average', 0)
