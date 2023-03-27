@@ -22,7 +22,6 @@ from django.db.models.functions import Lower
 from django.db.models import Q
 from rest_framework.response import Response
 
-
 auth_obj = 50
 app_url = 'scouting/admin/'
 
@@ -65,7 +64,8 @@ class Init(APIView):
 
         fieldSchedule = []
 
-        fsf = ScoutFieldSchedule.objects.select_related('red_one', 'red_two', 'red_three', 'blue_one', 'blue_two', 'blue_three').filter(
+        fsf = ScoutFieldSchedule.objects.select_related('red_one', 'red_two', 'red_three', 'blue_one', 'blue_two',
+                                                        'blue_three').filter(
             event=current_event, void_ind='n').order_by('notification3', 'st_time')
 
         for fs in fsf:
@@ -88,46 +88,24 @@ class Init(APIView):
                           '\nR2: ' +
                           ('' if fs.red_two is None else fs.red_two.first_name + ' ' + fs.red_two.last_name[0:1]) +
                           '\nR3: ' +
-                          ('' if fs.red_three is None else fs.red_three.first_name + ' ' + fs.red_three.last_name[0:1]) +
+                          ('' if fs.red_three is None else fs.red_three.first_name + ' ' + fs.red_three.last_name[
+                                                                                           0:1]) +
                           '\nB1: ' +
                           ('' if fs.blue_one is None else fs.blue_one.first_name + ' ' + fs.blue_one.last_name[0:1]) +
                           '\nB2: ' +
                           ('' if fs.blue_two is None else fs.blue_two.first_name + ' ' + fs.blue_two.last_name[0:1]) +
                           '\nB3: ' +
-                          ('' if fs.blue_three is None else fs.blue_three.first_name + ' ' + fs.blue_three.last_name[0:1])
+                          ('' if fs.blue_three is None else fs.blue_three.first_name + ' ' + fs.blue_three.last_name[
+                                                                                             0:1])
             })
-
-        """
-        pitSchedule = ScoutPitSchedule.objects.filter(
-            event=current_event, void_ind='n').order_by('-st_time')
-        """
 
         teams = Team.objects.filter(void_ind='n').order_by('team_no')
 
-        """
-        pastSchedule = []
-        sss = ScoutSchedule.objects.filter(Q(end_time__lt=time) & Q(
-            void_ind='n')).order_by('st_time', 'user')
-        for ss in sss:
-            pastSchedule.append({
-                'scout_sch_id': ss.scout_sch_id,
-                'user': ss.user.first_name + ' ' + ss.user.last_name,
-                'user_id': ss.user.id,
-                'sq_typ': ss.sq_typ_id,
-                'sq_nm': ss.sq_typ.sq_nm,
-                'st_time': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'end_time': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'notified': ss.notified,
-                'void_ind': ss.void_ind,
-                'st_time_str': ss.st_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-                'end_time_str': ss.end_time.astimezone(pytz.timezone('US/Eastern')).strftime('%m/%d/%Y %I:%M %p'),
-            })
-        """
         scoutQuestionType = ScoutQuestionType.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
                 'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
-                'fieldSchedule': fieldSchedule, #'pitSchedule': pitSchedule,
+                'fieldSchedule': fieldSchedule,  # 'pitSchedule': pitSchedule,
                 'scoutQuestionType': scoutQuestionType, 'teams': teams}
 
     def get(self, request, format=None):
@@ -137,7 +115,8 @@ class Init(APIView):
                 serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, app_url + self.endpoint, request.user.id,
+                return ret_message('An error occurred while initializing.', True, app_url + self.endpoint,
+                                   request.user.id,
                                    e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
@@ -176,7 +155,7 @@ class SyncSeason(APIView):
                 'postal_code': e.get('postal_code', None),
                 'location_name': e.get('location_name', None),
                 'timezone': e.get('timezone', 'America/New_York'),
-                'webcast_url':  e['webcasts'][0]['channel'] if len(e['webcasts']) > 0 else '',
+                'webcast_url': e['webcasts'][0]['channel'] if len(e['webcasts']) > 0 else '',
                 'teams': [],
                 'teams_to_keep': []
             }
@@ -201,7 +180,10 @@ class SyncSeason(APIView):
 
             try:
                 Event(season=season, event_nm=e['event_nm'], date_st=e['date_st'], date_end=e['date_end'],
-                      event_cd=e['event_cd'], event_url=e['event_url'], address=e['address'], city=e['city'], state_prov=e['state_prov'], postal_code=e['postal_code'], location_name=e['location_name'], gmaps_url=e['gmaps_url'], webcast_url=e['webcast_url'], timezone=e['timezone'], current='n', competition_page_active='n', void_ind='n').save(force_insert=True)
+                      event_cd=e['event_cd'], event_url=e['event_url'], address=e['address'], city=e['city'],
+                      state_prov=e['state_prov'], postal_code=e['postal_code'], location_name=e['location_name'],
+                      gmaps_url=e['gmaps_url'], webcast_url=e['webcast_url'], timezone=e['timezone'], current='n',
+                      competition_page_active='n', void_ind='n').save(force_insert=True)
                 messages += "(ADD) Added event: " + e['event_cd'] + '\n'
             except IntegrityError:
                 event = Event.objects.get(
@@ -220,7 +202,7 @@ class SyncSeason(APIView):
                 event.save()
 
                 messages += "(NO ADD) Already have event: " + \
-                    e['event_cd'] + '\n'
+                            e['event_cd'] + '\n'
 
             # remove teams that have been removed from an event
             event = Event.objects.get(event_cd=e['event_cd'], void_ind='n')
@@ -235,10 +217,10 @@ class SyncSeason(APIView):
                     Team(team_no=t['team_no'], team_nm=t['team_nm'], void_ind='n').save(
                         force_insert=True)
                     messages += "(ADD) Added team: " + \
-                        str(t['team_no']) + " " + t['team_nm'] + '\n'
+                                str(t['team_no']) + " " + t['team_nm'] + '\n'
                 except IntegrityError:
                     messages += "(NO ADD) Already have team: " + \
-                        str(t['team_no']) + " " + t['team_nm'] + '\n'
+                                str(t['team_no']) + " " + t['team_nm'] + '\n'
 
                 try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
                     team = Team.objects.get(team_no=t['team_no'])
@@ -259,7 +241,8 @@ class SyncSeason(APIView):
                     request.query_params.get('season_id', None))
                 return ret_message(req)
             except Exception as e:
-                return ret_message('An error occurred while syncing the season/event/teams.', True, app_url + self.endpoint,
+                return ret_message('An error occurred while syncing the season/event/teams.', True,
+                                   app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
@@ -323,15 +306,17 @@ class SyncMatches(APIView):
 
                 match.save()
                 messages += '(UPDATE) ' + event.event_nm + \
-                    ' ' + comp_level.comp_lvl_typ_nm + \
-                    ' ' + str(match_number) + ' ' + match_key + '\n'
+                            ' ' + comp_level.comp_lvl_typ_nm + \
+                            ' ' + str(match_number) + ' ' + match_key + '\n'
             except ObjectDoesNotExist as odne:
-                match = Match(match_id=match_key, match_number=match_number, event=event, red_one=red_one, red_two=red_two, red_three=red_three, blue_one=blue_one,
-                              blue_two=blue_two, blue_three=blue_three, red_score=red_score, blue_score=blue_score, comp_level=comp_level, time=time, void_ind='n')
+                match = Match(match_id=match_key, match_number=match_number, event=event, red_one=red_one,
+                              red_two=red_two, red_three=red_three, blue_one=blue_one,
+                              blue_two=blue_two, blue_three=blue_three, red_score=red_score, blue_score=blue_score,
+                              comp_level=comp_level, time=time, void_ind='n')
                 match.save()
                 messages += '(ADD) ' + event.event_nm + \
-                    ' ' + comp_level.comp_lvl_typ_nm + \
-                    ' ' + str(match_number) + ' ' + match_key + '\n'
+                            ' ' + comp_level.comp_lvl_typ_nm + \
+                            ' ' + str(match_number) + ' ' + match_key + '\n'
 
         return messages
 
@@ -351,8 +336,8 @@ class SyncEventTeamInfo(APIView):
     """
     API endpoint to sync the info for a teams at an event
     """
-    #authentication_classes = (JWTAuthentication,)
-    #permission_classes = (IsAuthenticated,)
+    # authentication_classes = (JWTAuthentication,)
+    # permission_classes = (IsAuthenticated,)
     endpoint = 'sync-event-team-info/'
 
     def sync_event_team_info(self):
@@ -378,7 +363,6 @@ class SyncEventTeamInfo(APIView):
             team = Team.objects.get(
                 Q(team_no=e['team_key'].replace('frc', '')) & Q(void_ind='n'))
 
-
             try:
                 eti = EventTeamInfo.objects.get(
                     Q(event=event) & Q(team_no=team) & Q(void_ind='n'))
@@ -393,13 +377,13 @@ class SyncEventTeamInfo(APIView):
 
                 eti.save()
                 messages += '(UPDATE) ' + event.event_nm + \
-                    ' ' + str(team.team_no) + '\n'
+                            ' ' + str(team.team_no) + '\n'
             except ObjectDoesNotExist as odne:
                 eti = EventTeamInfo(event=event, team_no=team, matches_played=matches_played, qual_average=qual_average,
                                     losses=losses, wins=wins, ties=ties, rank=rank, dq=dq)
                 eti.save()
                 messages += '(ADD) ' + event.event_nm + \
-                    ' ' + str(team.team_no) + '\n'
+                            ' ' + str(team.team_no) + '\n'
 
         return messages
 
@@ -473,7 +457,8 @@ class ToggleCompetitionPage(APIView):
                 event.competition_page_active = 'n'
             event.save()
         except ObjectDoesNotExist as odne:
-            return ret_message('No active event, can\'t activate competition page', True, app_url + self.endpoint, self.request.user.id, odne)
+            return ret_message('No active event, can\'t activate competition page', True, app_url + self.endpoint,
+                               self.request.user.id, odne)
 
         return ret_message('Successfully  activated competition page.')
 
@@ -804,7 +789,8 @@ class QuestionInit(APIView):
         scout_questions = []
         try:
             sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
-                Q(season=current_season) & Q(sq_typ_id=question_type) & Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
+                Q(season=current_season) & Q(sq_typ_id=question_type) & Q(void_ind='n')).order_by('sq_sub_typ_id',
+                                                                                                  'order')
 
             for sq in sqs:
                 scout_questions.append({
@@ -818,13 +804,17 @@ class QuestionInit(APIView):
                     'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
                     'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
                     'sq_typ': sq.sq_typ,
-                    'questionoptions_set': sq.questionoptions_set
+                    'questionoptions_set': sq.questionoptions_set,
+                    'display_value': ('' if sq.active is 'y' else 'Deactivated: ') +
+                                     (sq.sq_sub_typ.sq_sub_nm + ': ' if sq.sq_sub_typ is not None else '') +
+                                     sq.question
                 })
 
         except Exception as e:
             scout_questions = []
 
-        return {'questionTypes': question_types, 'scoutQuestions': scout_questions, 'scoutQuestionSubTypes': scout_question_sub_types}
+        return {'questionTypes': question_types, 'scoutQuestions': scout_questions,
+                'scoutQuestionSubTypes': scout_question_sub_types}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -856,7 +846,7 @@ class SaveScoutQuestion(APIView):
                 return ret_message('No season set, see an admin.', True, app_url + self.endpoint,
                                    self.request.user.id, e)
 
-            sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'],  sq_typ_id=data['sq_typ'],
+            sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'], sq_typ_id=data['sq_typ'],
                                sq_sub_typ_id=data.get('sq_sub_typ', None),
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
@@ -1104,42 +1094,42 @@ class NotifyUsers(APIView):
             message += 'Notified: ' + sfs.red_one.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
-                (sfs.red_one.first_name if sfs.red_one is not None else "red one") + '\n'
+                       (sfs.red_one.first_name if sfs.red_one is not None else "red one") + '\n'
         try:
             send_message.send_email(
                 sfs.red_two.phone + sfs.red_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_two.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
-                (sfs.red_two.first_name if sfs.red_two is not None else "red two") + '\n'
+                       (sfs.red_two.first_name if sfs.red_two is not None else "red two") + '\n'
         try:
             send_message.send_email(
                 sfs.red_three.phone + sfs.red_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.red_three.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
-                (sfs.red_three.first_name if sfs.red_three is not None else "red three") + '\n'
+                       (sfs.red_three.first_name if sfs.red_three is not None else "red three") + '\n'
         try:
             send_message.send_email(
                 sfs.blue_one.phone + sfs.blue_one.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_one.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
-                (sfs.blue_one.first_name if sfs.blue_one is not None else "blue one") + '\n'
+                       (sfs.blue_one.first_name if sfs.blue_one is not None else "blue one") + '\n'
         try:
             send_message.send_email(
                 sfs.blue_two.phone + sfs.blue_two.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_two.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
-                (sfs.blue_two.first_name if sfs.blue_two is not None else "blue two") + '\n'
+                       (sfs.blue_two.first_name if sfs.blue_two is not None else "blue two") + '\n'
         try:
             send_message.send_email(
                 sfs.blue_three.phone + sfs.blue_three.phone_type.phone_type, 'Time to Scout!', 'notify_scout', data)
             message += 'Notified: ' + sfs.blue_three.first_name + '\n'
         except Exception as e:
             message += 'Unable to notify: ' + \
-                (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
+                       (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
 
         discord_message = f'Scheduled time for scouting from ' \
                           f'{date_st_str} to {date_end_str} : '

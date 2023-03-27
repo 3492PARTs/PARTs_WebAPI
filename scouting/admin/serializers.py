@@ -257,6 +257,7 @@ class ScoutQuestionSerializer(serializers.Serializer):
     sq_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     sq_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     sq_typ = serializers.CharField()
+    display_value = serializers.CharField(read_only=True)
 
     questionoptions_set = QuestionOptionsSerializer(
         required=False, allow_null=True, many=True)
