@@ -45,8 +45,8 @@ class Init(APIView):
                 serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while getting match information.', True,
-                                   app_url + self.endpoint, exception=e)
+                return ret_message('An error occurred initializing match planning.', True,
+                                   app_url + self.endpoint, request.user.id, e)
 
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
