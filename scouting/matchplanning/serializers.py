@@ -40,11 +40,17 @@ class MatchSerializer(serializers.Serializer):
     blue_score = serializers.IntegerField()
     time = serializers.DateTimeField()
     blue_one_id = serializers.IntegerField()
+    blue_one_rank = serializers.IntegerField()
     blue_two_id = serializers.IntegerField()
+    blue_two_rank = serializers.IntegerField()
     blue_three_id = serializers.IntegerField()
+    blue_three_rank = serializers.IntegerField()
     red_one_id = serializers.IntegerField()
+    red_one_rank = serializers.IntegerField()
     red_two_id = serializers.IntegerField()
+    red_two_rank = serializers.IntegerField()
     red_three_id = serializers.IntegerField()
+    red_three_rank = serializers.IntegerField()
 
     comp_level = CompetitionLevelSerializer(read_only=True)
 
@@ -63,16 +69,6 @@ class ScoutPitResultAnswerSerializer(serializers.Serializer):
 class ScoutPitResultsSerializer(serializers.Serializer):
     teamNo = serializers.CharField()
     teamNm = serializers.CharField()
-    pic = serializers.CharField()
-    results = ScoutPitResultAnswerSerializer(many=True)
-
-
-class ScoutPitResultAnswerSerializer(serializers.Serializer):
-    question = serializers.CharField()
-    answer = serializers.CharField(required=False, allow_null=True)
-
-
-class ScoutPitResultsSerializer(serializers.Serializer):
     pic = serializers.CharField()
     results = ScoutPitResultAnswerSerializer(many=True)
 
