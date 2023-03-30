@@ -179,7 +179,7 @@ class SavePicture(APIView):
         try:
             response = cloudinary.uploader.upload(file)
             sp = ScoutPit.objects.get(
-                Q(event=current_event) & Q(team_no_id=team_no))
+                Q(event=current_event) & Q(team_no_id=team_no) & Q(void_ind='n'))
 
             sp.img_id = response['public_id']
             sp.img_ver = str(response['version'])
