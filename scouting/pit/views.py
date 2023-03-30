@@ -319,11 +319,15 @@ def get_pit_results(teams, endpoint, request):
 
             tmp_questions = []
 
-            eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=team.team_no) & Q(void_ind='n'))
-            tmp_questions.append({
-                'question': 'Rank',
-                'answer': eti.rank
-            })
+            try:
+                eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=team.team_no) & Q(void_ind='n'))
+                tmp_questions.append({
+                    'question': 'Rank',
+                    'answer': eti.rank
+                })
+            except:
+                x = 1
+
 
             for spa in spas:
                 tmp_questions.append({
