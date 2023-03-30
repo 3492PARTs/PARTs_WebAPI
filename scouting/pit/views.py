@@ -357,7 +357,13 @@ class TeamData(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        sp = ScoutPit.objects.get(team_no=team_num)
+        try:
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y'))
+        except Exception as e:
+            return ret_message('No event set, see an admin', True, app_url + self.endpoint, self.request.user.id, e)
+
+        sp = ScoutPit.objects.get(Q(team_no=team_num) & Q(void_ind='n') & Q(event=current_event))
 
         scout_questions = []
         # sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
