@@ -249,8 +249,11 @@ def get_field_results(team, endpoint, request):
         sa_obj['user_id'] = sf.user.id
         sa_obj['team'] = sf.team_no_id
 
-        eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind='n'))
-        sa_obj['rank'] = eti.rank
+        try:
+            eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind='n'))
+            sa_obj['rank'] = eti.rank
+        except:
+            x = 1
 
         scout_answers.append(sa_obj)
 

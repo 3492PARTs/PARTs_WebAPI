@@ -74,17 +74,17 @@ class Init(APIView):
                 'blue_score': m.blue_score,
                 'time': m.time,
                 'blue_one_id': m.blue_one.team_no,
-                'blue_one_rank': '' if eti_blue_one is None else eti_blue_one.rank,
+                'blue_one_rank': None if eti_blue_one is None else eti_blue_one.rank,
                 'blue_two_id': m.blue_two.team_no,
-                'blue_two_rank': '' if eti_blue_two is None else eti_blue_two.rank,
+                'blue_two_rank': None if eti_blue_two is None else eti_blue_two.rank,
                 'blue_three_id': m.blue_three.team_no,
-                'blue_three_rank': '' if eti_blue_three is None else eti_blue_three.rank,
+                'blue_three_rank': None if eti_blue_three is None else eti_blue_three.rank,
                 'red_one_id': m.red_one.team_no,
-                'red_one_rank': '' if eti_red_one is None else eti_red_one.rank,
+                'red_one_rank': None if eti_red_one is None else eti_red_one.rank,
                 'red_two_id': m.red_two.team_no,
-                'red_two_rank': '' if eti_red_two is None else eti_red_two.rank,
+                'red_two_rank': None if eti_red_two is None else eti_red_two.rank,
                 'red_three_id': m.red_three.team_no,
-                'red_three_rank': '' if eti_red_three is None else eti_red_three.rank,
+                'red_three_rank': None if eti_red_three is None else eti_red_three.rank,
                 'comp_level': m.comp_level
             })
 
