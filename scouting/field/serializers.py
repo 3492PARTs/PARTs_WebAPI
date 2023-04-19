@@ -8,6 +8,19 @@ class TeamSerializer(serializers.Serializer):
     checked = serializers.BooleanField(required=False)
 
 
+class MatchSerializer(serializers.Serializer):
+    match_id = serializers.CharField(read_only=True)
+    event_id = serializers.IntegerField(read_only=True)
+    match_number = serializers.IntegerField()
+    time = serializers.DateTimeField()
+    blue_one_id = serializers.IntegerField()
+    blue_two_id = serializers.IntegerField()
+    blue_three_id = serializers.IntegerField()
+    red_one_id = serializers.IntegerField()
+    red_two_id = serializers.IntegerField()
+    red_three_id = serializers.IntegerField()
+
+
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
@@ -65,6 +78,7 @@ class ScoutFieldSerializer(serializers.Serializer):
     teams = TeamSerializer(many=True, required=False)
     team = serializers.CharField(required=False)
     scoutFieldSchedule = ScoutFieldScheduleSerializer(required=False)
+    matches = MatchSerializer(many=True, required=False)
 
 
 class ScoutColSerializer(serializers.Serializer):

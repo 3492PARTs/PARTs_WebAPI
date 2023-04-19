@@ -4,7 +4,7 @@ from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team, ScoutFieldSchedule, ScoutField, \
-    ScoutFieldAnswer, EventTeamInfo
+    ScoutFieldAnswer, EventTeamInfo, Match
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
 from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer
@@ -33,8 +33,9 @@ class Questions(APIView):
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
         scout_questions = []
-        sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
-                                                                                               Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
+        sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
+            Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
+            Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
 
         for sq in sqs:
             scout_questions.append({
@@ -79,7 +80,25 @@ class Questions(APIView):
                 'blue_three_id': s.blue_three
             }
 
-        return {'scoutQuestions': scout_questions, 'teams': teams, 'scoutFieldSchedule': sfs}
+        matches = Match.objects.filter(Q(event=current_event) & Q(comp_level_id='qm') & Q(void_ind='n')) \
+            .order_by('match_number')
+        parsed_matches = []
+
+        for m in matches:
+            parsed_matches.append({
+                'match_id': m.match_id,
+                'event_id': m.event.event_id,
+                'match_number': m.match_number,
+                'time': m.time,
+                'blue_one_id': m.blue_one.team_no,
+                'blue_two_id': m.blue_two.team_no,
+                'blue_three_id': m.blue_three.team_no,
+                'red_one_id': m.red_one.team_no,
+                'red_two_id': m.red_two.team_no,
+                'red_three_id': m.red_three.team_no,
+            })
+
+        return {'scoutQuestions': scout_questions, 'teams': teams, 'scoutFieldSchedule': sfs, 'matches': parsed_matches}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -174,7 +193,6 @@ class Results(APIView):
 
 
 def get_field_results(team, endpoint, request):
-
     try:
         current_season = Season.objects.get(current='y')
     except Exception as e:
@@ -201,18 +219,19 @@ def get_field_results(team, endpoint, request):
                                         Q(sq_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
 
     sqst = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
-                                        Q(sq_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n'))\
+                                        Q(sq_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
     sqso = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
-                                        Q(sq_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n'))\
+                                        Q(sq_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
     for sqs in [sqsa, sqst, sqso]:
         for sq in sqs:
             scout_cols.append({
                 'PropertyName': 'ans' + str(sq.sq_id),
-                'ColLabel': ('' if sq.sq_sub_typ is None else sq.sq_sub_typ.sq_sub_typ[0:1].upper() + ': ') + sq.question,
+                'ColLabel': ('' if sq.sq_sub_typ is None else sq.sq_sub_typ.sq_sub_typ[
+                                                              0:1].upper() + ': ') + sq.question,
                 'order': sq.order
             })
 
