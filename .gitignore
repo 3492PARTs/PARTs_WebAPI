@@ -2,6 +2,7 @@ dump.json
 api/settings_dev.py
 keys/
 logs/
+db.sqlite3
 
 .DS_Store
 
