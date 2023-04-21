@@ -172,6 +172,7 @@ class ScoutField(models.Model):
     team_no = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
+    match = models.ForeignKey(Match, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
