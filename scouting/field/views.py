@@ -7,7 +7,7 @@ from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team,
     ScoutFieldAnswer, EventTeamInfo, Match
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
-from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer
+from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer, SaveScoutFieldSerializer
 from django.db.models import Q
 from rest_framework.response import Response
 from django.utils import timezone
@@ -90,15 +90,27 @@ class Questions(APIView):
                 'event_id': m.event.event_id,
                 'match_number': m.match_number,
                 'time': m.time,
-                'blue_one_id': m.blue_one.team_no,
-                'blue_two_id': m.blue_two.team_no,
-                'blue_three_id': m.blue_three.team_no,
-                'red_one_id': m.red_one.team_no,
-                'red_two_id': m.red_two.team_no,
-                'red_three_id': m.red_three.team_no,
+                'blue_one_id': m.blue_one.team_no if self.get_team_match_field_result(m, m.blue_one.team_no) is None else None,
+                'blue_two_id': m.blue_two.team_no if self.get_team_match_field_result(m, m.blue_two.team_no) is None else None,
+                'blue_three_id': m.blue_three.team_no if self.get_team_match_field_result(m, m.blue_three.team_no) is None else None,
+                'red_one_id': m.red_one.team_no if self.get_team_match_field_result(m, m.red_one.team_no) is None else None,
+                'red_two_id': m.red_two.team_no if self.get_team_match_field_result(m, m.red_two.team_no) is None else None,
+                'red_three_id': m.red_three.team_no if self.get_team_match_field_result(m, m.red_three.team_no) is None else None,
             })
 
         return {'scoutQuestions': scout_questions, 'teams': teams, 'scoutFieldSchedule': sfs, 'matches': parsed_matches}
+
+    def get_team_match_field_result(self, m, team):
+        try:
+            res = ScoutField.objects.filter(Q(match=m) & Q(team_no=team) & Q(void_ind='n'))
+            if res.count() > 0:
+                return res
+            else:
+                return None
+        except:
+            x = 9
+
+        return None
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -138,7 +150,8 @@ class SaveAnswers(APIView):
             return ret_message('No event set, see an admin', True, app_url + self.endpoint, self.request.user.id, e)
 
         sf = ScoutField(
-            event=current_event, team_no_id=data['team'], user_id=self.request.user.id, void_ind='n')
+            event=current_event, team_no_id=data['team'], match_id=data.get('match', None),
+            user_id=self.request.user.id, void_ind='n')
         sf.save()
 
         for d in data['scoutQuestions']:
@@ -149,7 +162,7 @@ class SaveAnswers(APIView):
         return ret_message('Response saved successfully')
 
     def post(self, request, format=None):
-        serializer = ScoutFieldSerializer(data=request.data)
+        serializer = SaveScoutFieldSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
 
@@ -212,6 +225,10 @@ def get_field_results(team, endpoint, request):
         'PropertyName': 'rank',
         'ColLabel': 'Rank',
         'order': 1
+    }, {
+        'PropertyName': 'match',
+        'ColLabel': 'Match',
+        'order': 1
     }]
 
     scout_answers = []
@@ -263,6 +280,7 @@ def get_field_results(team, endpoint, request):
         for sfa in sfas:
             sa_obj['ans' + str(sfa.sq_id)] = sfa.answer
 
+        sa_obj['match'] = sf.match.match_number if sf.match else None
         sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name
         sa_obj['time'] = sf.time
         sa_obj['user_id'] = sf.user.id

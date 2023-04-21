@@ -76,9 +76,15 @@ class ScoutQuestionSerializer(serializers.Serializer):
 class ScoutFieldSerializer(serializers.Serializer):
     scoutQuestions = ScoutQuestionSerializer(many=True)
     teams = TeamSerializer(many=True, required=False)
-    team = serializers.CharField(required=False)
-    scoutFieldSchedule = ScoutFieldScheduleSerializer(required=False)
+    #team = serializers.CharField(required=False)
+    scoutFieldSchedule = ScoutFieldScheduleSerializer()
     matches = MatchSerializer(many=True, required=False)
+
+
+class SaveScoutFieldSerializer(serializers.Serializer):
+    scoutQuestions = ScoutQuestionSerializer(many=True)
+    team = serializers.CharField()
+    match = serializers.CharField(required=False)
 
 
 class ScoutColSerializer(serializers.Serializer):
