@@ -1,7 +1,9 @@
-from django.urls import path
+import webpush.views
+from django.urls import path, include
 from rest_framework_simplejwt import views as jwt_views
 from .views import UserData, UserLinksView, UserGroups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, \
-    UserRequestPasswordReset, UserPasswordReset, UserRequestUsername, SaveUserPushNotificationSubscriptionObject
+    UserRequestPasswordReset, UserPasswordReset, UserRequestUsername, \
+    TestNotification, SaveWebPushInfo
 
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -18,5 +20,6 @@ urlpatterns = [
     path('request-reset-password/', UserRequestPasswordReset.as_view()),
     path('reset-password/', UserPasswordReset.as_view()),
     path('request-username/', UserRequestUsername.as_view()),
-    path('save-user-push-notification-object/', SaveUserPushNotificationSubscriptionObject.as_view())
+    path('test/', TestNotification.as_view()),
+    path('webpush-save/', SaveWebPushInfo.as_view()),
 ]

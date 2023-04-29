@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'corsheaders',
     'rest_framework',
+    'webpush'
 ]
 
 MIDDLEWARE = [

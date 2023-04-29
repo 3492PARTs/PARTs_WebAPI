@@ -1,6 +1,7 @@
 import ast
 import datetime
 
+import webpush.views
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import redirect
 
@@ -11,11 +12,11 @@ from pytz import timezone, utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from webpush import send_user_notification
 
 from api.settings import AUTH_PASSWORD_VALIDATORS
-from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
-    SaveUserPushNotificationSubscriptionObjectSerializer
-from .models import User, UserLinks, UserPushNotificationSubscriptionObjects
+from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer
+from .models import User, UserLinks
 from general.security import get_user_groups, get_user_permissions, ret_message
 
 from django.core.mail import send_mail
@@ -41,7 +42,7 @@ class UserProfile(APIView):
         try:
             serialized = UserCreationSerializer(data=request.data)
             if serialized.is_valid():
-                #user_confirm_hash = abs(hash(serialized.data.date_joined))
+                # user_confirm_hash = abs(hash(serialized.data.date_joined))
                 if serialized.data.get('password1', 't') != serialized.data.get('password2', 'y'):
                     return ret_message('Passwords don\'t match.', True, app_url + self.endpoint, 0)
 
@@ -50,14 +51,17 @@ class UserProfile(APIView):
                 try:
                     user = User.objects.get(
                         email=user_data.get('email').lower())
-                    return ret_message('User already exists with that email.', True, app_url + self.endpoint, 0, user_data.get('email').lower())
+                    return ret_message('User already exists with that email.', True, app_url + self.endpoint, 0,
+                                       user_data.get('email').lower())
                 except ObjectDoesNotExist as odne:
                     x = 0
 
-                user = User(username=user_data.get('username').lower(), email=user_data.get('email').lower(), first_name=user_data.get('first_name'),
-                            last_name=user_data.get('last_name'), date_joined=datetime.datetime.utcnow().replace(tzinfo=utc))
+                user = User(username=user_data.get('username').lower(), email=user_data.get('email').lower(),
+                            first_name=user_data.get('first_name'),
+                            last_name=user_data.get('last_name'),
+                            date_joined=datetime.datetime.utcnow().replace(tzinfo=utc))
 
-                #user = form.save(commit=False)
+                # user = form.save(commit=False)
                 user.is_active = False
                 user.set_password(user_data.get('password1'))
                 user.save()
@@ -68,7 +72,8 @@ class UserProfile(APIView):
 
                 cntx = {
                     'user': user,
-                    'url': request.scheme + '://' + current_site.domain + '/user/confirm/?pk={}&confirm={}'.format(user.username, user_confirm_hash)
+                    'url': request.scheme + '://' + current_site.domain + '/user/confirm/?pk={}&confirm={}'.format(
+                        user.username, user_confirm_hash)
                 }
 
                 send_mail(
@@ -96,7 +101,9 @@ class UserProfile(APIView):
                 error_string = 'A user with that username already exists.'
             else:
                 error_string = None
-            return ret_message('An error occurred while creating user.' + ('\n' + error_string if error_string is not None else ''), True, app_url + self.endpoint, exception=e)
+            return ret_message(
+                'An error occurred while creating user.' + ('\n' + error_string if error_string is not None else ''),
+                True, app_url + self.endpoint, exception=e)
 
     # TODO Add auth
     """
@@ -260,7 +267,8 @@ class UserEmailResendConfirmation(APIView):
 
         cntx = {
             'user': user,
-            'url': request.scheme + '://' + current_site.domain + '/user/confirm/?pk={}&confirm={}'.format(user.username, user_confirm_hash)
+            'url': request.scheme + '://' + current_site.domain + '/user/confirm/?pk={}&confirm={}'.format(
+                user.username, user_confirm_hash)
         }
 
         send_mail(
@@ -330,7 +338,7 @@ class UserPasswordReset(APIView):
 
     def reset_password(self, request):
         try:
-            #username = request.data['username']
+            # username = request.data['username']
             uuid = request.data['uuid']
             token = request.data['token']
             password = request.data['password']
@@ -339,7 +347,8 @@ class UserPasswordReset(APIView):
 
             user = User.objects.get(id=user_id)
             if token == None or uuid == None:  # prevents
-                return ret_message('Reset token required.', True, app_url + self.endpoint, exception=request.data['email'])
+                return ret_message('Reset token required.', True, app_url + self.endpoint,
+                                   exception=request.data['email'])
             # TODO Add time component back and ((user.reset_requested_at + timedelta(hours=1)) > timezone.now()):
             if (default_token_generator.check_token(user, token)):
                 try:
@@ -465,27 +474,24 @@ class UserGroups(APIView):
                                request.user.id, e)
 
 
-class SaveUserPushNotificationSubscriptionObject(APIView):
+class SaveWebPushInfo(APIView):
     """
     API endpoint to save a user push notification subscription object
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'user-groups/'
-
-    def save_user_push_notification_object(self, data):
-        UserPushNotificationSubscriptionObjects(user=self.request.user, endpoint=data['endpoint'], p256dh=data['p256dh'], auth=data['auth']).save()
-        return ret_message('Successfully subscribed to push notifications.')
+    endpoint = 'webpush-save/'
 
     def post(self, request, format=None):
         try:
-            serializer = SaveUserPushNotificationSubscriptionObjectSerializer(data=request.data)
-            if not serializer.is_valid():
-                return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+            response = webpush.views.save_info(request)
+            if response.status_code == 400:
+                return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, response)
 
-            return self.save_user_push_notification_object(serializer.data)
+            return ret_message('Successfully subscribed to push notifications.')
         except Exception as e:
-            return ret_message('An error occurred while saving the user push notification object.', True, app_url + self.endpoint,
+            return ret_message('An error occurred while subscribing to push notifications.', True,
+                               app_url + self.endpoint,
                                request.user.id, e)
 
 
@@ -493,17 +499,20 @@ class TestNotification(APIView):
     """
     API endpoint to get groups a user has based on permissions
     """
-    #authentication_classes = (JWTAuthentication,)
-    #permission_classes = (IsAuthenticated,)
+    # authentication_classes = (JWTAuthentication,)
+    # permission_classes = (IsAuthenticated,)
     endpoint = 'user-groups/'
 
     def get_groups(self):
-        return get_user_groups(user_id)
+        user = User.objects.get(id=1)
+        payload = {'head': "Welcome!", 'body': "Hello World",
+                   "icon": "https://i.imgur.com/dRDxiCQ.png", "url": "https://www.example.com"}
+        send_user_notification(user=user, payload=payload, ttl=1000)
 
     def get(self, request, format=None):
         try:
             req = self.get_groups()
             return Response('test')
         except Exception as e:
-            return ret_message('An error occurred while getting user groups.', True, app_url + self.endpoint,
+            return ret_message('An error occurred while sending notification.', True, app_url + self.endpoint,
                                request.user.id, e)

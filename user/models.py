@@ -86,12 +86,3 @@ class User(AbstractBaseUser, PermissionsMixin):
         # TODO revisit this
         return True
 
-
-class UserPushNotificationSubscriptionObjects(models.Model):
-    sub_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, models.PROTECT)
-    endpoint = models.CharField(max_length=2000)
-    p256dh = models.CharField(max_length=255)
-    auth = models.CharField(max_length=255)
-    time = models.DateTimeField(default=django.utils.timezone.now)
-    void_ind = models.CharField(max_length=1, default='n')
