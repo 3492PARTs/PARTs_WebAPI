@@ -13,8 +13,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from api.settings import AUTH_PASSWORD_VALIDATORS
-from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer
-from .models import User, UserLinks
+from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
+    SaveUserPushNotificationSubscriptionObjectSerializer
+from .models import User, UserLinks, UserPushNotificationSubscriptionObjects
 from general.security import get_user_groups, get_user_permissions, ret_message
 
 from django.core.mail import send_mail
@@ -459,6 +460,50 @@ class UserGroups(APIView):
             req = self.get_groups(request.query_params.get('user_id', None))
             serializer = GroupSerializer(req, many=True)
             return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user groups.', True, app_url + self.endpoint,
+                               request.user.id, e)
+
+
+class SaveUserPushNotificationSubscriptionObject(APIView):
+    """
+    API endpoint to save a user push notification subscription object
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'user-groups/'
+
+    def save_user_push_notification_object(self, data):
+        UserPushNotificationSubscriptionObjects(user=self.request.user, endpoint=data['endpoint'], p256dh=data['p256dh'], auth=data['auth']).save()
+        return ret_message('Successfully subscribed to push notifications.')
+
+    def post(self, request, format=None):
+        try:
+            serializer = SaveUserPushNotificationSubscriptionObjectSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+            return self.save_user_push_notification_object(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while saving the user push notification object.', True, app_url + self.endpoint,
+                               request.user.id, e)
+
+
+class TestNotification(APIView):
+    """
+    API endpoint to get groups a user has based on permissions
+    """
+    #authentication_classes = (JWTAuthentication,)
+    #permission_classes = (IsAuthenticated,)
+    endpoint = 'user-groups/'
+
+    def get_groups(self):
+        return get_user_groups(user_id)
+
+    def get(self, request, format=None):
+        try:
+            req = self.get_groups()
+            return Response('test')
         except Exception as e:
             return ret_message('An error occurred while getting user groups.', True, app_url + self.endpoint,
                                request.user.id, e)

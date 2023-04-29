@@ -11,6 +11,7 @@ from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer, Save
 from django.db.models import Q
 from rest_framework.response import Response
 from django.utils import timezone
+from django.conf import settings
 
 auth_obj = 49
 auth_view_obj = 52
@@ -269,7 +270,11 @@ def get_field_results(team, endpoint, request):
             .order_by('-time', '-scout_field_id')
     else:
         # get result for all teams
-        sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
+        if settings.DEBUG:
+            sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
+                void_ind='n')).order_by('-time', '-scout_field_id')[: 10]
+        else:
+            sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
             void_ind='n')).order_by('-time', '-scout_field_id')
 
     for sf in sfs:

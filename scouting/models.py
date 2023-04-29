@@ -149,7 +149,7 @@ class ScoutQuestion(models.Model):
     question = models.CharField(max_length=1000)
     order = models.IntegerField()
     active = models.CharField(max_length=1)
-    void_ind = models.CharField(max_length=1)
+    void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
         return str(self.sq_id) + ' ' + self.question

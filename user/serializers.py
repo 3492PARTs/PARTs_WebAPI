@@ -88,3 +88,9 @@ class UserLinksSerializer(serializers.Serializer):
 class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
     error = serializers.BooleanField()
+
+
+class SaveUserPushNotificationSubscriptionObjectSerializer(serializers.Serializer):
+    endpoint = serializers.CharField()
+    p256dh = serializers.CharField()
+    auth = serializers.CharField()
