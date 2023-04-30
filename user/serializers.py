@@ -36,6 +36,8 @@ class UserSerializer(serializers.Serializer):
     phone_type = PhoneTypeSerializer(required=False, allow_null=True)
     phone_type_id = serializers.IntegerField(required=False, allow_null=True)
 
+    image = serializers.CharField(required=False)
+
 
 class UserCreationSerializer(serializers.Serializer):
     """
@@ -67,6 +69,7 @@ class UserUpdateSerializer(serializers.Serializer):
     password = serializers.CharField(required=False)
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
+    image = serializers.ImageField(required=False)
 
 
 class UserLinksSerializer(serializers.Serializer):

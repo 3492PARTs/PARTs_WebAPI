@@ -1,6 +1,7 @@
 import ast
 import datetime
 
+import cloudinary
 import webpush.views
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
@@ -128,7 +129,7 @@ class UserProfile(APIView):
             if user is None:
                 return ret_message('An error occurred while updating user data.', True, app_url + self.endpoint,
                                    0)
-            serializer = UserUpdateSerializer(data=request.data, partial=True)
+            serializer = UserUpdateSerializer(data=request.data)
             # flag used to email user the user's old email about the change in the event that both the email and
             # password are updated
             password_changed = False
@@ -190,7 +191,9 @@ class UserProfile(APIView):
                 if "last_name" in serializer.validated_data:
                     user.last_name = serializer.validated_data["last_name"]
                 if "image" in serializer.validated_data:
-                    user.image = serializer.validated_data["image"]
+                    response = cloudinary.uploader.upload(serializer.validated_data["image"])
+                    user.img_id = response['public_id']
+                    user.img_ver = str(response['version'])
                 if request.user.is_superuser:  # only allow role editing if admin
                     if "is_staff" in serializer.validated_data:
                         user.is_staff = serializer.validated_data["is_staff"]
@@ -445,6 +448,20 @@ class UserData(APIView):
 
     def get_user(self):
         user = User.objects.get(id=self.request.user.id)
+
+        user = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'is_active': user.is_active,
+            'phone': user.phone,
+            'groups': user.groups,
+            'phone_type': user.phone_type,
+            'phone_type_id': user.phone_type_id,
+            'image': cloudinary.CloudinaryImage(user.img_id, version=user.img_ver).build_url()
+        }
 
         return user
 
