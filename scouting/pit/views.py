@@ -177,9 +177,12 @@ class SavePicture(APIView):
             return ret_message('Invalid file type.', True, app_url + self.endpoint, self.request.user.id)
 
         try:
-            response = cloudinary.uploader.upload(file)
             sp = ScoutPit.objects.get(
                 Q(event=current_event) & Q(team_no_id=team_no) & Q(void_ind='n'))
+            if sp.img_id:
+                response = cloudinary.uploader.upload(file, public_id=sp.img_id)
+            else:
+                response = cloudinary.uploader.upload(file)
 
             sp.img_id = response['public_id']
             sp.img_ver = str(response['version'])

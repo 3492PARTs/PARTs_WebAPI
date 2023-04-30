@@ -191,7 +191,10 @@ class UserProfile(APIView):
                 if "last_name" in serializer.validated_data:
                     user.last_name = serializer.validated_data["last_name"]
                 if "image" in serializer.validated_data:
-                    response = cloudinary.uploader.upload(serializer.validated_data["image"])
+                    if user.img_id:
+                        response = cloudinary.uploader.upload(serializer.validated_data["image"], public_id=user.img_id)
+                    else:
+                        response = cloudinary.uploader.upload(serializer.validated_data["image"])
                     user.img_id = response['public_id']
                     user.img_ver = str(response['version'])
                 if request.user.is_superuser:  # only allow role editing if admin
