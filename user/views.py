@@ -2,7 +2,10 @@ import ast
 import datetime
 
 import webpush.views
+from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
 from django.shortcuts import redirect
 
 from django.contrib.sites.shortcuts import get_current_site
@@ -31,6 +34,18 @@ from rest_framework.response import Response
 
 app_url = 'user/'
 
+
+class UserLogIn(ModelBackend):
+    def authenticate(self, request, **kwargs):
+        UserModel = get_user_model()
+        try:
+            username = kwargs.get('username', None)
+            user = UserModel.objects.get((Q(email=username) | Q(username=username)) & Q(is_active=True))
+            if user.check_password(kwargs.get('password', None)):
+                return user
+        except UserModel.DoesNotExist:
+            return None
+        return None
 
 class UserProfile(APIView):
     """
