@@ -65,6 +65,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_type = models.ForeignKey(
         PhoneType, models.PROTECT, blank=True, null=True)
     discord_user_id = models.CharField(max_length=1000, blank=True, null=True)
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
 
     # sets what the user will log in with
     USERNAME_FIELD = 'username'
