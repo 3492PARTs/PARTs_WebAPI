@@ -18,7 +18,8 @@ from rest_framework.views import APIView
 from webpush import send_user_notification
 
 from api.settings import AUTH_PASSWORD_VALIDATORS
-from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer
+from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
+    UserUpdateSerializer
 from .models import User, UserLinks
 from general.security import get_user_groups, get_user_permissions, ret_message
 
@@ -28,7 +29,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import secrets
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.password_validation import validate_password, get_default_password_validators
 from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 
@@ -53,7 +54,7 @@ class UserProfile(APIView):
     """
     endpoint = 'profile/'
 
-    def put(self, request):
+    def post(self, request):
         try:
             serialized = UserCreationSerializer(data=request.data)
             if serialized.is_valid():
@@ -120,59 +121,34 @@ class UserProfile(APIView):
                 'An error occurred while creating user.' + ('\n' + error_string if error_string is not None else ''),
                 True, app_url + self.endpoint, exception=e)
 
-    # TODO Add auth
-    """
-    def update(self, request, pk=None):
-        user = self.queryset.filter(id=pk).first()
-        if user is None:
-            return ret_message('An error occurred while updating user data.', True, 'auth/profile',
-                               0)
-        self.check_object_permissions(request, user)
-        serializer = UserUpdateSerializer(data=request.data, partial=True)
-        # flag used to email user the user's old email about the change in the event that both the email and password are updated
-        password_changed = False
-        if serializer.is_valid():
-            if "password" in serializer.validated_data:
-                try:
-                    validate_password(
-                        serializer.validated_data["password"], user=request.user, password_validators=get_default_password_validators())
-                except ValidationError as e:
-                    return ret_message('An error occurred changing password.', True, 'auth/user',
-                                       request.user.id, e)
-                password_changed = True
-                user.set_password(serializer.validated_data["password"])
-                cntx = {'user': user,
-                        'message': 'Your password has been updated. If you did not do this, please secure your account by requesting a password reset as soon as possible.'}
-
-                send_mail(
-                    subject="Password Change",
-                    message=render_to_string(
-                        'email_templates/generic_email.txt', cntx).strip(),
-                    html_message=render_to_string(
-                        'email_templates/generic_email.html', cntx).strip(),
-                    from_email='team3492@gmail.com',
-                    recipient_list=[user.email]
-                )
-            if "email" in serializer.validated_data and user.email != serializer.validated_data["email"]:
-                old_email = user.email
-                user.email = serializer.validated_data["email"]
-                user.save()  # checks for db violations, unique constraints and such
-                cntx = {'user': user,
-                        'message': 'Your email has been updated to "{}", if you did not do this, please secure your account by changing your password as soon as possible.'.format(user.email)}
-                send_mail(
-                    subject="Email Updated",
-                    message=render_to_string(
-                        'email_templates/generic_email.txt', cntx).strip(),
-                    html_message=render_to_string(
-                        'email_templates/generic_email.html', cntx).strip(),
-                    from_email='team3492@gmail.com',
-                    recipient_list=[user.email, old_email]
-                )
-                if password_changed:
+    def put(self, request, pk=None):
+        #try:
+        user = User.objects.get(id=self.request.user.id)
+        if user.is_authenticated:
+            if user is None:
+                return ret_message('An error occurred while updating user data.', True, app_url + self.endpoint,
+                                   0)
+            serializer = UserUpdateSerializer(data=request.data, partial=True)
+            # flag used to email user the user's old email about the change in the event that both the email and
+            # password are updated
+            password_changed = False
+            if serializer.is_valid():
+                if "password" in serializer.validated_data:
+                    try:
+                        validate_password(
+                            serializer.validated_data["password"], user=request.user,
+                            password_validators=get_default_password_validators())
+                    except ValidationError as e:
+                        return ret_message('An error occurred changing password.', True, app_url + self.endpoint,
+                                           request.user.id, e)
+                    password_changed = True
+                    user.set_password(serializer.validated_data["password"])
                     cntx = {'user': user,
-                            'message': 'Your password has been updated. If you did not do this, please secure your account by requesting a password reset as soon as possible.'}
+                            'message': 'Your password has been updated. If you did not do this, please secure your '
+                                       'account by requesting a password reset as soon as possible.'}
+
                     send_mail(
-                        subject="Password Changed",
+                        subject="Password Change",
                         message=render_to_string(
                             'email_templates/generic_email.txt', cntx).strip(),
                         html_message=render_to_string(
@@ -180,28 +156,69 @@ class UserProfile(APIView):
                         from_email='team3492@gmail.com',
                         recipient_list=[user.email]
                     )
-            if "first_name" in serializer.validated_data:
-                user.first_name = serializer.validated_data["first_name"]
-            if "last_name" in serializer.validated_data:
-                user.last_name = serializer.validated_data["last_name"]
-            if "image" in serializer.validated_data:
-                user.image = serializer.validated_data["image"]
-            if request.user.is_superuser:  # only allow role editing if admin
-                if "is_staff" in serializer.validated_data:
-                    user.is_staff = serializer.validated_data["is_staff"]
-                if "is_active" in serializer.validated_data:
-                    user.is_active = serializer.validated_data["is_active"]
-                if "is_superuser" in serializer.validated_data:
-                    user.is_superuser = serializer.validated_data["is_superuser"]
-            user.save()
-            serializer = UserProfileSerializer(instance=user)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+                if "email" in serializer.validated_data and user.email != serializer.validated_data["email"]:
+                    old_email = user.email
+                    user.email = serializer.validated_data["email"]
+                    user.save()  # checks for db violations, unique constraints and such
+                    cntx = {'user': user,
+                            'message': 'Your email has been updated to "{}", if you did not do this, please secure '
+                                       'your account by changing your password as soon as possible.'.format(user.email)}
+                    send_mail(
+                        subject="Email Updated",
+                        message=render_to_string(
+                            'email_templates/generic_email.txt', cntx).strip(),
+                        html_message=render_to_string(
+                            'email_templates/generic_email.html', cntx).strip(),
+                        from_email='team3492@gmail.com',
+                        recipient_list=[user.email, old_email]
+                    )
+                    if password_changed:
+                        cntx = {'user': user,
+                                'message': 'Your password has been updated. If you did not do this, please secure '
+                                           'your account by requesting a password reset as soon as possible.'}
+                        send_mail(
+                            subject="Password Changed",
+                            message=render_to_string(
+                                'email_templates/generic_email.txt', cntx).strip(),
+                            html_message=render_to_string(
+                                'email_templates/generic_email.html', cntx).strip(),
+                            from_email='team3492@gmail.com',
+                            recipient_list=[user.email]
+                        )
+                if "first_name" in serializer.validated_data:
+                    user.first_name = serializer.validated_data["first_name"]
+                if "last_name" in serializer.validated_data:
+                    user.last_name = serializer.validated_data["last_name"]
+                if "image" in serializer.validated_data:
+                    user.image = serializer.validated_data["image"]
+                if request.user.is_superuser:  # only allow role editing if admin
+                    if "is_staff" in serializer.validated_data:
+                        user.is_staff = serializer.validated_data["is_staff"]
+                    if "is_active" in serializer.validated_data:
+                        user.is_active = serializer.validated_data["is_active"]
+                    if "is_superuser" in serializer.validated_data:
+                        user.is_superuser = serializer.validated_data["is_superuser"]
+                user.save()
+                return ret_message('Successfully updated user info.')
+            else:
+                return ret_message('An error occurred while updating user data.', True, app_url + self.endpoint,
+                                   user.id, serializer.errors)
         else:
-            return ret_message('An error occurred while updating user data.', True, 'auth/user',
-                               user.id, serializer.errors)
+            return ret_message('Not authenticated.', True, app_url + self.endpoint)
+        """
+        except Exception as e:
+            error_string = str(e)
+            if error_string == 'UNIQUE constraint failed: auth_user.username':
+                error_string = 'A user with that username already exists.'
+            else:
+                error_string = None
+            return ret_message(
+                'An error occurred while updating user.' + ('\n' + error_string if error_string is not None else ''),
+                True, app_url + self.endpoint, exception=e)
+                """
     """
     # there should be no path to this, but leave it here just in case
-    """
+    
     def partial_update(self, request, pk=None):
         message = ResponseMessage("Not implemented", rep_status.success)
         return Response(data=message.jsonify(), status=status.HTTP_200_OK)
@@ -227,7 +244,6 @@ class UserProfile(APIView):
         else:
             return Response(ResponseMessage("User does not exist", rep_status.not_found).jsonify(), status=status.HTTP_404_NOT_FOUND)
     """
-
 
 class UserEmailConfirmation(APIView):
     endpoint = 'confirm/'

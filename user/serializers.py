@@ -62,19 +62,11 @@ class UserCreationSerializer(serializers.Serializer):
         return validated_data
 
 
-"""
-class UserUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'password', 'email', 'first_name', 'last_name',
-                  'last_login', 'date_joined', "is_superuser", "is_active", 'phone', 'phone_type']
-        read_only_fields = ['username', 'last_login', 'date_joined']
-        extra_kwargs = {
-            'email': {'validators': [EmailValidator, ]},
-            'password': {'write_only': True},
-        }
-"""
+class UserUpdateSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField(required=False)
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
 
 
 class UserLinksSerializer(serializers.Serializer):
