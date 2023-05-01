@@ -36,9 +36,10 @@ FRONTEND_ADDRESS = os.getenv('FRONTEND_ADDRESS')
 
 INSTALLED_APPS = [
     'admin.apps.AdminConfig',
-    'user.apps.UserConfig',
-    'scouting.apps.ScoutingConfig',
+    'alerts.apps.AlertsConfig',
     'public.apps.PublicConfig',
+    'scouting.apps.ScoutingConfig',
+    'user.apps.UserConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'corsheaders',
@@ -135,8 +136,8 @@ SIMPLE_JWT = {
     'UPDATE_LAST_LOGIN': True,
 
     'ALGORITHM': 'RS512',
-    'SIGNING_KEY': open('keys/jwt-key').read(),
-    'VERIFYING_KEY': open('keys/jwt-key.pub').read(),
+    'SIGNING_KEY': open('./keys/jwt-key').read(),
+    'VERIFYING_KEY': open('./keys/jwt-key.pub').read(),
     'AUDIENCE': None,
     'ISSUER': None,
 
