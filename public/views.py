@@ -117,7 +117,7 @@ class NotifyUsers(APIView):
                 sch.save()
                 message += 'Discord Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
 
-        if message is '':
+        if message == '':
             message = 'No notifications'
 
         return ret_message(message)
