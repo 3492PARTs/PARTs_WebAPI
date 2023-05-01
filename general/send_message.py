@@ -2,6 +2,7 @@ import requests
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from django.conf import settings
+from webpush import send_user_notification
 
 
 def send_email(to_email: str, subject: str, template: str, cntx: dict):
@@ -24,3 +25,12 @@ def send_discord_notification(message: str):
     x = requests.post(url, json=myobj)
     if not x.ok:
         raise Exception('discord sending issue')
+
+
+def send_webpush(user, subject: str, body: str):
+    payload = {'head': subject,
+               'body': body,
+               "icon": "https://i.imgur.com/dRDxiCQ.png",
+               "url": "https://www.bduke.dev"}
+
+    send_user_notification(user=user, payload=payload, ttl=1000)

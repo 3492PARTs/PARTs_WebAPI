@@ -1,9 +1,12 @@
 import datetime
 
+import django
 import pytz
 from django.db.models import Q, ExpressionWrapper, DurationField, F
 
 from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
+from general import send_message
+from general.security import ret_message
 from scouting.models import Event, ScoutFieldSchedule, Schedule
 
 
@@ -31,6 +34,9 @@ def stage_all_field_schedule_alerts():
     message += stage_field_schedule_alerts(2, sfss_5, event)
     message += stage_field_schedule_alerts(3, sfss_now, event)
 
+    if message == '':
+        message = 'No notifications'
+
     return message
 
 
@@ -57,7 +63,7 @@ def stage_field_schedule_alerts(notification, sfss, event):
                 warning_text = 'time to scout!'
 
         subject = 'Scouting ' + warning_text
-        body = f'You are scheduled to scout from: <@{date_st_str}> to <@{date_end_str}>.\n- PARTs'
+        body = f'You are scheduled to scout from: {date_st_str} to {date_end_str}.\n- PARTs'
 
         success_txt = 'Stage scouting alert: '
         fail_txt = 'Phone Unable to notify scouting: '
@@ -121,7 +127,7 @@ def stage_schedule_alerts():
         date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
         date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
 
-        body = f'You are scheduled in the pit from: <@{date_st_str}> to <@{date_end_str}> for <@{sch.sch_typ.sch_nm}>.\n- PARTs'
+        body = f'You are scheduled in the pit from: {date_st_str} to {date_end_str} for {sch.sch_typ.sch_nm}.\n- PARTs'
         staged_alerts.append(stage_alert(sch.user, 'Pit time!', body))
         message += 'Pit Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
 
@@ -134,6 +140,8 @@ def stage_schedule_alerts():
         message = 'No notifications'
 
     return message
+
+
 def stage_alert(user, alert_subject: str, alert_body: str):
     alert = Alert(user=user, alert_subject=alert_subject, alert_body=alert_body)
     alert.save()
@@ -147,3 +155,43 @@ def stage_alert_channel_send(alert, alert_comm_typ: str):
         alert=alert)
     acs.save()
     return acs
+
+
+def send_alerts():
+    message = ''
+
+    acss = AlertChannelSend.objects.filter(Q(sent_time__isnull=True) & Q(void_ind='n'))
+    for acs in acss:
+        try:
+            match acs.alert_comm_typ.alert_comm_typ:
+                case 'email':
+                    send_message.send_email(
+                        acs.alert.user.email, acs.alert.alert_subject,
+                        'generic_email', {'message': acs.alert.alert_body, 'user': acs.alert.user})
+                    message += 'Email'
+                case 'message':
+                    message += 'message not configured'
+                case 'notification':
+                    send_message.send_webpush(acs.alert.user, acs.alert.alert_subject, acs.alert.alert_body)
+                    message += 'Webpush'
+                case 'txt':
+                    send_message.send_email(
+                        acs.alert.user.phone + acs.alert.user.phone_type.phone_type, acs.alert.alert_subject,
+                        'generic_text', {'message': acs.alert.alert_body})
+                    message += 'Phone'
+                case 'discord':
+                    discord_message = acs.alert.alert_subject + ':\n' + f'@<{acs.alert.user.discord_user_id}>\n' + acs.alert.alert_body
+                    send_message.send_discord_notification(discord_message)
+                    message += 'Discord'
+
+            acs.sent_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+            acs.save()
+            message += 'Notified: ' + acs.alert.user.first_name + ' acs id: ' + str(acs.alert_channel_send_id) + '\n'
+        except Exception as e:
+            alert = 'An error occurred while sending alert: ' + acs.alert.user.first_name + ' acs id: ' + str(acs.alert_channel_send_id)
+            message += alert + '\n'
+            ret_message(alert, True, 'alerts.util.send_alerts', 0, e)
+    if message == '':
+        message = 'No notifications'
+
+    return message

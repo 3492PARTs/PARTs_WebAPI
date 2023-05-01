@@ -545,24 +545,3 @@ class SaveWebPushInfo(APIView):
                                request.user.id, e)
 
 
-class TestNotification(APIView):
-    """
-    API endpoint to get groups a user has based on permissions
-    """
-    # authentication_classes = (JWTAuthentication,)
-    # permission_classes = (IsAuthenticated,)
-    endpoint = 'user-groups/'
-
-    def get_groups(self):
-        user = User.objects.get(id=1)
-        payload = {'head': "Welcome!", 'body': "Hello World",
-                   "icon": "https://i.imgur.com/dRDxiCQ.png", "url": "https://www.example.com"}
-        send_user_notification(user=user, payload=payload, ttl=1000)
-
-    def get(self, request, format=None):
-        try:
-            self.get_groups()
-            return ret_message('works')
-        except Exception as e:
-            return ret_message('An error occurred while sending notification.', True, app_url + self.endpoint,
-                               0, e)
