@@ -156,6 +156,8 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'user.User'
 
+AUTHENTICATION_BACKENDS = ['user.views.UserLogIn']
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -192,3 +194,9 @@ os.environ["CLOUDINARY_URL"] = os.getenv('CLOUDINARY_URL')
 TBA_KEY = 'vOi134WDqMjUjGslV08r9ElOGoiWAU8LtSMxMBPziTVertNPmsdUqBOY8cYnyb7u'
 
 DISCORD_NOTIFICATION_WEBHOOK = os.getenv('DISCORD_NOTIFICATION_WEBHOOK')
+
+WEBPUSH_SETTINGS = {
+   "VAPID_PUBLIC_KEY": os.getenv('VAPID_PUBLIC_KEY'),
+   "VAPID_PRIVATE_KEY": os.getenv('VAPID_PRIVATE_KEY'),
+   "VAPID_ADMIN_EMAIL": "team3492@gmail.com"
+}
