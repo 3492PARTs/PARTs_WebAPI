@@ -180,7 +180,8 @@ def send_alerts():
                         'generic_text', {'message': acs.alert.alert_body})
                     message += 'Phone'
                 case 'discord':
-                    discord_message = acs.alert.alert_subject + ':\n' + f'@<{acs.alert.user.discord_user_id}>\n' + acs.alert.alert_body
+                    user = f'@<{acs.alert.user.discord_user_id}>' if acs.alert.user.discord_user_id else acs.alert.user.first_name + ' ' + acs.alert.user.last_name
+                    discord_message = acs.alert.alert_subject + ':\n' + user + '\n' + acs.alert.alert_body
                     send_message.send_discord_notification(discord_message)
                     message += 'Discord'
 

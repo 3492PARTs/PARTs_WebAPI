@@ -31,19 +31,30 @@ def send_discord_notification(message: str):
 
 
 def send_webpush(user, subject: str, body: str):
-    payload = {'notificaiton': {
+    payload = {'notification': {
                     'title': subject,
                     'body': body,
-                    "icon": "https://i.imgur.com/dRDxiCQ.png",
-                    "vibrate": [100, 50, 100],
-                    "data": {
+                    "icon": "assets/icons/icon-128x128.png",
+                    'badge': 'badge',
+                    'tag': 'notif id',
+                    'requireInteraction': True,
+                    'silent': False,
+                    "vibrate": [200, 100, 200],
+                    'timestamp': datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat(),
+                    "data": { # i believe this can be anything
                         "dateOfArrival": datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat(),
                         "primaryKey": 1
                     },
                     "actions": [{
                         "action": "explore",
                         "title": "Go to the site"
-                    }]
+                    },
+                    {
+                        "action": "field-scouting",
+                        "title": "Go to scouting",
+                        "icon": 'icon'
+                    }
+                    ]
     }}
 
     send_user_notification(user=user, payload=payload, ttl=1000)
