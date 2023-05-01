@@ -808,7 +808,7 @@ class QuestionInit(APIView):
                     'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
                     'sq_typ': sq.sq_typ,
                     'questionoptions_set': sq.questionoptions_set,
-                    'display_value': ('' if sq.active is 'y' else 'Deactivated: ') +
+                    'display_value': ('' if sq.active == 'y' else 'Deactivated: ') +
                                      (sq.sq_sub_typ.sq_sub_nm + ': ' if sq.sq_sub_typ is not None else '') +
                                      sq.question
                 })
