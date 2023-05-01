@@ -1,3 +1,6 @@
+import datetime
+
+import pytz
 import requests
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
@@ -28,9 +31,19 @@ def send_discord_notification(message: str):
 
 
 def send_webpush(user, subject: str, body: str):
-    payload = {'head': subject,
-               'body': body,
-               "icon": "https://i.imgur.com/dRDxiCQ.png",
-               "url": "https://www.bduke.dev"}
+    payload = {'notificaiton': {
+                    'title': subject,
+                    'body': body,
+                    "icon": "https://i.imgur.com/dRDxiCQ.png",
+                    "vibrate": [100, 50, 100],
+                    "data": {
+                        "dateOfArrival": datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat(),
+                        "primaryKey": 1
+                    },
+                    "actions": [{
+                        "action": "explore",
+                        "title": "Go to the site"
+                    }]
+    }}
 
     send_user_notification(user=user, payload=payload, ttl=1000)
