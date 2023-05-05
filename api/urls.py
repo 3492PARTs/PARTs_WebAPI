@@ -15,13 +15,11 @@ Including another URLconf
 """
 from django.urls import include, path, re_path
 
-from api.views import HomePageView
 
 urlpatterns = [
     path('admin/', include('admin.urls')),
     path('alerts/', include('alerts.urls')),
     path('public/', include('public.urls')),
     path('scouting/', include('scouting.urls')),
-    path('user/', include('user.urls')),
-    re_path(r'^$', HomePageView.as_view()),
+    path('user/', include('user.urls'))
 ]
