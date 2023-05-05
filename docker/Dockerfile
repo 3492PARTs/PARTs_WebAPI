@@ -1,4 +1,4 @@
-FROM python:3.10.2-slim
+FROM python:3.11.3-slim
 
 # Create a group and user to run our app
 ARG APP_USER=appuser

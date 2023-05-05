@@ -37,6 +37,7 @@ class AlertChannelSend(models.Model):
     alert_comm_typ = models.ForeignKey(AlertCommunicationChannelType, on_delete=models.PROTECT)
     alert = models.ForeignKey(Alert, on_delete=models.PROTECT)
     sent_time = models.DateTimeField(null=True)
+    dismissed_time = models.DateTimeField(null=True)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
