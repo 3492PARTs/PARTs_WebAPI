@@ -16,6 +16,7 @@ from pytz import timezone, utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from webpush import send_user_notification
 
 from api.settings import AUTH_PASSWORD_VALIDATORS
@@ -35,6 +36,44 @@ from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 
 app_url = 'user/'
+
+
+class TokenObtainPairView(APIView):
+    """
+    API endpoint to get a  user token
+    """
+    endpoint = 'token/'
+
+    def post(self, request, format=None):
+        try:
+            serializer = TokenObtainPairSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message('Invalid data', True, app_url + self.endpoint, 0, serializer.errors)
+
+            return Response(serializer.validated_data)
+        except Exception as e:
+            return ret_message('An error occurred while logging in.', True,
+                               app_url + self.endpoint,
+                               0, e)
+
+
+class TokenRefreshView(APIView):
+    """
+    API endpoint to get a  user token
+    """
+    endpoint = 'token/refresh/'
+
+    def post(self, request, format=None):
+        try:
+            serializer = TokenRefreshSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message('Invalid data', True, app_url + self.endpoint, 0, serializer.errors)
+
+            return Response(serializer.validated_data)
+        except Exception as e:
+            return ret_message('An error occurred while refreshing token.', True,
+                               app_url + self.endpoint,
+                               0, e)
 
 
 class UserLogIn(ModelBackend):
