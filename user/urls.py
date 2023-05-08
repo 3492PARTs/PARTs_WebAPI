@@ -2,7 +2,7 @@ import webpush.views
 from django.urls import path, include
 from .views import UserData, UserLinksView, UserGroups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, \
     UserRequestPasswordReset, UserPasswordReset, UserRequestUsername, \
-    SaveWebPushInfo, TokenObtainPairView, TokenRefreshView
+    SaveWebPushInfo, TokenObtainPairView, TokenRefreshView, Notifications
 
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -19,5 +19,6 @@ urlpatterns = [
     path('request-reset-password/', UserRequestPasswordReset.as_view()),
     path('reset-password/', UserPasswordReset.as_view()),
     path('request-username/', UserRequestUsername.as_view()),
+    path('notifications/', Notifications.as_view()),
     path('webpush-save/', SaveWebPushInfo.as_view()),
 ]

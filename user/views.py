@@ -19,9 +19,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from webpush import send_user_notification
 
+import alerts.util
 from api.settings import AUTH_PASSWORD_VALIDATORS
 from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
-    UserUpdateSerializer
+    UserUpdateSerializer, GetAlertsSerializer
 from .models import User, UserLinks
 from general.security import get_user_groups, get_user_permissions, ret_message
 
@@ -34,6 +35,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.password_validation import validate_password, get_default_password_validators
 from django.core.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework_simplejwt import views as jwt_views
 
 app_url = 'user/'
 
@@ -562,6 +564,22 @@ class UserGroups(APIView):
             return ret_message('An error occurred while getting user groups.', True, app_url + self.endpoint,
                                request.user.id, e)
 
+class Notifications(APIView):
+    """
+    API endpoint to get a user's notifications
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'get-notifications/'
+
+    def get(self, request, format=None):
+        try:
+            req = alerts.util.get_user_notifications(request.user.id)
+            serializer = GetAlertsSerializer(req, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting user notifications.', True, app_url + self.endpoint,
+                               request.user.id, e)
 
 class SaveWebPushInfo(APIView):
     """

@@ -84,3 +84,9 @@ class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
     error = serializers.BooleanField()
 
+
+class GetAlertsSerializer(serializers.Serializer):
+    alert_id = serializers.IntegerField()
+    alert_subject = serializers.CharField()
+    alert_body = serializers.CharField()
+    staged_time = serializers.DateTimeField()

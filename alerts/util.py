@@ -66,7 +66,7 @@ def stage_field_schedule_alerts(notification, sfss, event):
         body = f'You are scheduled to scout from: {date_st_str} to {date_end_str}.\n- PARTs'
 
         success_txt = 'Stage scouting alert: '
-        fail_txt = 'Phone Unable to notify scouting: '
+        fail_txt = 'Phone Unable to stage scouting alert: '
         staged_alerts = []
         try:
             staged_alerts.append(stage_alert(sfs.red_one, subject, body))
@@ -196,3 +196,15 @@ def send_alerts():
         message = 'No notifications'
 
     return message
+
+def get_user_notifications(user_id: str):
+    acs = AlertChannelSend.objects.filter(Q(dismissed_time__isnull=True) &
+                                          Q(alert_comm_typ_id='notification') &
+                                          Q(void_ind='n') &
+                                          Q(alert__user_id=user_id) &
+                                          Q(alert__void_ind='n')).select_related('alert')
+
+    notifs = []
+    for a in acs:
+        notifs.append(a.alert)
+    return notifs
