@@ -172,7 +172,7 @@ def send_alerts():
                 case 'message':
                     message += 'message not configured'
                 case 'notification':
-                    send_message.send_webpush(acs.alert.user, acs.alert.alert_subject, acs.alert.alert_body)
+                    send_message.send_webpush(acs.alert.user, acs.alert.alert_subject, acs.alert.alert_body, acs.alert.alert_id)
                     message += 'Webpush'
                 case 'txt':
                     send_message.send_email(

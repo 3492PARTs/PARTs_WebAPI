@@ -30,13 +30,13 @@ def send_discord_notification(message: str):
         raise Exception('discord sending issue')
 
 
-def send_webpush(user, subject: str, body: str):
+def send_webpush(user, subject: str, body: str, alert_id: int):
     payload = {'notification': {
                     'title': subject,
                     'body': body,
                     "icon": "assets/icons/icon-128x128.png",
                     'badge': 'badge',
-                    'tag': 'notif id',
+                    'tag': alert_id,
                     'requireInteraction': True,
                     'silent': False,
                     "vibrate": [200, 100, 200],
