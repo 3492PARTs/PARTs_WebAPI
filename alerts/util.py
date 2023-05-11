@@ -100,7 +100,8 @@ def stage_field_schedule_alerts(notification, sfss, event):
             message += fail_txt + (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
 
         for sa in staged_alerts:
-            accts = AlertCommunicationChannelType.objects.filter(Q(void_ind='n') & ~Q(alert_comm_typ__in=['message', 'email']))
+            accts = AlertCommunicationChannelType.objects.filter(
+                Q(void_ind='n') & ~Q(alert_comm_typ__in=['message', 'email']))
             for acct in accts:
                 stage_alert_channel_send(sa, acct.alert_comm_typ)
 
@@ -132,7 +133,8 @@ def stage_schedule_alerts():
         message += 'Pit Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
 
     for sa in staged_alerts:
-        accts = AlertCommunicationChannelType.objects.filter(Q(void_ind='n') & ~Q(alert_comm_typ__in=['message', 'email']))
+        accts = AlertCommunicationChannelType.objects.filter(
+            Q(void_ind='n') & ~Q(alert_comm_typ__in=['message', 'email']))
         for acct in accts:
             stage_alert_channel_send(sa, acct.alert_comm_typ)
 
@@ -172,7 +174,8 @@ def send_alerts():
                 case 'message':
                     message += 'message not configured'
                 case 'notification':
-                    send_message.send_webpush(acs.alert.user, acs.alert.alert_subject, acs.alert.alert_body, acs.alert.alert_id)
+                    send_message.send_webpush(acs.alert.user, acs.alert.alert_subject, acs.alert.alert_body,
+                                              acs.alert.alert_id)
                     message += 'Webpush'
                 case 'txt':
                     send_message.send_email(
@@ -187,15 +190,17 @@ def send_alerts():
 
             acs.sent_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             acs.save()
-            message += 'Notified: ' + acs.alert.user.first_name + ' acs id: ' + str(acs.alert_channel_send_id) + '\n'
+            message += ' Notified: ' + acs.alert.user.first_name + ' acs id: ' + str(acs.alert_channel_send_id) + '\n'
         except Exception as e:
-            alert = 'An error occurred while sending alert: ' + acs.alert.user.first_name + ' acs id: ' + str(acs.alert_channel_send_id)
+            alert = 'An error occurred while sending alert: ' + acs.alert.user.first_name + ' acs id: ' + str(
+                acs.alert_channel_send_id)
             message += alert + '\n'
-            ret_message(alert, True, 'alerts.util.send_alerts', 0, e)
-    if message == '':
+            return ret_message(alert, True, 'alerts.util.send_alerts', 0, e)
+    if message is '':
         message = 'No notifications'
 
     return message
+
 
 def get_user_notifications(user_id: str):
     acs = AlertChannelSend.objects.filter(Q(dismissed_time__isnull=True) &
@@ -206,5 +211,21 @@ def get_user_notifications(user_id: str):
 
     notifs = []
     for a in acs:
-        notifs.append(a.alert)
+        notifs.append({
+            'alert_id': a.alert.alert_id,
+            'alert_channel_send_id': a.alert_channel_send_id,
+            'alert_subject': a.alert.alert_subject,
+            'alert_body': a.alert.alert_body,
+            'staged_time': a.alert.staged_time
+        })
     return notifs
+
+
+def dismiss_alert(alert_channel_send_id: str, user_id: str):
+    acs = AlertChannelSend.objects.get(Q(dismissed_time__isnull=True) &
+                                       Q(void_ind='n') &
+                                       Q(alert_channel_send_id=alert_channel_send_id) &
+                                       Q(alert__user_id=user_id) &
+                                       Q(alert__void_ind='n'))
+    acs.dismissed_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    acs.save()
