@@ -90,6 +90,7 @@ class UserLogIn(ModelBackend):
             return None
         return None
 
+
 class UserProfile(APIView):
     """
     Handles registering new users and management of user profiles.
@@ -204,7 +205,8 @@ class UserProfile(APIView):
                         user.save()  # checks for db violations, unique constraints and such
                         cntx = {'user': user,
                                 'message': 'Your email has been updated to "{}", if you did not do this, please secure '
-                                           'your account by changing your password as soon as possible.'.format(user.email)}
+                                           'your account by changing your password as soon as possible.'.format(
+                                    user.email)}
                         send_mail(
                             subject="Email Updated",
                             message=render_to_string(
@@ -233,7 +235,8 @@ class UserProfile(APIView):
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
                         if user.img_id:
-                            response = cloudinary.uploader.upload(serializer.validated_data["image"], public_id=user.img_id)
+                            response = cloudinary.uploader.upload(serializer.validated_data["image"],
+                                                                  public_id=user.img_id)
                         else:
                             response = cloudinary.uploader.upload(serializer.validated_data["image"])
                         user.img_id = response['public_id']
@@ -290,6 +293,7 @@ class UserProfile(APIView):
         else:
             return Response(ResponseMessage("User does not exist", rep_status.not_found).jsonify(), status=status.HTTP_404_NOT_FOUND)
     """
+
 
 class UserEmailConfirmation(APIView):
     endpoint = 'confirm/'
@@ -564,7 +568,8 @@ class UserGroups(APIView):
             return ret_message('An error occurred while getting user groups.', True, app_url + self.endpoint,
                                request.user.id, e)
 
-class Notifications(APIView):
+
+class Alerts(APIView):
     """
     API endpoint to get a user's notifications
     """
@@ -574,12 +579,13 @@ class Notifications(APIView):
 
     def get(self, request, format=None):
         try:
-            req = alerts.util.get_user_notifications(request.user.id)
+            req = alerts.util.get_user_alerts(request.user.id, request.query_params.get('alert_comm_typ_id', None))
             serializer = GetAlertsSerializer(req, many=True)
             return Response(serializer.data)
         except Exception as e:
-            return ret_message('An error occurred while getting user notifications.', True, app_url + self.endpoint,
+            return ret_message('An error occurred while getting user alerts.', True, app_url + self.endpoint,
                                request.user.id, e)
+
 
 class SaveWebPushInfo(APIView):
     """
@@ -600,5 +606,3 @@ class SaveWebPushInfo(APIView):
             return ret_message('An error occurred while subscribing to push notifications.', True,
                                app_url + self.endpoint,
                                request.user.id, e)
-
-

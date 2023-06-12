@@ -202,9 +202,9 @@ def send_alerts():
     return message
 
 
-def get_user_notifications(user_id: str):
+def get_user_alerts(user_id: str, alert_comm_typ_id: str):
     acs = AlertChannelSend.objects.filter(Q(dismissed_time__isnull=True) &
-                                          Q(alert_comm_typ_id='notification') &
+                                          Q(alert_comm_typ_id=alert_comm_typ_id) &
                                           Q(void_ind='n') &
                                           Q(alert__user_id=user_id) &
                                           Q(alert__void_ind='n')).select_related('alert')
