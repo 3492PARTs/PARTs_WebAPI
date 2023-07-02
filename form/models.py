@@ -12,7 +12,7 @@ from django.db import models
 from django.contrib.auth.models import Group
 from pytz import utc
 
-from scouting.models import Season, ScoutField
+from scouting.models import Season, ScoutField, ScoutPit
 from user.models import User
 
 
@@ -43,7 +43,7 @@ class SubType(models.Model):
 
 
 class Question(models.Model):
-    q_id = models.AutoField(primary_key=True)
+    question_id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     form_typ = models.ForeignKey(Type, models.PROTECT)
     form_sub_typ = models.ForeignKey(SubType, models.PROTECT, null=True)
@@ -58,9 +58,9 @@ class Question(models.Model):
 
 
 class QuestionOption(models.Model):
-    q_opt_id = models.AutoField(primary_key=True)
+    question_opt_id = models.AutoField(primary_key=True)
     option = models.CharField(max_length=255)
-    q_id = models.ForeignKey(Question, models.PROTECT)
+    question = models.ForeignKey(Question, models.PROTECT)
     active = models.CharField(max_length=1, blank=True, null=True)
     void_ind = models.CharField(max_length=1, default='n')
 
@@ -68,17 +68,17 @@ class QuestionOption(models.Model):
         return str(self.q_opt_id) + ' ' + self.option
 
 
-class FormResponse(models.Model):
-    fr_id = models.AutoField(primary_key=True)
+class Response(models.Model):
+    response_id = models.AutoField(primary_key=True)
     time = models.DateTimeField(default=django.utils.timezone.now)
 
 
 class QuestionAnswer(models.Model):
-    qa_id = models.AutoField(primary_key=True)
+    question_answer_id = models.AutoField(primary_key=True)
     scout_field = models.ForeignKey(ScoutField, models.PROTECT, null=True, related_name='scout_field')
-    scout_pit = models.ForeignKey(ScoutField, models.PROTECT, null=True, related_name='scout_pit')
-    form_response = models.ForeignKey(FormResponse, models.PROTECT, null=True, related_name='form_response')
-    q_id = models.ForeignKey(Question, models.PROTECT)
+    scout_pit = models.ForeignKey(ScoutPit, models.PROTECT, null=True, related_name='scout_pit')
+    response = models.ForeignKey(Response, models.PROTECT, null=True, related_name='form_response')
+    question = models.ForeignKey(Question, models.PROTECT)
     answer = models.CharField(max_length=1000, blank=True, null=True)
     void_ind = models.CharField(max_length=1, default='n')
 

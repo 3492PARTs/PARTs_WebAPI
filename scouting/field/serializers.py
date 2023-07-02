@@ -48,14 +48,14 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
-    q_opt_id = serializers.IntegerField(required=False, allow_null=True)
-    sq_id = serializers.IntegerField(read_only=True)
+    question_opt_id = serializers.IntegerField(required=False, allow_null=True)
+    question_id = serializers.IntegerField(read_only=True)
     option = serializers.CharField()
     active = serializers.CharField()
 
 
-class ScoutQuestionSerializer(serializers.Serializer):
-    sq_id = serializers.IntegerField(required=False, allow_null=True)
+class QuestionSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
 
     question = serializers.CharField()
@@ -63,9 +63,9 @@ class ScoutQuestionSerializer(serializers.Serializer):
     active = serializers.CharField()
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField(required=False, allow_blank=True)
-    sq_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    sq_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    sq_typ = serializers.CharField()
+    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_typ = serializers.CharField()
 
     questionoptions_set = QuestionOptionsSerializer(
         required=False, allow_null=True, many=True)
@@ -74,7 +74,7 @@ class ScoutQuestionSerializer(serializers.Serializer):
 
 
 class ScoutFieldSerializer(serializers.Serializer):
-    scoutQuestions = ScoutQuestionSerializer(many=True)
+    scoutQuestions = QuestionSerializer(many=True)
     teams = TeamSerializer(many=True, required=False)
     #team = serializers.CharField(required=False)
     scoutFieldSchedule = ScoutFieldScheduleSerializer()
@@ -82,7 +82,7 @@ class ScoutFieldSerializer(serializers.Serializer):
 
 
 class SaveScoutFieldSerializer(serializers.Serializer):
-    scoutQuestions = ScoutQuestionSerializer(many=True)
+    scoutQuestions = QuestionSerializer(many=True)
     team = serializers.CharField()
     match = serializers.CharField(required=False)
 

@@ -3,6 +3,9 @@ from datetime import datetime
 from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+
+import form.util
+from form.models import Question
 from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team, ScoutFieldSchedule, ScoutField, \
     ScoutFieldAnswer, EventTeamInfo, Match
 from rest_framework.views import APIView
@@ -33,25 +36,7 @@ class Questions(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_questions = []
-        sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
-            Q(season=current_season) & Q(sq_typ_id='field') & Q(active='y') &
-            Q(void_ind='n')).order_by('sq_sub_typ_id', 'order')
-
-        for sq in sqs:
-            scout_questions.append({
-                'sq_id': sq.sq_id,
-                'season_id': sq.season_id,
-                'question': sq.question,
-                'order': sq.order,
-                'active': sq.active,
-                'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
-                'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
-                'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
-                'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
-                'sq_typ': sq.sq_typ,
-                'questionoptions_set': sq.questionoptions_set
-            })
+        scout_questions = form.util.get_questions('field')
 
         try:
             current_event = Event.objects.get(
@@ -156,9 +141,7 @@ class SaveAnswers(APIView):
         sf.save()
 
         for d in data['scoutQuestions']:
-            sfa = ScoutFieldAnswer(
-                scout_field=sf, sq_id=d['sq_id'], answer=d.get('answer', ''), void_ind='n')
-            sfa.save()
+            form.util.save_question_answer(d.get('answer', ''), Question.objects.get(question_id=d['question_id']), scout_field=sf)
 
         return ret_message('Response saved successfully')
 

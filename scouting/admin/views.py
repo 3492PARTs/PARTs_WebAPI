@@ -7,13 +7,13 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 
+from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, SubType, Type
 from general import send_message
 from user.models import User, PhoneType
 
 from .serializers import *
-from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, ScoutQuestionType, Team, \
-    CompetitionLevel, Match, ScoutField, ScoutFieldAnswer, ScoutPit, ScoutPitAnswer, ScoutQuestion, \
-    ScoutQuestionSubType, QuestionOptions, QuestionType, EventTeamInfo
+from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, Team, \
+    CompetitionLevel, Match, EventTeamInfo, ScoutField, ScoutPit
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
 import requests
@@ -21,6 +21,7 @@ from django.conf import settings
 from django.db.models.functions import Lower
 from django.db.models import Q
 from rest_framework.response import Response
+import form.util
 
 auth_obj = 50
 app_url = 'scouting/admin/'
@@ -101,7 +102,7 @@ class Init(APIView):
 
         teams = Team.objects.filter(void_ind='n').order_by('team_no')
 
-        scoutQuestionType = ScoutQuestionType.objects.all()
+        scoutQuestionType = Type.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
                 'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
@@ -549,7 +550,7 @@ class DeleteEvent(APIView):
 
         scout_fields = ScoutField.objects.filter(event=e)
         for sf in scout_fields:
-            scout_field_answers = ScoutFieldAnswer.objects.filter(
+            scout_field_answers = QuestionAnswer.objects.filter(
                 scout_field=sf)
             for sfa in scout_field_answers:
                 sfa.delete()
@@ -557,7 +558,7 @@ class DeleteEvent(APIView):
 
         scout_pits = ScoutPit.objects.filter(event=e)
         for sp in scout_pits:
-            scout_pit_answers = ScoutPitAnswer.objects.filter(scout_pit=sp)
+            scout_pit_answers = QuestionAnswer.objects.filter(scout_pit=sp)
             for spa in scout_pit_answers:
                 spa.delete()
             sp.delete()
@@ -720,7 +721,7 @@ class DeleteSeason(APIView):
 
             scout_fields = ScoutField.objects.filter(event=e)
             for sf in scout_fields:
-                scout_field_answers = ScoutFieldAnswer.objects.filter(
+                scout_field_answers = QuestionAnswer.objects.filter(
                     scout_field=sf)
                 for sfa in scout_field_answers:
                     sfa.delete()
@@ -728,14 +729,14 @@ class DeleteSeason(APIView):
 
             scout_pits = ScoutPit.objects.filter(event=e)
             for sp in scout_pits:
-                scout_pit_answers = ScoutPitAnswer.objects.filter(scout_pit=sp)
+                scout_pit_answers = QuestionAnswer.objects.filter(scout_pit=sp)
                 for spa in scout_pit_answers:
                     spa.delete()
                 sp.delete()
 
-            scout_questions = ScoutQuestion.objects.filter(season=season)
+            scout_questions = Question.objects.filter(season=season)
             for sq in scout_questions:
-                question_options = QuestionOptions.objects.filter(sq=sq)
+                question_options = QuestionOption.objects.filter(question=sq)
                 for qo in question_options:
                     qo.delete()
                 sq.delete()
@@ -786,35 +787,10 @@ class QuestionInit(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_question_sub_types = ScoutQuestionSubType.objects.filter(
-            sq_typ_id=question_type).order_by('sq_sub_nm')
+        scout_question_sub_types = SubType.objects.filter(
+            form_typ=question_type).order_by('form_sub_nm')
 
-        scout_questions = []
-        try:
-            sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
-                Q(season=current_season) & Q(sq_typ_id=question_type) & Q(void_ind='n')).order_by('sq_sub_typ_id',
-                                                                                                  'order')
-
-            for sq in sqs:
-                scout_questions.append({
-                    'sq_id': sq.sq_id,
-                    'season_id': sq.season_id,
-                    'question': sq.question,
-                    'order': sq.order,
-                    'active': sq.active,
-                    'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
-                    'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
-                    'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
-                    'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
-                    'sq_typ': sq.sq_typ,
-                    'questionoptions_set': sq.questionoptions_set,
-                    'display_value': ('' if sq.active == 'y' else 'Deactivated: ') +
-                                     (sq.sq_sub_typ.sq_sub_nm + ': ' if sq.sq_sub_typ is not None else '') +
-                                     sq.question
-                })
-
-        except Exception as e:
-            scout_questions = []
+        scout_questions = form.util.get_questions(question_type)
 
         return {'questionTypes': question_types, 'scoutQuestions': scout_questions,
                 'scoutQuestionSubTypes': scout_question_sub_types}
@@ -849,8 +825,8 @@ class SaveScoutQuestion(APIView):
                 return ret_message('No season set, see an admin.', True, app_url + self.endpoint,
                                    self.request.user.id, e)
 
-            sq = ScoutQuestion(season=current_season, question_typ_id=data['question_typ'], sq_typ_id=data['sq_typ'],
-                               sq_sub_typ_id=data.get('sq_sub_typ', None),
+            sq = Question(season=current_season, question_typ_id=data['question_typ'], form_typ_id=data['form_typ'],
+                               form_sub_typ_id=data.get('form_sub_typ', None),
                                question=data['question'], order=data['order'], active='y', void_ind='n')
 
             sq.save()
@@ -863,7 +839,7 @@ class SaveScoutQuestion(APIView):
                                                                                               )))
 
                 for qa in questions_answered:
-                    ScoutPitAnswer(scout_pit=qa, sq=sq,
+                    QuestionAnswer(scout_pit=qa, sq=sq,
                                    answer='!EXIST', void_ind='n').save()
             else:
                 questions_answered = ScoutField.objects.filter(Q(void_ind='n') &
@@ -872,22 +848,22 @@ class SaveScoutQuestion(APIView):
                                                                                                 )))
 
                 for qa in questions_answered:
-                    ScoutFieldAnswer(scout_field=qa, sq=sq,
+                    QuestionAnswer(scout_field=qa, sq=sq,
                                      answer='!EXIST', void_ind='n').save()
 
             if data['sq_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
                 raise Exception('Select questions must have options.')
 
             for op in data.get('questionoptions_set', []):
-                QuestionOptions(
-                    option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
+                QuestionOption(
+                    option=op['option'], question_id=sq.question_id, active='y', void_ind='n').save()
 
             return ret_message('Saved question successfully.')
         except Exception as e:
             return ret_message('Couldn\'t save question', True, app_url + self.endpoint, self.request.user.id, e)
 
     def post(self, request, format=None):
-        serializer = ScoutQuestionSerializer(data=request.data)
+        serializer = QuestionSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
@@ -911,7 +887,7 @@ class UpdateScoutQuestion(APIView):
     endpoint = 'update-scout-question/'
 
     def update_question(self, data):
-        sq = ScoutQuestion.objects.get(sq_id=data['sq_id'])
+        sq = Question.objects.get(question_id=data['sq_id'])
 
         sq.question = data['question']
         sq.order = data['order']
@@ -924,18 +900,18 @@ class UpdateScoutQuestion(APIView):
 
         for op in data.get('questionoptions_set', []):
             if op.get('q_opt_id', None) is not None:
-                o = QuestionOptions.objects.get(q_opt_id=op['q_opt_id'])
+                o = QuestionOption.objects.get(question_opt_id=op['question_opt_id'])
                 o.option = op['option']
                 o.active = op['active']
                 o.save()
             else:
-                QuestionOptions(
+                QuestionOption(
                     option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
 
         return ret_message('Question saved successfully')
 
     def post(self, request, format=None):
-        serializer = ScoutQuestionSerializer(data=request.data)
+        serializer = QuestionSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
@@ -960,7 +936,7 @@ class ToggleScoutQuestion(APIView):
     endpoint = 'toggle-scout-question/'
 
     def toggle(self, sq_id):
-        sq = ScoutQuestion.objects.get(sq_id=sq_id)
+        sq = Question.objects.get(question_id=sq_id)
 
         if sq.active == 'n':
             sq.active = 'y'
@@ -992,7 +968,7 @@ class ToggleOption(APIView):
     endpoint = 'toggle-option/'
 
     def toggle(self, q_opt_id):
-        opt = QuestionOptions.objects.get(q_opt_id=q_opt_id)
+        opt = QuestionOption.objects.get(question_opt_id=q_opt_id)
 
         if opt.active == 'n':
             opt.active = 'y'

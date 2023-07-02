@@ -227,15 +227,15 @@ class ScoutPitScheduleSerializer(serializers.Serializer):
     notified = serializers.CharField()
 
 
-class ScoutQuestionTypeSerializer(serializers.Serializer):
-    sq_typ = serializers.CharField(read_only=True)
-    sq_nm = serializers.CharField()
+class FormTypeSerializer(serializers.Serializer):
+    form_typ = serializers.CharField(read_only=True)
+    form_nm = serializers.CharField()
 
 
-class ScoutQuestionSubTypeSerializer(serializers.Serializer):
-    sq_sub_typ = serializers.CharField()
-    sq_sub_nm = serializers.CharField()
-    sq_typ_id = serializers.CharField()
+class FormSubTypeSerializer(serializers.Serializer):
+    form_sub_typ = serializers.CharField()
+    form_sub_nm = serializers.CharField()
+    form_typ_id = serializers.CharField()
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
@@ -245,8 +245,8 @@ class QuestionOptionsSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
-class ScoutQuestionSerializer(serializers.Serializer):
-    sq_id = serializers.IntegerField(required=False, allow_null=True)
+class QuestionSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
 
     question = serializers.CharField()
@@ -254,9 +254,9 @@ class ScoutQuestionSerializer(serializers.Serializer):
     active = serializers.CharField()
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField(required=False, allow_blank=True)
-    sq_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    sq_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    sq_typ = serializers.CharField()
+    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoptions_set = QuestionOptionsSerializer(
@@ -267,9 +267,9 @@ class ScoutQuestionSerializer(serializers.Serializer):
 
 class ScoutAdminQuestionInitSerializer(serializers.Serializer):
     questionTypes = QuestionTypeSerializer(many=True)
-    scoutQuestionSubTypes = ScoutQuestionSubTypeSerializer(
+    scoutQuestionSubTypes = FormSubTypeSerializer(
         many=True, required=False)
-    scoutQuestions = ScoutQuestionSerializer(many=True)
+    scoutQuestions = QuestionSerializer(many=True)
 
 
 class EventToTeamsSerializer(serializers.Serializer):
@@ -288,5 +288,5 @@ class InitSerializer(serializers.Serializer):
     fieldSchedule = ScoutFieldScheduleSerializer(many=True)
     # pitSchedule = ScoutPitScheduleSerializer(many=True)
     # pastSchedule = ScoutScheduleSerializer(many=True)
-    scoutQuestionType = ScoutQuestionTypeSerializer(many=True)
+    scoutQuestionType = FormTypeSerializer(many=True)
     teams = TeamSerializer(many=True)

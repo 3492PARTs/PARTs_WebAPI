@@ -1,5 +1,7 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+
+from form.models import QuestionAnswer, Question
 from scouting.models import ScoutQuestion, Season, Team, Event, ScoutPit, ScoutPitAnswer, EventTeamInfo
 from .serializers import InitSerializer, PitTeamDataSerializer, ScoutAnswerSerializer, ScoutPitResultsSerializer, \
     TeamSerializer
@@ -10,6 +12,7 @@ import cloudinary.uploader
 import cloudinary.api
 from django.db.models import Q, Prefetch
 from rest_framework.response import Response
+import form.util
 
 auth_obj = 51
 auth_view_obj = 53
@@ -31,27 +34,7 @@ class Questions(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_questions = []
-        try:
-            sqs = ScoutQuestion.objects.prefetch_related('questionoptions_set').filter(
-                Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
-
-            for sq in sqs:
-                scout_questions.append({
-                    'sq_id': sq.sq_id,
-                    'season_id': sq.season_id,
-                    'question': sq.question,
-                    'order': sq.order,
-                    'active': sq.active,
-                    'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
-                    'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
-                    'sq_sub_typ': sq.sq_sub_typ.sq_sub_typ if sq.sq_sub_typ is not None else None,
-                    'sq_sub_nm': sq.sq_sub_typ.sq_sub_nm if sq.sq_sub_typ is not None else None,
-                    'sq_typ': sq.sq_typ,
-                    'questionoptions_set': sq.questionoptions_set
-                })
-        except Exception as e:
-            x = 1
+        scout_questions = form.util.get_questions('pit')
 
         try:
             current_event = Event.objects.get(
@@ -126,13 +109,12 @@ class SaveAnswers(APIView):
 
         for d in data['scoutQuestions']:
             try:
-                spa = ScoutPitAnswer.objects.get(
-                    Q(scout_pit=sp) & Q(sq_id=d['sq_id']) & Q(void_ind='n'))
+                spa = QuestionAnswer.objects.get(
+                    Q(scout_pit=sp) & Q(question_id=d['question_id']) & Q(void_ind='n'))
                 spa.answer = d.get('answer', '')
             except Exception as e:
-                spa = ScoutPitAnswer(scout_pit=sp, sq_id=d['sq_id'],
-                                     answer=d.get('answer', ''), void_ind='n')
-            spa.save()
+                form.util.save_question_answer(d.get('answer', ''), Question.objects.get(question_id=d['question_id']),
+                                               scout_pit=sp)
 
         return ret_message('Response saved successfully')
 
