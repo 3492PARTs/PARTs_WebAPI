@@ -9,8 +9,7 @@ from general.security import ret_message, has_access
 from scouting.field.views import get_field_results
 from scouting.matchplanning.serializers import InitSerializer, SaveTeamNoteSerializer, MatchPlanningSerializer, \
     TeamSerializer, TeamNoteSerializer
-from scouting.models import Event, Team, Match, ScoutPit, ScoutPitAnswer, ScoutQuestion, Season, ScoutField, \
-    ScoutFieldAnswer, TeamNotes
+from scouting.models import Event, Team, Match, Season, TeamNotes
 from scouting.pit.views import get_pit_results
 
 auth_obj = 58

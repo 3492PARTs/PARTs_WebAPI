@@ -2,7 +2,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from form.models import QuestionAnswer, Question
-from scouting.models import ScoutQuestion, Season, Team, Event, ScoutPit, ScoutPitAnswer, EventTeamInfo
+from scouting.models import Season, Team, Event, ScoutPit, EventTeamInfo
 from .serializers import InitSerializer, PitTeamDataSerializer, ScoutAnswerSerializer, ScoutPitResultsSerializer, \
     TeamSerializer
 from rest_framework.views import APIView

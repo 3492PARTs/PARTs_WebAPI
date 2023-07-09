@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 
 import form.util
 from form.models import Question, QuestionAnswer
-from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team, ScoutFieldSchedule, ScoutField, \
-    ScoutFieldAnswer, EventTeamInfo, Match
+from scouting.models import Season, Event, Team, ScoutFieldSchedule, ScoutField, \
+    EventTeamInfo, Match
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
 from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer, SaveScoutFieldSerializer
