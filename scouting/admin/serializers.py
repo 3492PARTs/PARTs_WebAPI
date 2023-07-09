@@ -239,8 +239,8 @@ class FormSubTypeSerializer(serializers.Serializer):
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
-    q_opt_id = serializers.IntegerField(required=False, allow_null=True)
-    sq_id = serializers.IntegerField(read_only=True)
+    question_opt_id = serializers.IntegerField(required=False, allow_null=True)
+    question_id = serializers.IntegerField(read_only=True)
     option = serializers.CharField()
     active = serializers.CharField()
 

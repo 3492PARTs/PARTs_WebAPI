@@ -777,7 +777,7 @@ class QuestionInit(APIView):
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'question-init/'
+    endpoint = 'scout-question-init/'
 
     def get_init(self, question_type):
         question_types = QuestionType.objects.filter(void_ind='n')
@@ -832,14 +832,14 @@ class SaveScoutQuestion(APIView):
             sq.save()
 
             # If adding a new question we need to make a null answer for it for all questions already answered
-            if data['sq_typ'] == 'pit':
+            if data['form_typ'] == 'pit':
                 questions_answered = ScoutPit.objects.filter(Q(void_ind='n') &
                                                              Q(event__in=Event.objects.filter(Q(void_ind='n') &
                                                                                               Q(season=current_season)
                                                                                               )))
 
                 for qa in questions_answered:
-                    QuestionAnswer(scout_pit=qa, sq=sq,
+                    QuestionAnswer(scout_pit=qa, question=sq,
                                    answer='!EXIST', void_ind='n').save()
             else:
                 questions_answered = ScoutField.objects.filter(Q(void_ind='n') &
@@ -848,15 +848,15 @@ class SaveScoutQuestion(APIView):
                                                                                                 )))
 
                 for qa in questions_answered:
-                    QuestionAnswer(scout_field=qa, sq=sq,
+                    QuestionAnswer(scout_field=qa, question=sq,
                                      answer='!EXIST', void_ind='n').save()
 
-            if data['sq_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
+            if data['question_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
                 raise Exception('Select questions must have options.')
 
             for op in data.get('questionoptions_set', []):
                 QuestionOption(
-                    option=op['option'], question_id=sq.question_id, active='y', void_ind='n').save()
+                    option=op['option'], question=sq, active='y', void_ind='n').save()
 
             return ret_message('Saved question successfully.')
         except Exception as e:
@@ -887,26 +887,26 @@ class UpdateScoutQuestion(APIView):
     endpoint = 'update-scout-question/'
 
     def update_question(self, data):
-        sq = Question.objects.get(question_id=data['sq_id'])
+        sq = Question.objects.get(question_id=data['question_id'])
 
         sq.question = data['question']
         sq.order = data['order']
-        sq.sq_sub_typ_id = data.get('sq_sub_typ', None)
+        sq.form_sub_typ_id = data.get('form_sub_typ', None)
         sq.question_typ_id = data['question_typ']
         sq.save()
 
-        if data['sq_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
+        if data['question_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
             raise Exception('Select questions must have options.')
 
         for op in data.get('questionoptions_set', []):
-            if op.get('q_opt_id', None) is not None:
+            if op.get('question_opt_id', None) is not None:
                 o = QuestionOption.objects.get(question_opt_id=op['question_opt_id'])
                 o.option = op['option']
                 o.active = op['active']
                 o.save()
             else:
                 QuestionOption(
-                    option=op['option'], sq_id=sq.sq_id, active='y', void_ind='n').save()
+                    option=op['option'], question=sq, active='y', void_ind='n').save()
 
         return ret_message('Question saved successfully')
 

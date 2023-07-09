@@ -9,7 +9,7 @@ def get_questions(form_typ):
 
     questions = []
     qs = Question.objects.prefetch_related('questionoption_set').filter(
-        Q(form_typ_id=form_typ) & Q(active='y') &
+        Q(form_typ_id=form_typ) &
         Q(void_ind='n')).order_by('form_sub_typ_id', 'order')
 
     if form_typ == 'field' or form_typ == 'pit':
