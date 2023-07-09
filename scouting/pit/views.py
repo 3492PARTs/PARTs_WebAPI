@@ -293,8 +293,8 @@ def get_pit_results(teams, endpoint, request):
                 return ret_message('No pit data for team.', True, app_url + endpoint,
                                    request.user.id, e)
 
-            spas = ScoutPitAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n') & Q(sq__void_ind='n'))\
-                .order_by('sq__order')
+            spas = QuestionAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n') & Q(question__void_ind='n'))\
+                .order_by('question__order')
 
             tmp = {
                 'teamNo': team.team_no,
@@ -316,7 +316,7 @@ def get_pit_results(teams, endpoint, request):
 
             for spa in spas:
                 tmp_questions.append({
-                    'question': spa.sq.question,
+                    'question': spa.question.question,
                     'answer': spa.answer
                 })
 
