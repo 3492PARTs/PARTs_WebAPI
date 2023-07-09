@@ -5,7 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import form.util
-from form.models import Question
+from form.models import Question, QuestionAnswer
 from scouting.models import Season, ScoutQuestion, QuestionOptions, Event, Team, ScoutFieldSchedule, ScoutField, \
     ScoutFieldAnswer, EventTeamInfo, Match
 from rest_framework.views import APIView
@@ -216,22 +216,22 @@ def get_field_results(team, endpoint, request):
     }]
 
     scout_answers = []
-    sqsa = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
-                                        Q(sq_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
+    sqsa = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+                                        Q(form_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
 
-    sqst = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
-                                        Q(sq_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
+    sqst = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+                                        Q(form_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
-    sqso = ScoutQuestion.objects.filter(Q(season=current_season) & Q(sq_typ_id='field') &
-                                        Q(sq_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
+    sqso = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+                                        Q(form_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
     for sqs in [sqsa, sqst, sqso]:
         for sq in sqs:
             scout_cols.append({
-                'PropertyName': 'ans' + str(sq.sq_id),
-                'ColLabel': ('' if sq.sq_sub_typ is None else sq.sq_sub_typ.sq_sub_typ[
+                'PropertyName': 'ans' + str(sq.question_id),
+                'ColLabel': ('' if sq.form_sub_typ is None else sq.form_sub_typ.form_sub_typ[
                                                               0:1].upper() + ': ') + sq.question,
                 'order': sq.order
             })
@@ -261,12 +261,12 @@ def get_field_results(team, endpoint, request):
             void_ind='n')).order_by('-time', '-scout_field_id')
 
     for sf in sfs:
-        sfas = ScoutFieldAnswer.objects.filter(
+        sfas = QuestionAnswer.objects.filter(
             Q(scout_field=sf) & Q(void_ind='n'))
 
         sa_obj = {}
         for sfa in sfas:
-            sa_obj['ans' + str(sfa.sq_id)] = sfa.answer
+            sa_obj['ans' + str(sfa.question_id)] = sfa.answer
 
         sa_obj['match'] = sf.match.match_number if sf.match else None
         sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name

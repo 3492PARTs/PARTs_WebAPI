@@ -848,8 +848,7 @@ class SaveScoutQuestion(APIView):
                                                                                                 )))
 
                 for qa in questions_answered:
-                    QuestionAnswer(scout_field=qa, question=sq,
-                                     answer='!EXIST', void_ind='n').save()
+                    QuestionAnswer(scout_field=qa, question=sq, answer='!EXIST', void_ind='n').save()
 
             if data['question_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
                 raise Exception('Select questions must have options.')
