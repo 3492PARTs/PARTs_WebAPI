@@ -804,10 +804,10 @@ class QuestionInit(APIView):
                 serializer = ScoutAdminQuestionInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
-                return ret_message('An error occurred while initializing.', True, 'api/scoutAdmin/GetQuestionInit',
+                return ret_message('An error occurred while initializing.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
-            return ret_message('You do not have access.', True, 'api/scoutAdmin/GetQuestionInit', request.user.id)
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class SaveScoutQuestion(APIView):
@@ -850,10 +850,10 @@ class SaveScoutQuestion(APIView):
                 for qa in questions_answered:
                     QuestionAnswer(scout_field=qa, question=sq, answer='!EXIST', void_ind='n').save()
 
-            if data['question_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
+            if data['question_typ'] == 'select' and len(data.get('questionoption_set', [])) <= 0:
                 raise Exception('Select questions must have options.')
 
-            for op in data.get('questionoptions_set', []):
+            for op in data.get('questionoption_set', []):
                 QuestionOption(
                     option=op['option'], question=sq, active='y', void_ind='n').save()
 
@@ -894,10 +894,10 @@ class UpdateScoutQuestion(APIView):
         sq.question_typ_id = data['question_typ']
         sq.save()
 
-        if data['question_typ'] == 'select' and len(data.get('questionoptions_set', [])) <= 0:
+        if data['question_typ'] == 'select' and len(data.get('questionoption_set', [])) <= 0:
             raise Exception('Select questions must have options.')
 
-        for op in data.get('questionoptions_set', []):
+        for op in data.get('questionoption_set', []):
             if op.get('question_opt_id', None) is not None:
                 o = QuestionOption.objects.get(question_opt_id=op['question_opt_id'])
                 o.option = op['option']

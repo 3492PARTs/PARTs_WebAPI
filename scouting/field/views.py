@@ -115,10 +115,11 @@ class Questions(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
+"""
 class SaveAnswers(APIView):
-    """
+    ""
     API endpoint to save scout field answers
-    """
+    ""
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = 'save-answers/'
@@ -159,7 +160,7 @@ class SaveAnswers(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-
+"""
 
 class Results(APIView):
     """

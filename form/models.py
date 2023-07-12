@@ -70,7 +70,9 @@ class QuestionOption(models.Model):
 
 class Response(models.Model):
     response_id = models.AutoField(primary_key=True)
+    form_typ = models.ForeignKey(Type, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
+    void_ind = models.CharField(max_length=1, default='n')
 
 
 class QuestionAnswer(models.Model):
