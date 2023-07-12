@@ -79,11 +79,11 @@ class Questions(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
-
+"""
 class SaveAnswers(APIView):
-    """
+    ""
     API endpoint to save scout pit answers
-    """
+    ""
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = 'save-answers/'
@@ -132,7 +132,7 @@ class SaveAnswers(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-
+"""
 
 class SavePicture(APIView):
     """
