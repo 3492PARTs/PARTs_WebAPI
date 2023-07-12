@@ -1,12 +1,12 @@
 from django.db.models import Q
 
-from form.models import Question, Response, QuestionAnswer, QuestionOption
+from form.models import Question, Response, QuestionAnswer, QuestionOption, SubType, QuestionType
 from form.serializers import QuestionSerializer
 from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
 
 
-def get_questions(form_typ):
+def get_questions(form_typ: str):
     current_season = Season.objects.get(current='y')
 
     questions = []
@@ -38,12 +38,25 @@ def get_questions(form_typ):
     return questions
 
 
-def save_question(question: QuestionSerializer):
-    q = Question(question_typ_id=question.question_typ, form_typ_id=question.form_typ,
-                 form_sub_typ_id=question.form_sub_typ, question=question.question,
-                 order=question.order, active='y', void_ind='n')
+def get_question_types():
+    question_types = QuestionType.objects.filter(void_ind='n')
+    return question_types
 
-    if question.form_typ in ['pit', 'field']:
+
+def get_form_sub_types(form_typ: str):
+    sub_types = SubType.objects.filter(form_typ=form_typ).order_by('form_sub_nm')
+    return sub_types
+
+
+def save_question(question):
+    if question.get('question_id', None) is not None:
+        q = Question.objects.get(question_id=question['question_id'])
+    else:
+        q = Question(question_typ_id=question['question_typ'], form_typ_id=question['form_typ'],
+                     form_sub_typ_id=question['form_sub_typ'], question=question['question'],
+                     order=question['order'], active='y', void_ind='n')
+
+    if question['form_typ'] in ['pit', 'field']:
         try:
             current_season = Season.objects.get(current='y')
             q.season = current_season
@@ -53,7 +66,7 @@ def save_question(question: QuestionSerializer):
     q.save()
 
     # If adding a new question we need to make a null answer for it for all questions already answered
-    match question.form_typ:
+    match question['form_typ']:
         case 'pit':
             questions_answered = ScoutPit.objects.filter(Q(void_ind='n') &
                                                          Q(event__in=Event.objects.filter(Q(void_ind='n') &
@@ -71,16 +84,23 @@ def save_question(question: QuestionSerializer):
             for qa in questions_answered:
                 QuestionAnswer(scout_field=qa, question=q, answer='!EXIST', void_ind='n').save()
         case _:
-            questions_answered = Response.objects.filter(Q(void_ind='n') & Q(form_typ_id=question.form_typ))
+            questions_answered = Response.objects.filter(Q(void_ind='n') & Q(form_typ__form_typ=question['form_typ']))
 
+            print(questions_answered.query)
             for qa in questions_answered:
-                QuestionAnswer(scout_field=qa, question=q, answer='!EXIST', void_ind='n').save()
+                QuestionAnswer(response=qa, question=q, answer='!EXIST', void_ind='n').save()
 
-    if question.question_typ == 'select' and len(question.questionoptions_set) <= 0:
+    if question['question_typ'] == 'select' and len(question.get('questionoptions_set', [])) <= 0:
         raise Exception('Select questions must have options.')
 
-    for op in question.questionoptions_set:
-        QuestionOption(option=op['option'], question=question, active='y', void_ind='n').save()
+    for op in question.get('questionoptions_set', []):
+        if op.get('question_opt_id', None) is not None:
+            qop = QuestionOption.onjects.get(question_opt_id=op['question_opt_id'])
+            qop.option = op['optio']
+            qop.save()
+        else:
+            QuestionOption(option=op['option'], question=question, active='y', void_ind='n').save()
+
 
 def save_question_answer(answer: str, question: Question, scout_field: ScoutField = None, scout_pit: ScoutPit = None,
                          response: Response = None):

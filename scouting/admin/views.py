@@ -770,11 +770,11 @@ class DeleteSeason(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
-
+"""
 class QuestionInit(APIView):
-    """
+    ""
     API endpoint to get the question init values for the scout admin screen
-    """
+    ""
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = 'scout-question-init/'
@@ -808,10 +808,13 @@ class QuestionInit(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+"""
 
-
+"""
 class SaveScoutQuestion(APIView):
-    """API endpoint to save new questions"""
+    ""
+    API endpoint to save new questions
+    ""
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -876,10 +879,12 @@ class SaveScoutQuestion(APIView):
                                    app_url + self.endpoint, request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-
-
+"""
+"""
 class UpdateScoutQuestion(APIView):
-    """API endpoint to update questions"""
+    ""
+    API endpoint to update questions
+    ""
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -924,7 +929,7 @@ class UpdateScoutQuestion(APIView):
                                    app_url + self.endpoint, request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-
+"""
 
 class ToggleScoutQuestion(APIView):
     """

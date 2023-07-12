@@ -7,7 +7,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import form.util
 from form.models import Question, QuestionAnswer
-from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveScoutSerializer
+from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveScoutSerializer, \
+    QuestionInitializationSerializer
 from general.security import has_access, ret_message
 from scouting.models import Event, Season, ScoutField, ScoutPit
 
@@ -15,19 +16,25 @@ auth_obj = 50
 app_url = 'form/'
 
 
-class GetQuestions(APIView):
+class GetFormInit(APIView):
     """
-    API endpoint to get the questions
+    API endpoint to init form editor
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'scout-question-init/'
+    endpoint = 'form-init/'
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = form.util.get_questions(request.query_params['form_typ'])
-                serializer = QuestionSerializer(req, many=True)
+                questions = form.util.get_questions(request.query_params['form_typ'])
+                question_types = form.util.get_question_types()
+                form_sub_types = form.util.get_form_sub_types(request.query_params['form_typ'])
+                serializer = QuestionInitializationSerializer({
+                    "questions": questions,
+                    "question_types": question_types,
+                    "form_sub_types": form_sub_types,
+                })
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message('An error occurred while initializing.', True, app_url + self.endpoint,
@@ -43,7 +50,6 @@ class SaveQuestion(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = 'save-question/'
 
-    @transaction.atomic
     def post(self, request, format=None):
         serializer = QuestionSerializer(data=request.data)
         if not serializer.is_valid():
@@ -52,7 +58,8 @@ class SaveQuestion(APIView):
 
         if has_access(request.user.id, auth_obj):
             try:
-                form.util.save_question(serializer.validated_data)
+                with transaction.atomic():
+                    form.util.save_question(serializer.validated_data)
                 return ret_message('Saved question successfully.')
             except Exception as e:
                 return ret_message('An error occurred while saving the question.', True,

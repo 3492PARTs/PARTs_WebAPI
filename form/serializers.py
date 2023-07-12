@@ -2,7 +2,6 @@ from rest_framework import serializers
 from scouting.models import Team, Event, ScoutFieldSchedule
 
 
-
 class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField()
@@ -63,3 +62,9 @@ class TeamSerializer(serializers.Serializer):
 class SaveResponseSerializer(serializers.Serializer):
     question_answers = QuestionSerializer(many=True)
     form_typ = serializers.CharField()
+
+
+class QuestionInitializationSerializer(serializers.Serializer):
+    questions = QuestionSerializer(many=True)
+    question_types = QuestionTypeSerializer(many=True)
+    form_sub_types = FormSubTypeSerializer(many=True, required=False)
