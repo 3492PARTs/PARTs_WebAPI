@@ -930,11 +930,11 @@ class UpdateScoutQuestion(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 """
-
+"""
 class ToggleScoutQuestion(APIView):
-    """
+    ""
     API endpoint to toggle a scout field question
-    """
+    ""
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = 'toggle-scout-question/'
@@ -961,12 +961,13 @@ class ToggleScoutQuestion(APIView):
                                    app_url + self.endpoint, request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-
+"""
+"""
 
 class ToggleOption(APIView):
-    """
+    ""
     API endpoint to toggle a question option
-    """
+    ""
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = 'toggle-option/'
@@ -993,7 +994,7 @@ class ToggleOption(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-
+"""
 
 class SaveScoutFieldScheduleEntry(APIView):
     """API endpoint to save scout schedule entry"""

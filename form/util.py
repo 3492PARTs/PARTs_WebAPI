@@ -29,7 +29,7 @@ def get_questions(form_typ: str):
             'form_sub_typ': q.form_sub_typ.form_sub_typ if q.form_sub_typ is not None else None,
             'form_sub_nm': q.form_sub_typ.form_sub_nm if q.form_sub_typ is not None else None,
             'form_typ': q.form_typ,
-            'questionoptions_set': q.questionoption_set,
+            'questionoption_set': q.questionoption_set,
             'display_value': ('' if q.active == 'y' else 'Deactivated: ') +
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
                              q.question
@@ -51,17 +51,23 @@ def get_form_sub_types(form_typ: str):
 def save_question(question):
     if question.get('question_id', None) is not None:
         q = Question.objects.get(question_id=question['question_id'])
+        q.question = question['question']
+        q.question_typ_id=question['question_typ']
+        q.form_sub_typ_id=question.get('form_sub_typ', None)
+        q.order = question['order']
+        q.active=question['active']
     else:
         q = Question(question_typ_id=question['question_typ'], form_typ_id=question['form_typ'],
-                     form_sub_typ_id=question['form_sub_typ'], question=question['question'],
-                     order=question['order'], active='y', void_ind='n')
+                     form_sub_typ_id=question.get('form_sub_typ', None), question=question['question'],
+                     order=question['order'], active=question['active'], void_ind='n')
 
     if question['form_typ'] in ['pit', 'field']:
-        try:
-            current_season = Season.objects.get(current='y')
-            q.season = current_season
-        except Exception as e:
-            raise Exception('No season set, see an admin.')
+        if q.season is None:
+            try:
+                current_season = Season.objects.get(current='y')
+                q.season = current_season
+            except Exception as e:
+                raise Exception('No season set, see an admin.')
 
     q.save()
 
@@ -84,22 +90,22 @@ def save_question(question):
             for qa in questions_answered:
                 QuestionAnswer(scout_field=qa, question=q, answer='!EXIST', void_ind='n').save()
         case _:
-            questions_answered = Response.objects.filter(Q(void_ind='n') & Q(form_typ__form_typ=question['form_typ']))
+            questions_answered = Response.objects.filter(Q(void_ind='n') & Q(form_typ_id=question['form_typ']))
 
-            print(questions_answered.query)
             for qa in questions_answered:
                 QuestionAnswer(response=qa, question=q, answer='!EXIST', void_ind='n').save()
 
-    if question['question_typ'] == 'select' and len(question.get('questionoptions_set', [])) <= 0:
+    if question['question_typ'] == 'select' and len(question.get('questionoption_set', [])) <= 0:
         raise Exception('Select questions must have options.')
 
-    for op in question.get('questionoptions_set', []):
+    for op in question.get('questionoption_set', []):
         if op.get('question_opt_id', None) is not None:
-            qop = QuestionOption.onjects.get(question_opt_id=op['question_opt_id'])
-            qop.option = op['optio']
+            qop = QuestionOption.objects.get(question_opt_id=op['question_opt_id'])
+            qop.option = op['option']
+            qop.active = op['active']
             qop.save()
         else:
-            QuestionOption(option=op['option'], question=question, active='y', void_ind='n').save()
+            QuestionOption(option=op['option'], question=question, active=op['active'], void_ind='n').save()
 
 
 def save_question_answer(answer: str, question: Question, scout_field: ScoutField = None, scout_pit: ScoutPit = None,
