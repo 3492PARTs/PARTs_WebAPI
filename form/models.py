@@ -50,6 +50,7 @@ class Question(models.Model):
     question_typ = models.ForeignKey(QuestionType, models.PROTECT)
     question = models.CharField(max_length=1000)
     order = models.IntegerField()
+    required = models.CharField(max_length=1)
     active = models.CharField(max_length=1)
     void_ind = models.CharField(max_length=1, default='n')
 

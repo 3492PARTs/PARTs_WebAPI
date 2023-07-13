@@ -23,6 +23,7 @@ def get_questions(form_typ: str):
             'season_id': q.season_id,
             'question': q.question,
             'order': q.order,
+            'required': q.required,
             'active': q.active,
             'question_typ': q.question_typ.question_typ if q.question_typ is not None else None,
             'question_typ_nm': q.question_typ.question_typ_nm if q.question_typ is not None else None,
@@ -52,14 +53,15 @@ def save_question(question):
     if question.get('question_id', None) is not None:
         q = Question.objects.get(question_id=question['question_id'])
         q.question = question['question']
-        q.question_typ_id=question['question_typ']
-        q.form_sub_typ_id=question.get('form_sub_typ', None)
+        q.question_typ_id = question['question_typ']
+        q.form_sub_typ_id = question.get('form_sub_typ', None)
         q.order = question['order']
-        q.active=question['active']
+        q.required = question['required']
+        q.active = question['active']
     else:
         q = Question(question_typ_id=question['question_typ'], form_typ_id=question['form_typ'],
                      form_sub_typ_id=question.get('form_sub_typ', None), question=question['question'],
-                     order=question['order'], active=question['active'], void_ind='n')
+                     order=question['order'], active=question['active'], required=question['required'], void_ind='n')
 
     if question['form_typ'] in ['pit', 'field']:
         if q.season is None:

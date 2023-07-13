@@ -16,6 +16,23 @@ auth_obj = 50
 app_url = 'form/'
 
 
+class GetQuestions(APIView):
+    """
+    API endpoint to init form editor
+    """
+    endpoint = 'get-questions/'
+
+    def get(self, request, format=None):
+        try:
+            questions = form.util.get_questions(request.query_params['form_typ'])
+            serializer = QuestionSerializer(questions, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting questions.', True, app_url + self.endpoint,
+                               request.user.id, e)
+
+
+
 class GetFormInit(APIView):
     """
     API endpoint to init form editor
