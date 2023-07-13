@@ -31,7 +31,7 @@ def get_questions(form_typ: str):
             'form_sub_nm': q.form_sub_typ.form_sub_nm if q.form_sub_typ is not None else None,
             'form_typ': q.form_typ,
             'questionoption_set': q.questionoption_set,
-            'display_value': ('' if q.active == 'y' else 'Deactivated: ') +
+            'display_value': ('' if q.active == 'y' else 'Deactivated: ') + 'Order ' + str(q.order) + ': ' +
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
                              q.question
         })
@@ -50,18 +50,21 @@ def get_form_sub_types(form_typ: str):
 
 
 def save_question(question):
+    required = question.get('required', 'n')
+    required = required if required != '' else 'n'
+
     if question.get('question_id', None) is not None:
         q = Question.objects.get(question_id=question['question_id'])
         q.question = question['question']
         q.question_typ_id = question['question_typ']
         q.form_sub_typ_id = question.get('form_sub_typ', None)
         q.order = question['order']
-        q.required = question['required']
+        q.required = required
         q.active = question['active']
     else:
         q = Question(question_typ_id=question['question_typ'], form_typ_id=question['form_typ'],
                      form_sub_typ_id=question.get('form_sub_typ', None), question=question['question'],
-                     order=question['order'], active=question['active'], required=question['required'], void_ind='n')
+                     order=question['order'], active=question['active'], required=required, void_ind='n')
 
     if question['form_typ'] in ['pit', 'field']:
         if q.season is None:

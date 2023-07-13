@@ -32,7 +32,6 @@ class GetQuestions(APIView):
                                request.user.id, e)
 
 
-
 class GetFormInit(APIView):
     """
     API endpoint to init form editor

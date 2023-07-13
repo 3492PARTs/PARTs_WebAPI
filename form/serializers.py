@@ -31,6 +31,7 @@ class QuestionSerializer(serializers.Serializer):
 
     question = serializers.CharField()
     order = serializers.IntegerField()
+    required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField(required=False, allow_blank=True)
