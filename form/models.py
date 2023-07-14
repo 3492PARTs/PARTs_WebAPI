@@ -33,7 +33,7 @@ class FormType(models.Model):
         return self.form_typ + ' ' + self.form_nm
 
 
-class SubType(models.Model):
+class FormSubType(models.Model):
     form_sub_typ = models.CharField(primary_key=True, max_length=10)
     form_sub_nm = models.CharField(max_length=255)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
@@ -46,7 +46,7 @@ class Question(models.Model):
     question_id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
-    form_sub_typ = models.ForeignKey(SubType, models.PROTECT, null=True)
+    form_sub_typ = models.ForeignKey(FormSubType, models.PROTECT, null=True)
     question_typ = models.ForeignKey(QuestionType, models.PROTECT)
     question = models.CharField(max_length=1000)
     order = models.IntegerField()

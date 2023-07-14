@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from form.models import Question, Response, QuestionAnswer, QuestionOption, SubType, QuestionType
+from form.models import Question, Response, QuestionAnswer, QuestionOption, FormSubType, QuestionType
 from form.serializers import QuestionSerializer
 from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
@@ -45,7 +45,7 @@ def get_question_types():
 
 
 def get_form_sub_types(form_typ: str):
-    sub_types = SubType.objects.filter(form_typ=form_typ).order_by('form_sub_nm')
+    sub_types = FormSubType.objects.filter(form_typ=form_typ).order_by('form_sub_nm')
     return sub_types
 
 

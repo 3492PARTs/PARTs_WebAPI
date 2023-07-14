@@ -7,7 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 
-from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, SubType, FormType
+from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, FormSubType, FormType
 from general import send_message
 from user.models import User, PhoneType
 
