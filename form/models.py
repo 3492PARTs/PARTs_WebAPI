@@ -25,7 +25,7 @@ class QuestionType(models.Model):
         return self.question_typ + ' ' + self.question_typ_nm
 
 
-class Type(models.Model):
+class FormType(models.Model):
     form_typ = models.CharField(primary_key=True, max_length=10)
     form_nm = models.CharField(max_length=255)
 
@@ -36,7 +36,7 @@ class Type(models.Model):
 class SubType(models.Model):
     form_sub_typ = models.CharField(primary_key=True, max_length=10)
     form_sub_nm = models.CharField(max_length=255)
-    form_typ = models.ForeignKey(Type, models.PROTECT)
+    form_typ = models.ForeignKey(FormType, models.PROTECT)
 
     def __str__(self):
         return self.form_sub_typ + ' ' + self.form_sub_nm
@@ -45,7 +45,7 @@ class SubType(models.Model):
 class Question(models.Model):
     question_id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, models.PROTECT, null=True)
-    form_typ = models.ForeignKey(Type, models.PROTECT)
+    form_typ = models.ForeignKey(FormType, models.PROTECT)
     form_sub_typ = models.ForeignKey(SubType, models.PROTECT, null=True)
     question_typ = models.ForeignKey(QuestionType, models.PROTECT)
     question = models.CharField(max_length=1000)
@@ -71,7 +71,7 @@ class QuestionOption(models.Model):
 
 class Response(models.Model):
     response_id = models.AutoField(primary_key=True)
-    form_typ = models.ForeignKey(Type, models.PROTECT)
+    form_typ = models.ForeignKey(FormType, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
     void_ind = models.CharField(max_length=1, default='n')
 

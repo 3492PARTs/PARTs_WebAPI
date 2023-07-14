@@ -7,7 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 
-from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, SubType, Type
+from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, SubType, FormType
 from general import send_message
 from user.models import User, PhoneType
 
@@ -102,7 +102,7 @@ class Init(APIView):
 
         teams = Team.objects.filter(void_ind='n').order_by('team_no')
 
-        scoutQuestionType = Type.objects.all()
+        scoutQuestionType = FormType.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
                 'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
