@@ -15,6 +15,12 @@ class QuestionOptionsSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
+class QuestionTypeSerializer(serializers.Serializer):
+    question_typ = serializers.CharField()
+    question_typ_nm = serializers.CharField()
+    is_list = serializers.CharField()
+
+
 class QuestionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
@@ -22,8 +28,7 @@ class QuestionSerializer(serializers.Serializer):
     question = serializers.CharField()
     order = serializers.IntegerField()
     active = serializers.CharField()
-    question_typ = serializers.CharField()
-    question_typ_nm = serializers.CharField(required=False, allow_blank=True)
+    question_typ = QuestionTypeSerializer()
     form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     form_typ = serializers.CharField()

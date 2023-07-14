@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db.models.functions import Lower
 
 from form.models import Question, Response, QuestionAnswer, QuestionOption, FormSubType, QuestionType
 from form.serializers import QuestionSerializer
@@ -24,8 +25,7 @@ def get_questions(form_typ: str):
             'order': q.order,
             'required': q.required,
             'active': q.active,
-            'question_typ': q.question_typ.question_typ if q.question_typ is not None else None,
-            'question_typ_nm': q.question_typ.question_typ_nm if q.question_typ is not None else None,
+            'question_typ': q.question_typ,
             'form_sub_typ': q.form_sub_typ.form_sub_typ if q.form_sub_typ is not None else None,
             'form_sub_nm': q.form_sub_typ.form_sub_nm if q.form_sub_typ is not None else None,
             'form_typ': q.form_typ,
@@ -39,12 +39,12 @@ def get_questions(form_typ: str):
 
 
 def get_question_types():
-    question_types = QuestionType.objects.filter(void_ind='n')
+    question_types = QuestionType.objects.filter(void_ind='n').order_by(Lower('question_typ_nm'))
     return question_types
 
 
 def get_form_sub_types(form_typ: str):
-    sub_types = FormSubType.objects.filter(form_typ=form_typ).order_by('form_sub_nm')
+    sub_types = FormSubType.objects.filter(form_typ=form_typ).order_by('order', Lower('form_sub_nm'))
     return sub_types
 
 
@@ -55,13 +55,13 @@ def save_question(question):
     if question.get('question_id', None) is not None:
         q = Question.objects.get(question_id=question['question_id'])
         q.question = question['question']
-        q.question_typ_id = question['question_typ']
+        q.question_typ_id = question['question_typ']['question_typ']
         q.form_sub_typ_id = question.get('form_sub_typ', None)
         q.order = question['order']
         q.required = required
         q.active = question['active']
     else:
-        q = Question(question_typ_id=question['question_typ'], form_typ_id=question['form_typ'],
+        q = Question(question_typ_id=question['question_typ']['question_typ'], form_typ_id=question['form_typ'],
                      form_sub_typ_id=question.get('form_sub_typ', None), question=question['question'],
                      order=question['order'], active=question['active'], required=required, void_ind='n')
 
@@ -99,7 +99,7 @@ def save_question(question):
             for qa in questions_answered:
                 QuestionAnswer(response=qa, question=q, answer='!EXIST', void_ind='n').save()
 
-    if question['question_typ'] == 'select' and len(question.get('questionoption_set', [])) <= 0:
+    if question['question_typ']['is_list'] == 'y' and len(question.get('questionoption_set', [])) <= 0:
         raise Exception('Select questions must have options.')
 
     for op in question.get('questionoption_set', []):
@@ -109,7 +109,7 @@ def save_question(question):
             qop.active = op['active']
             qop.save()
         else:
-            QuestionOption(option=op['option'], question=question, active=op['active'], void_ind='n').save()
+            QuestionOption(option=op['option'], question=q, active=op['active'], void_ind='n').save()
 
 
 def save_question_answer(answer: str, question: Question, scout_field: ScoutField = None, scout_pit: ScoutPit = None,
