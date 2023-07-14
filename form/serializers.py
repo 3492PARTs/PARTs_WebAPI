@@ -5,6 +5,7 @@ from scouting.models import Team, Event, ScoutFieldSchedule
 class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField()
+    is_list = serializers.CharField()
 
 
 class FormTypeSerializer(serializers.Serializer):

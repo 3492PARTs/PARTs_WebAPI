@@ -19,6 +19,7 @@ from user.models import User
 class QuestionType(models.Model):
     question_typ = models.CharField(primary_key=True, max_length=50)
     question_typ_nm = models.CharField(max_length=255)
+    is_list = models.CharField(max_length=1, default='n')
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
