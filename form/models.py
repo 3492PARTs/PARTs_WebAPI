@@ -37,6 +37,7 @@ class FormSubType(models.Model):
     form_sub_typ = models.CharField(primary_key=True, max_length=10)
     form_sub_nm = models.CharField(max_length=255)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
+    order = models.IntegerField()
 
     def __str__(self):
         return self.form_sub_typ + ' ' + self.form_sub_nm
