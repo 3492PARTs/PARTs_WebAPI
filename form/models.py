@@ -84,7 +84,7 @@ class QuestionAnswer(models.Model):
     scout_pit = models.ForeignKey(ScoutPit, models.PROTECT, null=True, related_name='scout_pit')
     response = models.ForeignKey(Response, models.PROTECT, null=True, related_name='form_response')
     question = models.ForeignKey(Question, models.PROTECT)
-    answer = models.CharField(max_length=1000, blank=True, null=True)
+    answer = models.TextField(blank=True, null=True)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
