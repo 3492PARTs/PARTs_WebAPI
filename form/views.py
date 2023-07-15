@@ -138,11 +138,11 @@ class SaveAnswers(APIView):
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
                     with transaction.atomic():
-                        r = form.models.Response(form_typ_id=serializer.form_typ)
+                        r = form.models.Response(form_typ_id=serializer.data['form_typ'])
                         r.save()
 
                         for d in serializer.data.get('question_answers', []):
-                            form.util.save_question_answer(d.answer, Question.objects.get(question_id=d['question_id']),
+                            form.util.save_question_answer(d['answer'], Question.objects.get(question_id=d['question_id']),
                                                            response=r)
                         return ret_message(success_msg)
 
