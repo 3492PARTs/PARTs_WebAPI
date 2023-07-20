@@ -1,6 +1,4 @@
 from rest_framework import serializers
-from scouting.models import Team, Event, ScoutFieldSchedule
-
 
 class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()

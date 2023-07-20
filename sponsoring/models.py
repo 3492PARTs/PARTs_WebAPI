@@ -11,6 +11,7 @@ import django
 from django.db import models
 from django.contrib.auth.models import Group
 from pytz import utc
+from simple_history.models import HistoricalRecords
 
 from scouting.models import Season, ScoutField, ScoutPit
 from user.models import User
@@ -21,6 +22,7 @@ class Item(models.Model):
     item_nm = models.CharField(max_length=255)
     item_desc = models.TextField()
     quantity = models.IntegerField()
+    history = HistoricalRecords()
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
@@ -32,6 +34,8 @@ class Sponsor(models.Model):
     sponsor_nm = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
+    history = HistoricalRecords()
+    void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
         return self.sponsor_id + ' ' + self.sponsor_nm
