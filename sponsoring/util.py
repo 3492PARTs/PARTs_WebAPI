@@ -13,7 +13,8 @@ def get_items():
             'item_id': i.item_id,
             'item_nm': i.item_nm,
             'item_desc': i.item_desc,
-            'quantity': i.quantity
+            'quantity': i.quantity,
+            'active': i.active
         })
 
     return items

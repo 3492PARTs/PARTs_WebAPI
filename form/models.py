@@ -53,7 +53,7 @@ class Question(models.Model):
     question = models.CharField(max_length=1000)
     order = models.IntegerField()
     required = models.CharField(max_length=1)
-    active = models.CharField(max_length=1)
+    active = models.CharField(max_length=1, default='y')
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
@@ -64,7 +64,7 @@ class QuestionOption(models.Model):
     question_opt_id = models.AutoField(primary_key=True)
     option = models.CharField(max_length=255)
     question = models.ForeignKey(Question, models.PROTECT)
-    active = models.CharField(max_length=1, blank=True, null=True)
+    active = models.CharField(max_length=1, default='y')
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):

@@ -6,6 +6,7 @@ class ItemSerializer(serializers.Serializer):
     item_nm = serializers.CharField()
     item_desc = serializers.CharField()
     quantity = serializers.IntegerField
+    item_desc = serializers.CharField()
 
 
 class SponsorSerializer(serializers.Serializer):

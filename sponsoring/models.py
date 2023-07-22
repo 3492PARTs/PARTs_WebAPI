@@ -22,6 +22,8 @@ class Item(models.Model):
     item_nm = models.CharField(max_length=255)
     item_desc = models.TextField()
     quantity = models.IntegerField()
+    reset_date = models.DateField(default=django.utils.timezone.now)
+    active = models.CharField(max_length=1, default='y')
     history = HistoricalRecords()
     void_ind = models.CharField(max_length=1, default='n')
 
