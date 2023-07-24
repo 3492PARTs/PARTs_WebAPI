@@ -5,8 +5,8 @@ class ItemSerializer(serializers.Serializer):
     item_id = serializers.IntegerField(required=False)
     item_nm = serializers.CharField()
     item_desc = serializers.CharField()
-    quantity = serializers.IntegerField
-    item_desc = serializers.CharField()
+    quantity = serializers.IntegerField()
+    active = serializers.CharField()
 
 
 class SponsorSerializer(serializers.Serializer):

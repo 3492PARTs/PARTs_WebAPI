@@ -9,15 +9,19 @@ def get_items():
 
     ret = []
     for i in items:
-        ret.push({
+        purchased = 0
+        for s in i.itemsponsor_set.all():
+            purchased += s.quantity
+
+        ret.append({
             'item_id': i.item_id,
             'item_nm': i.item_nm,
             'item_desc': i.item_desc,
-            'quantity': i.quantity,
+            'quantity': i.quantity - purchased,
             'active': i.active
         })
 
-    return items
+    return ret
 
 
 def get_sponsors():
