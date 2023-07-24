@@ -24,6 +24,8 @@ class Item(models.Model):
     quantity = models.IntegerField()
     reset_date = models.DateField(default=django.utils.timezone.now)
     active = models.CharField(max_length=1, default='y')
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
     history = HistoricalRecords()
     void_ind = models.CharField(max_length=1, default='n')
 
