@@ -1,4 +1,6 @@
-from django.db.models import Q
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 from django.db.models.functions import Lower
 
 from sponsoring.models import Item, Sponsor, ItemSponsor
@@ -51,6 +53,16 @@ def save_item(item):
         i = Item(item_nm=item['item_nm'], item_desc=item['item_desc'], quantity=item['quantity'], void_ind='n')
 
     i.save()
+
+    if item.get('img', None) is not None:
+        if i.img_id:
+            response = cloudinary.uploader.upload(item['img'], public_id=i.img_id)
+        else:
+            response = cloudinary.uploader.upload(item['img'])
+
+        i.img_id = response['public_id']
+        i.img_ver = str(response['version'])
+        i.save()
 
 
 def save_item_sponsor(item_sponsor):
