@@ -16,6 +16,7 @@ class ItemSerializer(serializers.Serializer):
     item_desc = serializers.CharField()
     quantity = serializers.IntegerField()
     active = serializers.CharField()
+    img_url = serializers.CharField()
 
 
 class SponsorSerializer(serializers.Serializer):

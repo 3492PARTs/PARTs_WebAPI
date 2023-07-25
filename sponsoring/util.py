@@ -20,7 +20,8 @@ def get_items():
             'item_nm': i.item_nm,
             'item_desc': i.item_desc,
             'quantity': i.quantity - purchased,
-            'active': i.active
+            'active': i.active,
+            'img_url': cloudinary.CloudinaryImage(i.img_id, version=i.img_ver).build_url()
         })
 
     return ret
