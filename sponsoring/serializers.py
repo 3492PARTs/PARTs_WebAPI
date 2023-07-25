@@ -1,6 +1,15 @@
 from rest_framework import serializers
 
 
+class SaveItemSerializer(serializers.Serializer):
+    item_id = serializers.IntegerField(required=False)
+    item_nm = serializers.CharField()
+    item_desc = serializers.CharField()
+    quantity = serializers.IntegerField()
+    active = serializers.CharField()
+    img = serializers.FileField(required=False)
+
+
 class ItemSerializer(serializers.Serializer):
     item_id = serializers.IntegerField(required=False)
     item_nm = serializers.CharField()

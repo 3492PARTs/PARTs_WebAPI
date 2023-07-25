@@ -7,7 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import sponsoring.util
 from general.security import ret_message, has_access
-from sponsoring.serializers import ItemSerializer, SponsorSerializer, ItemSponsorSerializer
+from sponsoring.serializers import ItemSerializer, SponsorSerializer, ItemSponsorSerializer, SaveItemSerializer
 
 auth_obj = 50
 app_url = 'sponsoring/'
@@ -74,7 +74,7 @@ class SaveItem(APIView):
     endpoint = 'save-item/'
 
     def post(self, request, format=None):
-        serializer = ItemSerializer(data=request.data)
+        serializer = SaveItemSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
