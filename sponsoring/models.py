@@ -50,6 +50,8 @@ class ItemSponsor(models.Model):
     item_id = models.ForeignKey(Item, models.PROTECT)
     sponsor_id = models.ForeignKey(Sponsor, models.PROTECT)
     quantity = models.IntegerField()
+    time = models.DateTimeField(default=django.utils.timezone.now)
+    void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
         return self.item_sponsor_id + ' ' + self.quantity

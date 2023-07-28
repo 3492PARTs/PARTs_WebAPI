@@ -1,6 +1,7 @@
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+from django.db.models import Q
 from django.db.models.functions import Lower
 
 from sponsoring.models import Item, Sponsor, ItemSponsor
@@ -12,7 +13,7 @@ def get_items():
     ret = []
     for i in items:
         purchased = 0
-        for s in i.itemsponsor_set.all():
+        for s in i.itemsponsor_set.filter(Q(void_ind='n') & Q(time__gte=i.reset_date)):
             purchased += s.quantity
 
         ret.append({
@@ -42,6 +43,7 @@ def save_sponsor(sponsor):
         s = Sponsor(sponsor_nm=sponsor['sponsor_nm'], phone=sponsor['phone'], email=sponsor['email'], void_ind='n')
 
     s.save()
+    return s
 
 
 def save_item(item):
@@ -65,6 +67,8 @@ def save_item(item):
         i.img_ver = str(response['version'])
         i.save()
 
+    return i
+
 
 def save_item_sponsor(item_sponsor):
     if item_sponsor.get('item_sponsor_id', None) is not None:
@@ -73,7 +77,20 @@ def save_item_sponsor(item_sponsor):
         i.sponsor_id.sponsor_id = item_sponsor['sponsor_id']
         i.quantity = item_sponsor['quantity']
     else:
-        i = Item(item_id__item_id=item_sponsor['item_id'], sponsor_id__sponsor_id=item_sponsor['sponsor_id'],
-                 quantity=item_sponsor['quantity'], void_ind='n')
+        i = ItemSponsor(item_id_id=item_sponsor['item_id'], sponsor_id_id=item_sponsor['sponsor_id'],
+                        quantity=item_sponsor['quantity'], void_ind='n')
 
     i.save()
+    return i
+
+
+def save_sponsor_order(sponsor_order):
+    s = save_sponsor(sponsor_order['sponsor'])
+
+    for i in sponsor_order['items']:
+        item_sponsor = {
+            'item_id': i['item_id'],
+            'sponsor_id': s.sponsor_id,
+            'quantity': i['sponsor_quantity']
+        }
+        save_item_sponsor(item_sponsor)

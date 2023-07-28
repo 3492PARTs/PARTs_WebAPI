@@ -7,7 +7,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import sponsoring.util
 from general.security import ret_message, has_access
-from sponsoring.serializers import ItemSerializer, SponsorSerializer, ItemSponsorSerializer, SaveItemSerializer
+from sponsoring.serializers import ItemSerializer, SponsorSerializer, ItemSponsorSerializer, SaveItemSerializer, \
+    SaveSponsorOrderSerializer
 
 auth_obj = 50
 app_url = 'sponsoring/'
@@ -91,21 +92,21 @@ class SaveItem(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
-class SaveItemSponsor(APIView):
+class SaveSponsorOrder(APIView):
     """
-    API endpoint to save an item sponsor
+    API endpoint to save a sponsor's order
     """
-    endpoint = 'save-item-sponsor/'
+    endpoint = 'save-sponsor-order/'
 
     def post(self, request, format=None):
-        serializer = ItemSponsorSerializer(data=request.data)
+        serializer = SaveSponsorOrderSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
 
         try:
             with transaction.atomic():
-                sponsoring.util.save_item_sponsor(serializer.validated_data)
+                sponsoring.util.save_sponsor_order(serializer.validated_data)
             return ret_message('Saved data successfully.')
         except Exception as e:
             return ret_message('An error occurred while saving data.', True,
