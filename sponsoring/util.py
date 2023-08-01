@@ -1,7 +1,10 @@
+from datetime import datetime
+
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-from django.db.models import Q
+import pytz
+from django.db.models import Q, Sum
 from django.db.models.functions import Lower
 
 from sponsoring.models import Item, Sponsor, ItemSponsor
@@ -12,15 +15,16 @@ def get_items():
 
     ret = []
     for i in items:
-        purchased = 0
-        for s in i.itemsponsor_set.filter(Q(void_ind='n') & Q(time__gte=i.reset_date)):
-            purchased += s.quantity
-
+        purchased = i.itemsponsor_set.filter(Q(void_ind='n') & Q(time__gte=i.reset_date)).aggregate(Sum('quantity'))
+        purchased = purchased.get('quantity__sum', 0)
+        purchased = purchased if purchased is not None else 0
         ret.append({
             'item_id': i.item_id,
             'item_nm': i.item_nm,
             'item_desc': i.item_desc,
-            'quantity': i.quantity - purchased,
+            'quantity': i.quantity,
+            'sponsor_quantity': purchased,
+            'reset_date': i.reset_date,
             'active': i.active,
             'img_url': cloudinary.CloudinaryImage(i.img_id, version=i.img_ver).build_url()
         })
@@ -52,8 +56,10 @@ def save_item(item):
         i.item_nm = item['item_nm']
         i.item_desc = item['item_desc']
         i.quantity = item['quantity']
+        i.reset_date = item['reset_date']
     else:
-        i = Item(item_nm=item['item_nm'], item_desc=item['item_desc'], quantity=item['quantity'], void_ind='n')
+        i = Item(item_nm=item['item_nm'], item_desc=item['item_desc'], quantity=item['quantity'],
+                 reset_date=item['reset_date'], void_ind='n')
 
     i.save()
 

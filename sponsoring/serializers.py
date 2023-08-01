@@ -6,6 +6,7 @@ class SaveItemSerializer(serializers.Serializer):
     item_nm = serializers.CharField()
     item_desc = serializers.CharField()
     quantity = serializers.IntegerField()
+    reset_date = serializers.DateField()
     active = serializers.CharField()
     img = serializers.FileField(required=False)
 
@@ -15,6 +16,7 @@ class ItemSerializer(serializers.Serializer):
     item_nm = serializers.CharField()
     item_desc = serializers.CharField()
     quantity = serializers.IntegerField()
+    reset_date = serializers.DateField()
     sponsor_quantity = serializers.IntegerField(required=False)
     active = serializers.CharField()
     img_url = serializers.CharField()
