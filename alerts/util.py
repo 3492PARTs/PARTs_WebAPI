@@ -196,7 +196,7 @@ def send_alerts():
                 acs.alert_channel_send_id)
             message += alert + '\n'
             return ret_message(alert, True, 'alerts.util.send_alerts', 0, e)
-    if message is '':
+    if message == '':
         message = 'No notifications'
 
     return message
