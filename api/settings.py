@@ -13,24 +13,28 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
+import environ
+
+# Initialise environment variables
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
-DEBUG_PROPAGATE_EXCEPTIONS = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
+DEBUG = env('DEBUG', 'True').lower() in ('true', '1', 't')
+DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 
-ALLOWED_HOSTS = ['parts.bduke.dev', '192.168.1.41', 'partsuat.bduke.dev']
+ALLOWED_HOSTS = ['parts3492.org', 'test1.parts3492.org']
 
-FRONTEND_ADDRESS = os.getenv('FRONTEND_ADDRESS')
+FRONTEND_ADDRESS = env('FRONTEND_ADDRESS')
 
 # Application definition
 
@@ -39,13 +43,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'admin.apps.AdminConfig',
     'alerts.apps.AlertsConfig',
+    'form.apps.FormConfig',
     'public.apps.PublicConfig',
     'scouting.apps.ScoutingConfig',
+    'sponsoring.apps.SponsoringConfig',
     'user.apps.UserConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'corsheaders',
     'rest_framework',
+    'simple_history',
     'webpush'
 ]
 
@@ -64,9 +71,8 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     'https://parts3492.org',
     'https://www.parts3492.org',
-    'https://parts3492uat.bduke.dev',
-    'https://www.parts3492uat.bduke.dev',
-    'http://192.168.1.41:49156'
+    'https://test1.parts3492.org',
+    'https://test1.www.parts3492.org',
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -94,19 +100,14 @@ WSGI_APPLICATION = 'api.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     }
 }
-
-"""
-sequence reset for postgres
-    python3 manage.py sqlsequencereset user
-"""
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -196,23 +197,23 @@ STATICFILES_STORAGE = 'spa.storage.SPAStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email and SMTP settings
-DEFAULT_FROM_EMAIL = os.getenv('EMAIL_FROM')
+DEFAULT_FROM_EMAIL = env('EMAIL_FROM')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
-EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = env('EMAIL_PORT')
 
 # Cloudinary
-os.environ["CLOUDINARY_URL"] = os.getenv('CLOUDINARY_URL', '')
+os.environ["CLOUDINARY_URL"] = env('CLOUDINARY_URL')
 
-TBA_KEY = 'vOi134WDqMjUjGslV08r9ElOGoiWAU8LtSMxMBPziTVertNPmsdUqBOY8cYnyb7u'
+TBA_KEY = env('TBA_KEY')
 
-DISCORD_NOTIFICATION_WEBHOOK = os.getenv('DISCORD_NOTIFICATION_WEBHOOK', '')
+DISCORD_NOTIFICATION_WEBHOOK = env('DISCORD_NOTIFICATION_WEBHOOK', '')
 
 WEBPUSH_SETTINGS = {
-   "VAPID_PUBLIC_KEY": os.getenv('VAPID_PUBLIC_KEY'),
-   "VAPID_PRIVATE_KEY": os.getenv('VAPID_PRIVATE_KEY'),
-   "VAPID_ADMIN_EMAIL": "team3492@gmail.com"
+    "VAPID_PUBLIC_KEY": env('VAPID_PUBLIC_KEY'),
+    "VAPID_PRIVATE_KEY": env('VAPID_PRIVATE_KEY'),
+    "VAPID_ADMIN_EMAIL": env('VAPID_ADMIN_EMAIL')
 }
