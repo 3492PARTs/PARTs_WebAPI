@@ -97,6 +97,6 @@ def save_sponsor_order(sponsor_order):
         item_sponsor = {
             'item_id': i['item_id'],
             'sponsor_id': s.sponsor_id,
-            'quantity': i['sponsor_quantity']
+            'quantity': i['cart_quantity']
         }
         save_item_sponsor(item_sponsor)

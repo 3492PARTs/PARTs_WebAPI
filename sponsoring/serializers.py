@@ -18,6 +18,7 @@ class ItemSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
     reset_date = serializers.DateField()
     sponsor_quantity = serializers.IntegerField(required=False)
+    cart_quantity = serializers.IntegerField(required=False)
     active = serializers.CharField()
     img_url = serializers.CharField()
 
