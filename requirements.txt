@@ -19,5 +19,4 @@ PyJWT>=2.3.0
 sqlparse>=0.4.2
 toml>=0.10.2
 urllib3>=1.26.9
-django-spa
 django-simple-history
