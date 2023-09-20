@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 # Initialise environment variables
 load_dotenv('/home/parts3492/domains/api.parts3492.org/code/api/.env')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
