@@ -13,12 +13,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
-import environ
+from dotenv import load_dotenv, find_dotenv
 
 # Initialise environment variables
-env = environ.Env()
-environ.Env.read_env()
-
+load_dotenv('/home/parts3492/domains/api.parts3492.org/code/api/.env')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,15 +24,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', 'True').lower() in ('true', '1', 't')
+DEBUG = os.getenv('DEBUG').lower() in ('true', '1', 't')
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 
-ALLOWED_HOSTS = ['parts3492.org', 'test1.parts3492.org']
+ALLOWED_HOSTS = ['parts3492.org', 'test1.parts3492.org', 'api.parts3492.org']
 
-FRONTEND_ADDRESS = env('FRONTEND_ADDRESS')
+FRONTEND_ADDRESS = os.getenv('FRONTEND_ADDRESS')
 
 # Application definition
 
@@ -101,11 +99,11 @@ WSGI_APPLICATION = 'api.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -197,23 +195,23 @@ STATICFILES_STORAGE = 'spa.storage.SPAStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email and SMTP settings
-DEFAULT_FROM_EMAIL = env('EMAIL_FROM')
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_FROM')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = env('EMAIL_PORT')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
 
 # Cloudinary
-os.environ["CLOUDINARY_URL"] = env('CLOUDINARY_URL')
+os.environ["CLOUDINARY_URL"] = os.getenv('CLOUDINARY_URL')
 
-TBA_KEY = env('TBA_KEY')
+TBA_KEY = os.getenv('TBA_KEY')
 
-DISCORD_NOTIFICATION_WEBHOOK = env('DISCORD_NOTIFICATION_WEBHOOK', '')
+DISCORD_NOTIFICATION_WEBHOOK = os.getenv('DISCORD_NOTIFICATION_WEBHOOK')
 
 WEBPUSH_SETTINGS = {
-    "VAPID_PUBLIC_KEY": env('VAPID_PUBLIC_KEY'),
-    "VAPID_PRIVATE_KEY": env('VAPID_PRIVATE_KEY'),
-    "VAPID_ADMIN_EMAIL": env('VAPID_ADMIN_EMAIL')
+    "VAPID_PUBLIC_KEY": os.getenv('VAPID_PUBLIC_KEY'),
+    "VAPID_PRIVATE_KEY": os.getenv('VAPID_PRIVATE_KEY'),
+    "VAPID_ADMIN_EMAIL": os.getenv('VAPID_ADMIN_EMAIL')
 }
