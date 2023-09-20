@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 
 # Initialise environment variables
 load_dotenv('/home/parts3492/domains/api.parts3492.org/code/api/.env')
