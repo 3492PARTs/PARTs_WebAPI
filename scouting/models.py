@@ -113,59 +113,6 @@ class Match(models.Model):
         return 'match: ' + self.event.event_nm + ' ' + self.comp_level + ' match no: ' + self.match_number
 
 
-class QuestionType(models.Model):
-    question_typ = models.CharField(primary_key=True, max_length=50)
-    question_typ_nm = models.CharField(max_length=255)
-    void_ind = models.CharField(max_length=1, default='n')
-
-    def __str__(self):
-        return self.question_typ + ' ' + self.question_typ_nm
-
-
-class ScoutQuestionType(models.Model):
-    sq_typ = models.CharField(primary_key=True, max_length=10)
-    sq_nm = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.sq_typ + ' ' + self.sq_nm
-
-
-class ScoutQuestionSubType(models.Model):
-    sq_sub_typ = models.CharField(primary_key=True, max_length=10)
-    sq_sub_nm = models.CharField(max_length=255)
-    sq_typ = models.ForeignKey(ScoutQuestionType, models.PROTECT)
-
-    def __str__(self):
-        return self.sq_sub_typ + ' ' + self.sq_sub_nm
-
-
-class ScoutQuestion(models.Model):
-    sq_id = models.AutoField(primary_key=True)
-    season = models.ForeignKey(Season, models.DO_NOTHING)
-    sq_typ = models.ForeignKey(ScoutQuestionType, models.PROTECT)
-    sq_sub_typ = models.ForeignKey(
-        ScoutQuestionSubType, models.PROTECT, null=True)
-    question_typ = models.ForeignKey(QuestionType, models.PROTECT)
-    question = models.CharField(max_length=1000)
-    order = models.IntegerField()
-    active = models.CharField(max_length=1)
-    void_ind = models.CharField(max_length=1, default='n')
-
-    def __str__(self):
-        return str(self.sq_id) + ' ' + self.question
-
-
-class QuestionOptions(models.Model):
-    q_opt_id = models.AutoField(primary_key=True)
-    option = models.CharField(max_length=255)
-    sq = models.ForeignKey(ScoutQuestion, models.PROTECT)
-    active = models.CharField(max_length=1, blank=True, null=True)
-    void_ind = models.CharField(max_length=1, default='n')
-
-    def __str__(self):
-        return str(self.q_opt_id) + ' ' + self.option
-
-
 class ScoutField(models.Model):
     scout_field_id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
@@ -179,17 +126,6 @@ class ScoutField(models.Model):
         return self.scout_field_id
 
 
-class ScoutFieldAnswer(models.Model):
-    sfa_id = models.AutoField(primary_key=True)
-    scout_field = models.ForeignKey(ScoutField, models.PROTECT)
-    sq = models.ForeignKey(ScoutQuestion, models.PROTECT)
-    answer = models.CharField(max_length=1000, blank=True, null=True)
-    void_ind = models.CharField(max_length=1, default='n')
-
-    def __str__(self):
-        return str(self.sfa_id) + ' ' + self.answer
-
-
 class ScoutPit(models.Model):
     scout_pit_id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
@@ -201,17 +137,6 @@ class ScoutPit(models.Model):
 
     def __str__(self):
         return self.scout_pit_id
-
-
-class ScoutPitAnswer(models.Model):
-    spa_id = models.AutoField(primary_key=True)
-    scout_pit = models.ForeignKey(ScoutPit, models.PROTECT)
-    sq = models.ForeignKey(ScoutQuestion, models.PROTECT)
-    answer = models.CharField(max_length=1000, blank=True, null=True)
-    void_ind = models.CharField(max_length=1, default='n')
-
-    def __str__(self):
-        return str(self.spa_id) + ' ' + self.answer
 
 
 class ScoutAuthGroups(models.Model):
