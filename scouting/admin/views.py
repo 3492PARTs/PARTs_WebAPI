@@ -7,6 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 
+import user.util
 from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, FormSubType, FormType
 from general import send_message
 from user.models import User, PhoneType
@@ -51,8 +52,7 @@ class Init(APIView):
         except Exception as e:
             current_event = Event()
 
-        users = User.objects.filter(Q(is_active=True) & Q(
-            date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
+        users = user.util.get_users()
 
         user_groups = []
         try:

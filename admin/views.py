@@ -2,6 +2,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
+import user.util
 from user.models import PhoneType
 from .serializers import ErrorLogSerializer, InitSerializer, SaveUserSerializer
 from .models import ErrorLog
@@ -27,8 +28,7 @@ class Init(APIView):
     endpoint = 'init/'
 
     def init(self):
-        users = User.objects.filter(
-            Q(date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
+        users = user.util.get_users(False)
 
         user_groups = Group.objects.all().order_by('name')
 
