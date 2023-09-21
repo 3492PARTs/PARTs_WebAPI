@@ -52,8 +52,6 @@ class Init(APIView):
         except Exception as e:
             current_event = Event()
 
-        users = user.util.get_users()
-
         user_groups = []
         try:
             user_groups = Group.objects.filter(id__in=list(
@@ -105,7 +103,7 @@ class Init(APIView):
         scoutQuestionType = FormType.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
-                'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
+                'userGroups': user_groups, 'phoneTypes': phone_types,
                 'fieldSchedule': fieldSchedule,  # 'pitSchedule': pitSchedule,
                 'scoutQuestionType': scoutQuestionType, 'teams': teams}
 

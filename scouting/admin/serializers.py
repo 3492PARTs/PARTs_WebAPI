@@ -282,7 +282,6 @@ class InitSerializer(serializers.Serializer):
     events = EventTeamSerializer(many=True)
     currentSeason = SeasonSerializer(required=False)
     currentEvent = EventSerializer(required=False)
-    users = UserSerializer(many=True)
     userGroups = GroupSerializer(many=True)
     phoneTypes = PhoneTypeSerializer(many=True)
     fieldSchedule = ScoutFieldScheduleSerializer(many=True)
