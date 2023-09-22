@@ -621,7 +621,7 @@ class Users(APIView):
 
     def get(self, request, format=None):
         try:
-            req = user.util.get_users(request.query_params.get('is_active', True))
+            req = user.util.get_users(int(request.query_params.get('is_active', '0')))
             serializer = UserSerializer(req, many=True)
             return Response(serializer.data)
         except Exception as e:
