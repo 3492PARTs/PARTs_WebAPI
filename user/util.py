@@ -6,10 +6,17 @@ from user.models import User
 
 
 def get_users(active=True):
-    users = User.objects.filter(Q(date_joined__isnull=False)).order_by('-is_active', Lower('first_name'), Lower('last_name'))
+    users = User.objects.filter(Q(date_joined__isnull=False)).order_by('is_active', Lower('first_name'), Lower('last_name'))
 
     if active:
         users.filter(Q(is_active=True))
+
+    users.filter(first_name='Brandon')
+
+    print(users.query)
+
+    for u in users:
+        print(u)
 
     return users
 
