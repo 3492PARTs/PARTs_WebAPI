@@ -14,7 +14,7 @@ def get_users(active=True):
     return users
 
 
-def save_user(self, data):
+def save_user(data):
     groups = []
     user = User.objects.get(username=data['user']['username'])
     user.first_name = data['user']['first_name']
@@ -26,17 +26,17 @@ def save_user(self, data):
     user.is_active = data['user']['is_active']
     user.save()
 
-    for d in data['groups']:
-        groups.append(d['name'])
-        aug = user.groups.filter(name=d['name']).exists()
-        if not aug:
-            group = Group.objects.get(name=d['name'])
-            user.groups.add(group)
+    if 'groups' in data:
+        for d in data['groups']:
+            groups.append(d['name'])
+            aug = user.groups.filter(name=d['name']).exists()
+            if not aug:
+                group = Group.objects.get(name=d['name'])
+                user.groups.add(group)
 
-    user_groups = user.groups.all()
-    user_groups = user_groups.filter(~Q(name__in=groups))
+        user_groups = user.groups.filter(~Q(name__in=groups))
 
-    for user_group in user_groups:
-        user_group.user_set.remove(user)
+        for user_group in user_groups:
+            user_group.user_set.remove(user)
 
     return user
