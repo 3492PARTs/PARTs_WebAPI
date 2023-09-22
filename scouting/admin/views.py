@@ -7,6 +7,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
 
+import user.util
 from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, FormSubType, FormType
 from general import send_message
 from user.models import User, PhoneType
@@ -50,9 +51,6 @@ class Init(APIView):
                 Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
         except Exception as e:
             current_event = Event()
-
-        users = User.objects.filter(Q(is_active=True) & Q(
-            date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
 
         user_groups = []
         try:
@@ -105,7 +103,7 @@ class Init(APIView):
         scoutQuestionType = FormType.objects.all()
 
         return {'seasons': seasons, 'events': events, 'currentSeason': current_season, 'currentEvent': current_event,
-                'users': users, 'userGroups': user_groups, 'phoneTypes': phone_types,
+                'userGroups': user_groups, 'phoneTypes': phone_types,
                 'fieldSchedule': fieldSchedule,  # 'pitSchedule': pitSchedule,
                 'scoutQuestionType': scoutQuestionType, 'teams': teams}
 

@@ -2,7 +2,7 @@ import webpush.views
 from django.urls import path, include
 from .views import UserData, UserLinksView, UserGroups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, \
     UserRequestPasswordReset, UserPasswordReset, UserRequestUsername, \
-    SaveWebPushInfo, TokenObtainPairView, TokenRefreshView, Alerts
+    SaveWebPushInfo, TokenObtainPairView, TokenRefreshView, Alerts, Users, SaveUser
 from rest_framework_simplejwt import views as jwt_views
 
 # Wire up our API using atomic URL routing.
@@ -23,4 +23,6 @@ urlpatterns = [
     path('request-username/', UserRequestUsername.as_view()),
     path('alerts/', Alerts.as_view()),
     path('webpush-save/', SaveWebPushInfo.as_view()),
+    path('users/', Users.as_view()),
+    path('save/', SaveUser.as_view()),
 ]

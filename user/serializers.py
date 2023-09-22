@@ -31,6 +31,7 @@ class UserSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     is_active = serializers.BooleanField()
     phone = serializers.CharField()
+    discord_user_id = serializers.CharField(required=False, allow_null=True)
 
     groups = GroupSerializer(many=True, required=False)
     phone_type = PhoneTypeSerializer(required=False, allow_null=True)
@@ -91,3 +92,8 @@ class GetAlertsSerializer(serializers.Serializer):
     alert_subject = serializers.CharField()
     alert_body = serializers.CharField()
     staged_time = serializers.DateTimeField()
+
+
+class SaveUserSerializer(serializers.Serializer):
+    user = UserSerializer()
+    groups = GroupSerializer(many=True)

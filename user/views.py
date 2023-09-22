@@ -6,6 +6,7 @@ import webpush.views
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.tokens import default_token_generator
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect
 
@@ -20,11 +21,12 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from webpush import send_user_notification
 
 import alerts.util
+import user.util
 from api.settings import AUTH_PASSWORD_VALIDATORS
 from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
-    UserUpdateSerializer, GetAlertsSerializer
+    UserUpdateSerializer, GetAlertsSerializer, SaveUserSerializer
 from .models import User, UserLinks
-from general.security import get_user_groups, get_user_permissions, ret_message
+from general.security import get_user_groups, get_user_permissions, ret_message, has_access
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -37,6 +39,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt import views as jwt_views
 
+auth_obj_save_user = 56
 app_url = 'user/'
 
 
@@ -606,3 +609,45 @@ class SaveWebPushInfo(APIView):
             return ret_message('An error occurred while subscribing to push notifications.', True,
                                app_url + self.endpoint,
                                request.user.id, e)
+
+
+class Users(APIView):
+    """
+    API endpoint to get users
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'users/'
+
+    def get(self, request, format=None):
+        try:
+            req = user.util.get_users(int(request.query_params.get('is_active', '0')))
+            serializer = UserSerializer(req, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting users.', True, app_url + self.endpoint,
+                               request.user.id, e)
+
+
+class SaveUser(APIView):
+    """API endpoint to save user data"""
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'save/'
+
+    def post(self, request, format=None):
+        serializer = SaveUserSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, auth_obj_save_user):
+            try:
+                with transaction.atomic():
+                    user.util.save_user(serializer.validated_data)
+                    return ret_message('Saved user successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the user.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
