@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG').lower() in ('true', '1', 't')
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 
-ALLOWED_HOSTS = ['parts3492.org', 'test1.parts3492.org', 'api.parts3492.org']
+ALLOWED_HOSTS = ['parts3492.org', 'api.parts3492.org']
 
 FRONTEND_ADDRESS = os.getenv('FRONTEND_ADDRESS')
 
@@ -66,8 +66,6 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     'https://parts3492.org',
     'https://www.parts3492.org',
-    'https://test1.parts3492.org',
-    'https://test1.www.parts3492.org',
 ]
 
 ROOT_URLCONF = 'api.urls'
