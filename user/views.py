@@ -644,7 +644,7 @@ class SaveUser(APIView):
         if has_access(request.user.id, auth_obj_save_user):
             try:
                 with transaction.atomic():
-                    req = user.util.save_user(serializer.validated_data)
+                    user.util.save_user(serializer.validated_data)
                     return ret_message('Saved user successfully')
             except Exception as e:
                 return ret_message('An error occurred while saving the user.', True, app_url + self.endpoint,
