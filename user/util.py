@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group
 from django.db.models import Q, Value
 from django.db.models.functions import Lower, Concat
 
-from user.models import User
+from user.models import User, PhoneType
 
 
 def get_users(active):
@@ -43,5 +43,17 @@ def save_user(data):
     return user
 
 
-def get_user_groups():
+def get_user_groups(user_id: int):
+    user_groups = User.objects.get(id=user_id).groups.all().order_by('name')
+
+    return user_groups
+
+
+def get_all_user_groups(user_id: int = None):
     user_groups = Group.objects.all().order_by('name')
+
+    return user_groups
+
+
+def get_phone_types():
+    return PhoneType.objects.all().order_by('carrier')
