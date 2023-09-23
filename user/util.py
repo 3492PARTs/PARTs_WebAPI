@@ -10,11 +10,7 @@ def get_users(active):
     if active in [-1, 1]:
         user_active = Q(is_active=active == 1)
 
-    #users.filter(first_name='Brandon')
-
     users = User.objects.annotate(name=Concat('first_name', Value(' '), 'last_name')).filter(Q(date_joined__isnull=False) & user_active).order_by('is_active', Lower('first_name'), Lower('last_name'))
-
-    print(users.query)
 
     return users
 
