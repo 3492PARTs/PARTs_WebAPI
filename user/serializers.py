@@ -31,7 +31,7 @@ class UserSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     is_active = serializers.BooleanField()
-    phone = serializers.CharField()
+    phone = serializers.CharField(allow_blank=True)
     discord_user_id = serializers.CharField(required=False, allow_null=True)
 
     groups = GroupSerializer(many=True, required=False)

@@ -41,3 +41,7 @@ def save_user(data):
             user_group.user_set.remove(user)
 
     return user
+
+
+def get_user_groups():
+    user_groups = Group.objects.all().order_by('name')
