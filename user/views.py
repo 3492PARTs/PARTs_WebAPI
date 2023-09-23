@@ -503,6 +503,7 @@ class UserData(APIView):
             'id': user.id,
             'username': user.username,
             'email': user.email,
+            'name': user.first_name + ' ' + user.last_name,
             'first_name': user.first_name,
             'last_name': user.last_name,
             'is_active': user.is_active,

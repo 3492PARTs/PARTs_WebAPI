@@ -1,6 +1,6 @@
 from django.contrib.auth.models import Group
-from django.db.models import Q
-from django.db.models.functions import Lower
+from django.db.models import Q, Value
+from django.db.models.functions import Lower, Concat
 
 from user.models import User
 
@@ -12,7 +12,7 @@ def get_users(active):
 
     #users.filter(first_name='Brandon')
 
-    users = User.objects.filter(Q(date_joined__isnull=False) & user_active).order_by('is_active', Lower('first_name'), Lower('last_name'))
+    users = User.objects.annotate(name=Concat('first_name', Value(' '), 'last_name')).filter(Q(date_joined__isnull=False) & user_active).order_by('is_active', Lower('first_name'), Lower('last_name'))
 
     print(users.query)
 
