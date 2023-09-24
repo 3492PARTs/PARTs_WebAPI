@@ -57,3 +57,7 @@ def get_all_user_groups(user_id: int = None):
 
 def get_phone_types():
     return PhoneType.objects.all().order_by('carrier')
+
+
+def get_users_in_group(name: str):
+    return get_users(1).filter(groups__name=name)
