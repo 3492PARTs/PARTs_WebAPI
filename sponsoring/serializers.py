@@ -28,6 +28,7 @@ class SponsorSerializer(serializers.Serializer):
     sponsor_nm = serializers.CharField()
     phone = serializers.CharField()
     email = serializers.CharField()
+    can_send_emails = serializers.BooleanField()
 
 
 class ItemSponsorSerializer(serializers.Serializer):

@@ -2,6 +2,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
+import user.util
 from user.models import PhoneType
 from .serializers import ErrorLogSerializer, InitSerializer
 from .models import ErrorLog
@@ -22,17 +23,12 @@ class Init(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = 'init/'
 
-    def init(self):
-        user_groups = Group.objects.all().order_by('name')
-
-        phone_types = PhoneType.objects.all().order_by('carrier')
-
-        return {'userGroups': user_groups, 'phoneTypes': phone_types}
-
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.init()
+                user_groups = user.util.get_all_user_groups()
+                phone_types = user.util.get_phone_types()
+                req = {'userGroups': user_groups, 'phoneTypes': phone_types}
                 serializer = InitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:

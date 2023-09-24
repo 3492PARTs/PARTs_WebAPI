@@ -38,6 +38,7 @@ class Sponsor(models.Model):
     sponsor_nm = models.CharField(max_length=255)
     phone = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
+    can_send_emails = models.BooleanField(default=False)
     history = HistoricalRecords()
     void_ind = models.CharField(max_length=1, default='n')
 

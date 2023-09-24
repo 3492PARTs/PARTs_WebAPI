@@ -8,6 +8,7 @@ from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
 from general import send_message
 from general.security import ret_message
 from scouting.models import Event, ScoutFieldSchedule, Schedule
+from user.models import User
 
 
 def stage_all_field_schedule_alerts():
@@ -144,13 +145,13 @@ def stage_schedule_alerts():
     return message
 
 
-def stage_alert(user, alert_subject: str, alert_body: str):
+def stage_alert(user: User, alert_subject: str, alert_body: str):
     alert = Alert(user=user, alert_subject=alert_subject, alert_body=alert_body)
     alert.save()
     return alert
 
 
-def stage_alert_channel_send(alert, alert_comm_typ: str):
+def stage_alert_channel_send(alert: Alert, alert_comm_typ: str):
     acs = AlertChannelSend(
         alert_comm_typ=AlertCommunicationChannelType.objects.get(
             Q(alert_comm_typ=alert_comm_typ) & Q(void_ind='n')),
@@ -172,6 +173,7 @@ def send_alerts():
                         'generic_email', {'message': acs.alert.alert_body, 'user': acs.alert.user})
                     message += 'Email'
                 case 'message':
+                    # this is because i have not decided what to do yet
                     message += 'message not configured'
                 case 'notification':
                     send_message.send_webpush(acs.alert.user, acs.alert.alert_subject, acs.alert.alert_body,

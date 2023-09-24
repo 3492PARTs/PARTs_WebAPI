@@ -5,8 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+import alerts.util
 import form.util
-from form.models import Question, QuestionAnswer
+import user.util
+from form.models import Question, QuestionAnswer, FormType
 from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveScoutSerializer, \
     QuestionInitializationSerializer
 from general.security import has_access, ret_message
@@ -102,6 +104,7 @@ class SaveAnswers(APIView):
                 except Exception as e:
                     raise Exception('No event set, see an admin')
 
+                # Try to deserialize as a field or pit answer
                 serializer = SaveScoutSerializer(data=request.data)
                 if serializer.is_valid():
                     with transaction.atomic():
@@ -135,15 +138,25 @@ class SaveAnswers(APIView):
                                                                    scout_pit=sp)
                         return ret_message(success_msg)
 
+                # if the deserialization above didn't work try as a regular response
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
                     with transaction.atomic():
-                        r = form.models.Response(form_typ_id=serializer.data['form_typ'])
+                        form_type = FormType.objects.get(form_typ=serializer.data['form_typ'])
+                        r = form.models.Response(form_typ=form_type)
                         r.save()
 
                         for d in serializer.data.get('question_answers', []):
                             form.util.save_question_answer(d['answer'], Question.objects.get(question_id=d['question_id']),
                                                            response=r)
+
+                        alert = []
+                        users = user.util.get_users_in_group('Site Alerts')
+                        for u in users:
+                            alert.append(alerts.util.stage_alert(u, form_type.form_nm, 'A new response has been logged.'))
+                        for a in alert:
+                            for acct in ['email', 'message', 'notification']:
+                                alerts.util.stage_alert_channel_send(a, acct)
                         return ret_message(success_msg)
 
                 return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
@@ -152,6 +165,3 @@ class SaveAnswers(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-
-
-

@@ -1,8 +1,8 @@
 from django.contrib.auth.models import Group
-from django.db.models import Q
-from django.db.models.functions import Lower
+from django.db.models import Q, Value
+from django.db.models.functions import Lower, Concat
 
-from user.models import User
+from user.models import User, PhoneType
 
 
 def get_users(active):
@@ -10,11 +10,7 @@ def get_users(active):
     if active in [-1, 1]:
         user_active = Q(is_active=active == 1)
 
-    #users.filter(first_name='Brandon')
-
-    users = User.objects.filter(Q(date_joined__isnull=False) & user_active).order_by('is_active', Lower('first_name'), Lower('last_name'))
-
-    print(users.query)
+    users = User.objects.annotate(name=Concat('first_name', Value(' '), 'last_name')).filter(Q(date_joined__isnull=False) & user_active).order_by('is_active', Lower('first_name'), Lower('last_name'))
 
     return users
 
@@ -45,3 +41,23 @@ def save_user(data):
             user_group.user_set.remove(user)
 
     return user
+
+
+def get_user_groups(user_id: int):
+    user_groups = User.objects.get(id=user_id).groups.all().order_by('name')
+
+    return user_groups
+
+
+def get_all_user_groups(user_id: int = None):
+    user_groups = Group.objects.all().order_by('name')
+
+    return user_groups
+
+
+def get_phone_types():
+    return PhoneType.objects.all().order_by('carrier')
+
+
+def get_users_in_group(name: str):
+    return get_users(1).filter(groups__name=name)

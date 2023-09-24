@@ -54,12 +54,12 @@ class Init(APIView):
 
         user_groups = []
         try:
-            user_groups = Group.objects.filter(id__in=list(
-                ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True))).order_by('name')
+            user_groups = user.util.get_all_user_groups().filter(id__in=list(
+                ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True)))
         except Exception as e:
             user_groups = []
 
-        phone_types = PhoneType.objects.all().order_by(Lower('carrier'))
+        phone_types = user.util.get_phone_types()
 
         fieldSchedule = []
 
