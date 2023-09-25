@@ -151,7 +151,7 @@ class SaveAnswers(APIView):
                                                            response=r)
 
                         alert = []
-                        users = user.util.get_users_in_group('Site Alerts')
+                        users = user.util.get_users_in_group('Site Forms')
                         for u in users:
                             alert.append(alerts.util.stage_alert(u, form_type.form_nm, 'A new response has been logged.'))
                         for a in alert:
@@ -165,3 +165,19 @@ class SaveAnswers(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class GetResponse(APIView):
+    """
+    API endpoint to get a form response
+    """
+    endpoint = 'get-response/'
+
+    def get(self, request, format=None):
+        try:
+            response = form.util.get_response(request.query_params['response_id'])
+            serializer = QuestionSerializer(response, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting responses.', True, app_url + self.endpoint,
+                               request.user.id, e)
