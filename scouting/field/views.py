@@ -16,8 +16,8 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.conf import settings
 
-auth_obj = 49
-auth_view_obj = 52
+auth_obj = 'scoutfield'
+auth_view_obj = 'scoutFieldResults'
 app_url = 'scouting/field/'
 
 

@@ -39,7 +39,7 @@ from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt import views as jwt_views
 
-auth_obj_save_user = 56
+auth_obj_save_user = 'save_user'
 app_url = 'user/'
 
 

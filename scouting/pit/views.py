@@ -14,8 +14,8 @@ from django.db.models import Q, Prefetch
 from rest_framework.response import Response
 import form.util
 
-auth_obj = 51
-auth_view_obj = 53
+auth_obj = 'scoutpit'
+auth_view_obj = 'scoutPitResults'
 app_url = 'scouting/pit/'
 
 

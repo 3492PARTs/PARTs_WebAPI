@@ -14,7 +14,6 @@ from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveSco
 from general.security import has_access, ret_message
 from scouting.models import Event, Season, ScoutField, ScoutPit
 
-auth_obj = 50
 app_url = 'form/'
 
 
@@ -43,7 +42,7 @@ class GetFormInit(APIView):
     endpoint = 'form-init/'
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, 'admin'):
             try:
                 questions = form.util.get_questions(request.query_params['form_typ'])
                 question_types = form.util.get_question_types()
@@ -74,7 +73,7 @@ class SaveQuestion(APIView):
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
 
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, 'admin'):
             try:
                 with transaction.atomic():
                     form.util.save_question(serializer.validated_data)
@@ -96,7 +95,7 @@ class SaveAnswers(APIView):
 
     def post(self, request, format=None):
         success_msg = 'Response saved successfully'
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, 'admin'):
             try:
                 try:
                     current_event = Event.objects.get(
@@ -174,10 +173,13 @@ class GetResponse(APIView):
     endpoint = 'get-response/'
 
     def get(self, request, format=None):
-        try:
-            response = form.util.get_response(request.query_params['response_id'])
-            serializer = QuestionSerializer(response, many=True)
-            return Response(serializer.data)
-        except Exception as e:
-            return ret_message('An error occurred while getting responses.', True, app_url + self.endpoint,
-                               request.user.id, e)
+        if has_access(request.user.id, 'site_forms'):
+            try:
+                response = form.util.get_response(request.query_params['response_id'])
+                serializer = QuestionSerializer(response, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting responses.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)

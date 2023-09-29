@@ -15,8 +15,8 @@ from general.security import has_access, ret_message
 from django.db.models import Q
 from rest_framework.response import Response
 
-auth_obj = 54
-scheduling_auth_obj = 57
+auth_obj = 'scoutPortal'
+scheduling_auth_obj = 'scheduling'
 app_url = 'scouting/portal/'
 
 

@@ -12,8 +12,8 @@ from scouting.matchplanning.serializers import InitSerializer, SaveTeamNoteSeria
 from scouting.models import Event, Team, Match, Season, TeamNotes
 from scouting.pit.views import get_pit_results
 
-auth_obj = 58
-auth_view_obj_scout_field = 52
+auth_obj = 'matchplanning'
+auth_view_obj_scout_field = 'scoutFieldResults'
 app_url = 'scouting/match-planning/'
 
 
