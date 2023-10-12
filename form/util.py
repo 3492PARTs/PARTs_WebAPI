@@ -118,3 +118,14 @@ def save_question_answer(answer: str, question: Question, scout_field: ScoutFiel
                         response=response, void_ind='n')
     qa.save()
     return qa
+
+
+def get_response(response_id: int):
+    res = Response.objects.get(Q(response_id=response_id) & Q(void_ind='n'))
+    questions = get_questions(res.form_typ)
+
+    for question in questions:
+        question['answer'] = QuestionAnswer.objects.get(
+            Q(question_id=question.get('question_id')) & Q(response=res) & Q(void_ind='n')).answer
+
+    return questions

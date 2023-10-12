@@ -12,7 +12,7 @@ def has_access(user_id, sec_permission):
 
     access = False
     for prmsn in prmsns:
-        if prmsn.id == sec_permission:
+        if prmsn.codename == sec_permission:
             access = True
             break
 

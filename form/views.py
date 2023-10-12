@@ -14,7 +14,6 @@ from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveSco
 from general.security import has_access, ret_message
 from scouting.models import Event, Season, ScoutField, ScoutPit
 
-auth_obj = 50
 app_url = 'form/'
 
 
@@ -43,7 +42,7 @@ class GetFormInit(APIView):
     endpoint = 'form-init/'
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, 'admin'):
             try:
                 questions = form.util.get_questions(request.query_params['form_typ'])
                 question_types = form.util.get_question_types()
@@ -74,7 +73,7 @@ class SaveQuestion(APIView):
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
 
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, 'admin'):
             try:
                 with transaction.atomic():
                     form.util.save_question(serializer.validated_data)
@@ -88,80 +87,106 @@ class SaveQuestion(APIView):
 
 class SaveAnswers(APIView):
     """
-    API endpoint to save scout field answers
+    API endpoint to save answers
     """
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    # authentication_classes = (JWTAuthentication,)
+    # permission_classes = (IsAuthenticated,)
     endpoint = 'save-answers/'
 
     def post(self, request, format=None):
         success_msg = 'Response saved successfully'
-        if has_access(request.user.id, auth_obj):
+        form_typ = request.data.get('form_typ', '')
+        with transaction.atomic():
             try:
-                try:
-                    current_event = Event.objects.get(
-                        Q(season=Season.objects.get(current='y')) & Q(current='y'))
-                except Exception as e:
-                    raise Exception('No event set, see an admin')
+                if form_typ in ['field', 'pit']:
+                    # field and pit responses must be authenticated
+                    if (form_typ == 'field' and has_access(request.user.id, 'scoutfield')) or (form_typ == 'pit' and has_access(request.user.id, 'scoutpit')):
+                        try:
+                            current_event = Event.objects.get(
+                                Q(season=Season.objects.get(current='y')) & Q(current='y'))
+                        except Exception as e:
+                            raise Exception('No event set, see an admin')
 
-                # Try to deserialize as a field or pit answer
-                serializer = SaveScoutSerializer(data=request.data)
-                if serializer.is_valid():
-                    with transaction.atomic():
-                        if (serializer.data['form_typ'] == 'field'):
-                            sf = ScoutField(
-                                event=current_event, team_no_id=serializer.data['team'],
-                                match_id=serializer.data.get('match', None),
-                                user_id=self.request.user.id, void_ind='n')
-                            sf.save()
+                        # Try to deserialize as a field or pit answer
+                        serializer = SaveScoutSerializer(data=request.data)
+                        if serializer.is_valid():
+                            if serializer.data['form_typ'] == 'field':
+                                sf = ScoutField(
+                                    event=current_event, team_no_id=serializer.data['team'],
+                                    match_id=serializer.data.get('match', None),
+                                    user_id=self.request.user.id, void_ind='n')
+                                sf.save()
 
-                            for d in serializer.data.get('question_answers', []):
-                                form.util.save_question_answer(d['answer'], Question.objects.get(question_id=d['question_id']),
-                                                               scout_field=sf)
-                        else:
-                            try:
-                                sp = ScoutPit.objects.get(Q(team_no_id=serializer.data['team']) & Q(void_ind='n') &
-                                                          Q(event=current_event))
-                            except Exception as e:
-                                sp = ScoutPit(event=current_event, team_no_id=serializer.data['team'],
-                                              user_id=self.request.user.id, void_ind='n')
-                                sp.save()
-
-                            for d in serializer.data.get('question_answers', []):
-                                try:
-                                    spa = QuestionAnswer.objects.get(Q(scout_pit=sp) & Q(question_id=d['question_id']) &
-                                                                     Q(void_ind='n'))
-                                    spa.answer = d.get('answer', '')
-                                except Exception as e:
-                                    form.util.save_question_answer(d.get('answer', ''),
+                                for d in serializer.data.get('question_answers', []):
+                                    form.util.save_question_answer(d['answer'],
                                                                    Question.objects.get(question_id=d['question_id']),
-                                                                   scout_pit=sp)
-                        return ret_message(success_msg)
+                                                                   scout_field=sf)
+                            else:
+                                try:
+                                    sp = ScoutPit.objects.get(Q(team_no_id=serializer.data['team']) & Q(void_ind='n') &
+                                                              Q(event=current_event))
+                                except Exception as e:
+                                    sp = ScoutPit(event=current_event, team_no_id=serializer.data['team'],
+                                                  user_id=self.request.user.id, void_ind='n')
+                                    sp.save()
 
-                # if the deserialization above didn't work try as a regular response
-                serializer = SaveResponseSerializer(data=request.data)
-                if serializer.is_valid():
-                    with transaction.atomic():
+                                for d in serializer.data.get('question_answers', []):
+                                    try:
+                                        spa = QuestionAnswer.objects.get(
+                                            Q(scout_pit=sp) & Q(question_id=d['question_id']) &
+                                            Q(void_ind='n'))
+                                        spa.answer = d.get('answer', '')
+                                    except Exception as e:
+                                        form.util.save_question_answer(d.get('answer', ''),
+                                                                       Question.objects.get(
+                                                                           question_id=d['question_id']),
+                                                                       scout_pit=sp)
+                            return ret_message(success_msg)
+                        raise Exception('Invalid Data')
+                    else:
+                        return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+                else:
+                    # regular response
+                    serializer = SaveResponseSerializer(data=request.data)
+                    if serializer.is_valid():
                         form_type = FormType.objects.get(form_typ=serializer.data['form_typ'])
                         r = form.models.Response(form_typ=form_type)
                         r.save()
 
                         for d in serializer.data.get('question_answers', []):
-                            form.util.save_question_answer(d['answer'], Question.objects.get(question_id=d['question_id']),
+                            form.util.save_question_answer(d['answer'],
+                                                           Question.objects.get(question_id=d['question_id']),
                                                            response=r)
 
                         alert = []
-                        users = user.util.get_users_in_group('Site Alerts')
+                        users = user.util.get_users_in_group('Site Forms')
                         for u in users:
-                            alert.append(alerts.util.stage_alert(u, form_type.form_nm, 'A new response has been logged.'))
+                            alert.append(
+                                alerts.util.stage_alert(u, form_type.form_nm, 'A new response has been logged.'))
                         for a in alert:
                             for acct in ['email', 'message', 'notification']:
                                 alerts.util.stage_alert_channel_send(a, acct)
                         return ret_message(success_msg)
-
-                return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+                    raise Exception('Invalid Data')
             except Exception as e:
                 return ret_message('An error occurred while saving answers.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+
+
+class GetResponse(APIView):
+    """
+    API endpoint to get a form response
+    """
+    endpoint = 'get-response/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 'site_forms'):
+            try:
+                response = form.util.get_response(request.query_params['response_id'])
+                serializer = QuestionSerializer(response, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting responses.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)

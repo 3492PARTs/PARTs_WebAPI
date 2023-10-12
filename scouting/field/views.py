@@ -16,8 +16,8 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.conf import settings
 
-auth_obj = 49
-auth_view_obj = 52
+auth_obj = 'scoutfield'
+auth_view_obj = 'scoutFieldResults'
 app_url = 'scouting/field/'
 
 
@@ -115,53 +115,6 @@ class Questions(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
-"""
-class SaveAnswers(APIView):
-    ""
-    API endpoint to save scout field answers
-    ""
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = 'save-answers/'
-
-    def save_answers(self, data):
-        try:
-            current_season = Season.objects.get(current='y')
-        except Exception as e:
-            return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
-
-        try:
-            current_event = Event.objects.get(
-                Q(season=current_season) & Q(current='y'))
-        except Exception as e:
-            return ret_message('No event set, see an admin', True, app_url + self.endpoint, self.request.user.id, e)
-
-        sf = ScoutField(
-            event=current_event, team_no_id=data['team'], match_id=data.get('match', None),
-            user_id=self.request.user.id, void_ind='n')
-        sf.save()
-
-        for d in data['scoutQuestions']:
-            form.util.save_question_answer(d.get('answer', ''), Question.objects.get(question_id=d['question_id']), scout_field=sf)
-
-        return ret_message('Response saved successfully')
-
-    def post(self, request, format=None):
-        serializer = SaveScoutFieldSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
-
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.save_answers(serializer.data)
-                return req
-            except Exception as e:
-                return ret_message('An error occurred while saving answers.', True, app_url + self.endpoint,
-                                   request.user.id, e)
-        else:
-            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
-"""
-
 class Results(APIView):
     """
     API endpoint to get the results of field scouting
@@ -170,13 +123,10 @@ class Results(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = 'results/'
 
-    def get_answers(self, team):
-        return get_field_results(team, self.endpoint, self.request)
-
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj) or has_access(request.user.id, auth_view_obj):
             try:
-                req = self.get_answers(request.query_params.get('team', None))
+                req = get_field_results(request.query_params.get('team', None), self.endpoint, self.request)
 
                 if type(req) == Response:
                     return req

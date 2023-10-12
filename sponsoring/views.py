@@ -10,7 +10,7 @@ from general.security import ret_message, has_access
 from sponsoring.serializers import ItemSerializer, SponsorSerializer, ItemSponsorSerializer, SaveItemSerializer, \
     SaveSponsorOrderSerializer
 
-auth_obj = 50
+auth_obj = 'scoutadmin'
 app_url = 'sponsoring/'
 
 

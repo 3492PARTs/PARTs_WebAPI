@@ -24,7 +24,7 @@ from django.db.models import Q
 from rest_framework.response import Response
 import form.util
 
-auth_obj = 50
+auth_obj = 'scoutadmin'
 app_url = 'scouting/admin/'
 
 

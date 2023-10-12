@@ -11,7 +11,7 @@ from general.security import has_access, ret_message
 from django.contrib.auth.models import Group
 from rest_framework.response import Response
 
-auth_obj = 55
+auth_obj = 'admin'
 app_url = 'admin/'
 
 
