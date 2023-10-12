@@ -100,7 +100,7 @@ class SaveAnswers(APIView):
             try:
                 if form_typ in ['field', 'pit']:
                     # field and pit responses must be authenticated
-                    if has_access(request.user.id, 'admin'):
+                    if (form_typ == 'field' and has_access(request.user.id, 'scoutfield')) or (form_typ == 'pit' and has_access(request.user.id, 'scoutpit')):
                         try:
                             current_event = Event.objects.get(
                                 Q(season=Season.objects.get(current='y')) & Q(current='y'))
