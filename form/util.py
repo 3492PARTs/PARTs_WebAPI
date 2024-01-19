@@ -9,13 +9,17 @@ from scouting.models import Season, ScoutField, ScoutPit, Event
 
 def get_questions(form_typ: str):
     questions = []
-    qs = Question.objects.prefetch_related('questionoption_set').filter(
-        Q(form_typ_id=form_typ) &
-        Q(void_ind='n')).order_by('form_sub_typ__order', 'order')
+    season = Q()
+
 
     if form_typ == 'field' or form_typ == 'pit':
         current_season = Season.objects.get(current='y')
-        qs.filter(Q(season=current_season))
+        season = Q(season=current_season)
+
+    qs = Question.objects.prefetch_related('questionoption_set').filter(
+        season &
+        Q(form_typ_id=form_typ) &
+        Q(void_ind='n')).order_by('form_sub_typ__order', 'order')
 
     for q in qs:
         questions.append({
