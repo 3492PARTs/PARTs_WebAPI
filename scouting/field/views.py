@@ -27,7 +27,7 @@ class Questions(APIView):
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'get-questions/'
+    endpoint = 'questions/'
 
     def get_questions(self):
 

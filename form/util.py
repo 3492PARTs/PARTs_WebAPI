@@ -11,7 +11,6 @@ def get_questions(form_typ: str):
     questions = []
     season = Q()
 
-
     if form_typ == 'field' or form_typ == 'pit':
         current_season = Season.objects.get(current='y')
         season = Q(season=current_season)
@@ -38,6 +37,10 @@ def get_questions(form_typ: str):
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
                              q.question
         })
+        print(q)
+        if q.questionoption_set is not None:
+            for o in q.questionoption_set:
+                print(o)
 
     return questions
 
