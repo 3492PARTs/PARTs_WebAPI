@@ -57,7 +57,7 @@ class Question(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return str(self.sq_id) + ' ' + self.question
+        return str(self.question_id) + ' ' + self.question
 
 
 class QuestionOption(models.Model):
