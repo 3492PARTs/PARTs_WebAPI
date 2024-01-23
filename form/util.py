@@ -21,6 +21,15 @@ def get_questions(form_typ: str):
         Q(void_ind='n')).order_by('form_sub_typ__order', 'order')
 
     for q in qs:
+        questionoption_set = []
+        for qo in q.questionoption_set.all():
+            questionoption_set.append({
+                'question_opt_id': qo.question_opt_id,
+                'question_id': qo.question_id,
+                'option': qo.option,
+                'active': qo.active
+            })
+
         questions.append({
             'question_id': q.question_id,
             'season_id': q.season_id,
@@ -32,15 +41,11 @@ def get_questions(form_typ: str):
             'form_sub_typ': q.form_sub_typ.form_sub_typ if q.form_sub_typ is not None else None,
             'form_sub_nm': q.form_sub_typ.form_sub_nm if q.form_sub_typ is not None else None,
             'form_typ': q.form_typ,
-            'questionoption_set': q.questionoption_set,
+            'questionoption_set': questionoption_set,
             'display_value': ('' if q.active == 'y' else 'Deactivated: ') + 'Order ' + str(q.order) + ': ' +
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
                              q.question
         })
-        print(q)
-        if q.questionoption_set is not None:
-            for o in q.questionoption_set:
-                print(o)
 
     return questions
 
