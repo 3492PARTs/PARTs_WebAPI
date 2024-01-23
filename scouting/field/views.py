@@ -11,7 +11,7 @@ from scouting.models import Season, Event, Team, ScoutFieldSchedule, ScoutField,
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
 from .serializers import ScoutFieldSerializer, ScoutFieldResultsSerializer, SaveScoutFieldSerializer
-from django.db.models import Q
+from django.db.models import Q, OuterRef
 from rest_framework.response import Response
 from django.utils import timezone
 from django.conf import settings
@@ -27,7 +27,7 @@ class Questions(APIView):
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'get-questions/'
+    endpoint = 'questions/'
 
     def get_questions(self):
 
@@ -71,18 +71,35 @@ class Questions(APIView):
         parsed_matches = []
 
         for m in matches:
-            parsed_matches.append({
-                'match_id': m.match_id,
-                'event_id': m.event.event_id,
-                'match_number': m.match_number,
-                'time': m.time,
-                'blue_one_id': m.blue_one.team_no if self.get_team_match_field_result(m, m.blue_one.team_no) is None else None,
-                'blue_two_id': m.blue_two.team_no if self.get_team_match_field_result(m, m.blue_two.team_no) is None else None,
-                'blue_three_id': m.blue_three.team_no if self.get_team_match_field_result(m, m.blue_three.team_no) is None else None,
-                'red_one_id': m.red_one.team_no if self.get_team_match_field_result(m, m.red_one.team_no) is None else None,
-                'red_two_id': m.red_two.team_no if self.get_team_match_field_result(m, m.red_two.team_no) is None else None,
-                'red_three_id': m.red_three.team_no if self.get_team_match_field_result(m, m.red_three.team_no) is None else None,
-            })
+            blue_one_id = m.blue_one.team_no if self.get_team_match_field_result(m,
+                                                                                 m.blue_one.team_no) is None else None
+            blue_two_id = m.blue_two.team_no if self.get_team_match_field_result(m,
+                                                                                 m.blue_two.team_no) is None else None
+            blue_three_id = m.blue_three.team_no if self.get_team_match_field_result(m,
+                                                                                     m.blue_three.team_no) is None else None
+            red_one_id = m.red_one.team_no if self.get_team_match_field_result(m, m.red_one.team_no) is None else None
+            red_two_id = m.red_two.team_no if self.get_team_match_field_result(m, m.red_two.team_no) is None else None
+            red_three_id = m.red_three.team_no if self.get_team_match_field_result(m,
+                                                                                   m.red_three.team_no) is None else None
+
+            if (blue_one_id is not None or
+                    blue_two_id is not None or
+                    blue_three_id is not None or
+                    red_one_id is not None or
+                    red_two_id is not None or
+                    red_three_id is not None):
+                parsed_matches.append({
+                    'match_id': m.match_id,
+                    'event_id': m.event.event_id,
+                    'match_number': m.match_number,
+                    'time': m.time,
+                    'blue_one_id': blue_one_id,
+                    'blue_two_id': blue_two_id,
+                    'blue_three_id': blue_three_id,
+                    'red_one_id': red_one_id,
+                    'red_two_id': red_two_id,
+                    'red_three_id': red_three_id,
+                })
 
         return {'scoutQuestions': scout_questions, 'teams': teams, 'scoutFieldSchedule': sfs, 'matches': parsed_matches}
 
@@ -168,14 +185,14 @@ def get_field_results(team, endpoint, request):
 
     scout_answers = []
     sqsa = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
-                                        Q(form_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
+                                   Q(form_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
 
     sqst = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
-                                        Q(form_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
+                                   Q(form_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
     sqso = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
-                                        Q(form_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
+                                   Q(form_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
     for sqs in [sqsa, sqst, sqso]:
@@ -183,7 +200,7 @@ def get_field_results(team, endpoint, request):
             scout_cols.append({
                 'PropertyName': 'ans' + str(sq.question_id),
                 'ColLabel': ('' if sq.form_sub_typ is None else sq.form_sub_typ.form_sub_typ[
-                                                              0:1].upper() + ': ') + sq.question,
+                                                                0:1].upper() + ': ') + sq.question,
                 'order': sq.order
             })
 
@@ -209,7 +226,7 @@ def get_field_results(team, endpoint, request):
                 void_ind='n')).order_by('-time', '-scout_field_id')[: 10]
         else:
             sfs = ScoutField.objects.filter(Q(event=current_event) & Q(
-            void_ind='n')).order_by('-time', '-scout_field_id')
+                void_ind='n')).order_by('-time', '-scout_field_id')
 
     for sf in sfs:
         sfas = QuestionAnswer.objects.filter(
