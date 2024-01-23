@@ -67,3 +67,10 @@ class QuestionInitializationSerializer(serializers.Serializer):
     questions = QuestionSerializer(many=True)
     question_types = QuestionTypeSerializer(many=True)
     form_sub_types = FormSubTypeSerializer(many=True, required=False)
+
+
+class ResponseSerializer(serializers.Serializer):
+    response_id = serializers.IntegerField()
+    form_typ = serializers.CharField()
+    time = serializers.DateTimeField()
+    questionanswer_set = QuestionSerializer(many=True)
