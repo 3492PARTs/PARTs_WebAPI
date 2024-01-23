@@ -10,7 +10,7 @@ import form.util
 import user.util
 from form.models import Question, QuestionAnswer, FormType
 from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveScoutSerializer, \
-    QuestionInitializationSerializer
+    QuestionInitializationSerializer, ResponseSerializer
 from general.security import has_access, ret_message
 from scouting.models import Event, Season, ScoutField, ScoutPit
 
@@ -100,7 +100,8 @@ class SaveAnswers(APIView):
             try:
                 if form_typ in ['field', 'pit']:
                     # field and pit responses must be authenticated
-                    if (form_typ == 'field' and has_access(request.user.id, 'scoutfield')) or (form_typ == 'pit' and has_access(request.user.id, 'scoutpit')):
+                    if (form_typ == 'field' and has_access(request.user.id, 'scoutfield')) or (
+                            form_typ == 'pit' and has_access(request.user.id, 'scoutpit')):
                         try:
                             current_event = Event.objects.get(
                                 Q(season=Season.objects.get(current='y')) & Q(current='y'))
@@ -185,6 +186,25 @@ class GetResponse(APIView):
             try:
                 response = form.util.get_response(request.query_params['response_id'])
                 serializer = QuestionSerializer(response, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting responses.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class GetResponses(APIView):
+    """
+    API endpoint to get a form responses
+    """
+    endpoint = 'get-responses/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 'site_forms'):
+            try:
+                responses = form.util.get_responses(request.query_params['form_typ'])
+                serializer = ResponseSerializer(responses, many=True)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message('An error occurred while getting responses.', True, app_url + self.endpoint,

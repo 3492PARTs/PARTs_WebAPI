@@ -141,3 +141,24 @@ def get_response(response_id: int):
             Q(question_id=question.get('question_id')) & Q(response=res) & Q(void_ind='n')).answer
 
     return questions
+
+
+def get_responses(form_typ: int):
+    responses = []
+    resps = Response.objects.filter(Q(form_typ__form_typ=form_typ) & Q(void_ind='n')).order_by('-time')
+
+    for res in resps:
+        questions = get_questions(res.form_typ)
+
+        for question in questions:
+            question['answer'] = QuestionAnswer.objects.get(
+                Q(question_id=question.get('question_id')) & Q(response=res) & Q(void_ind='n')).answer
+
+        responses.append({
+            'response_id': res.response_id,
+            'form_typ': res.form_typ.form_typ,
+            'time': res.time,
+            'questionanswer_set': questions
+        })
+
+    return responses
