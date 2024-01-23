@@ -370,7 +370,7 @@ class TeamData(APIView):
                 'question': sq.question,
                 'order': sq.order,
                 'active': sq.active,
-                'question_typ': sq.question_typ.question_typ if sq.question_typ is not None else None,
+                'question_typ': sq.question_typ,
                 'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
                 'form_sub_typ': sq.form_sub_typ.form_sub_typ if sq.form_sub_typ is not None else None,
                 'form_sub_nm': sq.form_sub_typ.form_sub_nm if sq.form_sub_typ is not None else None,

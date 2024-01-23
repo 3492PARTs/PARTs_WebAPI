@@ -72,7 +72,7 @@ class QuestionSerializer(serializers.Serializer):
     form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     form_typ = serializers.CharField()
 
-    questionoptions_set = QuestionOptionsSerializer(
+    questionoption_set = QuestionOptionsSerializer(
         required=False, allow_null=True, many=True)
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)

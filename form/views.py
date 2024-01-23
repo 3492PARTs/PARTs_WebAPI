@@ -136,6 +136,7 @@ class SaveAnswers(APIView):
                                             Q(scout_pit=sp) & Q(question_id=d['question_id']) &
                                             Q(void_ind='n'))
                                         spa.answer = d.get('answer', '')
+                                        spa.save()
                                     except Exception as e:
                                         form.util.save_question_answer(d.get('answer', ''),
                                                                        Question.objects.get(
