@@ -560,54 +560,59 @@ class DeleteEvent(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = 'delete-event/'
 
-    def delete(self, event_id):
-        e = Event.objects.get(event_id=event_id)
-
-        teams_at_event = Team.objects.filter(event=e)
-        for t in teams_at_event:
-            t.event_set.remove(e)
-
-        scout_fields = ScoutField.objects.filter(event=e)
-        for sf in scout_fields:
-            scout_field_answers = QuestionAnswer.objects.filter(
-                scout_field=sf)
-            for sfa in scout_field_answers:
-                sfa.delete()
-            sf.delete()
-
-        scout_pits = ScoutPit.objects.filter(event=e)
-        for sp in scout_pits:
-            scout_pit_answers = QuestionAnswer.objects.filter(scout_pit=sp)
-            for spa in scout_pit_answers:
-                spa.delete()
-            sp.delete()
-
-        matches = Match.objects.filter(event=e)
-        for m in matches:
-            m.delete()
-
-        scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
-        for sfs in scout_field_schedules:
-            sfs.delete()
-        """
-        scout_pit_schedules = ScoutPitSchedule.objects.filter(event=e)
-        for sps in scout_pit_schedules:
-            sps.delete()
-        """
-        e.delete()
-
-        return ret_message('Successfully deleted event: ' + e.event_nm)
-
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.delete(request.query_params.get('event_id', None))
+                req = delete(request.query_params.get('event_id', None))
                 return req
             except Exception as e:
                 return ret_message('An error occurred while deleting the event.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+def delete(event_id):
+    e = Event.objects.get(event_id=event_id)
+
+    teams_at_event = Team.objects.filter(event=e)
+    for t in teams_at_event:
+        t.event_set.remove(e)
+
+    scout_fields = ScoutField.objects.filter(event=e)
+    for sf in scout_fields:
+        scout_field_answers = QuestionAnswer.objects.filter(
+            scout_field=sf)
+        for sfa in scout_field_answers:
+            sfa.delete()
+        sf.delete()
+
+    scout_pits = ScoutPit.objects.filter(event=e)
+    for sp in scout_pits:
+        scout_pit_answers = QuestionAnswer.objects.filter(scout_pit=sp)
+        for spa in scout_pit_answers:
+            spa.delete()
+        sp.delete()
+
+    matches = Match.objects.filter(event=e)
+    for m in matches:
+        m.delete()
+
+    scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
+    for sfs in scout_field_schedules:
+        sfs.delete()
+    """
+    scout_pit_schedules = ScoutPitSchedule.objects.filter(event=e)
+    for sps in scout_pit_schedules:
+        sps.delete()
+    """
+
+    event_team_infos = EventTeamInfo.objects.filter(event=e)
+    for eti in event_team_infos:
+        eti.delete()
+
+    e.delete()
+
+    return ret_message('Successfully deleted event: ' + e.event_nm)
 
 
 class AddTeam(APIView):
@@ -734,45 +739,7 @@ class DeleteSeason(APIView):
 
         events = Event.objects.filter(season=season)
         for e in events:
-            teams_at_event = Team.objects.filter(event=e)
-            for t in teams_at_event:
-                t.event_set.remove(e)
-
-            scout_fields = ScoutField.objects.filter(event=e)
-            for sf in scout_fields:
-                scout_field_answers = QuestionAnswer.objects.filter(
-                    scout_field=sf)
-                for sfa in scout_field_answers:
-                    sfa.delete()
-                sf.delete()
-
-            scout_pits = ScoutPit.objects.filter(event=e)
-            for sp in scout_pits:
-                scout_pit_answers = QuestionAnswer.objects.filter(scout_pit=sp)
-                for spa in scout_pit_answers:
-                    spa.delete()
-                sp.delete()
-
-            scout_questions = Question.objects.filter(season=season)
-            for sq in scout_questions:
-                question_options = QuestionOption.objects.filter(question=sq)
-                for qo in question_options:
-                    qo.delete()
-                sq.delete()
-
-            matches = Match.objects.filter(event=e)
-            for m in matches:
-                m.delete()
-
-            scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
-            for sfs in scout_field_schedules:
-                sfs.delete()
-            """
-            scout_pit_schedules = ScoutPitSchedule.objects.filter(event=e)
-            for sps in scout_pit_schedules:
-                sps.delete()
-            """
-            e.delete()
+            delete(e.event_id)
 
         season.delete()
 
