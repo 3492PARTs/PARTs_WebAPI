@@ -37,8 +37,8 @@ class Init(APIView):
 
         users = None
         all_sfs_parsed = None
-        all_sch_parsed = None
         schedule_types = None
+        all_sch = []
         if has_access(self.request.user.id, scheduling_auth_obj):
             users = User.objects.filter(Q(is_active=True) & Q(
                 date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
@@ -51,13 +51,20 @@ class Init(APIView):
             for s in all_sfs:
                 all_sfs_parsed.append(self.parse_sfs(s))
 
-            all_sch = Schedule.objects.filter(Q(event=current_event) & Q(void_ind='n')).order_by('sch_typ', 'notified',
-                                                                                                 'st_time')
-            all_sch_parsed = []
-            for s in all_sch:
-                all_sch_parsed.append(self.parse_sch(s))
-
             schedule_types = ScheduleType.objects.all().order_by('sch_nm')
+
+            for st in schedule_types:
+
+                sch = (Schedule.objects.filter(Q(event=current_event) & Q(sch_typ=st) & Q(void_ind='n'))
+                       .order_by('sch_typ', 'notified', 'st_time'))
+                sch_parsed = []
+                for s in sch:
+                    sch_parsed.append(self.parse_sch(s))
+
+                all_sch.append({
+                    'sch_typ': st,
+                    'sch': sch_parsed
+                })
 
         sfs = ScoutFieldSchedule.objects.filter(Q(event=current_event) &
                                                 Q(end_time__gte=(timezone.now() - datetime.timedelta(hours=1))) &
@@ -79,7 +86,7 @@ class Init(APIView):
             sch_parsed.append(self.parse_sch(s))
 
         return {'fieldSchedule': sfs_parsed, 'schedule': sch_parsed, 'allFieldSchedule': all_sfs_parsed,
-                'allSchedule': all_sch_parsed, 'users': users, 'scheduleTypes': schedule_types}
+                'allSchedule': all_sch, 'users': users, 'scheduleTypes': schedule_types}
 
     def parse_sfs(self, s):
         return {
