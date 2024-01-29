@@ -67,4 +67,4 @@ def get_phone_types():
 
 
 def get_users_in_group(name: str):
-    return get_users(1).filter(groups__name=name)
+    return get_users(1, 1).filter(groups__name=name)
