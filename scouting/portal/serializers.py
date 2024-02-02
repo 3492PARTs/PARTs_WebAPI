@@ -51,11 +51,16 @@ class ScheduleTypeSerializer(serializers.Serializer):
     sch_nm = serializers.CharField()
 
 
+class ScheduleByTypeSerializer(serializers.Serializer):
+    sch_typ = ScheduleTypeSerializer()
+    sch = ScheduleSerializer(many=True, required=False)
+
+
 class InitSerializer(serializers.Serializer):
     fieldSchedule = ScoutFieldScheduleSerializer(many=True, required=False)
     schedule = ScheduleSerializer(many=True, required=False)
     allFieldSchedule = ScoutFieldScheduleSerializer(many=True, required=False)
-    allSchedule = ScheduleSerializer(many=True, required=False)
+    allSchedule = ScheduleByTypeSerializer(many=True, required=False)
     users = UserSerializer(many=True, required=False)
     scheduleTypes = ScheduleTypeSerializer(many=True, required=False)
 

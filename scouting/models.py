@@ -74,7 +74,7 @@ class EventTeamInfo(models.Model):
         unique_together = (('event', 'team_no'),)
 
     def __str__(self):
-        return str(self.event.event_id) + ' ' + self.team_no.team_no
+        return "Event {event}. Team {team}. ".format(event=self.event.event_id, team=self.team_no.team_no)
 
 
 class CompetitionLevel(models.Model):

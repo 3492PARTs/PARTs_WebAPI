@@ -5,12 +5,19 @@ from django.db.models.functions import Lower, Concat
 from user.models import User, PhoneType
 
 
-def get_users(active):
+def get_users(active, admin):
     user_active = Q()
     if active in [-1, 1]:
         user_active = Q(is_active=active == 1)
 
-    users = User.objects.annotate(name=Concat('first_name', Value(' '), 'last_name')).filter(Q(date_joined__isnull=False) & user_active).order_by('is_active', Lower('first_name'), Lower('last_name'))
+    user_admin = Q()
+    if not admin:
+        group = Group.objects.get(name='Admin')
+        user_admin = Q(groups__in=[group])
+
+    users = (User.objects.annotate(name=Concat('first_name', Value(' '), 'last_name'))
+             .filter(Q(date_joined__isnull=False) & user_active).exclude(user_admin)
+             .order_by('is_active', Lower('first_name'), Lower('last_name')))
 
     return users
 
@@ -60,4 +67,4 @@ def get_phone_types():
 
 
 def get_users_in_group(name: str):
-    return get_users(1).filter(groups__name=name)
+    return get_users(1, 1).filter(groups__name=name)

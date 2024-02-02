@@ -279,7 +279,7 @@ class EventToTeamsSerializer(serializers.Serializer):
 
 class InitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
-    events = EventTeamSerializer(many=True)
+    #events = EventTeamSerializer(many=True)
     currentSeason = SeasonSerializer(required=False)
     currentEvent = EventSerializer(required=False)
     userGroups = GroupSerializer(many=True)

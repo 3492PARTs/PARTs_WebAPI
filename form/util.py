@@ -7,17 +7,22 @@ from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
 
 
-def get_questions(form_typ: str):
+def get_questions(form_typ: str, active=''):
     questions = []
     season = Q()
+    active_ind = Q()
 
     if form_typ == 'field' or form_typ == 'pit':
         current_season = Season.objects.get(current='y')
         season = Q(season=current_season)
 
+    if active != '':
+        active_ind = Q(active=active)
+
     qs = Question.objects.prefetch_related('questionoption_set').filter(
         season &
         Q(form_typ_id=form_typ) &
+        active_ind &
         Q(void_ind='n')).order_by('form_sub_typ__order', 'order')
 
     for q in qs:
@@ -134,7 +139,7 @@ def save_question_answer(answer: str, question: Question, scout_field: ScoutFiel
 
 def get_response(response_id: int):
     res = Response.objects.get(Q(response_id=response_id) & Q(void_ind='n'))
-    questions = get_questions(res.form_typ)
+    questions = get_questions(res.form_typ, 'y')
 
     for question in questions:
         question['answer'] = QuestionAnswer.objects.get(
@@ -148,7 +153,7 @@ def get_responses(form_typ: int):
     resps = Response.objects.filter(Q(form_typ__form_typ=form_typ) & Q(void_ind='n')).order_by('-time')
 
     for res in resps:
-        questions = get_questions(res.form_typ)
+        questions = get_questions(res.form_typ, 'y')
 
         for question in questions:
             question['answer'] = QuestionAnswer.objects.get(

@@ -177,7 +177,7 @@ class PlanMatch(APIView):
             field_answers = team_results['scoutAnswers']
 
             # notes
-            notes = TeamNotes.objects.filter(Q(void_ind='n') & Q(team_no=t)).order_by('-time')
+            notes = TeamNotes.objects.filter(Q(void_ind='n') & Q(team_no=t) & Q(event=current_event)).order_by('-time')
 
             results.append({'team': t,
                             'pitData': pit,
