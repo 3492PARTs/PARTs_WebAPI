@@ -29,4 +29,5 @@ urlpatterns = [
          SaveScoutFieldScheduleEntry.as_view()),
     path('notify-users/', NotifyUsers.as_view()),
     path('save-phone-type/', SavePhoneType.as_view()),
+    path('scout-activity/', ScoutingActivity.as_view()),
 ]

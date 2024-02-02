@@ -277,6 +277,15 @@ class EventToTeamsSerializer(serializers.Serializer):
     teams = TeamSerializer(many=True)
 
 
+class ScoutFieldSerializer(serializers.Serializer):
+    scout_field_id = serializers.IntegerField()
+    event = serializers.IntegerField()
+    team_no = serializers.IntegerField()
+    user = serializers.IntegerField()
+    time = serializers.DateTimeField()
+    match = serializers.IntegerField()
+
+
 class InitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     #events = EventTeamSerializer(many=True)
@@ -289,3 +298,13 @@ class InitSerializer(serializers.Serializer):
     # pastSchedule = ScoutScheduleSerializer(many=True)
     scoutQuestionType = FormTypeSerializer(many=True)
     teams = TeamSerializer(many=True)
+
+
+class UserFieldResult(serializers.Serializer):
+    user = UserSerializer()
+    results = ScoutFieldSerializer(many=True)
+
+
+class UserActivitySerializer(serializers.Serializer):
+    fieldSchedule = ScoutFieldScheduleSerializer(many=True)
+    userFieldResults = UserFieldResult(many=True)

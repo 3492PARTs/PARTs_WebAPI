@@ -162,6 +162,12 @@ class ScoutFieldSchedule(models.Model):
         User, models.PROTECT, related_name='blue_two_user', null=True)
     blue_three = models.ForeignKey(
         User, models.PROTECT, related_name='blue_three_user', null=True)
+    red_one_check_in = models.DateTimeField(null=True)
+    red_two_check_in = models.DateTimeField(null=True)
+    red_three_check_in = models.DateTimeField(null=True)
+    blue_one_check_in = models.DateTimeField(null=True)
+    blue_two_check_in = models.DateTimeField(null=True)
+    blue_three_check_in = models.DateTimeField(null=True)
     st_time = models.DateTimeField()
     end_time = models.DateTimeField()
     notification1 = models.BooleanField(default=False)
