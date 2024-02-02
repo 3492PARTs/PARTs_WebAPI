@@ -511,7 +511,7 @@ class UserData(APIView):
             'groups': user.groups,
             'phone_type': user.phone_type,
             'phone_type_id': user.phone_type_id,
-            'image': cloudinary.CloudinaryImage(user.img_id, version=user.img_ver).build_url()
+            'image': cloudinary.CloudinaryImage(user.img_id, version=user.img_ver).build_url(secure=True)
         }
 
         return user

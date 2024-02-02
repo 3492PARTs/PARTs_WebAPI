@@ -299,7 +299,7 @@ def get_pit_results(teams, endpoint, request):
             tmp = {
                 'teamNo': team.team_no,
                 'teamNm': team.team_nm,
-                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(),
+                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(secure=True),
             }
 
             tmp_questions = []
@@ -378,7 +378,7 @@ class TeamData(APIView):
                 'questionoption_set': sq.questionoption_set,
                 'answer': spa.answer
             })
-        return {'questions': scout_questions, 'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url()}
+        return {'questions': scout_questions, 'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(secure=True)}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
