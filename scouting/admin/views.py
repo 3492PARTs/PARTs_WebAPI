@@ -23,6 +23,7 @@ from django.db.models.functions import Lower
 from django.db.models import Q
 from rest_framework.response import Response
 import form.util
+from ..field.views import get_field_results
 
 auth_obj = 'scoutadmin'
 app_url = 'scouting/admin/'
@@ -983,19 +984,6 @@ class ScoutingActivity(APIView):
         user_results = []
         users = user.util.get_users(1, 0)
         for u in users:
-            field_results = []
-            fields = ScoutField.objects.filter(Q(void_ind='n') & Q(event=current_event) & Q(user=u)).order_by('-time')
-
-            for f in fields:
-                field_results.append({
-                    'scout_field_id': f.scout_field_id,
-                    'event': f.event.event_id,
-                    'team_no': f.team_no.team_no,
-                    'user': f.user.id,
-                    'time': f.time,
-                    'match': f.match.match_number if f.match is not None else None
-                })
-
             field_schedule = []
             sfss = ScoutFieldSchedule.objects.filter(Q(void_ind='n') & Q(event=current_event) &
                                                      (Q(red_one=u) | Q(red_two=u) | Q(red_three=u) |
@@ -1023,12 +1011,29 @@ class ScoutingActivity(APIView):
                     'blue_one_check_in': fs.blue_one_check_in,
                     'blue_two_check_in': fs.blue_two_check_in,
                     'blue_three_check_in': fs.blue_three_check_in,
+                    'scouts': 'R1: ' +
+                              ('' if fs.red_one is None else fs.red_one.first_name + ' ' + fs.red_one.last_name[0:1]) +
+                              '\nR2: ' +
+                              ('' if fs.red_two is None else fs.red_two.first_name + ' ' + fs.red_two.last_name[0:1]) +
+                              '\nR3: ' +
+                              ('' if fs.red_three is None else fs.red_three.first_name + ' ' + fs.red_three.last_name[
+                                                                                               0:1]) +
+                              '\nB1: ' +
+                              ('' if fs.blue_one is None else fs.blue_one.first_name + ' ' + fs.blue_one.last_name[
+                                                                                             0:1]) +
+                              '\nB2: ' +
+                              ('' if fs.blue_two is None else fs.blue_two.first_name + ' ' + fs.blue_two.last_name[
+                                                                                             0:1]) +
+                              '\nB3: ' +
+                              (
+                                  '' if fs.blue_three is None else fs.blue_three.first_name + ' ' + fs.blue_three.last_name[
+                                                                                                    0:1])
                 })
 
             user_results.append({
                 'user': u,
                 'schedule': field_schedule,
-                'results': field_results
+                'results': get_field_results(None, self.endpoint, self.request, u)
             })
 
         return user_results

@@ -307,7 +307,24 @@ class InitSerializer(serializers.Serializer):
     teams = TeamSerializer(many=True)
 
 
+class ScoutColSerializer(serializers.Serializer):
+    PropertyName = serializers.CharField()
+    ColLabel = serializers.CharField()
+    order = serializers.CharField()
+
+
+class ScoutResultAnswerSerializer(serializers.BaseSerializer):
+    def to_representation(self, instance):
+        return instance
+
+
+class ScoutFieldResultsSerializer(serializers.Serializer):
+    scoutCols = ScoutColSerializer(many=True)
+    scoutAnswers = ScoutResultAnswerSerializer(many=True)
+
+
 class UserActivitySerializer(serializers.Serializer):
     user = UserSerializer()
-    results = ScoutFieldSerializer(many=True)
+    results = ScoutFieldResultsSerializer()
     schedule = ScoutFieldScheduleSerializer(many=True)
+

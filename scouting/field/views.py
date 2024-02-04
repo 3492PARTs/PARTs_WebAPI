@@ -157,7 +157,7 @@ class Results(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
-def get_field_results(team, endpoint, request):
+def get_field_results(team, endpoint, request, user=None):
     try:
         current_season = Season.objects.get(current='y')
     except Exception as e:
@@ -218,6 +218,10 @@ def get_field_results(team, endpoint, request):
     if team is not None:
         # get result for individual team
         sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n')) \
+            .order_by('-time', '-scout_field_id')
+    if user is not None:
+        # get result for individual team
+        sfs = ScoutField.objects.filter(Q(event=current_event) & Q(user=user) & Q(void_ind='n')) \
             .order_by('-time', '-scout_field_id')
     else:
         # get result for all teams
