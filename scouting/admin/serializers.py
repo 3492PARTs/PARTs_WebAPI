@@ -185,8 +185,15 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     red_three_id = UserSerializer(required=False, allow_null=True, read_only=True)
     blue_one_id = UserSerializer(required=False, allow_null=True, read_only=True)
     blue_two_id = UserSerializer(required=False, allow_null=True, read_only=True)
-    blue_three_id = UserSerializer(
-        required=False, allow_null=True, read_only=True)
+    blue_three_id = UserSerializer(required=False, allow_null=True, read_only=True)
+
+    red_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    red_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    red_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    blue_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    blue_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    blue_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
+
     scouts = serializers.CharField(read_only=True)
 
 
@@ -300,11 +307,7 @@ class InitSerializer(serializers.Serializer):
     teams = TeamSerializer(many=True)
 
 
-class UserFieldResult(serializers.Serializer):
+class UserActivitySerializer(serializers.Serializer):
     user = UserSerializer()
     results = ScoutFieldSerializer(many=True)
-
-
-class UserActivitySerializer(serializers.Serializer):
-    fieldSchedule = ScoutFieldScheduleSerializer(many=True)
-    userFieldResults = UserFieldResult(many=True)
+    schedule = ScoutFieldScheduleSerializer(many=True)

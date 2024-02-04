@@ -57,7 +57,7 @@ class TokenObtainPairView(APIView):
 
             return Response(serializer.validated_data)
         except Exception as e:
-            return ret_message('An error occurred while logging in.', True,
+            return ret_message('Invalid username or password.', True,
                                app_url + self.endpoint,
                                0, e)
 
