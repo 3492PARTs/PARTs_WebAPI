@@ -219,7 +219,7 @@ def get_field_results(team, endpoint, request, user=None):
         # get result for individual team
         sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n')) \
             .order_by('-time', '-scout_field_id')
-    if user is not None:
+    elif user is not None:
         # get result for individual team
         sfs = ScoutField.objects.filter(Q(event=current_event) & Q(user=user) & Q(void_ind='n')) \
             .order_by('-time', '-scout_field_id')
