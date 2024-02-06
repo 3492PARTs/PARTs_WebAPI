@@ -173,14 +173,17 @@ def get_field_results(team, endpoint, request, user=None):
     scout_cols = [{
         'PropertyName': 'team',
         'ColLabel': 'Team No',
+        'scorable': False,
         'order': 0
     }, {
         'PropertyName': 'rank',
         'ColLabel': 'Rank',
+        'scorable': False,
         'order': 1
     }, {
         'PropertyName': 'match',
         'ColLabel': 'Match',
+        'scorable': False,
         'order': 1
     }]
 
@@ -200,21 +203,25 @@ def get_field_results(team, endpoint, request, user=None):
 
     for sqs in [sqsa, sqst, sqso]:
         for sq in sqs:
+            scout_question = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=sq.question_id))
             scout_cols.append({
                 'PropertyName': 'ans' + str(sq.question_id),
                 'ColLabel': ('' if sq.form_sub_typ is None else sq.form_sub_typ.form_sub_typ[
                                                                 0:1].upper() + ': ') + sq.question,
+                'scorable': scout_question.scorable,
                 'order': sq.order
             })
 
     scout_cols.append({
         'PropertyName': 'user',
         'ColLabel': 'Scout',
+        'scorable': False,
         'order': 9999999999
     })
     scout_cols.append({
         'PropertyName': 'time',
         'ColLabel': 'Time',
+        'scorable': False,
         'order': 99999999999
     })
 

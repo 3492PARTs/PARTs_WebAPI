@@ -76,6 +76,7 @@ class ScoutPitResultsSerializer(serializers.Serializer):
 class ScoutColSerializer(serializers.Serializer):
     PropertyName = serializers.CharField()
     ColLabel = serializers.CharField()
+    scorable = serializers.BooleanField()
     order = serializers.CharField()
 
 
