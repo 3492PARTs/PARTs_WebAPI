@@ -26,7 +26,7 @@ class QuestionOptionsSerializer(serializers.Serializer):
 
 class ScoutQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
-    question_id = serializers.IntegerField()
+    question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
     scorable = serializers.BooleanField()
 

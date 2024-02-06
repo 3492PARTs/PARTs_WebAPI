@@ -15,7 +15,8 @@ def get_questions(form_typ: str, active=''):
 
     if form_typ == 'field' or form_typ == 'pit':
         current_season = Season.objects.get(current='y')
-        season = Q(season=current_season)
+        scout_questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+        season = Q(question_id__in=set(sq.question_id for sq in scout_questions))
 
     if active != '':
         active_ind = Q(active=active)
@@ -48,7 +49,7 @@ def get_questions(form_typ: str, active=''):
             'question_typ': q.question_typ,
             'form_sub_typ': q.form_sub_typ.form_sub_typ if q.form_sub_typ is not None else None,
             'form_sub_nm': q.form_sub_typ.form_sub_nm if q.form_sub_typ is not None else None,
-            'form_typ': q.form_typ,
+            'form_typ': q.form_typ.form_typ,
             'questionoption_set': questionoption_set,
             'display_value': ('' if q.active == 'y' else 'Deactivated: ') + 'Order ' + str(q.order) + ': ' +
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
@@ -88,17 +89,17 @@ def save_question(question):
     q.save()
 
     if question['form_typ'] in ['pit', 'field']:
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            raise Exception('No season set, see an admin.')
         if question.get('scout_question', None).get('id', None) is not None:
             sq = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=q.question_id))
         else:
             sq = scouting.models.Question(question_id=q.question_id)
 
         if sq.season is None:
-            try:
-                current_season = Season.objects.get(current='y')
-                sq.season = current_season
-            except Exception as e:
-                raise Exception('No season set, see an admin.')
+            sq.season = current_season
 
         sq.scorable = question.get('scout_question', None).get('scorable', False)
 
