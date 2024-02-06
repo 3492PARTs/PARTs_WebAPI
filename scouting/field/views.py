@@ -5,6 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import form.util
+import scouting.models
 from form.models import Question, QuestionAnswer
 from scouting.models import Season, Event, Team, ScoutFieldSchedule, ScoutField, \
     EventTeamInfo, Match
@@ -184,14 +185,16 @@ def get_field_results(team, endpoint, request, user=None):
     }]
 
     scout_answers = []
-    sqsa = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+    questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+
+    sqsa = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
 
-    sqst = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+    sqst = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
-    sqso = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+    sqso = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
@@ -234,7 +237,7 @@ def get_field_results(team, endpoint, request, user=None):
 
     for sf in sfs:
         sfas = QuestionAnswer.objects.filter(
-            Q(scout_field=sf) & Q(void_ind='n'))
+            Q(response_id=sf.response_id) & Q(void_ind='n'))
 
         sa_obj = {}
         for sfa in sfas:

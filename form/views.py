@@ -111,30 +111,34 @@ class SaveAnswers(APIView):
                         # Try to deserialize as a field or pit answer
                         serializer = SaveScoutSerializer(data=request.data)
                         if serializer.is_valid():
+                            form_type = FormType.objects.get(form_typ=serializer.data['form_typ'])
+                            r = form.models.Response(form_typ=form_type)
+                            r.save()
+
                             if serializer.data['form_typ'] == 'field':
                                 sf = ScoutField(
                                     event=current_event, team_no_id=serializer.data['team'],
                                     match_id=serializer.data.get('match', None),
-                                    user_id=self.request.user.id, void_ind='n')
+                                    user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
                                 sf.save()
 
                                 for d in serializer.data.get('question_answers', []):
                                     form.util.save_question_answer(d['answer'],
                                                                    Question.objects.get(question_id=d['question_id']),
-                                                                   scout_field=sf)
+                                                                   r)
                             else:
                                 try:
                                     sp = ScoutPit.objects.get(Q(team_no_id=serializer.data['team']) & Q(void_ind='n') &
                                                               Q(event=current_event))
                                 except Exception as e:
                                     sp = ScoutPit(event=current_event, team_no_id=serializer.data['team'],
-                                                  user_id=self.request.user.id, void_ind='n')
+                                                  user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
                                     sp.save()
 
                                 for d in serializer.data.get('question_answers', []):
                                     try:
                                         spa = QuestionAnswer.objects.get(
-                                            Q(scout_pit=sp) & Q(question_id=d['question_id']) &
+                                            Q(response_id=sp.response_id) & Q(question_id=d['question_id']) &
                                             Q(void_ind='n'))
                                         spa.answer = d.get('answer', '')
                                         spa.save()
@@ -142,7 +146,7 @@ class SaveAnswers(APIView):
                                         form.util.save_question_answer(d.get('answer', ''),
                                                                        Question.objects.get(
                                                                            question_id=d['question_id']),
-                                                                       scout_pit=sp)
+                                                                       r)
                             return ret_message(success_msg)
                         raise Exception('Invalid Data')
                     else:

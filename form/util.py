@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.db.models.functions import Lower
 
+import scouting.models
 from form.models import Question, Response, QuestionAnswer, QuestionOption, FormSubType, QuestionType
 from form.serializers import QuestionSerializer
 from general.security import ret_message
@@ -35,6 +36,8 @@ def get_questions(form_typ: str, active=''):
                 'active': qo.active
             })
 
+        scout_question = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=q.question_id))
+
         questions.append({
             'question_id': q.question_id,
             'season_id': q.season_id,
@@ -49,7 +52,8 @@ def get_questions(form_typ: str, active=''):
             'questionoption_set': questionoption_set,
             'display_value': ('' if q.active == 'y' else 'Deactivated: ') + 'Order ' + str(q.order) + ': ' +
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
-                             q.question
+                             q.question,
+            'scout_question': scout_question
         })
 
     return questions
@@ -81,40 +85,46 @@ def save_question(question):
         q = Question(question_typ_id=question['question_typ']['question_typ'], form_typ_id=question['form_typ'],
                      form_sub_typ_id=question.get('form_sub_typ', None), question=question['question'],
                      order=question['order'], active=question['active'], required=required, void_ind='n')
+    q.save()
 
     if question['form_typ'] in ['pit', 'field']:
-        if q.season is None:
+        if question.get('scout_question', None).get('id', None) is not None:
+            sq = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=q.question_id))
+        else:
+            sq = scouting.models.Question(question_id=q.question_id)
+
+        if sq.season is None:
             try:
                 current_season = Season.objects.get(current='y')
-                q.season = current_season
+                sq.season = current_season
             except Exception as e:
                 raise Exception('No season set, see an admin.')
 
-    q.save()
+        sq.scorable = question.get('scout_question', None).get('scorable', False)
+
+        sq.save()
 
     # If adding a new question we need to make a null answer for it for all questions already answered
     match question['form_typ']:
         case 'pit':
-            questions_answered = ScoutPit.objects.filter(Q(void_ind='n') &
-                                                         Q(event__in=Event.objects.filter(Q(void_ind='n') &
-                                                                                          Q(season=current_season)
-                                                                                          )))
-
-            for qa in questions_answered:
-                QuestionAnswer(scout_pit=qa, question=q, answer='!EXIST', void_ind='n').save()
+            pit_responses = ScoutPit.objects.filter(Q(void_ind='n') &
+                                                    Q(event__in=Event.objects.filter(Q(void_ind='n') &
+                                                                                     Q(season=current_season)
+                                                                                     )))
+            questions_answered = Response.objects.filter(Q(void_ind='n') &
+                                                         Q(response_id__in=set(pr.response_id for pr in pit_responses)))
         case 'field':
-            questions_answered = ScoutField.objects.filter(Q(void_ind='n') &
-                                                           Q(event__in=Event.objects.filter(Q(void_ind='n') &
-                                                                                            Q(season=current_season)
-                                                                                            )))
-
-            for qa in questions_answered:
-                QuestionAnswer(scout_field=qa, question=q, answer='!EXIST', void_ind='n').save()
+            field_responses = ScoutField.objects.filter(Q(void_ind='n') &
+                                                        Q(event__in=Event.objects.filter(Q(void_ind='n') &
+                                                                                         Q(season=current_season)
+                                                                                         )))
+            questions_answered = Response.objects.filter(Q(void_ind='n') &
+                                                         Q(response_id__in=set(fr.response_id for fr in field_responses)))
         case _:
             questions_answered = Response.objects.filter(Q(void_ind='n') & Q(form_typ_id=question['form_typ']))
 
-            for qa in questions_answered:
-                QuestionAnswer(response=qa, question=q, answer='!EXIST', void_ind='n').save()
+    for qa in questions_answered:
+        QuestionAnswer(response=qa, question=q, answer='!EXIST', void_ind='n').save()
 
     if question['question_typ']['is_list'] == 'y' and len(question.get('questionoption_set', [])) <= 0:
         raise Exception('Select questions must have options.')
@@ -129,10 +139,8 @@ def save_question(question):
             QuestionOption(option=op['option'], question=q, active=op['active'], void_ind='n').save()
 
 
-def save_question_answer(answer: str, question: Question, scout_field: ScoutField = None, scout_pit: ScoutPit = None,
-                         response: Response = None):
-    qa = QuestionAnswer(question=question, answer=answer, scout_field=scout_field, scout_pit=scout_pit,
-                        response=response, void_ind='n')
+def save_question_answer(answer: str, question: Question, response: Response):
+    qa = QuestionAnswer(question=question, answer=answer, response=response, void_ind='n')
     qa.save()
     return qa
 
