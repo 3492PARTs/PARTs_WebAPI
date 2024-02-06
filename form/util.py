@@ -8,7 +8,7 @@ from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
 
 
-def get_questions(form_typ: str, active=''):
+def get_questions(form_typ: str, active: str = ''):
     questions = []
     season = Q()
     active_ind = Q()
@@ -71,6 +71,12 @@ def get_form_sub_types(form_typ: str):
 
 
 def save_question(question):
+    if question['form_typ'] in ['pit', 'field']:
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            raise Exception('No season set, see an admin.')
+
     required = question.get('required', 'n')
     required = required if required != '' else 'n'
 
@@ -89,10 +95,6 @@ def save_question(question):
     q.save()
 
     if question['form_typ'] in ['pit', 'field']:
-        try:
-            current_season = Season.objects.get(current='y')
-        except Exception as e:
-            raise Exception('No season set, see an admin.')
         if question.get('scout_question', None).get('id', None) is not None:
             sq = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=q.question_id))
         else:
@@ -105,27 +107,30 @@ def save_question(question):
 
         sq.save()
 
-    # If adding a new question we need to make a null answer for it for all questions already answered
-    match question['form_typ']:
-        case 'pit':
-            pit_responses = ScoutPit.objects.filter(Q(void_ind='n') &
-                                                    Q(event__in=Event.objects.filter(Q(void_ind='n') &
-                                                                                     Q(season=current_season)
-                                                                                     )))
-            questions_answered = Response.objects.filter(Q(void_ind='n') &
-                                                         Q(response_id__in=set(pr.response_id for pr in pit_responses)))
-        case 'field':
-            field_responses = ScoutField.objects.filter(Q(void_ind='n') &
+    if question.get('question_id', None) is None:
+        # If adding a new question we need to make a null answer for it for all questions already answered
+        match question['form_typ']:
+            case 'pit':
+                pit_responses = ScoutPit.objects.filter(Q(void_ind='n') &
                                                         Q(event__in=Event.objects.filter(Q(void_ind='n') &
                                                                                          Q(season=current_season)
                                                                                          )))
-            questions_answered = Response.objects.filter(Q(void_ind='n') &
-                                                         Q(response_id__in=set(fr.response_id for fr in field_responses)))
-        case _:
-            questions_answered = Response.objects.filter(Q(void_ind='n') & Q(form_typ_id=question['form_typ']))
+                questions_answered = Response.objects.filter(Q(void_ind='n') &
+                                                             Q(response_id__in=set(
+                                                                 pr.response_id for pr in pit_responses)))
+            case 'field':
+                field_responses = ScoutField.objects.filter(Q(void_ind='n') &
+                                                            Q(event__in=Event.objects.filter(Q(void_ind='n') &
+                                                                                             Q(season=current_season)
+                                                                                             )))
+                questions_answered = Response.objects.filter(Q(void_ind='n') &
+                                                             Q(response_id__in=set(
+                                                                 fr.response_id for fr in field_responses)))
+            case _:
+                questions_answered = Response.objects.filter(Q(void_ind='n') & Q(form_typ_id=question['form_typ']))
 
-    for qa in questions_answered:
-        QuestionAnswer(response=qa, question=q, answer='!EXIST', void_ind='n').save()
+        for qa in questions_answered:
+            QuestionAnswer(response=qa, question=q, answer='!EXIST', void_ind='n').save()
 
     if question['question_typ']['is_list'] == 'y' and len(question.get('questionoption_set', [])) <= 0:
         raise Exception('Select questions must have options.')
