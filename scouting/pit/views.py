@@ -295,7 +295,10 @@ def get_pit_results(teams, endpoint, request):
                 return ret_message('No pit data for team.', True, app_url + endpoint,
                                    request.user.id, e)
 
-            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) & Q(void_ind='n') & Q(question__void_ind='n'))\
+            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) &
+                                                 Q(void_ind='n') &
+                                                 Q(question__active='y') &
+                                                 Q(question__void_ind='n'))\
                 .order_by('question__order')
 
             tmp = {
