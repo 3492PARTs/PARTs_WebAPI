@@ -114,7 +114,6 @@ class Match(models.Model):
 
 class ScoutField(models.Model):
     scout_field_id = models.AutoField(primary_key=True)
-    response_id_tmp = models.IntegerField(null=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
@@ -129,7 +128,6 @@ class ScoutField(models.Model):
 
 class ScoutPit(models.Model):
     scout_pit_id = models.AutoField(primary_key=True)
-    response_id_tmp = models.IntegerField(null=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
@@ -220,7 +218,6 @@ class TeamNotes(models.Model):
 
 class Question(models.Model):
     id = models.AutoField(primary_key=True)
-    question_id_tmp = models.IntegerField(null=True)
     question = models.ForeignKey(form.models.Question, models.PROTECT, related_name='scout_question')
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     scorable = models.BooleanField(default=False)
