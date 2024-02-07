@@ -214,12 +214,17 @@ class TeamNotes(models.Model):
     time = models.DateTimeField(default=django.utils.timezone.now)
     void_ind = models.CharField(max_length=1, default='n')
 
+    def __str__(self):
+        return '{} {}'.format(self.team_note_id, self.team_no)
+
 
 class Question(models.Model):
     id = models.AutoField(primary_key=True)
     question_id_tmp = models.IntegerField(null=True)
-    question = models.ForeignKey(form.models.Question, models.PROTECT, related_name='form_question')
+    question = models.ForeignKey(form.models.Question, models.PROTECT, related_name='scout_question')
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     scorable = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default='n')
 
+    def __str__(self):
+        return '{} {}'.format(self.id, self.question)
