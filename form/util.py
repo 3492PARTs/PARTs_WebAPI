@@ -37,11 +37,11 @@ def get_questions(form_typ: str, active: str = ''):
                 'active': qo.active
             })
 
-        scout_question = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=q.question_id))
+        scout_question = q.scout_question.get(Q(void_ind='n'))
 
         questions.append({
             'question_id': q.question_id,
-            'season_id': q.season_id,
+            'season_id': scout_question.season.season_id,
             'question': q.question,
             'order': q.order,
             'required': q.required,
