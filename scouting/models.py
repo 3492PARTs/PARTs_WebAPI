@@ -12,6 +12,7 @@ from django.db import models
 from django.contrib.auth.models import Group
 from pytz import utc
 
+import form.models
 from user.models import User
 
 
@@ -115,6 +116,7 @@ class Match(models.Model):
 
 class ScoutField(models.Model):
     scout_field_id = models.AutoField(primary_key=True)
+    response_id = models.IntegerField(null=True)##models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
@@ -128,6 +130,7 @@ class ScoutField(models.Model):
 
 class ScoutPit(models.Model):
     scout_pit_id = models.AutoField(primary_key=True)
+    response_id = models.IntegerField(null=True)##models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
@@ -162,6 +165,12 @@ class ScoutFieldSchedule(models.Model):
         User, models.PROTECT, related_name='blue_two_user', null=True)
     blue_three = models.ForeignKey(
         User, models.PROTECT, related_name='blue_three_user', null=True)
+    red_one_check_in = models.DateTimeField(null=True)
+    red_two_check_in = models.DateTimeField(null=True)
+    red_three_check_in = models.DateTimeField(null=True)
+    blue_one_check_in = models.DateTimeField(null=True)
+    blue_two_check_in = models.DateTimeField(null=True)
+    blue_three_check_in = models.DateTimeField(null=True)
     st_time = models.DateTimeField()
     end_time = models.DateTimeField()
     notification1 = models.BooleanField(default=False)
@@ -203,5 +212,13 @@ class TeamNotes(models.Model):
     user = models.ForeignKey(User, models.PROTECT)
     note = models.TextField()
     time = models.DateTimeField(default=django.utils.timezone.now)
+    void_ind = models.CharField(max_length=1, default='n')
+
+
+class Question(models.Model):
+    id = models.AutoField(primary_key=True)
+    question_id = models.IntegerField(null=True)#models.ForeignKey(form.models.Question, models.PROTECT, related_name='form_question')
+    season = models.ForeignKey(Season, models.PROTECT, null=True, related_name='scouting_question_season')
+    scorable = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default='n')
 

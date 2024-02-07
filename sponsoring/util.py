@@ -26,7 +26,7 @@ def get_items():
             'sponsor_quantity': purchased,
             'reset_date': i.reset_date,
             'active': i.active,
-            'img_url': cloudinary.CloudinaryImage(i.img_id, version=i.img_ver).build_url()
+            'img_url': cloudinary.CloudinaryImage(i.img_id, version=i.img_ver).build_url(secure=True)
         })
 
     return ret

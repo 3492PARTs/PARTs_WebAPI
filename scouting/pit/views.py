@@ -1,6 +1,7 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+import scouting
 from form.models import QuestionAnswer, Question
 from scouting.models import Season, Team, Event, ScoutPit, EventTeamInfo
 from .serializers import InitSerializer, PitTeamDataSerializer, ScoutAnswerSerializer, ScoutPitResultsSerializer, \
@@ -133,6 +134,7 @@ class SaveAnswers(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 """
+
 
 class SavePicture(APIView):
     """
@@ -293,13 +295,16 @@ def get_pit_results(teams, endpoint, request):
                 return ret_message('No pit data for team.', True, app_url + endpoint,
                                    request.user.id, e)
 
-            spas = QuestionAnswer.objects.filter(Q(scout_pit=sp) & Q(void_ind='n') & Q(question__void_ind='n'))\
+            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) &
+                                                 Q(void_ind='n') &
+                                                 Q(question__active='y') &
+                                                 Q(question__void_ind='n'))\
                 .order_by('question__order')
 
             tmp = {
                 'teamNo': team.team_no,
                 'teamNm': team.team_nm,
-                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(),
+                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(secure=True),
             }
 
             tmp_questions = []
@@ -312,7 +317,6 @@ def get_pit_results(teams, endpoint, request):
                 })
             except:
                 x = 1
-
 
             for spa in spas:
                 tmp_questions.append({
@@ -353,14 +357,16 @@ class TeamData(APIView):
         scout_questions = []
         # sqs = ScoutQuestion.objects.prefetch_related('questionoption_set').filter(
         #    Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
+        questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+
         sqs = Question.objects\
-            .prefetch_related(Prefetch('questionoption_set'), Prefetch('questionanswer_set', queryset=QuestionAnswer.objects.filter(Q(scout_pit=sp)).select_related('question')))\
-            .filter(Q(season=current_season) & Q(form_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
+            .prefetch_related(Prefetch('questionoption_set'), Prefetch('questionanswer_set', queryset=QuestionAnswer.objects.filter(Q(response_id=sp.response_id)).select_related('question')))\
+            .filter(Q(season=current_season) & Q(form_typ_id='pit') & Q(active='y') & Q(void_ind='n') & Q(question_id__in=set(q.question_id for q in questions))).order_by('order')
 
         for sq in sqs:
             try:
                 spa = QuestionAnswer.objects.get(
-                    Q(scout_pit=sp) & Q(question=sq))
+                    Q(response_id=sp.response_id) & Q(question=sq))
             except Exception as e:
                 spa = QuestionAnswer(answer='')
 
@@ -378,7 +384,7 @@ class TeamData(APIView):
                 'questionoption_set': sq.questionoption_set,
                 'answer': spa.answer
             })
-        return {'questions': scout_questions, 'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url()}
+        return {'questions': scout_questions, 'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(secure=True)}
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):

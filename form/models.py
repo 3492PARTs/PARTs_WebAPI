@@ -77,6 +77,9 @@ class Response(models.Model):
     time = models.DateTimeField(default=django.utils.timezone.now)
     void_ind = models.CharField(max_length=1, default='n')
 
+    def __str__(self):
+        return str(self.response_id) + ' ' + self.form_typ
+
 
 class QuestionAnswer(models.Model):
     question_answer_id = models.AutoField(primary_key=True)
@@ -88,5 +91,5 @@ class QuestionAnswer(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return str(self.sfa_id) + ' ' + self.answer
+        return str(self.question_answer_id) + ' ' + self.answer
 

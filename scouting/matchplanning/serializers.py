@@ -76,6 +76,7 @@ class ScoutPitResultsSerializer(serializers.Serializer):
 class ScoutColSerializer(serializers.Serializer):
     PropertyName = serializers.CharField()
     ColLabel = serializers.CharField()
+    scorable = serializers.BooleanField()
     order = serializers.CharField()
 
 
@@ -98,6 +99,7 @@ class MatchPlanningSerializer(serializers.Serializer):
     fieldCols = ScoutColSerializer(many=True)
     fieldAnswers = ScoutResultAnswerSerializer(many=True)
     notes = TeamNoteSerializer(many=True)
+    alliance = serializers.CharField()
 
 
 class SaveTeamNoteSerializer(serializers.Serializer):

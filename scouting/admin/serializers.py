@@ -185,8 +185,15 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     red_three_id = UserSerializer(required=False, allow_null=True, read_only=True)
     blue_one_id = UserSerializer(required=False, allow_null=True, read_only=True)
     blue_two_id = UserSerializer(required=False, allow_null=True, read_only=True)
-    blue_three_id = UserSerializer(
-        required=False, allow_null=True, read_only=True)
+    blue_three_id = UserSerializer(required=False, allow_null=True, read_only=True)
+
+    red_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    red_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    red_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    blue_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    blue_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
+    blue_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
+
     scouts = serializers.CharField(read_only=True)
 
 
@@ -277,6 +284,15 @@ class EventToTeamsSerializer(serializers.Serializer):
     teams = TeamSerializer(many=True)
 
 
+class ScoutFieldSerializer(serializers.Serializer):
+    scout_field_id = serializers.IntegerField()
+    event = serializers.IntegerField()
+    team_no = serializers.IntegerField()
+    user = serializers.IntegerField()
+    time = serializers.DateTimeField()
+    match = serializers.IntegerField()
+
+
 class InitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     #events = EventTeamSerializer(many=True)
@@ -289,3 +305,26 @@ class InitSerializer(serializers.Serializer):
     # pastSchedule = ScoutScheduleSerializer(many=True)
     scoutQuestionType = FormTypeSerializer(many=True)
     teams = TeamSerializer(many=True)
+
+
+class ScoutColSerializer(serializers.Serializer):
+    PropertyName = serializers.CharField()
+    ColLabel = serializers.CharField()
+    order = serializers.CharField()
+
+
+class ScoutResultAnswerSerializer(serializers.BaseSerializer):
+    def to_representation(self, instance):
+        return instance
+
+
+class ScoutFieldResultsSerializer(serializers.Serializer):
+    scoutCols = ScoutColSerializer(many=True)
+    scoutAnswers = ScoutResultAnswerSerializer(many=True)
+
+
+class UserActivitySerializer(serializers.Serializer):
+    user = UserSerializer()
+    results = ScoutFieldResultsSerializer()
+    schedule = ScoutFieldScheduleSerializer(many=True)
+

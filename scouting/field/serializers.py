@@ -60,6 +60,13 @@ class QuestionTypeSerializer(serializers.Serializer):
     is_list = serializers.CharField()
 
 
+class ScoutQuestionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    question_id = serializers.IntegerField()
+    season_id = serializers.IntegerField(read_only=True)
+    scorable = serializers.BooleanField()
+
+
 class QuestionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
@@ -76,6 +83,9 @@ class QuestionSerializer(serializers.Serializer):
         required=False, allow_null=True, many=True)
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
+
 
 
 class ScoutFieldSerializer(serializers.Serializer):

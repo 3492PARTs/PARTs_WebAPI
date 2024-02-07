@@ -157,11 +157,37 @@ class PlanMatch(APIView):
 
         match = Match.objects.get(match_id=match_id)
 
-        teams = [match.red_one, match.red_two, match.red_three, match.blue_one, match.blue_two, match.blue_three]
+        teams = [
+            {
+                'team': match.red_one,
+                'alliance': 'red'
+            },
+            {
+                'team': match.red_two,
+                'alliance': 'red'
+            },
+            {
+                'team': match.red_three,
+                'alliance': 'red'
+            },
+            {
+                'team': match.blue_one,
+                'alliance': 'blue'
+            },
+            {
+                'team': match.blue_two,
+                'alliance': 'blue'
+            },
+            {
+                'team': match.blue_three,
+                'alliance': 'blue'
+            }
+        ]
 
         results = []
 
-        for t in teams:
+        for ts in teams:
+            t = ts.get('team')
             # Pit Data
             st = TeamSerializer(t).data
             pit = get_pit_results([st], self.endpoint, self.request)
@@ -183,7 +209,8 @@ class PlanMatch(APIView):
                             'pitData': pit,
                             'fieldCols': field_cols,
                             'fieldAnswers': field_answers,
-                            'notes': notes})
+                            'notes': notes,
+                            'alliance': ts.get('alliance')})
         return results
 
     def get(self, request, format=None):

@@ -5,6 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import form.util
+import scouting.models
 from form.models import Question, QuestionAnswer
 from scouting.models import Season, Event, Team, ScoutFieldSchedule, ScoutField, \
     EventTeamInfo, Match
@@ -36,7 +37,7 @@ class Questions(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_questions = form.util.get_questions('field')
+        scout_questions = form.util.get_questions('field', 'y')
 
         try:
             current_event = Event.objects.get(
@@ -157,7 +158,7 @@ class Results(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
-def get_field_results(team, endpoint, request):
+def get_field_results(team, endpoint, request, user=None):
     try:
         current_season = Season.objects.get(current='y')
     except Exception as e:
@@ -172,52 +173,65 @@ def get_field_results(team, endpoint, request):
     scout_cols = [{
         'PropertyName': 'team',
         'ColLabel': 'Team No',
+        'scorable': False,
         'order': 0
     }, {
         'PropertyName': 'rank',
         'ColLabel': 'Rank',
+        'scorable': False,
         'order': 1
     }, {
         'PropertyName': 'match',
         'ColLabel': 'Match',
+        'scorable': False,
         'order': 1
     }]
 
     scout_answers = []
-    sqsa = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+    questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+
+    sqsa = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
 
-    sqst = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+    sqst = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
-    sqso = Question.objects.filter(Q(season=current_season) & Q(form_typ_id='field') &
+    sqso = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
 
     for sqs in [sqsa, sqst, sqso]:
         for sq in sqs:
+            scout_question = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=sq.question_id))
             scout_cols.append({
                 'PropertyName': 'ans' + str(sq.question_id),
                 'ColLabel': ('' if sq.form_sub_typ is None else sq.form_sub_typ.form_sub_typ[
                                                                 0:1].upper() + ': ') + sq.question,
+                'scorable': scout_question.scorable,
                 'order': sq.order
             })
 
     scout_cols.append({
         'PropertyName': 'user',
         'ColLabel': 'Scout',
+        'scorable': False,
         'order': 9999999999
     })
     scout_cols.append({
         'PropertyName': 'time',
         'ColLabel': 'Time',
+        'scorable': False,
         'order': 99999999999
     })
 
     if team is not None:
         # get result for individual team
         sfs = ScoutField.objects.filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind='n')) \
+            .order_by('-time', '-scout_field_id')
+    elif user is not None:
+        # get result for individual team
+        sfs = ScoutField.objects.filter(Q(event=current_event) & Q(user=user) & Q(void_ind='n')) \
             .order_by('-time', '-scout_field_id')
     else:
         # get result for all teams
@@ -230,7 +244,7 @@ def get_field_results(team, endpoint, request):
 
     for sf in sfs:
         sfas = QuestionAnswer.objects.filter(
-            Q(scout_field=sf) & Q(void_ind='n'))
+            Q(response_id=sf.response_id) & Q(void_ind='n'))
 
         sa_obj = {}
         for sfa in sfas:

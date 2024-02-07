@@ -57,7 +57,7 @@ class TokenObtainPairView(APIView):
 
             return Response(serializer.validated_data)
         except Exception as e:
-            return ret_message('An error occurred while logging in.', True,
+            return ret_message('Invalid username or password.', True,
                                app_url + self.endpoint,
                                0, e)
 
@@ -511,7 +511,7 @@ class UserData(APIView):
             'groups': user.groups,
             'phone_type': user.phone_type,
             'phone_type_id': user.phone_type_id,
-            'image': cloudinary.CloudinaryImage(user.img_id, version=user.img_ver).build_url()
+            'image': cloudinary.CloudinaryImage(user.img_id, version=user.img_ver).build_url(secure=True)
         }
 
         return user

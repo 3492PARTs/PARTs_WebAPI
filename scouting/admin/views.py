@@ -23,6 +23,7 @@ from django.db.models.functions import Lower
 from django.db.models import Q
 from rest_framework.response import Response
 import form.util
+from ..field.views import get_field_results
 
 auth_obj = 'scoutadmin'
 app_url = 'scouting/admin/'
@@ -80,6 +81,12 @@ class Init(APIView):
                 'blue_one_id': fs.blue_one,
                 'blue_two_id': fs.blue_two,
                 'blue_three_id': fs.blue_three,
+                'red_one_check_in': fs.red_one_check_in,
+                'red_two_check_in': fs.red_two_check_in,
+                'red_three_check_in': fs.red_three_check_in,
+                'blue_one_check_in': fs.blue_one_check_in,
+                'blue_two_check_in': fs.blue_two_check_in,
+                'blue_three_check_in': fs.blue_three_check_in,
                 'scouts': 'R1: ' +
                           ('' if fs.red_one is None else fs.red_one.first_name + ' ' + fs.red_one.last_name[0:1]) +
                           '\nR2: ' +
@@ -141,6 +148,7 @@ class SeasonEvents(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
 
 class SyncSeason(APIView):
     """
@@ -563,7 +571,7 @@ class DeleteEvent(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = delete(request.query_params.get('event_id', None))
+                req = delete_event(request.query_params.get('event_id', None))
                 return req
             except Exception as e:
                 return ret_message('An error occurred while deleting the event.', True, app_url + self.endpoint,
@@ -571,7 +579,8 @@ class DeleteEvent(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
-def delete(event_id):
+
+def delete_event(event_id):
     e = Event.objects.get(event_id=event_id)
 
     teams_at_event = Team.objects.filter(event=e)
@@ -739,7 +748,7 @@ class DeleteSeason(APIView):
 
         events = Event.objects.filter(season=season)
         for e in events:
-            delete(e.event_id)
+            delete_event(e.event_id)
 
         season.delete()
 
@@ -948,5 +957,96 @@ class SavePhoneType(APIView):
             except Exception as e:
                 return ret_message('An error occurred while saving phone type.', True, app_url + self.endpoint,
                                    request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class ScoutingActivity(APIView):
+    """
+    API endpoint to get activity of scouters
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'scout-activity/'
+
+    def init(self):
+        try:
+            current_season = Season.objects.get(current='y')
+        except Exception as e:
+            current_season = Season()
+
+        try:
+            current_event = Event.objects.get(
+                Q(season=current_season) & Q(current='y') & Q(void_ind='n'))
+        except Exception as e:
+            current_event = Event()
+
+        user_results = []
+        users = user.util.get_users(1, 0)
+        for u in users:
+            field_schedule = []
+            sfss = ScoutFieldSchedule.objects.filter(Q(void_ind='n') & Q(event=current_event) &
+                                                     (Q(red_one=u) | Q(red_two=u) | Q(red_three=u) |
+                                                      Q(blue_one=u) | Q(blue_two=u) | Q(blue_three=u))
+                                                     ).order_by('st_time')
+
+            for fs in sfss:
+                field_schedule.append({
+                    'scout_field_sch_id': fs.scout_field_sch_id,
+                    'event_id': fs.event_id,
+                    'st_time': fs.st_time,
+                    'end_time': fs.end_time,
+                    'notification1': fs.notification1,
+                    'notification2': fs.notification2,
+                    'notification3': fs.notification3,
+                    'red_one_id': fs.red_one,
+                    'red_two_id': fs.red_two,
+                    'red_three_id': fs.red_three,
+                    'blue_one_id': fs.blue_one,
+                    'blue_two_id': fs.blue_two,
+                    'blue_three_id': fs.blue_three,
+                    'red_one_check_in': fs.red_one_check_in,
+                    'red_two_check_in': fs.red_two_check_in,
+                    'red_three_check_in': fs.red_three_check_in,
+                    'blue_one_check_in': fs.blue_one_check_in,
+                    'blue_two_check_in': fs.blue_two_check_in,
+                    'blue_three_check_in': fs.blue_three_check_in,
+                    'scouts': 'R1: ' +
+                              ('' if fs.red_one is None else fs.red_one.first_name + ' ' + fs.red_one.last_name[0:1]) +
+                              '\nR2: ' +
+                              ('' if fs.red_two is None else fs.red_two.first_name + ' ' + fs.red_two.last_name[0:1]) +
+                              '\nR3: ' +
+                              ('' if fs.red_three is None else fs.red_three.first_name + ' ' + fs.red_three.last_name[
+                                                                                               0:1]) +
+                              '\nB1: ' +
+                              ('' if fs.blue_one is None else fs.blue_one.first_name + ' ' + fs.blue_one.last_name[
+                                                                                             0:1]) +
+                              '\nB2: ' +
+                              ('' if fs.blue_two is None else fs.blue_two.first_name + ' ' + fs.blue_two.last_name[
+                                                                                             0:1]) +
+                              '\nB3: ' +
+                              (
+                                  '' if fs.blue_three is None else fs.blue_three.first_name + ' ' + fs.blue_three.last_name[
+                                                                                                    0:1])
+                })
+
+            user_results.append({
+                'user': u,
+                'schedule': field_schedule,
+                'results': get_field_results(None, self.endpoint, self.request, u)
+            })
+
+        return user_results
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = self.init()
+                serializer = UserActivitySerializer(req, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting scouting activity.', True, app_url + self.endpoint,
+                                   request.user.id,
+                                   e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
