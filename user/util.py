@@ -2,6 +2,7 @@ from django.contrib.auth.models import Group, Permission
 from django.db.models import Q, Value
 from django.db.models.functions import Lower, Concat
 
+import user
 from user.models import User, PhoneType
 
 
@@ -72,6 +73,29 @@ def get_users_in_group(name: str):
 
 def get_groups():
     return Group.objects.all().order_by('name')
+
+
+def save_group(data):
+    if data.get('id', None) is None:
+        group = Group(name=data.get('name'))
+    else:
+        group = Group.objects.get(id=data.get('id', None))
+        group.name = data.get('name')
+
+    group.save()
+
+    prmsn_ids = []
+    for prm in data.get('permissions', []):
+        prmsn_ids.append(prm['id'])
+        gpr_prmsn = group.permissions.filter(id=prm['id']).exists()
+        if not gpr_prmsn:
+            permission = Permission.objects.get(id=prm['id'])
+            group.permissions.add(permission)
+
+    gpr_prmsns = group.permissions.filter(~Q(id__in=prmsn_ids))
+
+    for gpr_prmsn in gpr_prmsns:
+        gpr_prmsn.group_set.remove(group)
 
 
 def get_permissions():

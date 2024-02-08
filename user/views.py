@@ -560,20 +560,35 @@ class Groups(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = 'groups/'
 
-    def get_groups(self, user_id):
-        if user_id is not None:
-            return get_user_groups(user_id)
-        else:
-            return user.util.get_groups()
-
     def get(self, request, format=None):
         try:
-            req = self.get_groups(request.query_params.get('user_id', None))
-            serializer = GroupSerializer(req, many=True)
+            user_id = request.query_params.get('user_id', None)
+            if user_id is not None:
+                groups = get_user_groups(user_id)
+            else:
+                groups = user.util.get_groups()
+            serializer = GroupSerializer(groups, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message('An error occurred while getting groups.', True, app_url + self.endpoint,
                                request.user.id, e)
+
+    def post(self, request, format=None):
+        serializer = GroupSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.save_group(serializer.validated_data)
+                    return ret_message('Saved group successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the group.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
 
 
 class Permissions(APIView):
