@@ -125,6 +125,11 @@ def delete_permission(prmsn_id: int):
 
 def run_security_audit():
     users = get_users(1, 1)
-    users.annotate(group_count=Count('groups')).filter(Q(group_count__gte=1))
 
-    return users
+    users_ret = []
+
+    for u in users:
+        if len(u.groups.all()) > 0:
+            users_ret.append(u)
+
+    return users_ret
