@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group, Permission
-from django.db.models import Q, Value
+from django.db.models import Q, Value, Count
 from django.db.models.functions import Lower, Concat
 
 import user
@@ -121,3 +121,10 @@ def save_permission(data):
 
 def delete_permission(prmsn_id: int):
     Permission.objects.get(id=prmsn_id).delete()
+
+
+def run_security_audit():
+    users = get_users(1, 1)
+    users.annotate(group_count=Count('groups')).filter(Q(group_count__gte=1))
+
+    return users

@@ -726,3 +726,23 @@ class SaveUser(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class SecurityAudit(APIView):
+    """
+    API endpoint to get all users with security
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'security-audit/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 'admin'):
+            try:
+                serializer = UserSerializer(user.util.run_security_audit(), many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while running security audit.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
