@@ -589,6 +589,17 @@ class Groups(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
+    def delete(self, request, format=None):
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.delete_group(request.query_params.get('group_id', None))
+                    return ret_message('Deleted group successfully')
+            except Exception as e:
+                return ret_message('An error occurred while deleting the group.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class Permissions(APIView):
@@ -606,6 +617,34 @@ class Permissions(APIView):
         except Exception as e:
             return ret_message('An error occurred while getting permissions.', True, app_url + self.endpoint,
                                request.user.id, e)
+
+    def post(self, request, format=None):
+        serializer = PermissionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.save_permission(serializer.validated_data)
+                    return ret_message('Saved permission successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the permission.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+    def delete(self, request, format=None):
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.delete_permission(request.query_params.get('prmsn_id', None))
+                    return ret_message('Deleted permission successfully')
+            except Exception as e:
+                return ret_message('An error occurred while deleting the permission.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class Alerts(APIView):

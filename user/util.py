@@ -98,5 +98,26 @@ def save_group(data):
         gpr_prmsn.group_set.remove(group)
 
 
+def delete_group(group_id):
+    Group.objects.get(id=group_id).delete()
+
+
 def get_permissions():
     return Permission.objects.filter(content_type_id=-1).order_by('name')
+
+
+def save_permission(data):
+    if data.get('id', None) is None:
+        prmsn = Permission(name=data['name'])
+    else:
+        prmsn = Permission.objects.get(id=data['id'])
+        prmsn.name = data['name']
+
+    prmsn.codename = data['codename']
+    prmsn.content_type_id = -1
+
+    prmsn.save()
+
+
+def delete_permission(prmsn_id: int):
+    Permission.objects.get(id=prmsn_id).delete()
