@@ -1,4 +1,4 @@
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.db.models import Q, Value
 from django.db.models.functions import Lower, Concat
 
@@ -68,3 +68,11 @@ def get_phone_types():
 
 def get_users_in_group(name: str):
     return get_users(1, 1).filter(groups__name=name)
+
+
+def get_groups():
+    return Group.objects.all().order_by('name')
+
+
+def get_permissions():
+    return Permission.objects.filter(content_type_id=-1).order_by('name')

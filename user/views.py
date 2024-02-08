@@ -24,7 +24,7 @@ import alerts.util
 import user.util
 from api.settings import AUTH_PASSWORD_VALIDATORS
 from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
-    UserUpdateSerializer, GetAlertsSerializer, SaveUserSerializer
+    UserUpdateSerializer, GetAlertsSerializer, SaveUserSerializer, PermissionSerializer
 from .models import User, UserLinks
 from general.security import get_user_groups, get_user_permissions, ret_message, has_access
 
@@ -552,16 +552,19 @@ class UserLinksView(APIView):
                                request.user.id, e)
 
 
-class UserGroups(APIView):
+class Groups(APIView):
     """
-    API endpoint to get groups a user has based on permissions
+    API endpoint to get groups and its permissions, either all or by user
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'user-groups/'
+    endpoint = 'groups/'
 
     def get_groups(self, user_id):
-        return get_user_groups(user_id)
+        if user_id is not None:
+            return get_user_groups(user_id)
+        else:
+            return user.util.get_groups()
 
     def get(self, request, format=None):
         try:
@@ -569,7 +572,24 @@ class UserGroups(APIView):
             serializer = GroupSerializer(req, many=True)
             return Response(serializer.data)
         except Exception as e:
-            return ret_message('An error occurred while getting user groups.', True, app_url + self.endpoint,
+            return ret_message('An error occurred while getting groups.', True, app_url + self.endpoint,
+                               request.user.id, e)
+
+
+class Permissions(APIView):
+    """
+    API endpoint to get permissions
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'permissions/'
+
+    def get(self, request, format=None):
+        try:
+            serializer = PermissionSerializer(user.util.get_permissions(), many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting permissions.', True, app_url + self.endpoint,
                                request.user.id, e)
 
 
