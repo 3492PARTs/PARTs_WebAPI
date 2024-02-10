@@ -1,7 +1,8 @@
-from django.contrib.auth.models import Group
-from django.db.models import Q, Value
+from django.contrib.auth.models import Group, Permission
+from django.db.models import Q, Value, Count
 from django.db.models.functions import Lower, Concat
 
+import user
 from user.models import User, PhoneType
 
 
@@ -68,3 +69,67 @@ def get_phone_types():
 
 def get_users_in_group(name: str):
     return get_users(1, 1).filter(groups__name=name)
+
+
+def get_groups():
+    return Group.objects.all().order_by('name')
+
+
+def save_group(data):
+    if data.get('id', None) is None:
+        group = Group(name=data.get('name'))
+    else:
+        group = Group.objects.get(id=data.get('id', None))
+        group.name = data.get('name')
+
+    group.save()
+
+    prmsn_ids = []
+    for prm in data.get('permissions', []):
+        prmsn_ids.append(prm['id'])
+        gpr_prmsn = group.permissions.filter(id=prm['id']).exists()
+        if not gpr_prmsn:
+            permission = Permission.objects.get(id=prm['id'])
+            group.permissions.add(permission)
+
+    gpr_prmsns = group.permissions.filter(~Q(id__in=prmsn_ids))
+
+    for gpr_prmsn in gpr_prmsns:
+        gpr_prmsn.group_set.remove(group)
+
+
+def delete_group(group_id):
+    Group.objects.get(id=group_id).delete()
+
+
+def get_permissions():
+    return Permission.objects.filter(content_type_id=-1).order_by('name')
+
+
+def save_permission(data):
+    if data.get('id', None) is None:
+        prmsn = Permission(name=data['name'])
+    else:
+        prmsn = Permission.objects.get(id=data['id'])
+        prmsn.name = data['name']
+
+    prmsn.codename = data['codename']
+    prmsn.content_type_id = -1
+
+    prmsn.save()
+
+
+def delete_permission(prmsn_id: int):
+    Permission.objects.get(id=prmsn_id).delete()
+
+
+def run_security_audit():
+    users = get_users(1, 1)
+
+    users_ret = []
+
+    for u in users:
+        if len(u.groups.all()) > 0:
+            users_ret.append(u)
+
+    return users_ret

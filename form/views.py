@@ -186,7 +186,7 @@ class GetResponse(APIView):
     endpoint = 'get-response/'
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 'site_forms'):
+        if has_access(request.user.id, 'admin'):
             try:
                 response = form.util.get_response(request.query_params['response_id'])
                 serializer = QuestionSerializer(response, many=True)
@@ -205,7 +205,7 @@ class GetResponses(APIView):
     endpoint = 'get-responses/'
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 'site_forms'):
+        if has_access(request.user.id, 'admin'):
             try:
                 responses = form.util.get_responses(request.query_params['form_typ'])
                 serializer = ResponseSerializer(responses, many=True)

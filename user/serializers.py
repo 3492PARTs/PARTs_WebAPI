@@ -5,14 +5,14 @@ from django.core.validators import ValidationError
 
 
 class PermissionSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField()
     content_type_id = serializers.IntegerField(read_only=True)
     codename = serializers.CharField()
 
 
 class GroupSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField()
     permissions = PermissionSerializer(many=True, required=False)
 

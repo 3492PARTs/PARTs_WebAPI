@@ -24,7 +24,7 @@ import alerts.util
 import user.util
 from api.settings import AUTH_PASSWORD_VALIDATORS
 from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
-    UserUpdateSerializer, GetAlertsSerializer, SaveUserSerializer
+    UserUpdateSerializer, GetAlertsSerializer, SaveUserSerializer, PermissionSerializer
 from .models import User, UserLinks
 from general.security import get_user_groups, get_user_permissions, ret_message, has_access
 
@@ -552,25 +552,99 @@ class UserLinksView(APIView):
                                request.user.id, e)
 
 
-class UserGroups(APIView):
+class Groups(APIView):
     """
-    API endpoint to get groups a user has based on permissions
+    API endpoint to get groups and its permissions, either all or by user
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'user-groups/'
-
-    def get_groups(self, user_id):
-        return get_user_groups(user_id)
+    endpoint = 'groups/'
 
     def get(self, request, format=None):
         try:
-            req = self.get_groups(request.query_params.get('user_id', None))
-            serializer = GroupSerializer(req, many=True)
+            user_id = request.query_params.get('user_id', None)
+            if user_id is not None:
+                groups = get_user_groups(user_id)
+            else:
+                groups = user.util.get_groups()
+            serializer = GroupSerializer(groups, many=True)
             return Response(serializer.data)
         except Exception as e:
-            return ret_message('An error occurred while getting user groups.', True, app_url + self.endpoint,
+            return ret_message('An error occurred while getting groups.', True, app_url + self.endpoint,
                                request.user.id, e)
+
+    def post(self, request, format=None):
+        serializer = GroupSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.save_group(serializer.validated_data)
+                    return ret_message('Saved group successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the group.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+    def delete(self, request, format=None):
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.delete_group(request.query_params.get('group_id', None))
+                    return ret_message('Deleted group successfully')
+            except Exception as e:
+                return ret_message('An error occurred while deleting the group.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class Permissions(APIView):
+    """
+    API endpoint to get permissions
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'permissions/'
+
+    def get(self, request, format=None):
+        try:
+            serializer = PermissionSerializer(user.util.get_permissions(), many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting permissions.', True, app_url + self.endpoint,
+                               request.user.id, e)
+
+    def post(self, request, format=None):
+        serializer = PermissionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.save_permission(serializer.validated_data)
+                    return ret_message('Saved permission successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the permission.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+    def delete(self, request, format=None):
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    user.util.delete_permission(request.query_params.get('prmsn_id', None))
+                    return ret_message('Deleted permission successfully')
+            except Exception as e:
+                return ret_message('An error occurred while deleting the permission.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class Alerts(APIView):
@@ -649,6 +723,26 @@ class SaveUser(APIView):
                     return ret_message('Saved user successfully')
             except Exception as e:
                 return ret_message('An error occurred while saving the user.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class SecurityAudit(APIView):
+    """
+    API endpoint to get all users with security
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'security-audit/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 'admin'):
+            try:
+                serializer = UserSerializer(user.util.run_security_audit(), many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while running security audit.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
