@@ -53,7 +53,7 @@ class Init(APIView):
 
         user_groups = []
         try:
-            user_groups = user.util.get_all_user_groups().filter(id__in=list(
+            user_groups = user.util.get_groups().filter(id__in=list(
                 ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True)))
         except Exception as e:
             user_groups = []

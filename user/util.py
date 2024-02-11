@@ -56,12 +56,12 @@ def get_user_groups(user_id: int):
 
     return user_groups
 
-
+"""
 def get_all_user_groups(user_id: int = None):
     user_groups = Group.objects.all().order_by('name')
 
     return user_groups
-
+"""
 
 def get_phone_types():
     return PhoneType.objects.all().order_by('carrier')
