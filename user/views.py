@@ -23,6 +23,7 @@ from webpush import send_user_notification
 import alerts.util
 import user.util
 from api.settings import AUTH_PASSWORD_VALIDATORS
+from scouting.models import ScoutAuthGroups
 from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
     UserUpdateSerializer, GetAlertsSerializer, SaveUserSerializer, PermissionSerializer
 from .models import User, UserLinks

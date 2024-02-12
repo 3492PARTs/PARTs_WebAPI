@@ -3,6 +3,7 @@ from django.db.models import Q, Value, Count
 from django.db.models.functions import Lower, Concat
 
 import user
+from scouting.models import ScoutAuthGroups
 from user.models import User, PhoneType
 
 
@@ -56,12 +57,12 @@ def get_user_groups(user_id: int):
 
     return user_groups
 
-
+"""
 def get_all_user_groups(user_id: int = None):
     user_groups = Group.objects.all().order_by('name')
 
     return user_groups
-
+"""
 
 def get_phone_types():
     return PhoneType.objects.all().order_by('carrier')
@@ -99,6 +100,7 @@ def save_group(data):
 
 
 def delete_group(group_id):
+    ScoutAuthGroups.objects.get(auth_group_id_id=group_id).delete()
     Group.objects.get(id=group_id).delete()
 
 

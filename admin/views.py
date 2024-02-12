@@ -1,14 +1,17 @@
+from django.contrib.auth.models import Group
+from django.db import transaction
+from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 import user.util
+from scouting.models import ScoutAuthGroups
 from user.models import PhoneType
-from .serializers import ErrorLogSerializer, InitSerializer
+from .serializers import ErrorLogSerializer, InitSerializer, GroupSerializer
 from .models import ErrorLog
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
-from django.contrib.auth.models import Group
 from rest_framework.response import Response
 
 auth_obj = 'admin'
@@ -26,7 +29,7 @@ class Init(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                user_groups = user.util.get_all_user_groups()
+                user_groups = user.util.get_groups()
                 phone_types = user.util.get_phone_types()
                 req = {'userGroups': user_groups, 'phoneTypes': phone_types}
                 serializer = InitSerializer(req)
@@ -73,6 +76,53 @@ class ErrorLogView(APIView):
                 return Response(req)
             except Exception as e:
                 return ret_message('An error occurred while getting errors.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class ScoutAuthGroupsView(APIView):
+    """
+    API endpoint to manage the auth groups the scout admin can assign
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'scout-auth-groups/'
+
+    def get(self, request, format=None):
+        try:
+            groups = user.util.get_groups().filter(id__in=list(
+                ScoutAuthGroups.objects.all().values_list('auth_group_id', flat=True)))
+            serializer = GroupSerializer(groups, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting scout auth groups.', True, app_url + self.endpoint,
+                               request.user.id, e)
+
+    def post(self, request, format=None):
+        serializer = GroupSerializer(data=request.data, many=True)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    keep = []
+                    for s in serializer.validated_data:
+                        keep.append(s['id'])
+                        try:
+                            ScoutAuthGroups.objects.get(auth_group_id_id=s['id'])
+                        except ScoutAuthGroups.DoesNotExist:
+                            sag = ScoutAuthGroups(auth_group_id_id=s['id'])
+                            sag.save()
+
+                    sags = ScoutAuthGroups.objects.filter(~Q(auth_group_id_id__in=keep))
+                    for s in sags:
+                        s.delete()
+
+                    return ret_message('Saved scout auth groups successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the scout auth groups.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
