@@ -42,7 +42,7 @@ class GetFormInit(APIView):
     endpoint = 'form-init/'
 
     def get(self, request, format=None):
-        if has_access(request.user.id, 'admin'):
+        if has_access(request.user.id, 'admin') or has_access(request.user.id, 'scoutadmin'):
             try:
                 questions = form.util.get_questions(request.query_params['form_typ'])
                 question_types = form.util.get_question_types()
@@ -73,7 +73,7 @@ class SaveQuestion(APIView):
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
                                serializer.errors)
 
-        if has_access(request.user.id, 'admin'):
+        if has_access(request.user.id, 'admin') or has_access(request.user.id, 'scoutadmin'):
             try:
                 with transaction.atomic():
                     form.util.save_question(serializer.validated_data)
