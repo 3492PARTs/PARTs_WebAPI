@@ -96,7 +96,7 @@ class ScoutAuthGroupsView(APIView):
             serializer = GroupSerializer(groups, many=True)
             return Response(serializer.data)
         except Exception as e:
-            return ret_message('An error occurred while getting groups.', True, app_url + self.endpoint,
+            return ret_message('An error occurred while getting scout auth groups.', True, app_url + self.endpoint,
                                request.user.id, e)
 
     def post(self, request, format=None):
@@ -109,20 +109,20 @@ class ScoutAuthGroupsView(APIView):
                 with transaction.atomic():
                     keep = []
                     for s in serializer.validated_data:
-                        keep.append(s['auth_group_id'])
+                        keep.append(s['id'])
                         try:
-                            ScoutAuthGroups.objects.get(auth_group_id=s['auth_group_id'])
+                            ScoutAuthGroups.objects.get(auth_group_id_id=s['id'])
                         except ScoutAuthGroups.DoesNotExist:
-                            sag = ScoutAuthGroups(auth_group_id=s['auth_group_id'])
+                            sag = ScoutAuthGroups(auth_group_id_id=s['id'])
                             sag.save()
 
-                    sags = ScoutAuthGroups.objects.get(~Q(auth_group_id__in=keep))
+                    sags = ScoutAuthGroups.objects.filter(~Q(auth_group_id_id__in=keep))
                     for s in sags:
                         s.delete()
 
-                    return ret_message('Saved groups successfully')
+                    return ret_message('Saved scout auth groups successfully')
             except Exception as e:
-                return ret_message('An error occurred while saving the groups.', True, app_url + self.endpoint,
+                return ret_message('An error occurred while saving the scout auth groups.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
