@@ -1,9 +1,10 @@
+from django.db import transaction
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import scouting
 from form.models import QuestionAnswer, Question
-from scouting.models import Season, Team, Event, ScoutPit, EventTeamInfo
+from scouting.models import Season, Team, Event, ScoutPit, EventTeamInfo, ScoutPitImage
 from .serializers import InitSerializer, PitTeamDataSerializer, ScoutAnswerSerializer, ScoutPitResultsSerializer, \
     TeamSerializer
 from rest_framework.views import APIView
@@ -110,14 +111,11 @@ class SavePicture(APIView):
         try:
             sp = ScoutPit.objects.get(
                 Q(event=current_event) & Q(team_no_id=team_no) & Q(void_ind='n'))
-            if sp.img_id:
-                response = cloudinary.uploader.upload(file, public_id=sp.img_id)
-            else:
-                response = cloudinary.uploader.upload(file)
 
-            sp.img_id = response['public_id']
-            sp.img_ver = str(response['version'])
-            sp.save()
+            response = cloudinary.uploader.upload(file)
+
+            ScoutPitImage(scout_pit=sp, img_id=response['public_id'], img_ver = str(response['version'])).save()
+
         except Exception as e:
             return ret_message('An error occurred while saving the image.', True, app_url + self.endpoint,
                                self.request.user.id, e)
@@ -248,10 +246,19 @@ def get_pit_results(teams, endpoint, request):
                                                  Q(question__void_ind='n')) \
                 .order_by('question__order')
 
+            spis = ScoutPitImage.objects.filter(Q(void_ind='n') & Q(scout_pit=sp)).order_by('scout_pit_img_id')
+            pics = []
+            for spi in spis:
+                pics.append({
+                    'scout_pit_img_id': spi.scout_pit_img_id,
+                    'pic': cloudinary.CloudinaryImage(spi.img_id, version=spi.img_ver).build_url(secure=True),
+                    'default': spi.default
+                })
+
             tmp = {
                 'teamNo': team.team_no,
                 'teamNm': team.team_nm,
-                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(secure=True),
+                'pics': pics,
             }
 
             tmp_questions = []
@@ -275,6 +282,35 @@ def get_pit_results(teams, endpoint, request):
             results.append(tmp)
 
     return results
+
+
+class SetDefaultPitImage(APIView):
+    """
+    API endpoint to set a default image for a team's pit scouting result
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'set-default-pit-image/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                with transaction.atomic():
+                    spi = ScoutPitImage.objects.get(Q(void_ind='n') & Q(scout_pit_img_id=request.query_params.get('scout_pit_img_id', None)))
+
+                    for pi in spi.scout_pit.scoutpitimage_set.filter(Q(void_ind='n')):
+                        pi.default = False
+                        pi.save()
+
+                    spi.default = True
+                    spi.save()
+
+                return ret_message('Successfully set the team''s default image.')
+            except Exception as e:
+                return ret_message('An error occurred while getting team data.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
 class TeamData(APIView):
@@ -337,8 +373,19 @@ class TeamData(APIView):
                 'questionoption_set': sq.questionoption_set,
                 'answer': spa.answer
             })
-        return {'questions': scout_questions,
-                'pic': cloudinary.CloudinaryImage(sp.img_id, version=sp.img_ver).build_url(secure=True)}
+
+            pics = []
+            for pic in sp.scoutpitimage_set.filter(Q(void_ind='n')):
+                pics.append({
+                    'scout_pit_img_id': pic.scout_pit_img_id,
+                    'pic': cloudinary.CloudinaryImage(pic.img_id, version=pic.img_ver).build_url(secure=True),
+                    'default': pic.default
+                })
+
+        return {
+            'questions': scout_questions,
+            'pics': pics
+        }
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
