@@ -8,7 +8,6 @@ from user.models import User
 
 
 def has_access(user_id, sec_permission):
-    user.util.get_users_with_permission('site_forms_notif')
     # how to use has_access(self.request.user.id, 36)
     prmsns = get_user_permissions(user_id)
 
