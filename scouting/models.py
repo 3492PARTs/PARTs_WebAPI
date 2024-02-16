@@ -128,16 +128,26 @@ class ScoutField(models.Model):
 
 class ScoutPit(models.Model):
     scout_pit_id = models.AutoField(primary_key=True)
-    response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
+    response = models.ForeignKey(form.models.Response, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
-    img_id = models.CharField(max_length=500, blank=True, null=True)
-    img_ver = models.CharField(max_length=500, blank=True, null=True)
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
         return self.scout_pit_id
+
+
+class ScoutPitImage(models.Model):
+    scout_pit_img_id = models.AutoField(primary_key=True)
+    scout_pit = models.ForeignKey(ScoutPit, models.PROTECT)
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
+    default = models.BooleanField(default=False)
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return self.scout_pit_img_id
 
 
 class ScoutAuthGroups(models.Model):

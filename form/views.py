@@ -165,7 +165,7 @@ class SaveAnswers(APIView):
                                                            response=r)
 
                         alert = []
-                        users = user.util.get_users_in_group('Site Forms')
+                        users = user.util.get_users_with_permission('site_forms_notif')
                         for u in users:
                             alert.append(
                                 alerts.util.stage_alert(u, form_type.form_nm, 'A new response has been logged.'))
