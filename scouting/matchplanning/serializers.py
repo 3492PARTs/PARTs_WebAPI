@@ -66,10 +66,16 @@ class ScoutPitResultAnswerSerializer(serializers.Serializer):
     answer = serializers.CharField(required=False, allow_null=True)
 
 
+class ScoutPitImageSerializer(serializers.Serializer):
+    scout_pit_img_id = serializers.IntegerField(required=False)
+    pic = serializers.CharField()
+    default = serializers.BooleanField()
+
+
 class ScoutPitResultsSerializer(serializers.Serializer):
     teamNo = serializers.CharField()
     teamNm = serializers.CharField()
-    pic = serializers.CharField()
+    pics = ScoutPitImageSerializer(many=True, required=False)
     results = ScoutPitResultAnswerSerializer(many=True)
 
 

@@ -2,6 +2,10 @@
 
 newline=$'\n'
 timestamp=$(date)
-output=$(curl https://parts.bduke.dev/public/notify-users/)
+output=$(curl https://api.parts3492.org/alerts/run/)
 
-echo "$timestamp" "$output" "$newline" >> /home/brandon/PARTs_WebAPI/logs/log-notify-users.txt
+echo "$timestamp" "$output" "$newline" >> /home/parts3492/domains/api.parts3492.org/code/logs/log-notify-users.txt
+
+output=$(curl https://api.parts3492.org/alerts/send/)
+
+echo "$timestamp" "$output" "$newline" >> /home/parts3492/domains/api.parts3492.org/code/logs/log-notify-users.txt
