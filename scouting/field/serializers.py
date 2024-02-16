@@ -73,11 +73,13 @@ class QuestionSerializer(serializers.Serializer):
 
     question = serializers.CharField()
     order = serializers.IntegerField()
+    required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
     form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     form_typ = serializers.CharField()
+    display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
         required=False, allow_null=True, many=True)
@@ -85,7 +87,6 @@ class QuestionSerializer(serializers.Serializer):
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
-
 
 
 class ScoutFieldSerializer(serializers.Serializer):

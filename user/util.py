@@ -72,6 +72,16 @@ def get_users_in_group(name: str):
     return get_users(1, 1).filter(groups__name=name)
 
 
+def get_users_with_permission(codename: str):
+    users = []
+    prmsn = Permission.objects.get(codename=codename)
+    for g in prmsn.group_set.all():
+        users_in_grp = get_users(1, 1).filter(groups__name=g.name)
+        users += users_in_grp
+
+    return users
+
+
 def get_groups():
     return Group.objects.all().order_by('name')
 
