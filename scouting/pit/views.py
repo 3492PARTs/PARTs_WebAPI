@@ -352,6 +352,7 @@ class TeamData(APIView):
                .filter(Q(form_typ_id='pit') & Q(active='y') & Q(void_ind='n') &
                        Q(question_id__in=set(q.question_id for q in questions))).order_by('order'))
 
+        pics = []
         for sq in sqs:
             try:
                 spa = QuestionAnswer.objects.get(
@@ -374,7 +375,6 @@ class TeamData(APIView):
                 'answer': spa.answer
             })
 
-            pics = []
             for pic in sp.scoutpitimage_set.filter(Q(void_ind='n')):
                 pics.append({
                     'scout_pit_img_id': pic.scout_pit_img_id,
