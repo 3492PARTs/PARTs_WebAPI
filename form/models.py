@@ -64,6 +64,38 @@ class QuestionOption(models.Model):
         return str(self.question_opt_id) + ' ' + self.option
 
 
+class QuestionCondition(models.Model):
+    question_condition_id = models.AutoField(primary_key=True)
+    condition = models.CharField(max_length=1000)
+    question = models.ForeignKey(Question, models.PROTECT)
+    active = models.CharField(max_length=1, default='y')
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return str(self.question_condition_id) + ' ' + self.question
+
+
+class QuestionAggregateType(models.Model):
+    question_aggregate_typ = models.CharField(primary_key=True, max_length=10)
+    question_aggregate_nm = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return self.question_aggregate_typ + ' ' + self.question_aggregate_nm
+
+
+class QuestionAggregate(models.Model):
+    question_aggregate_id = models.AutoField(primary_key=True)
+    question_aggregate_typ = models.ForeignKey(QuestionAggregateType, models.PROTECT)
+    questions = models.ManyToManyField(Question)
+    field_name = models.CharField(max_length=1000)
+    active = models.CharField(max_length=1, default='y')
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return str(self.question_aggregate_id) + ' ' + str(self.question_aggregate_typ)
+
+
 class Response(models.Model):
     response_id = models.AutoField(primary_key=True)
     form_typ = models.ForeignKey(FormType, models.PROTECT)

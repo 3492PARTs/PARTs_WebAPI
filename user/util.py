@@ -18,8 +18,10 @@ def get_users(active, admin):
         user_admin = Q(groups__in=[group])
 
     users = (User.objects.annotate(name=Concat('first_name', Value(' '), 'last_name'))
-             .filter(Q(date_joined__isnull=False) & user_active).exclude(user_admin)
+             .filter(user_active).exclude(user_admin)
              .order_by('is_active', Lower('first_name'), Lower('last_name')))
+
+    #Q(date_joined__isnull=False) &
 
     return users
 
@@ -75,9 +77,7 @@ def get_users_in_group(name: str):
 def get_users_with_permission(codename: str):
     users = []
     prmsn = Permission.objects.get(codename=codename)
-    for g in prmsn.group_set.all():
-        users_in_grp = get_users(1, 1).filter(groups__name=g.name)
-        users += users_in_grp
+    users = get_users(1, 1).filter(groups__name__in=set(g.name for g in prmsn.group_set.all()))
 
     return users
 

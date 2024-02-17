@@ -2,7 +2,8 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 
 import scouting.models
-from form.models import Question, Response, QuestionAnswer, QuestionOption, FormSubType, QuestionType
+from form.models import Question, Response, QuestionAnswer, QuestionOption, FormSubType, QuestionType, \
+    QuestionAggregate, QuestionAggregateType
 from form.serializers import QuestionSerializer
 from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
@@ -28,23 +29,29 @@ def get_questions(form_typ: str, active: str = ''):
         Q(void_ind='n')).order_by('form_sub_typ__order', 'order')
 
     for q in qs:
-        questionoption_set = []
-        for qo in q.questionoption_set.all():
-            questionoption_set.append({
-                'question_opt_id': qo.question_opt_id,
-                'question_id': qo.question_id,
-                'option': qo.option,
-                'active': qo.active
-            })
+        questions.append(format_question_values(q))
 
-        try:
-            scout_question = q.scout_question.get(Q(void_ind='n'))
-            season = scout_question.season.season_id
-        except scouting.models.Question.DoesNotExist as e:
-            scout_question = None
-            season = None
+    return questions
 
-        questions.append({
+
+def format_question_values(q: Question):
+    try:
+        scout_question = q.scout_question.get(Q(void_ind='n'))
+        season = scout_question.season.season_id
+    except scouting.models.Question.DoesNotExist as e:
+        scout_question = None
+        season = None
+
+    questionoption_set = []
+    for qo in q.questionoption_set.all():
+        questionoption_set.append({
+            'question_opt_id': qo.question_opt_id,
+            'question_id': qo.question_id,
+            'option': qo.option,
+            'active': qo.active
+        })
+
+    return {
             'question_id': q.question_id,
             'season_id': season,
             'question': q.question,
@@ -60,10 +67,7 @@ def get_questions(form_typ: str, active: str = ''):
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
                              q.question,
             'scout_question': scout_question
-        })
-
-    return questions
-
+        }
 
 def get_question_types():
     question_types = QuestionType.objects.filter(void_ind='n').order_by(Lower('question_typ_nm'))
@@ -186,3 +190,29 @@ def get_responses(form_typ: int):
         })
 
     return responses
+
+
+def get_question_aggregates(form_typ: str):
+    question_aggregates = []
+    season = Q()
+
+    if form_typ == 'field' or form_typ == 'pit':
+        current_season = Season.objects.get(current='y')
+        scout_questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+        season = Q(questions__question_id__in=set(sq.question_id for sq in scout_questions))
+
+    qas = QuestionAggregate.objects.filter(Q(void_ind='n') & Q(questions__form_typ=form_typ) & season).distinct()
+    for qa in qas:
+        question_aggregates.append({
+            'question_aggregate_id': qa.question_aggregate_id,
+            'field_name': qa.field_name,
+            'question_aggregate_typ': qa.question_aggregate_typ,
+            'questions': list(format_question_values(q) for q in qa.questions.filter(Q(void_ind='n'))),
+            'active': qa.active,
+        })
+
+    return question_aggregates
+
+
+def get_question_aggregate_types():
+    return QuestionAggregateType.objects.filter(Q(void_ind='n'))

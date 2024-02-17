@@ -1,6 +1,7 @@
 from django.urls import path
 
-from .views import SaveAnswers, GetFormInit, SaveQuestion, GetQuestions, GetResponse, GetResponses
+from .views import SaveAnswers, GetFormInit, SaveQuestion, GetQuestions, GetResponse, GetResponses, \
+    QuestionAggregateView, QuestionAggregateTypeView
 
 urlpatterns = [
     path('get-questions/', GetQuestions.as_view()),
@@ -9,4 +10,6 @@ urlpatterns = [
     path('save-question/', SaveQuestion.as_view()),
     path('get-response/', GetResponse.as_view()),
     path('get-responses/', GetResponses.as_view()),
+    path('question-aggregates/', QuestionAggregateView.as_view()),
+    path('question-aggregate-types/', QuestionAggregateTypeView.as_view()),
 ]

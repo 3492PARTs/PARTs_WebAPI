@@ -10,7 +10,7 @@ import form.util
 import user.util
 from form.models import Question, QuestionAnswer, FormType
 from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveScoutSerializer, \
-    QuestionInitializationSerializer, ResponseSerializer
+    QuestionInitializationSerializer, ResponseSerializer, QuestionAggregateSerializer, QuestionAggregateTypeSerializer
 from general.security import has_access, ret_message
 from scouting.models import Event, Season, ScoutField, ScoutPit
 
@@ -215,3 +215,70 @@ class GetResponses(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class QuestionAggregateView(APIView):
+    """
+    API endpoint to manage the question aggregate groups
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'question-aggregates/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 'admin') or has_access(request.user.id, 'scoutadmin'):
+            try:
+                qas = form.util.get_question_aggregates(request.query_params['form_typ'])
+                serializer = QuestionAggregateSerializer(qas, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting question aggregates.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+    def post(self, request, format=None):
+        serializer = GroupSerializer(data=request.data, many=True)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, 'admin'):
+            try:
+                with transaction.atomic():
+                    keep = []
+                    for s in serializer.validated_data:
+                        keep.append(s['id'])
+                        try:
+                            ScoutAuthGroups.objects.get(auth_group_id_id=s['id'])
+                        except ScoutAuthGroups.DoesNotExist:
+                            sag = ScoutAuthGroups(auth_group_id_id=s['id'])
+                            sag.save()
+
+                    sags = ScoutAuthGroups.objects.filter(~Q(auth_group_id_id__in=keep))
+                    for s in sags:
+                        s.delete()
+
+                    return ret_message('Saved scout auth groups successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the scout auth groups.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class QuestionAggregateTypeView(APIView):
+    """
+    API endpoint to manage the question aggregate types
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'question-aggregate-types/'
+
+    def get(self, request, format=None):
+        try:
+            qas = form.util.get_question_aggregate_types()
+            serializer = QuestionAggregateTypeSerializer(qas, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message('An error occurred while getting question aggregate types.', True, app_url + self.endpoint,
+                               request.user.id, e)
