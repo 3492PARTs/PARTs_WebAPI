@@ -18,8 +18,10 @@ def get_users(active, admin):
         user_admin = Q(groups__in=[group])
 
     users = (User.objects.annotate(name=Concat('first_name', Value(' '), 'last_name'))
-             .filter(Q(date_joined__isnull=False) & user_active).exclude(user_admin)
+             .filter(user_active).exclude(user_admin)
              .order_by('is_active', Lower('first_name'), Lower('last_name')))
+
+    #Q(date_joined__isnull=False) &
 
     return users
 
