@@ -83,3 +83,17 @@ class ResponseSerializer(serializers.Serializer):
     form_typ = serializers.CharField()
     time = serializers.DateTimeField()
     questionanswer_set = QuestionSerializer(many=True)
+
+
+class QuestionAggregateTypeSerializer(serializers.Serializer):
+    question_aggregate_typ = serializers.CharField()
+    question_aggregate_nm = serializers.CharField()
+
+
+class QuestionAggregateSerializer(serializers.Serializer):
+    question_aggregate_id = serializers.IntegerField(required=False)
+    field_name = serializers.CharField()
+    question_aggregate_typ = QuestionAggregateTypeSerializer(required=False)
+    questions = QuestionSerializer(many=True)
+    active = serializers.CharField()
+

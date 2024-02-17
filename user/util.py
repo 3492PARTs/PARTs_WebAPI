@@ -75,9 +75,7 @@ def get_users_in_group(name: str):
 def get_users_with_permission(codename: str):
     users = []
     prmsn = Permission.objects.get(codename=codename)
-    for g in prmsn.group_set.all():
-        users_in_grp = get_users(1, 1).filter(groups__name=g.name)
-        users += users_in_grp
+    users = get_users(1, 1).filter(groups__name__in=set(g.name for g in prmsn.group_set.all()))
 
     return users
 

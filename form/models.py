@@ -87,11 +87,13 @@ class QuestionAggregateType(models.Model):
 class QuestionAggregate(models.Model):
     question_aggregate_id = models.AutoField(primary_key=True)
     question_aggregate_typ = models.ForeignKey(QuestionAggregateType, models.PROTECT)
-    question = models.ManyToManyField(Question)
+    questions = models.ManyToManyField(Question)
+    field_name = models.CharField(max_length=1000)
+    active = models.CharField(max_length=1, default='y')
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return str(self.question_aggregate_id) + ' ' + self.question_aggregate_typ
+        return str(self.question_aggregate_id) + ' ' + str(self.question_aggregate_typ)
 
 
 class Response(models.Model):
