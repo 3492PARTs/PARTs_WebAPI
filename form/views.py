@@ -223,7 +223,7 @@ class QuestionAggregateView(APIView):
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = 'question-aggregates/'
+    endpoint = 'question-aggregate/'
 
     def get(self, request, format=None):
         if has_access(request.user.id, 'admin') or has_access(request.user.id, 'scoutadmin'):
@@ -238,29 +238,17 @@ class QuestionAggregateView(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
     def post(self, request, format=None):
-        serializer = GroupSerializer(data=request.data, many=True)
+        serializer = QuestionAggregateSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
 
-        if has_access(request.user.id, 'admin'):
+        if has_access(request.user.id, 'admin') or has_access(request.user.id, 'scoutadmin'):
             try:
                 with transaction.atomic():
-                    keep = []
-                    for s in serializer.validated_data:
-                        keep.append(s['id'])
-                        try:
-                            ScoutAuthGroups.objects.get(auth_group_id_id=s['id'])
-                        except ScoutAuthGroups.DoesNotExist:
-                            sag = ScoutAuthGroups(auth_group_id_id=s['id'])
-                            sag.save()
-
-                    sags = ScoutAuthGroups.objects.filter(~Q(auth_group_id_id__in=keep))
-                    for s in sags:
-                        s.delete()
-
-                    return ret_message('Saved scout auth groups successfully')
+                    form.util.save_question_aggregate(serializer.validated_data)
+                return ret_message('Saved question aggregate successfully')
             except Exception as e:
-                return ret_message('An error occurred while saving the scout auth groups.', True, app_url + self.endpoint,
+                return ret_message('An error occurred while saving the question aggregate.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)

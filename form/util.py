@@ -216,3 +216,28 @@ def get_question_aggregates(form_typ: str):
 
 def get_question_aggregate_types():
     return QuestionAggregateType.objects.filter(Q(void_ind='n'))
+
+
+def save_question_aggregate(data):
+    if data.get('question_aggregate_id', None) is not None:
+        qa = QuestionAggregate.objects.get(Q(question_aggregate_id=data['question_aggregate_id']))
+    else:
+        qa = QuestionAggregate()
+
+    qa.field_name = data['field_name']
+    qa.active = data['active']
+    qa.question_aggregate_typ = QuestionAggregateType.objects.get(Q(void_ind='n') & Q(question_aggregate_typ=data['question_aggregate_typ']['question_aggregate_typ']))
+    qa.save()
+
+    questions = Question.objects.filter(question_id__in=set(q['question_id'] for q in data['questions']))
+
+    for q in questions:
+        qa.questions.add(q)
+
+    remove = Question.objects.filter(Q(question__in=qa.questions.all()) & ~Q(question__in=questions))
+    for r in remove:
+        qa.questions.remove(r)
+
+    qa.save()
+
+    return qa
