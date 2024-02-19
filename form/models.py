@@ -67,12 +67,13 @@ class QuestionOption(models.Model):
 class QuestionCondition(models.Model):
     question_condition_id = models.AutoField(primary_key=True)
     condition = models.CharField(max_length=1000)
-    question = models.ForeignKey(Question, models.PROTECT)
+    question_from = models.ForeignKey(Question, models.PROTECT, related_name='condition_question_from')
+    question_to = models.ForeignKey(Question, models.PROTECT, related_name='condition_question_to')
     active = models.CharField(max_length=1, default='y')
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return str(self.question_condition_id) + ' ' + self.question
+        return str(self.question_condition_id) + ' ' + self.condition
 
 
 class QuestionAggregateType(models.Model):

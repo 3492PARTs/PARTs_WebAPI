@@ -3,7 +3,7 @@ from django.db.models.functions import Lower
 
 import scouting.models
 from form.models import Question, Response, QuestionAnswer, QuestionOption, FormSubType, QuestionType, \
-    QuestionAggregate, QuestionAggregateType
+    QuestionAggregate, QuestionAggregateType, QuestionCondition
 from form.serializers import QuestionSerializer
 from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
@@ -68,6 +68,7 @@ def format_question_values(q: Question):
                              q.question,
             'scout_question': scout_question
         }
+
 
 def get_question_types():
     question_types = QuestionType.objects.filter(void_ind='n').order_by(Lower('question_typ_nm'))
@@ -241,3 +242,76 @@ def save_question_aggregate(data):
     qa.save()
 
     return qa
+
+
+def get_question_condition(form_typ: str):
+    question_aggregates = []
+    season = Q()
+
+    if form_typ == 'field' or form_typ == 'pit':
+        current_season = Season.objects.get(current='y')
+        scout_questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+        season = Q(question_from__question_id__in=set(q.question_id for q in scout_questions))
+
+    question_conditions = QuestionCondition.objects.filter(Q(void_ind='n') & Q(question_from__form_typ=form_typ) & season)
+
+    for qc in question_conditions:
+        question_aggregates.append({
+            'question_condition_id': qc.question_condition_id,
+            'condition': qc.condition,
+            'question_from': format_question_values(qc.question_from),
+            'question_to': format_question_values(qc.question_to),
+            'active': qc.active
+        })
+
+    return question_aggregates
+
+
+def save_question_condition(data):
+    if data.get('question_condition_id', None) is not None:
+        qc = QuestionCondition.objects.get(question_condition_id=data['question_condition_id'])
+    else:
+        qc = QuestionCondition()
+
+    qc.condition = data['condition']
+    qc.active = data['active']
+
+    qc.question_from = Question.objects.get(question_id=data['question_from']['question_id'])
+    qc.question_to = Question.objects.get(question_id=data['question_to']['question_id'])
+
+    qc.save()
+
+    return qc
+
+
+def format_question_condition_values(qc: QuestionCondition):
+    return {
+        'question_condition_id': qc.question_condition_id,
+        'condition': qc.condition,
+        'question_from': format_question_values(qc.question_from),
+        'question_to': format_question_values(qc.question_to),
+        'active': qc.active,
+    }
+
+
+def get_questions_with_conditions(form_typ: str):
+    questions_with_conditions = []
+    questions = get_questions(form_typ, 'y')
+
+    for q in questions:
+        q['conditions'] = []
+        is_condition = False
+        question = Question.objects.get(question_id=q['question_id'])
+        for qc in question.condition_question_from.filter(Q(void_ind='n') & Q(active='y')):
+            q['conditions'].append(format_question_condition_values(qc))
+
+        qct = question.condition_question_to.filter(Q(void_ind='n') & Q(active='y'))
+        is_condition = len(qct) > 0
+
+        if not is_condition:
+            questions_with_conditions.append(q)
+
+        if question.question_id == 112:
+            print(question)
+
+    return questions_with_conditions

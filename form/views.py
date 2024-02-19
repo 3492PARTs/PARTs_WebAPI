@@ -10,7 +10,8 @@ import form.util
 import user.util
 from form.models import Question, QuestionAnswer, FormType
 from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveScoutSerializer, \
-    QuestionInitializationSerializer, ResponseSerializer, QuestionAggregateSerializer, QuestionAggregateTypeSerializer
+    QuestionInitializationSerializer, ResponseSerializer, QuestionAggregateSerializer, QuestionAggregateTypeSerializer, \
+    QuestionConditionSerializer
 from general.security import has_access, ret_message
 from scouting.models import Event, Season, ScoutField, ScoutPit
 
@@ -270,3 +271,40 @@ class QuestionAggregateTypeView(APIView):
         except Exception as e:
             return ret_message('An error occurred while getting question aggregate types.', True, app_url + self.endpoint,
                                request.user.id, e)
+
+
+class QuestionConditionView(APIView):
+    """
+    API endpoint to manage the question conditions
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'question-condition/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, 'admin') or has_access(request.user.id, 'scoutadmin'):
+            try:
+                qas = form.util.get_question_condition(request.query_params['form_typ'])
+                serializer = QuestionConditionSerializer(qas, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message('An error occurred while getting question conditions.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+    def post(self, request, format=None):
+        serializer = QuestionConditionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id, serializer.errors)
+
+        if has_access(request.user.id, 'admin') or has_access(request.user.id, 'scoutadmin'):
+            try:
+                with transaction.atomic():
+                    form.util.save_question_condition(serializer.validated_data)
+                return ret_message('Saved question condition successfully')
+            except Exception as e:
+                return ret_message('An error occurred while saving the question condition.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
