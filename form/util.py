@@ -9,10 +9,11 @@ from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
 
 
-def get_questions(form_typ: str, active: str = ''):
+def get_questions(form_typ: str, active: str = '', form_sub_typ: str = ''):
     questions = []
     season = Q()
     active_ind = Q()
+    form_sub_typ_q = Q()
 
     if form_typ == 'field' or form_typ == 'pit':
         current_season = Season.objects.get(current='y')
@@ -22,9 +23,15 @@ def get_questions(form_typ: str, active: str = ''):
     if active != '':
         active_ind = Q(active=active)
 
+    if form_sub_typ is None:
+        form_sub_typ_q = Q(form_sub_typ_id__isnull=True)
+    elif form_sub_typ is not '':
+        form_sub_typ_q = Q(form_sub_typ_id=form_sub_typ)
+
     qs = Question.objects.prefetch_related('questionoption_set').filter(
         season &
         Q(form_typ_id=form_typ) &
+        form_sub_typ_q &
         active_ind &
         Q(void_ind='n')).order_by('form_sub_typ__order', 'order')
 
@@ -294,9 +301,9 @@ def format_question_condition_values(qc: QuestionCondition):
     }
 
 
-def get_questions_with_conditions(form_typ: str):
+def get_questions_with_conditions(form_typ: str, form_sub_typ: str = None):
     questions_with_conditions = []
-    questions = get_questions(form_typ, 'y')
+    questions = get_questions(form_typ, 'y', form_sub_typ)
 
     for q in questions:
         q['conditions'] = []
@@ -310,8 +317,5 @@ def get_questions_with_conditions(form_typ: str):
 
         if not is_condition:
             questions_with_conditions.append(q)
-
-        if question.question_id == 112:
-            print(question)
 
     return questions_with_conditions
