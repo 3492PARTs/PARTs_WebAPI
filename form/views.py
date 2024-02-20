@@ -122,11 +122,6 @@ class SaveAnswers(APIView):
                                     match_id=serializer.data.get('match', None),
                                     user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
                                 sf.save()
-
-                                for d in serializer.data.get('question_answers', []):
-                                    form.util.save_question_answer(d['answer'],
-                                                                   Question.objects.get(question_id=d['question_id']),
-                                                                   r)
                             else:
                                 try:
                                     sp = ScoutPit.objects.get(Q(team_no_id=serializer.data['team']) & Q(void_ind='n') &
@@ -135,21 +130,8 @@ class SaveAnswers(APIView):
                                     sp = ScoutPit(event=current_event, team_no_id=serializer.data['team'],
                                                   user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
                                     sp.save()
-
-                                for d in serializer.data.get('question_answers', []):
-                                    try:
-                                        spa = QuestionAnswer.objects.get(
-                                            Q(response_id=sp.response_id) & Q(question_id=d['question_id']) &
-                                            Q(void_ind='n'))
-                                        spa.answer = d.get('answer', '')
-                                        spa.save()
-                                    except Exception as e:
-                                        form.util.save_question_answer(d.get('answer', ''),
-                                                                       Question.objects.get(
-                                                                           question_id=d['question_id']),
-                                                                       r)
-                            return ret_message(success_msg)
-                        raise Exception('Invalid Data')
+                        else:
+                            raise Exception('Invalid Data')
                     else:
                         return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
                 else:
@@ -173,8 +155,36 @@ class SaveAnswers(APIView):
                         for a in alert:
                             for acct in ['email', 'message', 'notification']:
                                 alerts.util.stage_alert_channel_send(a, acct)
-                        return ret_message(success_msg)
-                    raise Exception('Invalid Data')
+                    else:
+                        raise Exception('Invalid Data')
+
+                for d in serializer.data.get('question_answers', []):
+                    if d.get('quesiton_id', None) is not None:
+                        spa = QuestionAnswer.objects.get(
+                            Q(response_id=sp.response_id) & Q(question_id=d['question_id']) &
+                            Q(void_ind='n'))
+                        spa.answer = d.get('answer', '')
+                        spa.save()
+                    else:
+                        form.util.save_question_answer(d.get('answer', ''),
+                                                       Question.objects.get(
+                                                           question_id=d['question_id']),
+                                                       r)
+
+                    for c in d.get('conditions', []):
+                        if c['question_to'].get('quesiton_id', None) is not None:
+                            spa = QuestionAnswer.objects.get(
+                                Q(response_id=sp.response_id) & Q(question_id=c['question_to']['question_id']) &
+                                Q(void_ind='n'))
+                            spa.answer = c['question_to'].get('answer', '')
+                            spa.save()
+                        else:
+                            form.util.save_question_answer(c['question_to'].get('answer', ''),
+                                                           Question.objects.get(
+                                                               question_id=c['question_to']['question_id']),
+                                                           r)
+
+                return ret_message(success_msg)
             except Exception as e:
                 return ret_message('An error occurred while saving answers.', True, app_url + self.endpoint,
                                    request.user.id, e)

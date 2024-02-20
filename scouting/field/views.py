@@ -37,7 +37,8 @@ class Questions(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_questions = form.util.get_questions('field', 'y')
+        #scout_questions = form.util.get_questions('field', 'y')
+        scout_questions = form.util.get_questions_with_conditions('field')
 
         try:
             current_event = Event.objects.get(

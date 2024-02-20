@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+
 class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField()
@@ -53,23 +54,11 @@ class QuestionSerializer(serializers.Serializer):
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
 
-class SaveScoutSerializer(serializers.Serializer):
-    question_answers = QuestionSerializer(many=True)
-    team = serializers.CharField()
-    match = serializers.CharField(required=False)
-    form_typ = serializers.CharField()
-
-
 class TeamSerializer(serializers.Serializer):
     team_no = serializers.IntegerField()
     team_nm = serializers.CharField()
 
     checked = serializers.BooleanField(required=False)
-
-
-class SaveResponseSerializer(serializers.Serializer):
-    question_answers = QuestionSerializer(many=True)
-    form_typ = serializers.CharField()
 
 
 class QuestionInitializationSerializer(serializers.Serializer):
@@ -128,3 +117,15 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
     conditions = QuestionConditionSerializer(many=True)
+
+
+class SaveScoutSerializer(serializers.Serializer):
+    question_answers = QuestionWithConditionsSerializer(many=True)
+    team = serializers.CharField()
+    match = serializers.CharField(required=False)
+    form_typ = serializers.CharField()
+
+
+class SaveResponseSerializer(serializers.Serializer):
+    question_answers = QuestionWithConditionsSerializer(many=True)
+    form_typ = serializers.CharField()
