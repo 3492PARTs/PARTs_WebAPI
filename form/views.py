@@ -26,7 +26,7 @@ class GetQuestions(APIView):
 
     def get(self, request, format=None):
         try:
-            questions = form.util.get_questions(request.query_params['form_typ'])
+            questions = form.util.get_questions(request.query_params['form_typ'], request.query_params.get('active', ''))
             serializer = QuestionSerializer(questions, many=True)
             return Response(serializer.data)
         except Exception as e:
@@ -141,11 +141,6 @@ class SaveAnswers(APIView):
                         form_type = FormType.objects.get(form_typ=serializer.data['form_typ'])
                         r = form.models.Response(form_typ=form_type)
                         r.save()
-
-                        for d in serializer.data.get('question_answers', []):
-                            form.util.save_question_answer(d['answer'],
-                                                           Question.objects.get(question_id=d['question_id']),
-                                                           response=r)
 
                         alert = []
                         users = user.util.get_users_with_permission('site_forms_notif')

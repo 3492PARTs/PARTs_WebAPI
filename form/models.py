@@ -104,7 +104,7 @@ class Response(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return str(self.response_id) + ' ' + self.form_typ
+        return str(self.response_id) + ' ' + str(self.form_typ)
 
 
 class QuestionAnswer(models.Model):

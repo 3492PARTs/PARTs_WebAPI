@@ -120,7 +120,7 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
 
     conditions = QuestionConditionSerializer(required=False, many=True)
 
-    is_condition = serializers.CharField()
+    is_condition = serializers.CharField(required=False)
 
 
 class SaveScoutSerializer(serializers.Serializer):

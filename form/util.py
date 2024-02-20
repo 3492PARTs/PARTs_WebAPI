@@ -25,7 +25,7 @@ def get_questions(form_typ: str, active: str = '', form_sub_typ: str = ''):
 
     if form_sub_typ is None:
         form_sub_typ_q = Q(form_sub_typ_id__isnull=True)
-    elif form_sub_typ is not '':
+    elif form_sub_typ != '':
         form_sub_typ_q = Q(form_sub_typ_id=form_sub_typ)
 
     qs = Question.objects.prefetch_related('questionoption_set').filter(
@@ -194,6 +194,8 @@ def get_responses(form_typ: int):
         questions = get_questions(res.form_typ, 'y')
 
         for question in questions:
+            print(question.get('question_id'))
+            print(res)
             question['answer'] = QuestionAnswer.objects.get(
                 Q(question_id=question.get('question_id')) & Q(response=res) & Q(void_ind='n')).answer
 
@@ -316,7 +318,7 @@ def get_questions_with_conditions(form_typ: str, form_sub_typ: str = ''):
         q['conditions'] = []
         is_condition = False
         question = Question.objects.get(question_id=q['question_id'])
-        for qc in question.condition_question_from.filter(Q(void_ind='n') & Q(active='y')):
+        for qc in question.condition_question_from.filter(Q(void_ind='n') & Q(active='y') & Q(question_to__active='y')):
             q['conditions'].append(format_question_condition_values(qc))
 
         qct = question.condition_question_to.filter(Q(void_ind='n') & Q(active='y'))
