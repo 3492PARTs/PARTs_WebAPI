@@ -58,6 +58,12 @@ def format_question_values(q: Question):
             'active': qo.active
         })
 
+    try:
+        q.condition_question_to.get(Q(void_ind='n') & Q(active='y'))
+        is_condition = 'y'
+    except QuestionCondition.DoesNotExist:
+        is_condition = 'n'
+
     return {
             'question_id': q.question_id,
             'season_id': season,
@@ -73,7 +79,8 @@ def format_question_values(q: Question):
             'display_value': ('' if q.active == 'y' else 'Deactivated: ') + 'Order ' + str(q.order) + ': ' +
                              (q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else '') +
                              q.question,
-            'scout_question': scout_question
+            'scout_question': scout_question,
+            'is_condition': is_condition
         }
 
 

@@ -53,6 +53,8 @@ class QuestionSerializer(serializers.Serializer):
 
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
+    is_condition = serializers.CharField()
+
 
 class TeamSerializer(serializers.Serializer):
     team_no = serializers.IntegerField()
@@ -117,6 +119,8 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
     conditions = QuestionConditionSerializer(many=True)
+
+    is_condition = serializers.CharField()
 
 
 class SaveScoutSerializer(serializers.Serializer):

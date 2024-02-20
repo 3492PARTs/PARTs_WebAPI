@@ -88,6 +88,8 @@ class QuestionConditionQuestionSerializer(serializers.Serializer):
 
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
+    is_condition = serializers.CharField()
+
 
 class QuestionConditionSerializer(serializers.Serializer):
     question_condition_id = serializers.IntegerField(required=False)
@@ -119,6 +121,8 @@ class QuestionSerializer(serializers.Serializer):
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
     conditions = QuestionConditionSerializer(many=True)
+
+    is_condition = serializers.CharField()
 
 
 class ScoutFieldSerializer(serializers.Serializer):
