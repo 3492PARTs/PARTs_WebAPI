@@ -28,6 +28,38 @@ class ScoutQuestionSerializer(serializers.Serializer):
     scorable = serializers.BooleanField()
 
 
+class QuestionConditionQuestionSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField(required=False, allow_null=True)
+    season_id = serializers.IntegerField(read_only=True)
+
+    question = serializers.CharField()
+    order = serializers.IntegerField()
+    required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    active = serializers.CharField()
+    question_typ = QuestionTypeSerializer()
+    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_typ = serializers.CharField()
+    display_value = serializers.CharField(read_only=True)
+
+    questionoption_set = QuestionOptionsSerializer(
+        required=False, allow_null=True, many=True)
+
+    answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
+
+    is_condition = serializers.CharField()
+
+
+class QuestionConditionSerializer(serializers.Serializer):
+    question_condition_id = serializers.IntegerField(required=False)
+    condition = serializers.CharField()
+    question_from = QuestionConditionQuestionSerializer()
+    question_to = QuestionConditionQuestionSerializer()
+    active = serializers.CharField()
+
+
 class QuestionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
@@ -46,6 +78,10 @@ class QuestionSerializer(serializers.Serializer):
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
+
+    conditions = QuestionConditionSerializer(required=False, many=True)
+
+    is_condition = serializers.CharField()
 
 class InitSerializer(serializers.Serializer):
     scoutQuestions = QuestionSerializer(many=True)
