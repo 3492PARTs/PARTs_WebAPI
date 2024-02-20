@@ -204,7 +204,7 @@ def get_field_results(team, endpoint, request, user=None):
         .order_by('order')
     '''
     sqsa = form.util.get_questions_with_conditions('field', 'auto')
-    sqst = form.util.get_questions_with_conditions('field', 'auto')
+    sqst = form.util.get_questions_with_conditions('field', 'tele')
     sqso = form.util.get_questions_with_conditions('field', None)
 
     for sqs in [sqsa, sqst, sqso]:

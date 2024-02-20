@@ -308,7 +308,7 @@ def format_question_condition_values(qc: QuestionCondition):
     }
 
 
-def get_questions_with_conditions(form_typ: str, form_sub_typ: str = None):
+def get_questions_with_conditions(form_typ: str, form_sub_typ: str = ''):
     questions_with_conditions = []
     questions = get_questions(form_typ, 'y', form_sub_typ)
 
