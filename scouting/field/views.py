@@ -37,7 +37,8 @@ class Questions(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_questions = form.util.get_questions('field', 'y')
+        # scout_questions = form.util.get_questions('field', 'y')
+        scout_questions = form.util.get_questions_with_conditions('field')
 
         try:
             current_event = Event.objects.get(
@@ -190,6 +191,7 @@ def get_field_results(team, endpoint, request, user=None):
     scout_answers = []
     questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
 
+    '''
     sqsa = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
 
@@ -200,17 +202,32 @@ def get_field_results(team, endpoint, request, user=None):
     sqso = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
                                    Q(form_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
         .order_by('order')
+    '''
+    sqsa = form.util.get_questions_with_conditions('field', 'auto')
+    sqst = form.util.get_questions_with_conditions('field', 'tele')
+    sqso = form.util.get_questions_with_conditions('field', None)
 
     for sqs in [sqsa, sqst, sqso]:
         for sq in sqs:
-            scout_question = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=sq.question_id))
+            scout_question = scouting.models.Question.objects.get(Q(void_ind='n') & Q(question_id=sq['question_id']))
             scout_cols.append({
-                'PropertyName': 'ans' + str(sq.question_id),
-                'ColLabel': ('' if sq.form_sub_typ is None else sq.form_sub_typ.form_sub_typ[
-                                                                0:1].upper() + ': ') + sq.question,
+                'PropertyName': 'ans' + str(sq['question_id']),
+                'ColLabel': ('' if sq.get('form_sub_typ', None) is None else sq['form_sub_typ'][0:1]
+                             .upper() + ': ') + sq['question'],
                 'scorable': scout_question.scorable,
-                'order': sq.order
+                'order': sq['order']
             })
+
+            for c in sq.get('conditions', []):
+                scout_question = scouting.models.Question.objects.get(
+                    Q(void_ind='n') & Q(question_id=c['question_to']['question_id']))
+                scout_cols.append({
+                    'PropertyName': 'ans' + str(c['question_to']['question_id']),
+                    'ColLabel': ('' if c['question_to'].get('form_sub_typ', None) is None else c['question_to']['form_sub_typ'][0:1]
+                                 .upper() + ': ') + 'C: ' + c['condition'] + ' ' + c['question_to']['question'],
+                    'scorable': scout_question.scorable,
+                    'order': c['question_to']['order']
+                })
 
     scout_cols.append({
         'PropertyName': 'user',

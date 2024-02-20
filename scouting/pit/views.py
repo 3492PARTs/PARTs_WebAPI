@@ -36,7 +36,7 @@ class Questions(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_questions = form.util.get_questions('pit')
+        scout_questions = form.util.get_questions('pit', 'y')
 
         try:
             current_event = Event.objects.get(
@@ -375,12 +375,12 @@ class TeamData(APIView):
                 'answer': spa.answer
             })
 
-            for pic in sp.scoutpitimage_set.filter(Q(void_ind='n')):
-                pics.append({
-                    'scout_pit_img_id': pic.scout_pit_img_id,
-                    'pic': cloudinary.CloudinaryImage(pic.img_id, version=pic.img_ver).build_url(secure=True),
-                    'default': pic.default
-                })
+        for pic in sp.scoutpitimage_set.filter(Q(void_ind='n')):
+            pics.append({
+                'scout_pit_img_id': pic.scout_pit_img_id,
+                'pic': cloudinary.CloudinaryImage(pic.img_id, version=pic.img_ver).build_url(secure=True),
+                'default': pic.default
+            })
 
         return {
             'questions': scout_questions,
