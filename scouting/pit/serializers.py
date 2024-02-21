@@ -110,6 +110,7 @@ class ScoutPitImageSerializer(serializers.Serializer):
 
 
 class ScoutPitResultsSerializer(serializers.Serializer):
+    scout_pit_id = serializers.IntegerField()
     teamNo = serializers.CharField()
     teamNm = serializers.CharField()
     pics = ScoutPitImageSerializer(many=True, required=False)

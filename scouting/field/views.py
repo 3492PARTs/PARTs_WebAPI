@@ -158,6 +158,7 @@ class Results(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
+
 #TODO: Have rowan clean this up
 def get_field_results(team, endpoint, request, user=None):
     try:
@@ -189,20 +190,7 @@ def get_field_results(team, endpoint, request, user=None):
     }]
 
     scout_answers = []
-    questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
 
-    '''
-    sqsa = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
-                                   Q(form_sub_typ_id='auto') & Q(active='y') & Q(void_ind='n')).order_by('order')
-
-    sqst = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
-                                   Q(form_sub_typ_id='teleop') & Q(active='y') & Q(void_ind='n')) \
-        .order_by('order')
-
-    sqso = Question.objects.filter(Q(question_id__in=set(q.question_id for q in questions)) & Q(form_typ_id='field') &
-                                   Q(form_sub_typ_id__isnull=True) & Q(active='y') & Q(void_ind='n')) \
-        .order_by('order')
-    '''
     sqsa = form.util.get_questions_with_conditions('field', 'auto')
     sqst = form.util.get_questions_with_conditions('field', 'teleop')
     sqso = form.util.get_questions_with_conditions('field', None)
@@ -245,8 +233,6 @@ def get_field_results(team, endpoint, request, user=None):
 
             sqas_cnt += 1
 
-
-
     scout_cols.append({
         'PropertyName': 'user',
         'ColLabel': 'Scout',
@@ -279,13 +265,13 @@ def get_field_results(team, endpoint, request, user=None):
 
     for sf in sfs:
         sfas = QuestionAnswer.objects.filter(
-            Q(response_id=sf.response_id) & Q(void_ind='n'))
+            Q(response=sf.response) & Q(void_ind='n'))
 
         sa_obj = {}
         for sfa in sfas:
             sa_obj['ans' + str(sfa.question_id)] = sfa.answer
 
-        #get aggregates
+        # get aggregates
         sqas = (QuestionAggregate.objects.filter(Q(void_ind='n') & Q(active='y') &
                                                  Q(questions__form_typ='field'))
                 .distinct())
@@ -303,11 +289,12 @@ def get_field_results(team, endpoint, request, user=None):
         sa_obj['time'] = sf.time
         sa_obj['user_id'] = sf.user.id
         sa_obj['team'] = sf.team_no_id
+        sa_obj['scout_field_id'] = sf.scout_field_id
 
         try:
             eti = EventTeamInfo.objects.get(Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind='n'))
             sa_obj['rank'] = eti.rank
-        except:
+        except EventTeamInfo.DoesNotExist:
             x = 1
 
         scout_answers.append(sa_obj)
