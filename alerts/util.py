@@ -62,6 +62,8 @@ def stage_field_schedule_alerts(notification, sfss, event):
             case 3:
                 sfs.notification3 = True
                 warning_text = 'time to scout!'
+            case _:
+                warning_text = 'time to scout!'
 
         subject = 'Scouting ' + warning_text
         body = f'You are scheduled to scout from: {date_st_str} to {date_end_str}.\n- PARTs'
@@ -101,10 +103,8 @@ def stage_field_schedule_alerts(notification, sfss, event):
             message += fail_txt + (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
 
         for sa in staged_alerts:
-            accts = AlertCommunicationChannelType.objects.filter(
-                Q(void_ind='n') & ~Q(alert_comm_typ__in=['message', 'email']))
-            for acct in accts:
-                stage_alert_channel_send(sa, acct.alert_comm_typ)
+            for acct in ['txt', 'notification', 'discord']:
+                stage_alert_channel_send(sa, acct)
 
         sfs.save()
 
@@ -163,7 +163,7 @@ def stage_alert_channel_send(alert: Alert, alert_comm_typ: str):
 def send_alerts():
     message = ''
 
-    acss = AlertChannelSend.objects.filter(Q(sent_time__isnull=True) & Q(void_ind='n'))
+    acss = AlertChannelSend.objects.filter(Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(void_ind='n'))
     for acs in acss:
         try:
             match acs.alert_comm_typ.alert_comm_typ:
@@ -185,16 +185,16 @@ def send_alerts():
                         'generic_text', {'message': acs.alert.alert_body})
                     message += 'Phone'
                 case 'discord':
-                    user = f'@<{acs.alert.user.discord_user_id}>' if acs.alert.user.discord_user_id else acs.alert.user.first_name + ' ' + acs.alert.user.last_name
-                    discord_message = acs.alert.alert_subject + ':\n' + user + '\n' + acs.alert.alert_body
+                    user = f'<@{acs.alert.user.discord_user_id}>' if acs.alert.user.discord_user_id else acs.alert.user.get_full_name()
+                    discord_message = f'{acs.alert.alert_subject}:\n {user}\n {acs.alert.alert_body}'
                     send_message.send_discord_notification(discord_message)
                     message += 'Discord'
 
             acs.sent_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             acs.save()
-            message += ' Notified: ' + acs.alert.user.first_name + ' acs id: ' + str(acs.alert_channel_send_id) + '\n'
+            message += ' Notified: ' + acs.alert.user.get_full_name() + ' acs id: ' + str(acs.alert_channel_send_id) + '\n'
         except Exception as e:
-            alert = 'An error occurred while sending alert: ' + acs.alert.user.first_name + ' acs id: ' + str(
+            alert = 'An error occurred while sending alert: ' + acs.alert.user.get_full_name() + ' acs id: ' + str(
                 acs.alert_channel_send_id)
             message += alert + '\n'
             return ret_message(alert, True, 'alerts.util.send_alerts', 0, e)
