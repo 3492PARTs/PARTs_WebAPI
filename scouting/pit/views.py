@@ -253,6 +253,7 @@ def get_pit_results(teams, endpoint, request):
                 'teamNo': team.team_no,
                 'teamNm': team.team_nm,
                 'pics': pics,
+                'scout_pit_id': sp.scout_pit_id
             }
 
             tmp_questions = []
@@ -263,15 +264,8 @@ def get_pit_results(teams, endpoint, request):
                     'question': 'Rank',
                     'answer': eti.rank
                 })
-            except:
+            except EventTeamInfo.DoesNotExist:
                 x = 1
-            '''
-            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) &
-                                                 Q(void_ind='n') &
-                                                 Q(question__active='y') &
-                                                 Q(question__void_ind='n')) \
-                .order_by('question__order')
-            '''
             questions = form.util.get_questions_with_conditions('pit')
 
             for q in questions:
@@ -352,21 +346,6 @@ class TeamData(APIView):
         sp = ScoutPit.objects.get(Q(team_no=team_num) & Q(void_ind='n') & Q(event=current_event))
 
         scout_questions = []
-        # sqs = ScoutQuestion.objects.prefetch_related('questionoption_set').filter(
-        #    Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
-        #questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
-
-        """
-        sqs = (Question.objects
-               .prefetch_related(
-            Prefetch('questionoption_set'),
-            Prefetch('questionanswer_set',
-                     queryset=QuestionAnswer.objects
-                     .filter(Q(response_id=sp.response_id)).select_related('question'))
-        )
-               .filter(Q(form_typ_id='pit') & Q(active='y') & Q(void_ind='n') &
-                       Q(question_id__in=set(q.question_id for q in questions))).order_by('order'))
-        """
 
         sqs = form.util.get_questions_with_conditions('pit')
 

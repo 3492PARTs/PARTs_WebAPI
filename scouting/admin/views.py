@@ -996,3 +996,26 @@ class DeleteFieldResult(APIView):
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class DeletePitResult(APIView):
+    """
+    API endpoint to delete a pit scouting result
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'delete-pit-result/'
+
+    def delete(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                sp = ScoutPit.objects.get(scout_pit_id=request.query_params['scout_pit_id'])
+                sp.void_ind = 'y'
+                sp.save()
+
+                return ret_message('Successfully deleted result')
+            except Exception as e:
+                return ret_message('An error occurred while deleting result.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
