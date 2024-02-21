@@ -340,7 +340,7 @@ class TeamData(APIView):
         scout_questions = []
         # sqs = ScoutQuestion.objects.prefetch_related('questionoption_set').filter(
         #    Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
-        questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+        #questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
 
         """
         sqs = (Question.objects
@@ -354,7 +354,7 @@ class TeamData(APIView):
                        Q(question_id__in=set(q.question_id for q in questions))).order_by('order'))
         """
 
-        sqs = form.util.get_question_condition('pit')
+        sqs = form.util.get_questions_with_conditions('pit')
 
         pics = []
         for sq in sqs:
@@ -365,6 +365,15 @@ class TeamData(APIView):
                 spa = QuestionAnswer(answer='')
 
             sq['answer'] = spa.answer
+
+            for c in sq.get('conditions', []):
+                try:
+                    spa = QuestionAnswer.objects.get(
+                        Q(response_id=sp.response_id) & Q(question_id=c['question_to']['question_id']))
+                except Exception as e:
+                    spa = QuestionAnswer(answer='')
+
+                c['question_to']['answer'] = spa.answer
             scout_questions.append(sq)
 
         for pic in sp.scoutpitimage_set.filter(Q(void_ind='n')):
