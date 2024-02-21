@@ -36,7 +36,7 @@ class Questions(APIView):
         except Exception as e:
             return ret_message('No season set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        scout_questions = form.util.get_questions('pit', 'y')
+        scout_questions = form.util.get_questions_with_conditions('pit')
 
         try:
             current_event = Event.objects.get(
@@ -240,12 +240,6 @@ def get_pit_results(teams, endpoint, request):
                 return ret_message('No pit data for team.', True, app_url + endpoint,
                                    request.user.id, e)
 
-            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) &
-                                                 Q(void_ind='n') &
-                                                 Q(question__active='y') &
-                                                 Q(question__void_ind='n')) \
-                .order_by('question__order')
-
             spis = ScoutPitImage.objects.filter(Q(void_ind='n') & Q(scout_pit=sp)).order_by('scout_pit_img_id')
             pics = []
             for spi in spis:
@@ -271,12 +265,32 @@ def get_pit_results(teams, endpoint, request):
                 })
             except:
                 x = 1
+            '''
+            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) &
+                                                 Q(void_ind='n') &
+                                                 Q(question__active='y') &
+                                                 Q(question__void_ind='n')) \
+                .order_by('question__order')
+            '''
+            questions = form.util.get_questions_with_conditions('pit')
 
-            for spa in spas:
+            for q in questions:
+                answer = QuestionAnswer.objects.get(Q(response=sp.response) &
+                                                 Q(void_ind='n') &
+                                                 Q(question_id=q['question_id']))
                 tmp_questions.append({
-                    'question': spa.question.question,
-                    'answer': spa.answer
+                    'question': q['question'],
+                    'answer': answer.answer
                 })
+
+                for c in q.get('conditions', []):
+                    answer = QuestionAnswer.objects.get(Q(response=sp.response) &
+                                                        Q(void_ind='n') &
+                                                        Q(question_id=c['question_to']['question_id']))
+                    tmp_questions.append({
+                        'question': 'C: ' + c['condition'] + ' ' + c['question_to']['question'],
+                        'answer': answer.answer
+                    })
 
             tmp['results'] = tmp_questions
             results.append(tmp)
@@ -340,8 +354,9 @@ class TeamData(APIView):
         scout_questions = []
         # sqs = ScoutQuestion.objects.prefetch_related('questionoption_set').filter(
         #    Q(season=current_season) & Q(sq_typ_id='pit') & Q(active='y') & Q(void_ind='n')).order_by('order')
-        questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
+        #questions = scouting.models.Question.objects.filter(Q(void_ind='n') & Q(season=current_season))
 
+        """
         sqs = (Question.objects
                .prefetch_related(
             Prefetch('questionoption_set'),
@@ -351,29 +366,29 @@ class TeamData(APIView):
         )
                .filter(Q(form_typ_id='pit') & Q(active='y') & Q(void_ind='n') &
                        Q(question_id__in=set(q.question_id for q in questions))).order_by('order'))
+        """
+
+        sqs = form.util.get_questions_with_conditions('pit')
 
         pics = []
         for sq in sqs:
             try:
                 spa = QuestionAnswer.objects.get(
-                    Q(response_id=sp.response_id) & Q(question=sq))
+                    Q(response_id=sp.response_id) & Q(question_id=sq['question_id']))
             except Exception as e:
                 spa = QuestionAnswer(answer='')
 
-            scout_questions.append({
-                'question_id': sq.question_id,
-                'season_id': sq.scout_question.get(Q(void_ind='n')).season.season_id,
-                'question': sq.question,
-                'order': sq.order,
-                'active': sq.active,
-                'question_typ': sq.question_typ,
-                'question_typ_nm': sq.question_typ.question_typ_nm if sq.question_typ is not None else None,
-                'form_sub_typ': sq.form_sub_typ.form_sub_typ if sq.form_sub_typ is not None else None,
-                'form_sub_nm': sq.form_sub_typ.form_sub_nm if sq.form_sub_typ is not None else None,
-                'form_typ': sq.form_typ,
-                'questionoption_set': sq.questionoption_set,
-                'answer': spa.answer
-            })
+            sq['answer'] = spa.answer
+
+            for c in sq.get('conditions', []):
+                try:
+                    spa = QuestionAnswer.objects.get(
+                        Q(response_id=sp.response_id) & Q(question_id=c['question_to']['question_id']))
+                except Exception as e:
+                    spa = QuestionAnswer(answer='')
+
+                c['question_to']['answer'] = spa.answer
+            scout_questions.append(sq)
 
         for pic in sp.scoutpitimage_set.filter(Q(void_ind='n')):
             pics.append({

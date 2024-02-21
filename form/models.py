@@ -115,5 +115,5 @@ class QuestionAnswer(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return str(self.question_answer_id) + ' ' + self.answer
+        return str(self.question_answer_id) + ' ' + str(self.answer)
 

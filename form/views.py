@@ -116,10 +116,10 @@ class SaveAnswers(APIView):
                             r = form.models.Response(form_typ=form_type)
                             r.save()
 
-                            if serializer.data['form_typ'] == 'field':
+                            if serializer.validated_data['form_typ'] == 'field':
                                 sf = ScoutField(
-                                    event=current_event, team_no_id=serializer.data['team'],
-                                    match_id=serializer.data.get('match', None),
+                                    event=current_event, team_no_id=serializer.validated_data['team'],
+                                    match_id=serializer.validated_data.get('match', None),
                                     user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
                                 sf.save()
                             else:
@@ -138,7 +138,7 @@ class SaveAnswers(APIView):
                     # regular response
                     serializer = SaveResponseSerializer(data=request.data)
                     if serializer.is_valid():
-                        form_type = FormType.objects.get(form_typ=serializer.data['form_typ'])
+                        form_type = FormType.objects.get(form_typ=serializer.validated_data['form_typ'])
                         r = form.models.Response(form_typ=form_type)
                         r.save()
 
@@ -153,31 +153,28 @@ class SaveAnswers(APIView):
                     else:
                         raise Exception('Invalid Data')
 
-                for d in serializer.data.get('question_answers', []):
-                    if d.get('quesiton_id', None) is not None:
+                for d in serializer.validated_data.get('question_answers', []):
+                    try:
                         spa = QuestionAnswer.objects.get(
-                            Q(response_id=sp.response_id) & Q(question_id=d['question_id']) &
+                            Q(response=r) & Q(question_id=d.get('question_id', None)) &
                             Q(void_ind='n'))
                         spa.answer = d.get('answer', '')
                         spa.save()
-                    else:
-                        form.util.save_question_answer(d.get('answer', ''),
-                                                       Question.objects.get(
-                                                           question_id=d['question_id']),
-                                                       r)
+                    except QuestionAnswer.DoesNotExist:
+                        form.util.save_question_answer(d.get('answer', ''),Question.objects.get(question_id=d['question_id']),r)
 
                     for c in d.get('conditions', []):
-                        if c['question_to'].get('quesiton_id', None) is not None:
+                        try:
                             spa = QuestionAnswer.objects.get(
-                                Q(response_id=sp.response_id) & Q(question_id=c['question_to']['question_id']) &
+                                Q(response=r) & Q(question_id=c['question_to']['question_id']) &
                                 Q(void_ind='n'))
                             spa.answer = c['question_to'].get('answer', '')
                             spa.save()
-                        else:
+                        except QuestionAnswer.DoesNotExist:
                             form.util.save_question_answer(c['question_to'].get('answer', ''),
                                                            Question.objects.get(
-                                                               question_id=c['question_to']['question_id']),
-                                                           r)
+                                                               question_id=c['question_to']['question_id']), r)
+
 
                 return ret_message(success_msg)
             except Exception as e:
