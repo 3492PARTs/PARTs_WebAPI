@@ -1,7 +1,7 @@
 import datetime
 import pytz
 from django.contrib.auth.models import Group
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -837,9 +837,10 @@ class NotifyUsers(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.notify_users(request.query_params.get(
-                    'id', None))
-                return req
+                with transaction.atomic():
+                    req = self.notify_users(request.query_params.get(
+                        'id', None))
+                    return req
             except Exception as e:
                 return ret_message('An error occurred while notifying the users.', True, app_url + self.endpoint,
                                    request.user.id, e)

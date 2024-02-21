@@ -14,7 +14,9 @@ from user.models import User
 def stage_all_field_schedule_alerts():
     message = ''
     event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
-    curr_time = datetime.datetime.utcnow().astimezone(pytz.timezone(event.timezone))
+    curr_time = datetime.datetime.utcnow()
+
+    # curr_time = curr_time.astimezone(pytz.timezone(event.timezone))
 
     sfss_15 = ScoutFieldSchedule.objects.annotate(
         diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
@@ -114,35 +116,38 @@ def stage_field_schedule_alerts(notification, sfss, event):
 def stage_schedule_alerts():
     message = ''
     event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
-    curr_time = datetime.datetime.utcnow().astimezone(pytz.timezone(event.timezone))
+    curr_time = datetime.datetime.utcnow()  # .astimezone(pytz.timezone(event.timezone))
     schs = Schedule.objects.annotate(
         diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
         .filter(diff__lte=datetime.timedelta(minutes=6)) \
         .filter(Q(event=event) & Q(notified=False) & Q(void_ind='n')).order_by('sch_typ__sch_typ', 'st_time')
 
-    staged_alerts = []
     for sch in schs:
-        date_st_utc = sch.st_time.astimezone(pytz.utc)
-        date_end_utc = sch.end_time.astimezone(pytz.utc)
-        date_st_local = date_st_utc.astimezone(pytz.timezone(event.timezone))
-        date_end_local = date_end_utc.astimezone(pytz.timezone(event.timezone))
-        date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
-        date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
-
-        body = f'You are scheduled in the pit from: {date_st_str} to {date_end_str} for {sch.sch_typ.sch_nm}.\n- PARTs'
-        staged_alerts.append(stage_alert(sch.user, 'Pit time!', body))
-        message += 'Pit Notified: ' + sch.user.first_name + ' : ' + sch.sch_typ.sch_nm + '\n'
-
-    for sa in staged_alerts:
-        accts = AlertCommunicationChannelType.objects.filter(
-            Q(void_ind='n') & ~Q(alert_comm_typ__in=['message', 'email']))
-        for acct in accts:
-            stage_alert_channel_send(sa, acct.alert_comm_typ)
+        message += stage_schedule_alert(sch)
+        sch.notified = True
+        sch.save()
 
     if message == '':
         message = 'No notifications'
 
     return message
+
+
+def stage_schedule_alert(sch: Schedule):
+    date_st_utc = sch.st_time.astimezone(pytz.utc)
+    date_end_utc = sch.end_time.astimezone(pytz.utc)
+    date_st_local = date_st_utc.astimezone(pytz.timezone(sch.event.timezone))
+    date_end_local = date_end_utc.astimezone(pytz.timezone(sch.event.timezone))
+    date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
+    date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
+
+    body = f'You are scheduled in the pit from: {date_st_str} to {date_end_str} for {sch.sch_typ.sch_nm}.\n- PARTs'
+
+    alert = stage_alert(sch.user, 'Pit time!', body)
+    for acct in ['txt', 'notification', 'discord']:
+        stage_alert_channel_send(alert, acct)
+
+    return 'Pit Notified: ' + sch.user.get_full_name() + ' : ' + sch.sch_typ.sch_nm + '\n'
 
 
 def stage_alert(user: User, alert_subject: str, alert_body: str):
@@ -192,7 +197,8 @@ def send_alerts():
 
             acs.sent_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
             acs.save()
-            message += ' Notified: ' + acs.alert.user.get_full_name() + ' acs id: ' + str(acs.alert_channel_send_id) + '\n'
+            message += ' Notified: ' + acs.alert.user.get_full_name() + ' acs id: ' + str(
+                acs.alert_channel_send_id) + '\n'
         except Exception as e:
             alert = 'An error occurred while sending alert: ' + acs.alert.user.get_full_name() + ' acs id: ' + str(
                 acs.alert_channel_send_id)
