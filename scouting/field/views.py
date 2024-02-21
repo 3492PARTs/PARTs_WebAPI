@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 import form.util
 import scouting.models
-from form.models import Question, QuestionAnswer
+from form.models import Question, QuestionAnswer, QuestionAggregate
 from scouting.models import Season, Event, Team, ScoutFieldSchedule, ScoutField, \
     EventTeamInfo, Match
 from rest_framework.views import APIView
@@ -158,7 +158,7 @@ class Results(APIView):
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
-
+#TODO: Have rowan clean this up
 def get_field_results(team, endpoint, request, user=None):
     try:
         current_season = Season.objects.get(current='y')
@@ -204,7 +204,7 @@ def get_field_results(team, endpoint, request, user=None):
         .order_by('order')
     '''
     sqsa = form.util.get_questions_with_conditions('field', 'auto')
-    sqst = form.util.get_questions_with_conditions('field', 'tele')
+    sqst = form.util.get_questions_with_conditions('field', 'teleop')
     sqso = form.util.get_questions_with_conditions('field', None)
 
     for sqs in [sqsa, sqst, sqso]:
@@ -223,11 +223,29 @@ def get_field_results(team, endpoint, request, user=None):
                     Q(void_ind='n') & Q(question_id=c['question_to']['question_id']))
                 scout_cols.append({
                     'PropertyName': 'ans' + str(c['question_to']['question_id']),
-                    'ColLabel': ('' if c['question_to'].get('form_sub_typ', None) is None else c['question_to']['form_sub_typ'][0:1]
+                    'ColLabel': ('' if c['question_to'].get('form_sub_typ', None) is None else c['question_to'][
+                                                                                                   'form_sub_typ'][0:1]
                                  .upper() + ': ') + 'C: ' + c['condition'] + ' ' + c['question_to']['question'],
                     'scorable': scout_question.scorable,
                     'order': c['question_to']['order']
                 })
+
+        sqas = (QuestionAggregate.objects.filter(Q(void_ind='n') & Q(active='y') &
+                                                 Q(questions__question_id__in=set(sq['question_id'] for sq in sqs)))
+                .distinct())
+        sqas_cnt = 1
+        for sqa in sqas:
+            scout_cols.append({
+                'PropertyName': 'ans_sqa' + str(sqa.question_aggregate_id),
+                'ColLabel': ('' if sqs[0].get('form_sub_typ', None) is None else sqs[0]['form_sub_typ'][0:1]
+                             .upper() + ': ') + sqa.field_name,
+                'scorable': True,
+                'order': sqs[len(sqs) - 1]['order'] + sqas_cnt
+            })
+
+            sqas_cnt += 1
+
+
 
     scout_cols.append({
         'PropertyName': 'user',
@@ -266,6 +284,19 @@ def get_field_results(team, endpoint, request, user=None):
         sa_obj = {}
         for sfa in sfas:
             sa_obj['ans' + str(sfa.question_id)] = sfa.answer
+
+        #get aggregates
+        sqas = (QuestionAggregate.objects.filter(Q(void_ind='n') & Q(active='y') &
+                                                 Q(questions__form_typ='field'))
+                .distinct())
+
+        for sqa in sqas:
+            sum = 0
+            for q in sqa.questions.filter(Q(void_ind='n') & Q(active='y')):
+                for a in q.questionanswer_set.filter(Q(void_ind='n') & Q(response=sf.response)):
+                    if a.answer is not None and a.answer != '!EXIST':
+                        sum += int(a.answer)
+            sa_obj['ans_sqa' + str(sqa.question_aggregate_id)] = sum
 
         sa_obj['match'] = sf.match.match_number if sf.match else None
         sa_obj['user'] = sf.user.first_name + ' ' + sf.user.last_name
