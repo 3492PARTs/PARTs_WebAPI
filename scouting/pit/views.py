@@ -240,12 +240,6 @@ def get_pit_results(teams, endpoint, request):
                 return ret_message('No pit data for team.', True, app_url + endpoint,
                                    request.user.id, e)
 
-            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) &
-                                                 Q(void_ind='n') &
-                                                 Q(question__active='y') &
-                                                 Q(question__void_ind='n')) \
-                .order_by('question__order')
-
             spis = ScoutPitImage.objects.filter(Q(void_ind='n') & Q(scout_pit=sp)).order_by('scout_pit_img_id')
             pics = []
             for spi in spis:
@@ -271,12 +265,32 @@ def get_pit_results(teams, endpoint, request):
                 })
             except:
                 x = 1
+            '''
+            spas = QuestionAnswer.objects.filter(Q(response_id=sp.response_id) &
+                                                 Q(void_ind='n') &
+                                                 Q(question__active='y') &
+                                                 Q(question__void_ind='n')) \
+                .order_by('question__order')
+            '''
+            questions = form.util.get_questions_with_conditions('pit')
 
-            for spa in spas:
+            for q in questions:
+                answer = QuestionAnswer.objects.get(Q(response=sp.response) &
+                                                 Q(void_ind='n') &
+                                                 Q(question_id=q['question_id']))
                 tmp_questions.append({
-                    'question': spa.question.question,
-                    'answer': spa.answer
+                    'question': q['question'],
+                    'answer': answer.answer
                 })
+
+                for c in q.get('conditions', []):
+                    answer = QuestionAnswer.objects.get(Q(response=sp.response) &
+                                                        Q(void_ind='n') &
+                                                        Q(question_id=c['question_to']['question_id']))
+                    tmp_questions.append({
+                        'question': 'C: ' + c['condition'] + ' ' + c['question_to']['question'],
+                        'answer': answer.answer
+                    })
 
             tmp['results'] = tmp_questions
             results.append(tmp)
