@@ -30,4 +30,6 @@ urlpatterns = [
     path('notify-users/', NotifyUsers.as_view()),
     path('save-phone-type/', SavePhoneType.as_view()),
     path('scout-activity/', ScoutingActivity.as_view()),
+    path('delete-field-result/', DeleteFieldResult.as_view()),
+    path('delete-pit-result/', DeletePitResult.as_view()),
 ]
