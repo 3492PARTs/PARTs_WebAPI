@@ -54,13 +54,13 @@ class TokenObtainPairView(APIView):
         try:
             serializer = TokenObtainPairSerializer(data=request.data)
             if not serializer.is_valid():
-                return ret_message('Invalid data', True, app_url + self.endpoint, 0, serializer.errors)
+                return ret_message('Invalid data', True, app_url + self.endpoint, -1, serializer.errors)
 
             return Response(serializer.validated_data)
         except Exception as e:
             return ret_message('Invalid username or password.', True,
                                app_url + self.endpoint,
-                               0, e)
+                               -1, e)
 
 
 class TokenRefreshView(APIView):
@@ -73,13 +73,13 @@ class TokenRefreshView(APIView):
         try:
             serializer = TokenRefreshSerializer(data=request.data)
             if not serializer.is_valid():
-                return ret_message('Invalid data', True, app_url + self.endpoint, 0, serializer.errors)
+                return ret_message('Invalid data', True, app_url + self.endpoint, -1, serializer.errors)
 
             return Response(serializer.validated_data)
         except Exception as e:
             return ret_message('An error occurred while refreshing token.', True,
                                app_url + self.endpoint,
-                               0, e)
+                               -1, e)
 
 
 class UserLogIn(ModelBackend):
@@ -107,14 +107,14 @@ class UserProfile(APIView):
             if serialized.is_valid():
                 # user_confirm_hash = abs(hash(serialized.data.date_joined))
                 if serialized.data.get('password1', 't') != serialized.data.get('password2', 'y'):
-                    return ret_message('Passwords don\'t match.', True, app_url + self.endpoint, 0)
+                    return ret_message('Passwords don\'t match.', True, app_url + self.endpoint, -1)
 
                 user_data = serialized.validated_data
 
                 try:
                     user = User.objects.get(
                         email=user_data.get('email').lower())
-                    return ret_message('User already exists with that email.', True, app_url + self.endpoint, 0,
+                    return ret_message('User already exists with that email.', True, app_url + self.endpoint, -1,
                                        user_data.get('email').lower())
                 except ObjectDoesNotExist as odne:
                     x = 0
@@ -157,7 +157,7 @@ class UserProfile(APIView):
                 for e in error_list:
                     error_str += '\n' + e
                 return ret_message('An error occurred while creating user.' + error_str, True, app_url + self.endpoint,
-                                   0, serialized._errors)
+                                   -1, serialized._errors)
         except Exception as e:
             error_string = str(e)
             if error_string == 'UNIQUE constraint failed: auth_user.username':
@@ -174,7 +174,7 @@ class UserProfile(APIView):
             if user.is_authenticated:
                 if user is None:
                     return ret_message('An error occurred while updating user data.', True, app_url + self.endpoint,
-                                       0)
+                                       -1)
                 serializer = UserUpdateSerializer(data=request.data)
                 # flag used to email user the user's old email about the change in the event that both the email and
                 # password are updated
@@ -329,7 +329,7 @@ class UserEmailConfirmation(APIView):
                 return redirect(settings.FRONTEND_ADDRESS + "/login?page=activationFail")
         except ObjectDoesNotExist as o:
             ret_message(
-                'An error occurred while confirming the user\'s account.', True, app_url + self.endpoint, 0, o)
+                'An error occurred while confirming the user\'s account.', True, app_url + self.endpoint, -1, o)
             return redirect(settings.FRONTEND_ADDRESS + "/login?page=activationFail")
 
 
