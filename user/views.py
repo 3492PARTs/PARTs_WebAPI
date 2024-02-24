@@ -5,7 +5,6 @@ import cloudinary
 import webpush.views
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.tokens import default_token_generator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect
@@ -13,17 +12,13 @@ from django.shortcuts import redirect
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from pytz import timezone, utc
+from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
-from webpush import send_user_notification
-
 import alerts.util
 import user.util
-from api.settings import AUTH_PASSWORD_VALIDATORS
-from scouting.models import ScoutAuthGroups
 from .serializers import GroupSerializer, UserCreationSerializer, UserLinksSerializer, UserSerializer, \
     UserUpdateSerializer, GetAlertsSerializer, SaveUserSerializer, PermissionSerializer
 from .models import User, UserLinks
@@ -38,7 +33,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.password_validation import validate_password, get_default_password_validators
 from django.core.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework_simplejwt import views as jwt_views
 
 auth_obj_save_user = 'save_user'
 app_url = 'user/'
@@ -56,7 +50,20 @@ class TokenObtainPairView(APIView):
             if not serializer.is_valid():
                 return ret_message('Invalid data', True, app_url + self.endpoint, -1, serializer.errors)
 
-            return Response(serializer.validated_data)
+            '''
+            refresh = serializer.validated_data['refresh']
+            #del serializer.validated_data['refresh']
+
+            cookie_max_age = 3600 * 24 * 14  # 14 days
+
+            response = Response(serializer.validated_data)
+            response.set_cookie('refresh_token',
+                                refresh,
+                                max_age=cookie_max_age,
+                                httponly=True,)
+            '''
+            response = Response(serializer.validated_data)
+            return response
         except Exception as e:
             return ret_message('Invalid username or password.', True,
                                app_url + self.endpoint,
@@ -71,6 +78,7 @@ class TokenRefreshView(APIView):
 
     def post(self, request, format=None):
         try:
+            #print(request)
             serializer = TokenRefreshSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message('Invalid data', True, app_url + self.endpoint, -1, serializer.errors)
