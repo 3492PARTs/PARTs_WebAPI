@@ -126,7 +126,7 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
 class SaveScoutSerializer(serializers.Serializer):
     question_answers = QuestionWithConditionsSerializer(many=True)
     team = serializers.CharField()
-    match = serializers.CharField(required=False)
+    match = serializers.CharField(required=False, allow_null=True)
     form_typ = serializers.CharField()
 
 
