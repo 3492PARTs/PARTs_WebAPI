@@ -105,7 +105,7 @@ class SavePicture(APIView):
         except Exception as e:
             return ret_message('No event set, see an admin.', True, app_url + self.endpoint, self.request.user.id, e)
 
-        if not allowed_file(file.name):
+        if not allowed_file(file.content_type):
             return ret_message('Invalid file type.', True, app_url + self.endpoint, self.request.user.id)
 
         try:
@@ -114,7 +114,7 @@ class SavePicture(APIView):
 
             response = cloudinary.uploader.upload(file)
 
-            ScoutPitImage(scout_pit=sp, img_id=response['public_id'], img_ver = str(response['version'])).save()
+            ScoutPitImage(scout_pit=sp, img_id=response['public_id'], img_ver=str(response['version'])).save()
 
         except Exception as e:
             return ret_message('An error occurred while saving the image.', True, app_url + self.endpoint,
@@ -400,5 +400,4 @@ def allowed_file(filename):
     :param str filename: A filename.
     :return: Whether the filename has an recognized image file extension
     :rtype: bool"""
-    return '.' in filename and \
-        filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
+    return filename.rsplit('/', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
