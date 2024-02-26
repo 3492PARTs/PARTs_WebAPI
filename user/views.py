@@ -85,7 +85,7 @@ class TokenRefreshView(APIView):
 
             return Response(serializer.validated_data)
         except Exception as e:
-            return ret_message('An error occurred while refreshing token.', True,
+            return ret_message('An error occurred while authenticating, please log in again.', True,
                                app_url + self.endpoint,
                                -1, e)
 
