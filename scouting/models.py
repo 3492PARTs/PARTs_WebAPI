@@ -235,3 +235,13 @@ class Question(models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.id, self.question)
+
+
+class UserInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, models.PROTECT)
+    under_review = models.BooleanField(default=False)
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return '{} {}'.format(self.id, self.user)
