@@ -4,8 +4,6 @@ from django.db.models.functions import Lower
 import scouting.models
 from form.models import Question, Response, QuestionAnswer, QuestionOption, FormSubType, QuestionType, \
     QuestionAggregate, QuestionAggregateType, QuestionCondition
-from form.serializers import QuestionSerializer
-from general.security import ret_message
 from scouting.models import Season, ScoutField, ScoutPit, Event
 
 

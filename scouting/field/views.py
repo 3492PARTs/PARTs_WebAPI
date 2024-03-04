@@ -1,10 +1,12 @@
 from datetime import datetime
 
+import django
 from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import form.util
+import scouting.util
 import scouting.models
 from form.models import Question, QuestionAnswer, QuestionAggregate
 from scouting.models import Season, Event, Team, ScoutFieldSchedule, ScoutField, \
@@ -55,18 +57,7 @@ class Questions(APIView):
 
         sfs = None
         for s in sfss:
-            sfs = {
-                'scout_field_sch_id': s.scout_field_sch_id,
-                'event_id': s.event_id,
-                'st_time': s.st_time,
-                'end_time': s.end_time,
-                'red_one_id': s.red_one,
-                'red_two_id': s.red_two,
-                'red_three_id': s.red_three,
-                'blue_one_id': s.blue_one,
-                'blue_two_id': s.blue_two,
-                'blue_three_id': s.blue_three
-            }
+            sfs = scouting.util.format_scout_field_schedule_entry(s)
 
         matches = Match.objects.filter(Q(event=current_event) & Q(comp_level_id='qm') & Q(void_ind='n')) \
             .order_by('match_number')
@@ -300,3 +291,48 @@ def get_field_results(team, endpoint, request, user=None):
         scout_answers.append(sa_obj)
 
     return {'scoutCols': scout_cols, 'scoutAnswers': scout_answers}
+
+
+class CheckIn(APIView):
+    """
+    API endpoint to let a field scout check in for thier shift
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'check-in/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=request.query_params.get('scout_field_sch_id', None))
+                check_in = False
+
+                if sfs.red_one and not sfs.red_one_check_in and sfs.red_one.id == request.user.id:
+                    sfs.red_one_check_in = timezone.now()
+                    check_in = True
+                elif sfs.red_two and not sfs.red_two_check_in and sfs.red_two.id == request.user.id:
+                    sfs.red_two_check_in = timezone.now()
+                    check_in = True
+                elif sfs.red_three and not sfs.red_three_check_in and sfs.red_three.id == request.user.id:
+                    sfs.red_three_check_in = timezone.now()
+                    check_in = True
+                elif sfs.blue_one and not sfs.blue_one_check_in and sfs.blue_one.id == request.user.id:
+                    sfs.blue_one_check_in = timezone.now()
+                    check_in = True
+                elif sfs.blue_two and not sfs.blue_two_check_in and sfs.blue_two.id == request.user.id:
+                    sfs.blue_two_check_in = timezone.now()
+                    check_in = True
+                elif sfs.blue_three and not sfs.blue_three_check_in and sfs.blue_three.id == request.user.id:
+                    sfs.blue_three_check_in = timezone.now()
+                    check_in = True
+
+                if check_in:
+                    sfs.save()
+                    return ret_message('Successfully checked in scour for their shift.')
+                else:
+                    return ret_message('')
+            except Exception as e:
+                return ret_message('An error occurred while checking in the scout for their shift.', True, app_url + self.endpoint,
+                                   request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
