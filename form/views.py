@@ -13,7 +13,7 @@ from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveSco
     QuestionInitializationSerializer, ResponseSerializer, QuestionAggregateSerializer, QuestionAggregateTypeSerializer, \
     QuestionConditionSerializer
 from general.security import has_access, ret_message
-from scouting.models import Event, Season, ScoutField, ScoutPit
+from scouting.models import Event, Season, ScoutField, ScoutPit, UserInfo
 
 app_url = 'form/'
 
@@ -112,9 +112,12 @@ class SaveAnswers(APIView):
                         # Try to deserialize as a field or pit answer
                         serializer = SaveScoutSerializer(data=request.data)
                         if serializer.is_valid():
-                            form_type = FormType.objects.get(form_typ=serializer.data['form_typ'])
-                            r = form.models.Response(form_typ=form_type)
-                            r.save()
+                            form_type = FormType.objects.get(form_typ=serializer.validated_data['form_typ'])
+                            try:
+                                r = form.models.Response.objects.get(response_id=serializer.validated_data['response_id'])
+                            except form.models.Response.DoesNotExist:
+                                r = form.models.Response(form_typ=form_type)
+                                r.save()
 
                             if serializer.validated_data['form_typ'] == 'field':
                                 sf = ScoutField(
@@ -122,11 +125,30 @@ class SaveAnswers(APIView):
                                     match_id=serializer.validated_data.get('match', None),
                                     user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
                                 sf.save()
+
+                                try:
+                                    user_info = self.request.user.scouting_user_info.get(void_ind='n')
+                                except UserInfo.DoesNotExist:
+                                    user_info = {}
+
+                                if user_info and user_info.under_review:
+                                    alert = []
+                                    users = user.util.get_users_with_permission('scoutadmin')
+                                    for u in users:
+                                        alert.append(
+                                            alerts.util.stage_alert(u, form_type.form_nm,
+                                                                    'Scout under review {} logged a new response: '
+                                                                    'Team {} Match {}'.format(
+                                                                        self.user.get_full_name(), sf.team_no.team_no,
+                                                                        sf.match.match_number)))
+                                    for a in alert:
+                                        for acct in ['txt', 'notification']:
+                                            alerts.util.stage_alert_channel_send(a, acct)
                             else:
                                 try:
                                     sp = ScoutPit.objects.get(Q(team_no_id=serializer.data['team']) & Q(void_ind='n') &
-                                                              Q(event=current_event))
-                                except Exception as e:
+                                                              Q(event=current_event) & Q(response=r))
+                                except ScoutPit.DoesNotExist:
                                     sp = ScoutPit(event=current_event, team_no_id=serializer.data['team'],
                                                   user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
                                     sp.save()
@@ -174,7 +196,6 @@ class SaveAnswers(APIView):
                             form.util.save_question_answer(c['question_to'].get('answer', ''),
                                                            Question.objects.get(
                                                                question_id=c['question_to']['question_id']), r)
-
 
                 return ret_message(success_msg)
             except Exception as e:

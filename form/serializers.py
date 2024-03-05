@@ -128,6 +128,7 @@ class SaveScoutSerializer(serializers.Serializer):
     team = serializers.CharField()
     match = serializers.CharField(required=False, allow_null=True)
     form_typ = serializers.CharField()
+    response_id = serializers.IntegerField(required=False, allow_null=True)
 
 
 class SaveResponseSerializer(serializers.Serializer):

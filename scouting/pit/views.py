@@ -377,6 +377,7 @@ class TeamData(APIView):
             })
 
         return {
+            'response_id': sp.response_id,
             'questions': scout_questions,
             'pics': pics
         }
