@@ -16,7 +16,7 @@ from user.models import User, PhoneType
 
 from .serializers import *
 from scouting.models import Season, Event, ScoutAuthGroups, ScoutFieldSchedule, Team, \
-    CompetitionLevel, Match, EventTeamInfo, ScoutField, ScoutPit
+    CompetitionLevel, Match, EventTeamInfo, ScoutField, ScoutPit, UserInfo
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
 import requests
@@ -883,8 +883,14 @@ class ScoutingActivity(APIView):
             for fs in sfss:
                 field_schedule.append(scouting.util.format_scout_field_schedule_entry(fs))
 
+            try:
+                user_info = u.scouting_user_info.get(void_ind='n')
+            except UserInfo.DoesNotExist:
+                user_info = {}
+
             user_results.append({
                 'user': u,
+                'user_info': user_info,
                 'schedule': field_schedule,
                 'results': get_field_results(None, self.endpoint, self.request, u)
             })
@@ -901,6 +907,34 @@ class ScoutingActivity(APIView):
                 return ret_message('An error occurred while getting scouting activity.', True, app_url + self.endpoint,
                                    request.user.id,
                                    e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class ToggleScoutUnderReview(APIView):
+    """
+    API endpoint to toggle a scout under review status
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'toggle-scout-under-review/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                try:
+                    ui = UserInfo.objects.get(Q(user__id=request.query_params.get('user_id', None)) & Q(void_ind='n'))
+                except UserInfo.DoesNotExist:
+                    ui = UserInfo(user=User.objects.get(id=request.query_params.get('user_id', None)), under_review=False)
+
+                ui.under_review = not ui.under_review
+
+                ui.save()
+
+                return ret_message('Successfully changed scout under review status')
+            except Exception as e:
+                return ret_message('An error occurred while changing the scout''s under review status.', True,
+                                   app_url + self.endpoint, request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 

@@ -239,7 +239,7 @@ class Question(models.Model):
 
 class UserInfo(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, models.PROTECT)
+    user = models.ForeignKey(User, models.PROTECT, related_name='scouting_user_info')
     under_review = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default='n')
 

@@ -323,8 +323,14 @@ class ScoutFieldResultsSerializer(serializers.Serializer):
     scoutAnswers = ScoutResultAnswerSerializer(many=True)
 
 
+class ScoutingUserInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    under_review = serializers.BooleanField(required=False)
+
+
 class UserActivitySerializer(serializers.Serializer):
     user = UserSerializer()
+    user_info = ScoutingUserInfoSerializer()
     results = ScoutFieldResultsSerializer()
     schedule = ScoutFieldScheduleSerializer(many=True)
 

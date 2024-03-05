@@ -32,4 +32,5 @@ urlpatterns = [
     path('scout-activity/', ScoutingActivity.as_view()),
     path('delete-field-result/', DeleteFieldResult.as_view()),
     path('delete-pit-result/', DeletePitResult.as_view()),
+    path('toggle-scout-under-review/', ToggleScoutUnderReview.as_view()),
 ]
