@@ -13,7 +13,7 @@ from form.serializers import QuestionSerializer, SaveResponseSerializer, SaveSco
     QuestionInitializationSerializer, ResponseSerializer, QuestionAggregateSerializer, QuestionAggregateTypeSerializer, \
     QuestionConditionSerializer
 from general.security import has_access, ret_message
-from scouting.models import Event, Season, ScoutField, ScoutPit, UserInfo
+from scouting.models import Event, Season, ScoutField, ScoutPit, UserInfo, Match
 
 app_url = 'form/'
 
@@ -114,33 +114,56 @@ class SaveAnswers(APIView):
                         if serializer.is_valid():
                             form_type = FormType.objects.get(form_typ=serializer.validated_data['form_typ'])
                             try:
-                                r = form.models.Response.objects.get(response_id=serializer.validated_data['response_id'])
+                                r = form.models.Response.objects.get(response_id=serializer.validated_data.get('response_id', None))
                             except form.models.Response.DoesNotExist:
                                 r = form.models.Response(form_typ=form_type)
                                 r.save()
 
                             if serializer.validated_data['form_typ'] == 'field':
+                                try:
+                                    m = Match.objects.get(match_id=serializer.validated_data.get('match', None))
+                                except Match.DoesNotExist:
+                                    m = None
+
                                 sf = ScoutField(
                                     event=current_event, team_no_id=serializer.validated_data['team'],
-                                    match_id=serializer.validated_data.get('match', None),
-                                    user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
+                                    match=m,
+                                    user_id=request.user.id, response_id=r.response_id, void_ind='n')
                                 sf.save()
 
+                                # Check if previous match is missing any results
+                                if m is not None and m.match_number > 1 and len(m.scoutfield_set.filter(void_ind='n')) == 1:
+                                    prev_m = Match.objects.get(Q(void_ind='n') & Q(event=m.event) &
+                                                               Q(comp_level=m.comp_level) &
+                                                               Q(match_number=m.match_number - 1))
+
+                                    print(prev_m)
+                                    sfs = prev_m.scoutfield_set.filter(void_ind='n')
+
+                                    if len(set(sf.team_no for sf in sfs)) < 6:
+                                        users = ''
+                                        for sf in sfs:
+                                            users += sf.user.get_full_name() + ', '
+                                        users = users[0:len(users)-2]
+                                        alert = alerts.util.stage_scout_admin_alerts(
+                                            f'Match: {prev_m.match_number} is missing a result.',
+                                            f'We have results from: {users}')
+
+                                        for a in alert:
+                                            for acct in ['txt', 'notification']:
+                                                alerts.util.stage_alert_channel_send(a, acct)
+
+                                # Check if user is under review and notify lead scouts
                                 try:
-                                    user_info = self.request.user.scouting_user_info.get(void_ind='n')
+                                    user_info = request.user.scouting_user_info.get(void_ind='n')
                                 except UserInfo.DoesNotExist:
                                     user_info = {}
 
                                 if user_info and user_info.under_review:
-                                    alert = []
-                                    users = user.util.get_users_with_permission('scoutadmin')
-                                    for u in users:
-                                        alert.append(
-                                            alerts.util.stage_alert(u, form_type.form_nm,
-                                                                    'Scout under review {} logged a new response: '
-                                                                    'Team {} Match {}'.format(
-                                                                        self.user.get_full_name(), sf.team_no.team_no,
-                                                                        sf.match.match_number)))
+                                    alert = alerts.util.stage_scout_admin_alerts(
+                                        f'Scout under review, {request.user.get_full_name()}, logged a new response.',
+                                        f'Team: {sf.team_no.team_no} Match: {sf.match.match_number}')
+
                                     for a in alert:
                                         for acct in ['txt', 'notification']:
                                             alerts.util.stage_alert_channel_send(a, acct)
@@ -150,7 +173,7 @@ class SaveAnswers(APIView):
                                                               Q(event=current_event) & Q(response=r))
                                 except ScoutPit.DoesNotExist:
                                     sp = ScoutPit(event=current_event, team_no_id=serializer.data['team'],
-                                                  user_id=self.request.user.id, response_id=r.response_id, void_ind='n')
+                                                  user_id=request.user.id, response_id=r.response_id, void_ind='n')
                                     sp.save()
                         else:
                             raise Exception('Invalid Data')
