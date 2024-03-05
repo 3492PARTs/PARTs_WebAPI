@@ -237,6 +237,7 @@ def send_alerts():
     acss = AlertChannelSend.objects.filter(Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(void_ind='n'))
     for acs in acss:
         try:
+            success = True
             match acs.alert_comm_typ.alert_comm_typ:
                 case 'email':
                     send_message.send_email(
@@ -251,18 +252,23 @@ def send_alerts():
                                               acs.alert.alert_id)
                     message += 'Webpush'
                 case 'txt':
-                    send_message.send_email(
-                        acs.alert.user.phone + acs.alert.user.phone_type.phone_type, acs.alert.alert_subject,
-                        'generic_text', {'message': acs.alert.alert_body})
-                    message += 'Phone'
+                    if acs.alert.user.phone is not None and acs.alert.user.phone_type is not None:
+                        send_message.send_email(
+                            acs.alert.user.phone + acs.alert.user.phone_type.phone_type, acs.alert.alert_subject,
+                            'generic_text', {'message': acs.alert.alert_body})
+                        message += 'Phone'
+                    else:
+                        message += 'Phone FAILED'
+                        success = False
                 case 'discord':
                     user = f'<@{acs.alert.user.discord_user_id}>' if acs.alert.user.discord_user_id else acs.alert.user.get_full_name()
                     discord_message = f'{acs.alert.alert_subject}:\n {user}\n {acs.alert.alert_body}'
                     send_message.send_discord_notification(discord_message)
                     message += 'Discord'
 
-            acs.sent_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
-            acs.save()
+            if success:
+                acs.sent_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+                acs.save()
             message += ' Notified: ' + acs.alert.user.get_full_name() + ' acs id: ' + str(
                 acs.alert_channel_send_id) + '\n'
         except Exception as e:
