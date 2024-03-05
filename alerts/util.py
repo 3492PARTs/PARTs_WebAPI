@@ -3,6 +3,7 @@ import datetime
 import django
 import pytz
 from django.db.models import Q, ExpressionWrapper, DurationField, F
+from django.utils import timezone
 
 from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
 from general import send_message
@@ -15,7 +16,7 @@ import user
 def stage_all_field_schedule_alerts():
     message = ''
     event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
-    curr_time = datetime.datetime.utcnow()
+    curr_time = timezone.now()
 
     # curr_time = curr_time.astimezone(pytz.timezone(event.timezone))
 
@@ -42,9 +43,9 @@ def stage_all_field_schedule_alerts():
         .annotate(diff=ExpressionWrapper(curr_time - F('st_time'), output_field=DurationField()))\
         .filter(diff__gte=datetime.timedelta(minutes=4.5))\
         .filter(Q(event=event) & Q(void_ind='n'))\
-        .filter(Q(red_one_check_in__is_null=True) | Q(red_two_check_in__is_null=True) |
-                Q(red_three_check_in__is_null=True) | Q(blue_one_check_in__is_null=True) |
-                Q(blue_two_check_in__is_null=True) | Q(blue_three_check_in__is_null=True))
+        .filter(Q(red_one_check_in__isnull=True) | Q(red_two_check_in__isnull=True) |
+                Q(red_three_check_in__isnull=True) | Q(blue_one_check_in__isnull=True) |
+                Q(blue_two_check_in__isnull=True) | Q(blue_three_check_in__isnull=True))
 
     for sfs_missing_scouts in sfss_missing_scouts:
         date_st_utc = sfs_missing_scouts.st_time.astimezone(pytz.utc)
@@ -57,7 +58,7 @@ def stage_all_field_schedule_alerts():
         subject = 'Late for Scouting!!!'
         body = f'You are scheduled to scout from: {date_st_str} to {date_end_str}.\n- PARTs'
 
-        lead_scout_subject = 'Late for Scouting!!!'
+        lead_scout_subject = 'You have a late scout'
         lead_scout_body = f' is late, they are scheduled from: {date_st_str} to {date_end_str}.'
 
         success_txt = 'Stage past due scouting alert: '
@@ -66,39 +67,43 @@ def stage_all_field_schedule_alerts():
 
         if sfs_missing_scouts.red_one is not None and sfs_missing_scouts.red_one_check_in is None:
             staged_alerts.append(stage_alert(sfs_missing_scouts.red_one, subject, body))
-            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+            staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.red_one.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.red_one.get_full_name() + '\n'
 
         if sfs_missing_scouts.red_two is not None and sfs_missing_scouts.red_two_check_in is None:
             staged_alerts.append(stage_alert(sfs_missing_scouts.red_two, subject, body))
-            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+            staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.red_two.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.red_two.get_full_name() + '\n'
 
         if sfs_missing_scouts.red_three is not None and sfs_missing_scouts.red_three_check_in is None:
             staged_alerts.append(stage_alert(sfs_missing_scouts.red_three, subject, body))
-            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+            staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.red_three.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.red_three.get_full_name() + '\n'
 
         if sfs_missing_scouts.blue_one is not None and sfs_missing_scouts.blue_one_check_in is None:
             staged_alerts.append(stage_alert(sfs_missing_scouts.blue_one, subject, body))
-            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+            staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.blue_one.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.blue_one.get_full_name() + '\n'
 
         if sfs_missing_scouts.blue_two is not None and sfs_missing_scouts.blue_two_check_in is None:
             staged_alerts.append(stage_alert(sfs_missing_scouts.blue_two, subject, body))
-            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+            staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.blue_two.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.blue_two.get_full_name() + '\n'
 
         if sfs_missing_scouts.blue_three is not None and sfs_missing_scouts.blue_three_check_in is None:
             staged_alerts.append(stage_alert(sfs_missing_scouts.blue_three, subject, body))
-            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+            staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.blue_three.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.blue_three.get_full_name() + '\n'
+
+        for sa in staged_alerts:
+            for acct in ['txt', 'notification']:
+                stage_alert_channel_send(sa, acct)
 
     if message == '':
         message = 'No notifications'
@@ -172,7 +177,7 @@ def stage_field_schedule_alerts(notification, sfss):
 def stage_schedule_alerts():
     message = ''
     event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
-    curr_time = datetime.datetime.utcnow()  # .astimezone(pytz.timezone(event.timezone))
+    curr_time = timezone.now()  # .astimezone(pytz.timezone(event.timezone))
     schs = Schedule.objects.annotate(
         diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
         .filter(diff__lte=datetime.timedelta(minutes=6)) \

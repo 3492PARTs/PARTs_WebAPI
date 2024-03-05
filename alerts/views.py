@@ -23,7 +23,7 @@ class RunAlerts(APIView):
             return ret_message(ret)
         except Exception as e:
             return ret_message('An error occurred while running alerts.', True, app_url + self.endpoint,
-                               0, e)
+                               -1, e)
 
 
 class SendAlerts(APIView):
@@ -37,7 +37,7 @@ class SendAlerts(APIView):
             ret += send_alerts()
             return ret_message(ret)
         except Exception as e:
-            return ret_message('An error occurred while sending alerts.', True, app_url + self.endpoint, 0, e)
+            return ret_message('An error occurred while sending alerts.', True, app_url + self.endpoint, -1, e)
 
 
 class DismissAlert(APIView):
@@ -52,4 +52,4 @@ class DismissAlert(APIView):
             dismiss_alert(request.query_params.get('alert_channel_send_id', None), request.user.id)
             return ret_message('')
         except Exception as e:
-            return ret_message('An error occurred while dismissing alert.', True, app_url + self.endpoint, 0, e)
+            return ret_message('An error occurred while dismissing alert.', True, app_url + self.endpoint, -1, e)
