@@ -33,4 +33,5 @@ urlpatterns = [
     path('delete-field-result/', DeleteFieldResult.as_view()),
     path('delete-pit-result/', DeletePitResult.as_view()),
     path('toggle-scout-under-review/', ToggleScoutUnderReview.as_view()),
+    path('mark-scout-present/', MarkScoutPresent.as_view()),
 ]

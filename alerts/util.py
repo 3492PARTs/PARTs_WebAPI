@@ -9,6 +9,7 @@ from general import send_message
 from general.security import ret_message
 from scouting.models import Event, ScoutFieldSchedule, Schedule
 from user.models import User
+import user
 
 
 def stage_all_field_schedule_alerts():
@@ -20,22 +21,84 @@ def stage_all_field_schedule_alerts():
 
     sfss_15 = ScoutFieldSchedule.objects.annotate(
         diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
-        .filter(diff__lte=datetime.timedelta(minutes=17)) \
+        .filter(diff__lte=datetime.timedelta(minutes=15.5)) \
         .filter(Q(event=event) & Q(notification1=False) & Q(void_ind='n'))
 
     sfss_5 = ScoutFieldSchedule.objects.annotate(
         diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
-        .filter(diff__lte=datetime.timedelta(minutes=7)) \
+        .filter(diff__lte=datetime.timedelta(minutes=5.5)) \
         .filter(Q(event=event) & Q(notification2=False) & Q(void_ind='n'))
 
     sfss_now = ScoutFieldSchedule.objects.annotate(
         diff=ExpressionWrapper(F('st_time') - curr_time, output_field=DurationField())) \
-        .filter(diff__lt=datetime.timedelta(minutes=5)) \
+        .filter(diff__lt=datetime.timedelta(minutes=.5)) \
         .filter(Q(event=event) & Q(notification3=False) & Q(void_ind='n'))
 
-    message += stage_field_schedule_alerts(1, sfss_15, event)
-    message += stage_field_schedule_alerts(2, sfss_5, event)
-    message += stage_field_schedule_alerts(3, sfss_now, event)
+    message += stage_field_schedule_alerts(1, sfss_15)
+    message += stage_field_schedule_alerts(2, sfss_5)
+    message += stage_field_schedule_alerts(3, sfss_now)
+
+    sfss_missing_scouts = ScoutFieldSchedule.objects\
+        .annotate(diff=ExpressionWrapper(curr_time - F('st_time'), output_field=DurationField()))\
+        .filter(diff__gte=datetime.timedelta(minutes=4.5))\
+        .filter(Q(event=event) & Q(void_ind='n'))\
+        .filter(Q(red_one_check_in__is_null=True) | Q(red_two_check_in__is_null=True) |
+                Q(red_three_check_in__is_null=True) | Q(blue_one_check_in__is_null=True) |
+                Q(blue_two_check_in__is_null=True) | Q(blue_three_check_in__is_null=True))
+
+    for sfs_missing_scouts in sfss_missing_scouts:
+        date_st_utc = sfs_missing_scouts.st_time.astimezone(pytz.utc)
+        date_end_utc = sfs_missing_scouts.end_time.astimezone(pytz.utc)
+        date_st_local = date_st_utc.astimezone(pytz.timezone(sfs_missing_scouts.event.timezone))
+        date_end_local = date_end_utc.astimezone(pytz.timezone(sfs_missing_scouts.event.timezone))
+        date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
+        date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
+
+        subject = 'Late for Scouting!!!'
+        body = f'You are scheduled to scout from: {date_st_str} to {date_end_str}.\n- PARTs'
+
+        lead_scout_subject = 'Late for Scouting!!!'
+        lead_scout_body = f' is late, they are scheduled from: {date_st_str} to {date_end_str}.'
+
+        success_txt = 'Stage past due scouting alert: '
+        fail_txt = 'Unable to stage scouting alert: '
+        staged_alerts = []
+
+        if sfs_missing_scouts.red_one is not None and sfs_missing_scouts.red_one_check_in is None:
+            staged_alerts.append(stage_alert(sfs_missing_scouts.red_one, subject, body))
+            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+                                                          sfs_missing_scouts.red_one.get_full_name() + lead_scout_body))
+            message += success_txt + sfs_missing_scouts.red_one.get_full_name() + '\n'
+
+        if sfs_missing_scouts.red_two is not None and sfs_missing_scouts.red_two_check_in is None:
+            staged_alerts.append(stage_alert(sfs_missing_scouts.red_two, subject, body))
+            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+                                                          sfs_missing_scouts.red_two.get_full_name() + lead_scout_body))
+            message += success_txt + sfs_missing_scouts.red_two.get_full_name() + '\n'
+
+        if sfs_missing_scouts.red_three is not None and sfs_missing_scouts.red_three_check_in is None:
+            staged_alerts.append(stage_alert(sfs_missing_scouts.red_three, subject, body))
+            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+                                                          sfs_missing_scouts.red_three.get_full_name() + lead_scout_body))
+            message += success_txt + sfs_missing_scouts.red_three.get_full_name() + '\n'
+
+        if sfs_missing_scouts.blue_one is not None and sfs_missing_scouts.blue_one_check_in is None:
+            staged_alerts.append(stage_alert(sfs_missing_scouts.blue_one, subject, body))
+            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+                                                          sfs_missing_scouts.blue_one.get_full_name() + lead_scout_body))
+            message += success_txt + sfs_missing_scouts.blue_one.get_full_name() + '\n'
+
+        if sfs_missing_scouts.blue_two is not None and sfs_missing_scouts.blue_two_check_in is None:
+            staged_alerts.append(stage_alert(sfs_missing_scouts.blue_two, subject, body))
+            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+                                                          sfs_missing_scouts.blue_two.get_full_name() + lead_scout_body))
+            message += success_txt + sfs_missing_scouts.blue_two.get_full_name() + '\n'
+
+        if sfs_missing_scouts.blue_three is not None and sfs_missing_scouts.blue_three_check_in is None:
+            staged_alerts.append(stage_alert(sfs_missing_scouts.blue_three, subject, body))
+            staged_alerts.append(stage_scout_admin_alerts(lead_scout_subject,
+                                                          sfs_missing_scouts.blue_three.get_full_name() + lead_scout_body))
+            message += success_txt + sfs_missing_scouts.blue_three.get_full_name() + '\n'
 
     if message == '':
         message = 'No notifications'
@@ -43,13 +106,13 @@ def stage_all_field_schedule_alerts():
     return message
 
 
-def stage_field_schedule_alerts(notification, sfss, event):
+def stage_field_schedule_alerts(notification, sfss):
     message = ''
     for sfs in sfss:
         date_st_utc = sfs.st_time.astimezone(pytz.utc)
         date_end_utc = sfs.end_time.astimezone(pytz.utc)
-        date_st_local = date_st_utc.astimezone(pytz.timezone(event.timezone))
-        date_end_local = date_end_utc.astimezone(pytz.timezone(event.timezone))
+        date_st_local = date_st_utc.astimezone(pytz.timezone(sfs.event.timezone))
+        date_end_local = date_end_utc.astimezone(pytz.timezone(sfs.event.timezone))
         date_st_str = date_st_local.strftime("%m/%d/%Y, %I:%M%p")
         date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
 
@@ -71,38 +134,31 @@ def stage_field_schedule_alerts(notification, sfss, event):
         body = f'You are scheduled to scout from: {date_st_str} to {date_end_str}.\n- PARTs'
 
         success_txt = 'Stage scouting alert: '
-        fail_txt = 'Phone Unable to stage scouting alert: '
+        fail_txt = 'Unable to stage scouting alert: '
         staged_alerts = []
-        try:
+        if sfs.red_one is not None:
             staged_alerts.append(stage_alert(sfs.red_one, subject, body))
-            message += success_txt + sfs.red_one.first_name + '\n'
-        except Exception as e:
-            message += fail_txt + (sfs.red_one.first_name if sfs.red_one is not None else "red one") + '\n'
-        try:
+            message += success_txt + sfs.red_one.get_full_name() + '\n'
+
+        if sfs.red_two is not None:
             staged_alerts.append(stage_alert(sfs.red_two, subject, body))
-            message += success_txt + sfs.red_two.first_name + '\n'
-        except Exception as e:
-            message += fail_txt + (sfs.red_two.first_name if sfs.red_two is not None else "red two") + '\n'
-        try:
+            message += success_txt + sfs.red_two.get_full_name() + '\n'
+
+        if sfs.red_three is not None:
             staged_alerts.append(stage_alert(sfs.red_three, subject, body))
-            message += success_txt + sfs.red_three.first_name + '\n'
-        except Exception as e:
-            message += fail_txt + (sfs.red_three.first_name if sfs.red_three is not None else "red three") + '\n'
-        try:
+            message += success_txt + sfs.red_three.get_full_name() + '\n'
+
+        if sfs.blue_one is not None:
             staged_alerts.append(stage_alert(sfs.blue_one, subject, body))
-            message += success_txt + sfs.blue_one.first_name + '\n'
-        except Exception as e:
-            message += fail_txt + (sfs.blue_one.first_name if sfs.blue_one is not None else "blue one") + '\n'
-        try:
+            message += success_txt + sfs.blue_one.get_full_name() + '\n'
+
+        if sfs.blue_two is not None:
             staged_alerts.append(stage_alert(sfs.blue_two, subject, body))
-            message += success_txt + sfs.blue_two.first_name + '\n'
-        except Exception as e:
-            message += fail_txt + (sfs.blue_two.first_name if sfs.blue_two is not None else "blue two") + '\n'
-        try:
+            message += success_txt + sfs.blue_two.get_full_name() + '\n'
+
+        if sfs.blue_three is not None:
             staged_alerts.append(stage_alert(sfs.blue_three, subject, body))
-            message += success_txt + sfs.blue_three.first_name + '\n'
-        except Exception as e:
-            message += fail_txt + (sfs.blue_three.first_name if sfs.blue_three is not None else "blue three") + '\n'
+            message += success_txt + sfs.blue_three.get_full_name() + '\n'
 
         for sa in staged_alerts:
             for acct in ['txt', 'notification', 'discord']:
@@ -148,6 +204,16 @@ def stage_schedule_alert(sch: Schedule):
         stage_alert_channel_send(alert, acct)
 
     return 'Pit Notified: ' + sch.user.get_full_name() + ' : ' + sch.sch_typ.sch_nm + '\n'
+
+
+def stage_scout_admin_alerts(subject: str, body: str):
+    staged_alerts = []
+    users = user.util.get_users_with_permission('scoutadmin')
+    for u in users:
+        staged_alerts.append(
+            stage_alert(u, subject, body))
+
+    return staged_alerts
 
 
 def stage_alert(user: User, alert_subject: str, alert_body: str):

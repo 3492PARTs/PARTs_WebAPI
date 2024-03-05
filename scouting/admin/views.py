@@ -1,6 +1,5 @@
 import datetime
 import pytz
-from django.contrib.auth.models import Group
 from django.db import IntegrityError, transaction
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -10,8 +9,7 @@ from rest_framework.utils import json
 import alerts.util
 import scouting.util
 import user.util
-from form.models import QuestionAnswer, Question, QuestionOption, QuestionType, FormSubType, FormType
-from general import send_message
+from form.models import QuestionAnswer, FormType
 from user.models import User, PhoneType
 
 from .serializers import *
@@ -24,7 +22,6 @@ from django.conf import settings
 from django.db.models.functions import Lower
 from django.db.models import Q
 from rest_framework.response import Response
-import form.util
 from ..field.views import get_field_results
 
 auth_obj = 'scoutadmin'
@@ -932,6 +929,27 @@ class ToggleScoutUnderReview(APIView):
                 ui.save()
 
                 return ret_message('Successfully changed scout under review status')
+            except Exception as e:
+                return ret_message('An error occurred while changing the scout''s under review status.', True,
+                                   app_url + self.endpoint, request.user.id, e)
+        else:
+            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+class MarkScoutPresent(APIView):
+    """
+    API endpoint to mark a scout present for their shift
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = 'mark-scout-present/'
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=request.query_params.get('scout_field_sch_id', None))
+                user_id = request.query_params.get('user_id', None)
+                return ret_message(scouting.field.views.check_in_scout(sfs, user_id))
             except Exception as e:
                 return ret_message('An error occurred while changing the scout''s under review status.', True,
                                    app_url + self.endpoint, request.user.id, e)

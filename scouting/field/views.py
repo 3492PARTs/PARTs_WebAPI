@@ -305,34 +305,37 @@ class CheckIn(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=request.query_params.get('scout_field_sch_id', None))
-                check_in = False
 
-                if sfs.red_one and not sfs.red_one_check_in and sfs.red_one.id == request.user.id:
-                    sfs.red_one_check_in = timezone.now()
-                    check_in = True
-                elif sfs.red_two and not sfs.red_two_check_in and sfs.red_two.id == request.user.id:
-                    sfs.red_two_check_in = timezone.now()
-                    check_in = True
-                elif sfs.red_three and not sfs.red_three_check_in and sfs.red_three.id == request.user.id:
-                    sfs.red_three_check_in = timezone.now()
-                    check_in = True
-                elif sfs.blue_one and not sfs.blue_one_check_in and sfs.blue_one.id == request.user.id:
-                    sfs.blue_one_check_in = timezone.now()
-                    check_in = True
-                elif sfs.blue_two and not sfs.blue_two_check_in and sfs.blue_two.id == request.user.id:
-                    sfs.blue_two_check_in = timezone.now()
-                    check_in = True
-                elif sfs.blue_three and not sfs.blue_three_check_in and sfs.blue_three.id == request.user.id:
-                    sfs.blue_three_check_in = timezone.now()
-                    check_in = True
-
-                if check_in:
-                    sfs.save()
-                    return ret_message('Successfully checked in scour for their shift.')
-                else:
-                    return ret_message('')
+                return ret_message(check_in_scout(sfs, request.user.id))
             except Exception as e:
                 return ret_message('An error occurred while checking in the scout for their shift.', True, app_url + self.endpoint,
                                    request.user.id, e)
         else:
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+
+
+def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
+    check_in = False
+    if sfs.red_one and not sfs.red_one_check_in and sfs.red_one.id == user_id:
+        sfs.red_one_check_in = timezone.now()
+        check_in = True
+    elif sfs.red_two and not sfs.red_two_check_in and sfs.red_two.id == user_id:
+        sfs.red_two_check_in = timezone.now()
+        check_in = True
+    elif sfs.red_three and not sfs.red_three_check_in and sfs.red_three.id == user_id:
+        sfs.red_three_check_in = timezone.now()
+        check_in = True
+    elif sfs.blue_one and not sfs.blue_one_check_in and sfs.blue_one.id == user_id:
+        sfs.blue_one_check_in = timezone.now()
+        check_in = True
+    elif sfs.blue_two and not sfs.blue_two_check_in and sfs.blue_two.id == user_id:
+        sfs.blue_two_check_in = timezone.now()
+        check_in = True
+    elif sfs.blue_three and not sfs.blue_three_check_in and sfs.blue_three.id == user_id:
+        sfs.blue_three_check_in = timezone.now()
+        check_in = True
+
+    if check_in:
+        sfs.save()
+        return 'Successfully checked in scour for their shift.'
+    return ''
