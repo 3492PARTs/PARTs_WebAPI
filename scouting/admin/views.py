@@ -948,7 +948,7 @@ class MarkScoutPresent(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=request.query_params.get('scout_field_sch_id', None))
-                user_id = request.query_params.get('user_id', None)
+                user_id = int(request.query_params.get('user_id', None))
                 return ret_message(scouting.field.views.check_in_scout(sfs, user_id))
             except Exception as e:
                 return ret_message('An error occurred while changing the scout''s under review status.', True,

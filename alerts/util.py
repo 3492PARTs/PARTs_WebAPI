@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
 from general import send_message
-from general.security import ret_message
+from general.security import ret_message, has_access
 from scouting.models import Event, ScoutFieldSchedule, Schedule
 from user.models import User
 import user
@@ -65,37 +65,37 @@ def stage_all_field_schedule_alerts():
         fail_txt = 'Unable to stage scouting alert: '
         staged_alerts = []
 
-        if sfs_missing_scouts.red_one is not None and sfs_missing_scouts.red_one_check_in is None:
+        if sfs_missing_scouts.red_one is not None and sfs_missing_scouts.red_one_check_in is None and not has_access(sfs_missing_scouts.red_one.id, 'scoutadmin'):
             staged_alerts.append(stage_alert(sfs_missing_scouts.red_one, subject, body))
             staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.red_one.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.red_one.get_full_name() + '\n'
 
-        if sfs_missing_scouts.red_two is not None and sfs_missing_scouts.red_two_check_in is None:
+        if sfs_missing_scouts.red_two is not None and sfs_missing_scouts.red_two_check_in is None and not has_access(sfs_missing_scouts.red_two.id, 'scoutadmin'):
             staged_alerts.append(stage_alert(sfs_missing_scouts.red_two, subject, body))
             staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.red_two.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.red_two.get_full_name() + '\n'
 
-        if sfs_missing_scouts.red_three is not None and sfs_missing_scouts.red_three_check_in is None:
+        if sfs_missing_scouts.red_three is not None and sfs_missing_scouts.red_three_check_in is None and not has_access(sfs_missing_scouts.red_three.id, 'scoutadmin'):
             staged_alerts.append(stage_alert(sfs_missing_scouts.red_three, subject, body))
             staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.red_three.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.red_three.get_full_name() + '\n'
 
-        if sfs_missing_scouts.blue_one is not None and sfs_missing_scouts.blue_one_check_in is None:
+        if sfs_missing_scouts.blue_one is not None and sfs_missing_scouts.blue_one_check_in is None and not has_access(sfs_missing_scouts.blue_one.id, 'scoutadmin'):
             staged_alerts.append(stage_alert(sfs_missing_scouts.blue_one, subject, body))
             staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.blue_one.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.blue_one.get_full_name() + '\n'
 
-        if sfs_missing_scouts.blue_two is not None and sfs_missing_scouts.blue_two_check_in is None:
+        if sfs_missing_scouts.blue_two is not None and sfs_missing_scouts.blue_two_check_in is None and not has_access(sfs_missing_scouts.blue_two.id, 'scoutadmin'):
             staged_alerts.append(stage_alert(sfs_missing_scouts.blue_two, subject, body))
             staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.blue_two.get_full_name() + lead_scout_body))
             message += success_txt + sfs_missing_scouts.blue_two.get_full_name() + '\n'
 
-        if sfs_missing_scouts.blue_three is not None and sfs_missing_scouts.blue_three_check_in is None:
+        if sfs_missing_scouts.blue_three is not None and sfs_missing_scouts.blue_three_check_in is None and not has_access(sfs_missing_scouts.blue_three.id, 'scoutadmin'):
             staged_alerts.append(stage_alert(sfs_missing_scouts.blue_three, subject, body))
             staged_alerts.extend(stage_scout_admin_alerts(lead_scout_subject,
                                                           sfs_missing_scouts.blue_three.get_full_name() + lead_scout_body))

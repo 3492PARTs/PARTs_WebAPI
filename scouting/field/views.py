@@ -337,5 +337,5 @@ def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
 
     if check_in:
         sfs.save()
-        return 'Successfully checked in scour for their shift.'
+        return 'Successfully checked in scout for their shift.'
     return ''
