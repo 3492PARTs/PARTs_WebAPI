@@ -1,6 +1,5 @@
 import datetime
 
-import django
 import pytz
 from django.db.models import Q, ExpressionWrapper, DurationField, F
 from django.utils import timezone

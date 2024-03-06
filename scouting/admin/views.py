@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.utils import json
+from django.utils import timezone
 
 import alerts.util
 import scouting.util
@@ -337,50 +338,50 @@ class SyncEventTeamInfo(APIView):
     endpoint = 'sync-event-team-info/'
 
     def sync_event_team_info(self):
-        event = Event.objects.get(current='y')
-
-        insert = []
         messages = ''
-        r = requests.get("https://www.thebluealliance.com/api/v3/event/" +
-                         event.event_cd + "/rankings", headers={"X-TBA-Auth-Key": settings.TBA_KEY})
-        r = json.loads(r.text)
+        event = Event.objects.get(current='y')
+        if event.date_st <= timezone.now() <= event.date_end:
+            r = requests.get("https://www.thebluealliance.com/api/v3/event/" +
+                             event.event_cd + "/rankings", headers={"X-TBA-Auth-Key": settings.TBA_KEY})
+            r = json.loads(r.text)
 
-        if r is None:
-            return 'Nothing to sync'
+            if r is None:
+                return 'Nothing to sync'
 
-        for e in r.get('rankings', []):
-            matches_played = e.get('matches_played', 0)
-            qual_average = e.get('qual_average', 0)
-            losses = e.get('record', 0).get('losses', 0)
-            wins = e.get('record', 0).get('wins', 0)
-            ties = e.get('record', 0).get('ties', 0)
-            rank = e.get('rank', 0)
-            dq = e.get('dq', 0)
-            team = Team.objects.get(
-                Q(team_no=e['team_key'].replace('frc', '')) & Q(void_ind='n'))
+            for e in r.get('rankings', []):
+                matches_played = e.get('matches_played', 0)
+                qual_average = e.get('qual_average', 0)
+                losses = e.get('record', 0).get('losses', 0)
+                wins = e.get('record', 0).get('wins', 0)
+                ties = e.get('record', 0).get('ties', 0)
+                rank = e.get('rank', 0)
+                dq = e.get('dq', 0)
+                team = Team.objects.get(
+                    Q(team_no=e['team_key'].replace('frc', '')) & Q(void_ind='n'))
 
-            try:
-                eti = EventTeamInfo.objects.get(
-                    Q(event=event) & Q(team_no=team) & Q(void_ind='n'))
+                try:
+                    eti = EventTeamInfo.objects.get(
+                        Q(event=event) & Q(team_no=team) & Q(void_ind='n'))
 
-                eti.matches_played = matches_played
-                eti.qual_average = qual_average
-                eti.losses = losses
-                eti.wins = wins
-                eti.ties = ties
-                eti.rank = rank
-                eti.dq = dq
+                    eti.matches_played = matches_played
+                    eti.qual_average = qual_average
+                    eti.losses = losses
+                    eti.wins = wins
+                    eti.ties = ties
+                    eti.rank = rank
+                    eti.dq = dq
 
-                eti.save()
-                messages += '(UPDATE) ' + event.event_nm + \
-                            ' ' + str(team.team_no) + '\n'
-            except ObjectDoesNotExist as odne:
-                eti = EventTeamInfo(event=event, team_no=team, matches_played=matches_played, qual_average=qual_average,
-                                    losses=losses, wins=wins, ties=ties, rank=rank, dq=dq)
-                eti.save()
-                messages += '(ADD) ' + event.event_nm + \
-                            ' ' + str(team.team_no) + '\n'
-
+                    eti.save()
+                    messages += '(UPDATE) ' + event.event_nm + \
+                                ' ' + str(team.team_no) + '\n'
+                except ObjectDoesNotExist as odne:
+                    eti = EventTeamInfo(event=event, team_no=team, matches_played=matches_played, qual_average=qual_average,
+                                        losses=losses, wins=wins, ties=ties, rank=rank, dq=dq)
+                    eti.save()
+                    messages += '(ADD) ' + event.event_nm + \
+                                ' ' + str(team.team_no) + '\n'
+        else:
+            messages = 'Event is not avtive'
         return messages
 
     def get(self, request, format=None):
