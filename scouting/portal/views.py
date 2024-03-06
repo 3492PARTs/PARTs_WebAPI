@@ -1,15 +1,12 @@
 import datetime
 
-import pytz
 from django.db import transaction
-from django.db.models.functions import Lower
 from django.utils import timezone
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import alerts.apps
-from general import send_message
-from user.models import User
+import user
 from .serializers import InitSerializer, ScheduleSaveSerializer
 from scouting.models import ScoutFieldSchedule, Event, Schedule, ScheduleType
 from rest_framework.views import APIView
@@ -31,7 +28,6 @@ class Init(APIView):
     endpoint = 'init/'
 
     def get_init(self):
-        user = self.request.user
         try:
             current_event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
         except Exception as e:
@@ -42,8 +38,7 @@ class Init(APIView):
         schedule_types = None
         all_sch = []
         if has_access(self.request.user.id, scheduling_auth_obj):
-            users = User.objects.filter(Q(is_active=True) & Q(
-                date_joined__isnull=False)).order_by(Lower('first_name'), Lower('last_name'))
+            users = user.util.get_users(1, 1)
 
             all_sfs = ScoutFieldSchedule.objects.filter(
                 Q(event=current_event) & Q(void_ind='n')) \
@@ -71,15 +66,15 @@ class Init(APIView):
         sfs = ScoutFieldSchedule.objects.filter(Q(event=current_event) &
                                                 Q(end_time__gte=(timezone.now() - datetime.timedelta(hours=1))) &
                                                 Q(void_ind='n') &
-                                                Q(Q(red_one=user) | Q(red_two=user) | Q(red_three=user) |
-                                                  Q(blue_one=user) | Q(blue_two=user) | Q(blue_three=user))
+                                                Q(Q(red_one=self.request.user) | Q(red_two=self.request.user) | Q(red_three=self.request.user) |
+                                                  Q(blue_one=self.request.user) | Q(blue_two=self.request.user) | Q(blue_three=self.request.user))
                                                 ).order_by('notification3', 'st_time')
 
         sfs_parsed = []
         for s in sfs:
             sfs_parsed.append(self.parse_sfs(s))
 
-        sch = Schedule.objects.filter(Q(event=current_event) & Q(user=user) &
+        sch = Schedule.objects.filter(Q(event=current_event) & Q(user=self.request.user) &
                                       Q(end_time__gte=(timezone.now() - datetime.timedelta(hours=1))) & Q(void_ind='n')) \
             .order_by('notified', 'st_time')
 
