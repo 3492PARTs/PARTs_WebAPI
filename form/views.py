@@ -1,3 +1,5 @@
+import pytz
+
 from django.db import transaction
 from django.db.models import Q
 from rest_framework.response import Response
@@ -244,7 +246,7 @@ class SaveAnswers(APIView):
                                 if user_info and user_info.under_review:
                                     alert = alerts.util.stage_scout_admin_alerts(
                                         f"Scout under review, {request.user.get_full_name()}, logged a new response.",
-                                        f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}',
+                                        f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}\n@{sf.time.astimezone(pytz.timezone(sf.event.timezone)).strftime("%m/%d/%Y, %I:%M%p")}',
                                     )
 
                                     for a in alert:
