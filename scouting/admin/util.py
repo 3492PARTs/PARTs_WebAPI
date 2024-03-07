@@ -121,7 +121,7 @@ def load_event(e):
                     Event.objects.get(event_cd=e["event_cd"], void_ind="n")
                 )
                 messages += (
-                    "(ADD) Added team: "
+                    "(LINK) Added team: "
                     + str(t["team_no"])
                     + " "
                     + t["team_nm"]
@@ -131,7 +131,7 @@ def load_event(e):
                 )
             except IntegrityError:
                 messages += (
-                    "(NO ADD) Team: "
+                    "(NO LINK) Team: "
                     + str(t["team_no"])
                     + " "
                     + t["team_nm"]

@@ -216,7 +216,7 @@ class SyncSeason(APIView):
 
 class SyncEvent(APIView):
     """
-    API endpoint to sync a season
+    API endpoint to sync an event
     """
 
     authentication_classes = (JWTAuthentication,)
@@ -228,7 +228,7 @@ class SyncEvent(APIView):
             try:
                 r = requests.get(
                     "https://www.thebluealliance.com/api/v3/event/"
-                    + request.query_params.get("event_key", None),
+                    + request.query_params.get("event_cd", None),
                     headers={"X-TBA-Auth-Key": settings.TBA_KEY},
                 )
                 r = json.loads(r.text)
@@ -409,10 +409,10 @@ class SyncEventTeamInfo(APIView):
     # permission_classes = (IsAuthenticated,)
     endpoint = "sync-event-team-info/"
 
-    def sync_event_team_info(self):
+    def sync_event_team_info(self, force: int):
         messages = ""
         event = Event.objects.get(current="y")
-        if event.date_st <= timezone.now() <= event.date_end:
+        if force == 1 or event.date_st <= timezone.now() <= event.date_end:
             r = requests.get(
                 "https://www.thebluealliance.com/api/v3/event/"
                 + event.event_cd
@@ -470,13 +470,15 @@ class SyncEventTeamInfo(APIView):
                         "(ADD) " + event.event_nm + " " + str(team.team_no) + "\n"
                     )
         else:
-            messages = "Event is not avtive"
+            messages = "Event is not active"
         return messages
 
     def get(self, request, format=None):
         if True or has_access(request.user.id, auth_obj):
             try:
-                req = self.sync_event_team_info()
+                req = self.sync_event_team_info(
+                    int(request.query_params.get("force", "0"))
+                )
                 return ret_message(req)
             except Exception as e:
                 return ret_message(
