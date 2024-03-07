@@ -318,8 +318,6 @@ class SyncMatches(APIView):
                 match_key = e["key"]
 
                 try:
-                    if comp_level.comp_lvl_typ == "qf":
-                        print(e)
                     match = Match.objects.get(Q(match_id=match_key) & Q(void_ind="n"))
 
                     match.red_one = red_one

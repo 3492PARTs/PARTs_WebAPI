@@ -216,7 +216,6 @@ class SaveAnswers(APIView):
                                         & Q(match_number=m.match_number - 1)
                                     )
 
-                                    print(prev_m)
                                     sfs = prev_m.scoutfield_set.filter(void_ind="n")
 
                                     if len(set(sf.team_no for sf in sfs)) < 6:
