@@ -54,7 +54,7 @@ class Event(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return str(self.event_id) + ' ' + self.event_nm
+        return f'{self.event_id} {self.event_nm}'
 
 
 class EventTeamInfo(models.Model):
@@ -109,7 +109,7 @@ class Match(models.Model):
     void_ind = models.CharField(max_length=1, default='n')
 
     def __str__(self):
-        return 'match: ' + self.event.event_nm + ' ' + self.comp_level + ' match no: ' + self.match_number
+        return f'match: {self.event} {self.comp_level} match no:{self.match_number}'
 
 
 class ScoutField(models.Model):
@@ -235,3 +235,13 @@ class Question(models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.id, self.question)
+
+
+class UserInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, models.PROTECT, related_name='scouting_user_info')
+    under_review = models.BooleanField(default=False)
+    void_ind = models.CharField(max_length=1, default='n')
+
+    def __str__(self):
+        return '{} {}'.format(self.id, self.user)

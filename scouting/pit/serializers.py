@@ -118,5 +118,6 @@ class ScoutPitResultsSerializer(serializers.Serializer):
 
 
 class PitTeamDataSerializer(serializers.Serializer):
+    response_id = serializers.IntegerField(required=False)
     questions = QuestionSerializer(required=False, many=True)
     pics = ScoutPitImageSerializer(many=True, required=False)
