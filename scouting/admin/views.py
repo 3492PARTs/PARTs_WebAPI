@@ -411,7 +411,11 @@ class SyncEventTeamInfo(APIView):
     def sync_event_team_info(self, force: int):
         messages = ""
         event = Event.objects.get(current="y")
-        if force == 1 or event.date_st <= timezone.now() <= event.date_end:
+
+        now = datetime.datetime.combine(timezone.now(), datetime.time.min)
+        date_st = datetime.datetime.combine(event.date_st, datetime.time.min)
+        date_end = datetime.datetime.combine(event.date_end, datetime.time.min)
+        if force == 1 or date_st <= now <= date_end:
             r = requests.get(
                 "https://www.thebluealliance.com/api/v3/event/"
                 + event.event_cd
@@ -469,7 +473,7 @@ class SyncEventTeamInfo(APIView):
                         "(ADD) " + event.event_nm + " " + str(team.team_no) + "\n"
                     )
         else:
-            messages = "Event is not active"
+            messages = "No active event"
         return messages
 
     def get(self, request, format=None):
