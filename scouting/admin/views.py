@@ -233,10 +233,11 @@ class SyncEvent(APIView):
                 )
                 r = json.loads(r.text)
 
-                messages = ""
-                messages += scouting.admin.util.load_event(r)
-
-                return ret_message(messages)
+                if r.get("Error", None) is not None:
+                    return ret_message(
+                        r["Error"], True, app_url + self.endpoint, request.user.id
+                    )
+                return ret_message(scouting.admin.util.load_event(r))
             except Exception as e:
                 return ret_message(
                     "An error occurred while syncing the season/event/teams.",
