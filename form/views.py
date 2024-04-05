@@ -254,7 +254,7 @@ class SaveAnswers(APIView):
                                             alerts.util.stage_alert_channel_send(
                                                 a, acct
                                             )
-                                            """
+                                """
                             else:
                                 try:
                                     sp = ScoutPit.objects.get(
