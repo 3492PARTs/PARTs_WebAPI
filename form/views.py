@@ -204,6 +204,7 @@ class SaveAnswers(APIView):
                                 sf.save()
 
                                 # Check if previous match is missing any results
+                                """
                                 if (
                                     m is not None
                                     and m.match_number > 1
@@ -253,6 +254,7 @@ class SaveAnswers(APIView):
                                             alerts.util.stage_alert_channel_send(
                                                 a, acct
                                             )
+                                            """
                             else:
                                 try:
                                     sp = ScoutPit.objects.get(
