@@ -27,7 +27,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG").lower() in ("true", "1", "t")
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 
-ALLOWED_HOSTS = ["parts3492.org", "api.parts3492.org"]
+ALLOWED_HOSTS = ["parts3492.org", "parts-webapi-b87789d4ecea.herokuapp.com"]
 
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
 
@@ -161,8 +161,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-
-DISABLE_COLLECTSTATIC = 1
 
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # STATIC_URL = '/static/'
