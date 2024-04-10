@@ -455,22 +455,21 @@ class SetDefaultPitImage(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                with transaction.atomic():
-                    spi = ScoutPitImage.objects.get(
-                        Q(void_ind="n")
-                        & Q(
-                            scout_pit_img_id=request.query_params.get(
-                                "scout_pit_img_id", None
-                            )
+                spi = ScoutPitImage.objects.get(
+                    Q(void_ind="n")
+                    & Q(
+                        scout_pit_img_id=request.query_params.get(
+                            "scout_pit_img_id", None
                         )
                     )
+                )
 
-                    for pi in spi.scout_pit.scoutpitimage_set.filter(Q(void_ind="n")):
-                        pi.default = False
-                        pi.save()
+                for pi in spi.scout_pit.scoutpitimage_set.filter(Q(void_ind="n")):
+                    pi.default = False
+                    pi.save()
 
-                    spi.default = True
-                    spi.save()
+                spi.default = True
+                spi.save()
 
                 return ret_message("Successfully set the team" "s default image.")
             except Exception as e:
