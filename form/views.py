@@ -156,6 +156,7 @@ class SaveAnswers(APIView):
             if form_typ in ["field", "pit"]:
                 # field and pit responses must be authenticated
 
+                # Without a user id report unauthenticated
                 if request.user.id is None:
                     return HttpResponse("Unauthorized", status=401)
 
