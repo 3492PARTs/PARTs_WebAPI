@@ -40,29 +40,52 @@ def get_user_groups(user_id):
     return augs
 
 
-def ret_message(message, error=False, path='', user_id=0, exception=None):
+def ret_message(message, error=False, path="", user_id=-1, exception=None):
     # TODO Make all of these optional in the DB
     if error:
-        user = User.objects.get(id=user_id)
-        print('----------ERROR START----------')
-        print('Error in: ' + path)
-        print('Message: ' + message)
-        print('Error by: ' + user.username + ' ' +
-              user.first_name + ' ' + user.last_name)
-        print('Exception: ')
-        print(exception)
-        print('----------ERROR END----------')
+        print("----------ERROR START----------")
         try:
-            ErrorLog(user=user, path=path, message=message, exception=exception,
-                     time=timezone.now(), void_ind='n').save()
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            user = User.objects.get(id=-1)
+            err_msg = "Ran into DoesNotExist exception finding user"
+            print(err_msg)
+            message += f"\n{err_msg}\n"
+        print("Error in: " + path)
+        print("Message: " + message)
+        print(
+            "Error by: " + user.username + " " + user.first_name + " " + user.last_name
+        )
+        print("Exception: ")
+        print(exception)
+        print("----------ERROR END----------")
+        try:
+            ErrorLog(
+                user=user,
+                path=path,
+                message=message,
+                exception=exception,
+                time=timezone.now(),
+                void_ind="n",
+            ).save()
         except Exception as e:
             message += "\nCritical Error: please email the team admin at team3492@gmail.com\nSend them this message:\n"
             message += e
             try:
-                ErrorLog(user=0, path=path, message=message, exception=exception,
-                         time=timezone.now(), void_ind='n').save()
+                ErrorLog(
+                    user=User.objects.get(id=-1),
+                    path=path,
+                    message=message,
+                    exception=exception,
+                    time=timezone.now(),
+                    void_ind="n",
+                ).save()
             except Exception as e:
-                y = 9
+                print("The most fatal of errors nothing was logged in db")
+                print("Exception: ")
+                print(e)
 
-            return Response(RetMessageSerializer({'retMessage': message, 'error': error}).data)
-    return Response(RetMessageSerializer({'retMessage': message, 'error': error}).data)
+            return Response(
+                RetMessageSerializer({"retMessage": message, "error": error}).data
+            )
+    return Response(RetMessageSerializer({"retMessage": message, "error": error}).data)

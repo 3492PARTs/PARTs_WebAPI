@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 import pytz
 
 from django.db import transaction
@@ -149,205 +150,196 @@ class SaveAnswers(APIView):
     def post(self, request, format=None):
         success_msg = "Response saved successfully"
         form_typ = request.data.get("form_typ", "")
-        with transaction.atomic():
-            try:
-                if form_typ in ["field", "pit"]:
-                    # field and pit responses must be authenticated
-                    if (
-                        form_typ == "field"
-                        and has_access(request.user.id, "scoutfield")
-                    ) or (
-                        form_typ == "pit" and has_access(request.user.id, "scoutpit")
-                    ):
-                        try:
-                            current_event = Event.objects.get(
-                                Q(season=Season.objects.get(current="y"))
-                                & Q(current="y")
-                            )
-                        except Exception as e:
-                            raise Exception("No event set, see an admin")
 
-                        # Try to deserialize as a field or pit answer
-                        serializer = SaveScoutSerializer(data=request.data)
-                        if serializer.is_valid():
-                            form_type = FormType.objects.get(
-                                form_typ=serializer.validated_data["form_typ"]
-                            )
-                            try:
-                                r = form.models.Response.objects.get(
-                                    response_id=serializer.validated_data.get(
-                                        "response_id", None
-                                    )
-                                )
-                            except form.models.Response.DoesNotExist:
-                                r = form.models.Response(form_typ=form_type)
-                                r.save()
+        try:
+            # with transaction.atomic():
+            if form_typ in ["field", "pit"]:
+                # field and pit responses must be authenticated
 
-                            if serializer.validated_data["form_typ"] == "field":
-                                try:
-                                    m = Match.objects.get(
-                                        match_id=serializer.validated_data.get(
-                                            "match", None
-                                        )
-                                    )
-                                except Match.DoesNotExist:
-                                    m = None
+                # Without a user id report unauthenticated
+                if request.user.id is None:
+                    return HttpResponse("Unauthorized", status=401)
 
-                                sf = ScoutField(
-                                    event=current_event,
-                                    team_no_id=serializer.validated_data["team"],
-                                    match=m,
-                                    user_id=request.user.id,
-                                    response_id=r.response_id,
-                                    void_ind="n",
-                                )
-                                sf.save()
-
-                                # Check if previous match is missing any results
-                                if (
-                                    m is not None
-                                    and m.match_number > 1
-                                    and len(m.scoutfield_set.filter(void_ind="n")) == 1
-                                ):
-                                    prev_m = Match.objects.get(
-                                        Q(void_ind="n")
-                                        & Q(event=m.event)
-                                        & Q(comp_level=m.comp_level)
-                                        & Q(match_number=m.match_number - 1)
-                                    )
-
-                                    sfs = prev_m.scoutfield_set.filter(void_ind="n")
-
-                                    if len(set(sf.team_no for sf in sfs)) < 6:
-                                        users = ""
-                                        for sf in sfs:
-                                            users += sf.user.get_full_name() + ", "
-                                        users = users[0 : len(users) - 2]
-                                        alert = alerts.util.stage_scout_admin_alerts(
-                                            f"Match: {prev_m.match_number} is missing a result.",
-                                            f"We have results from: {users}",
-                                        )
-
-                                        for a in alert:
-                                            for acct in ["txt", "notification"]:
-                                                alerts.util.stage_alert_channel_send(
-                                                    a, acct
-                                                )
-
-                                # Check if user is under review and notify lead scouts
-                                try:
-                                    user_info = request.user.scouting_user_info.get(
-                                        void_ind="n"
-                                    )
-                                except UserInfo.DoesNotExist:
-                                    user_info = {}
-
-                                if user_info and user_info.under_review:
-                                    alert = alerts.util.stage_scout_admin_alerts(
-                                        f"Scout under review, {request.user.get_full_name()}, logged a new response.",
-                                        f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}\n@{sf.time.astimezone(pytz.timezone(sf.event.timezone)).strftime("%m/%d/%Y, %I:%M%p")}',
-                                    )
-
-                                    for a in alert:
-                                        for acct in ["txt", "notification"]:
-                                            alerts.util.stage_alert_channel_send(
-                                                a, acct
-                                            )
-                            else:
-                                try:
-                                    sp = ScoutPit.objects.get(
-                                        Q(team_no_id=serializer.data["team"])
-                                        & Q(void_ind="n")
-                                        & Q(event=current_event)
-                                        & Q(response=r)
-                                    )
-                                except ScoutPit.DoesNotExist:
-                                    sp = ScoutPit(
-                                        event=current_event,
-                                        team_no_id=serializer.data["team"],
-                                        user_id=request.user.id,
-                                        response_id=r.response_id,
-                                        void_ind="n",
-                                    )
-                                    sp.save()
-                        else:
-                            raise Exception("Invalid Data")
-                    else:
-                        return ret_message(
-                            "You do not have access.",
-                            True,
-                            app_url + self.endpoint,
-                            request.user.id,
+                if (
+                    form_typ == "field" and has_access(request.user.id, "scoutfield")
+                ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
+                    try:
+                        current_event = Event.objects.get(
+                            Q(season=Season.objects.get(current="y")) & Q(current="y")
                         )
-                else:
-                    # regular response
-                    serializer = SaveResponseSerializer(data=request.data)
+                    except Exception as e:
+                        raise Exception("No event set, see an admin")
+
+                    # Try to deserialize as a field or pit answer
+                    serializer = SaveScoutSerializer(data=request.data)
                     if serializer.is_valid():
+                        # Get form type object
                         form_type = FormType.objects.get(
                             form_typ=serializer.validated_data["form_typ"]
                         )
-                        r = form.models.Response(form_typ=form_type)
-                        r.save()
 
-                        alert = []
-                        users = user.util.get_users_with_permission("site_forms_notif")
-                        for u in users:
-                            alert.append(
-                                alerts.util.stage_alert(
-                                    u,
-                                    form_type.form_nm,
-                                    "A new response has been logged.",
+                        if serializer.validated_data["form_typ"] == "field":
+                            try:
+                                m = Match.objects.get(
+                                    match_id=serializer.validated_data.get(
+                                        "match_id", None
+                                    )
+                                )
+                            except Match.DoesNotExist:
+                                m = None
+
+                        # with transaction.atomic():
+                        # Get response object if id was provided
+                        try:
+                            response = form.models.Response.objects.get(
+                                response_id=serializer.validated_data.get(
+                                    "response_id", None
                                 )
                             )
-                        for a in alert:
-                            for acct in ["email", "message", "notification"]:
-                                alerts.util.stage_alert_channel_send(a, acct)
+                        except form.models.Response.DoesNotExist:
+                            response = form.models.Response(form_typ=form_type)
+                            response.save()
+
+                        # Build field scout object and check for match
+                        if serializer.validated_data["form_typ"] == "field":
+                            sf = ScoutField(
+                                event=current_event,
+                                team_no_id=serializer.validated_data["team"],
+                                match=m,
+                                user_id=request.user.id,
+                                response_id=response.response_id,
+                                void_ind="n",
+                            )
+                            sf.save()
+                        else:
+                            # Build or get pit scout object
+                            try:
+                                sp = ScoutPit.objects.get(
+                                    Q(team_no_id=serializer.data["team"])
+                                    & Q(void_ind="n")
+                                    & Q(event=current_event)
+                                    & Q(response=response)
+                                )
+                            except ScoutPit.DoesNotExist:
+                                sp = ScoutPit(
+                                    event=current_event,
+                                    team_no_id=serializer.data["team"],
+                                    user_id=request.user.id,
+                                    response_id=response.response_id,
+                                    void_ind="n",
+                                )
+                                sp.save()
+
+                        # Save the answers against the response object
+                        for d in serializer.validated_data.get("question_answers", []):
+                            form.util.save_or_update_question_answer_with_conditions(
+                                d, response
+                            )
                     else:
+                        # Serializer is not valid
                         raise Exception("Invalid Data")
+                else:
+                    return ret_message(
+                        "You do not have access.",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                    )
+            else:
+                # regular response
+                serializer = SaveResponseSerializer(data=request.data)
+                if serializer.is_valid():
+                    form_type = FormType.objects.get(
+                        form_typ=serializer.validated_data["form_typ"]
+                    )
 
-                for d in serializer.validated_data.get("question_answers", []):
-                    try:
-                        spa = QuestionAnswer.objects.get(
-                            Q(response=r)
-                            & Q(question_id=d.get("question_id", None))
-                            & Q(void_ind="n")
+                    # with transaction.atomic():
+                    response = form.models.Response(form_typ=form_type)
+                    response.save()
+
+                    # Save the answers against the response object
+                    for d in serializer.validated_data.get("question_answers", []):
+                        form.util.save_or_update_question_answer_with_conditions(
+                            d, response
                         )
-                        spa.answer = d.get("answer", "")
-                        spa.save()
-                    except QuestionAnswer.DoesNotExist:
-                        form.util.save_question_answer(
-                            d.get("answer", ""),
-                            Question.objects.get(question_id=d["question_id"]),
-                            r,
+
+                    alert = []
+                    users = user.util.get_users_with_permission("site_forms_notif")
+                    for u in users:
+                        alert.append(
+                            alerts.util.stage_alert(
+                                u,
+                                form_type.form_nm,
+                                "A new response has been logged.",
+                            )
                         )
+                    for a in alert:
+                        for acct in ["email", "message", "notification"]:
+                            alerts.util.stage_alert_channel_send(a, acct)
+                else:
+                    raise Exception("Invalid Data")
 
-                    for c in d.get("conditions", []):
-                        try:
-                            spa = QuestionAnswer.objects.get(
-                                Q(response=r)
-                                & Q(question_id=c["question_to"]["question_id"])
-                                & Q(void_ind="n")
-                            )
-                            spa.answer = c["question_to"].get("answer", "")
-                            spa.save()
-                        except QuestionAnswer.DoesNotExist:
-                            form.util.save_question_answer(
-                                c["question_to"].get("answer", ""),
-                                Question.objects.get(
-                                    question_id=c["question_to"]["question_id"]
-                                ),
-                                r,
-                            )
-
-                return ret_message(success_msg)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving answers.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
+            # Check if previous match is missing any results
+            """
+            if (
+                m is not None
+                and m.match_number > 1
+                and len(m.scoutfield_set.filter(void_ind="n")) == 1
+            ):
+                prev_m = Match.objects.get(
+                    Q(void_ind="n")
+                    & Q(event=m.event)
+                    & Q(comp_level=m.comp_level)
+                    & Q(match_number=m.match_number - 1)
                 )
+
+                sfs = prev_m.scoutfield_set.filter(void_ind="n")
+
+                if len(set(sf.team_no for sf in sfs)) < 6:
+                    users = ""
+                    for sf in sfs:
+                        users += sf.user.get_full_name() + ", "
+                    users = users[0 : len(users) - 2]
+                    alert = alerts.util.stage_scout_admin_alerts(
+                        f"Match: {prev_m.match_number} is missing a result.",
+                        f"We have results from: {users}",
+                    )
+
+                    for a in alert:
+                        for acct in ["txt", "notification"]:
+                            alerts.util.stage_alert_channel_send(
+                                a, acct
+                            )
+
+            # Check if user is under review and notify lead scouts
+            try:
+                user_info = request.user.scouting_user_info.get(
+                    void_ind="n"
+                )
+            except UserInfo.DoesNotExist:
+                user_info = {}
+
+            if user_info and user_info.under_review:
+                alert = alerts.util.stage_scout_admin_alerts(
+                    f"Scout under review, {request.user.get_full_name()}, logged a new response.",
+                    f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}\n@{sf.time.astimezone(pytz.timezone(sf.event.timezone)).strftime("%m/%d/%Y, %I:%M%p")}',
+                )
+
+                for a in alert:
+                    for acct in ["txt", "notification"]:
+                        alerts.util.stage_alert_channel_send(
+                            a, acct
+                        )
+            """
+            return ret_message(success_msg)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving answers.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
 
 
 class GetResponse(APIView):

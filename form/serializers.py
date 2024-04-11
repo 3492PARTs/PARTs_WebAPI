@@ -41,13 +41,18 @@ class QuestionSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_typ = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    form_sub_nm = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True)
+        required=False, allow_null=True, many=True
+    )
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
@@ -106,13 +111,18 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_typ = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    form_sub_nm = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True)
+        required=False, allow_null=True, many=True
+    )
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
@@ -126,7 +136,7 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
 class SaveScoutSerializer(serializers.Serializer):
     question_answers = QuestionWithConditionsSerializer(many=True)
     team = serializers.CharField()
-    match = serializers.CharField(required=False, allow_null=True)
+    match_id = serializers.CharField(required=False, allow_null=True)
     form_typ = serializers.CharField()
     response_id = serializers.IntegerField(required=False, allow_null=True)
 

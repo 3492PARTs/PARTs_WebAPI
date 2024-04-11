@@ -232,6 +232,34 @@ def save_question_answer(answer: str, question: Question, response: Response):
     return qa
 
 
+def save_or_update_question_answer(question, response: Response):
+    # Get answer to update or save new
+    try:
+        spa = QuestionAnswer.objects.get(
+            Q(response=response)
+            & Q(question_id=question.get("question_id", None))
+            & Q(void_ind="n")
+        )
+        spa.answer = question.get("answer", "")
+        spa.save()
+    except QuestionAnswer.DoesNotExist:
+        save_question_answer(
+            question.get("answer", ""),
+            Question.objects.get(question_id=question["question_id"]),
+            response,
+        )
+
+
+def save_or_update_question_answer_with_conditions(question, response: Response):
+    # Get answer to update or save new
+    save_or_update_question_answer(question, response)
+
+    # Save answers to any condition questions
+    for c in question.get("conditions", []):
+        # Get answer to update or save new
+        save_or_update_question_answer(c["question_to"], response)
+
+
 def get_response(response_id: int):
     res = Response.objects.get(Q(response_id=response_id) & Q(void_ind="n"))
     questions = get_questions(res.form_typ, "y")
