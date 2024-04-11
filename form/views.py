@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 import pytz
 
 from django.db import transaction
@@ -154,6 +155,10 @@ class SaveAnswers(APIView):
             # with transaction.atomic():
             if form_typ in ["field", "pit"]:
                 # field and pit responses must be authenticated
+
+                if request.user.id is None:
+                    return HttpResponse("Unauthorized", status=401)
+
                 if (
                     form_typ == "field" and has_access(request.user.id, "scoutfield")
                 ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
