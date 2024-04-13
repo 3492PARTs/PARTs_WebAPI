@@ -13,12 +13,12 @@ class MatchSerializer(serializers.Serializer):
     event_id = serializers.IntegerField(read_only=True)
     match_number = serializers.IntegerField()
     time = serializers.DateTimeField()
-    blue_one_id = serializers.IntegerField()
-    blue_two_id = serializers.IntegerField()
-    blue_three_id = serializers.IntegerField()
-    red_one_id = serializers.IntegerField()
-    red_two_id = serializers.IntegerField()
-    red_three_id = serializers.IntegerField()
+    blue_one = serializers.IntegerField()
+    blue_two = serializers.IntegerField()
+    blue_three = serializers.IntegerField()
+    red_one = serializers.IntegerField()
+    red_two = serializers.IntegerField()
+    red_three = serializers.IntegerField()
 
 
 class UserSerializer(serializers.Serializer):

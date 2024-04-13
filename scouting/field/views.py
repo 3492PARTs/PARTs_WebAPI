@@ -135,12 +135,12 @@ class Init(APIView):
                         "event_id": m.event.event_id,
                         "match_number": m.match_number,
                         "time": m.time,
-                        "blue_one_id": blue_one_id,
-                        "blue_two_id": blue_two_id,
-                        "blue_three_id": blue_three_id,
-                        "red_one_id": red_one_id,
-                        "red_two_id": red_two_id,
-                        "red_three_id": red_three_id,
+                        "blue_one": blue_one_id,
+                        "blue_two": blue_two_id,
+                        "blue_three": blue_three_id,
+                        "red_one": red_one_id,
+                        "red_two": red_two_id,
+                        "red_three": red_three_id,
                     }
                 )
 
@@ -152,18 +152,11 @@ class Init(APIView):
         }
 
     def get_team_match_field_result(self, m, team):
-        try:
-            res = ScoutField.objects.filter(
-                Q(match=m) & Q(team_no=team) & Q(void_ind="n")
-            )
-            if res.count() > 0:
-                return res
-            else:
-                return None
-        except:
-            x = 9
-
-        return None
+        res = ScoutField.objects.filter(Q(match=m) & Q(team_no=team) & Q(void_ind="n"))
+        if res.count() > 0:
+            return res
+        else:
+            return None
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
