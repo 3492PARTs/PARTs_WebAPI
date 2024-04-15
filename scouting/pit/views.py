@@ -26,14 +26,14 @@ auth_view_obj = "scoutPitResults"
 app_url = "scouting/pit/"
 
 
-class Questions(APIView):
+class Init(APIView):
     """
     API endpoint to get scout pit inputs
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "questions/"
+    endpoint = "init/"
 
     def get_questions(self):
 
