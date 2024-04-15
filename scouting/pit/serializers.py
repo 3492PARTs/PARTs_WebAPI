@@ -37,13 +37,18 @@ class QuestionConditionQuestionSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_typ = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    form_sub_nm = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True)
+        required=False, allow_null=True, many=True
+    )
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
@@ -69,13 +74,18 @@ class QuestionSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_typ = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    form_sub_nm = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True)
+        required=False, allow_null=True, many=True
+    )
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
@@ -88,7 +98,6 @@ class QuestionSerializer(serializers.Serializer):
 
 class InitSerializer(serializers.Serializer):
     scoutQuestions = QuestionSerializer(many=True)
-    teams = TeamSerializer(many=True, required=False)
     comp_teams = TeamSerializer(many=True, required=False)
 
 

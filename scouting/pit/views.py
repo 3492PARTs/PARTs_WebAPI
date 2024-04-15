@@ -61,21 +61,6 @@ class Init(APIView):
                 e,
             )
 
-        teams = []
-        try:
-            teams = Team.objects.filter(
-                Q(event=current_event)
-                & ~Q(
-                    team_no__in=(
-                        ScoutPit.objects.filter(
-                            Q(event=current_event) & Q(void_ind="n")
-                        ).values_list("team_no", flat=True)
-                    )
-                )
-            ).order_by("team_no")
-        except Exception as e:
-            teams.append(Team())
-
         comp_teams = []
         try:
             comp_teams = Team.objects.filter(
@@ -93,7 +78,6 @@ class Init(APIView):
 
         return {
             "scoutQuestions": scout_questions,
-            "teams": teams,
             "comp_teams": comp_teams,
         }
 
