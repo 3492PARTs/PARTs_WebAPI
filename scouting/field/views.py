@@ -1,14 +1,10 @@
-from datetime import datetime
-
-import django
-from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import form.util
 import scouting.util
 import scouting.models
-from form.models import Question, QuestionAnswer, QuestionAggregate
+from form.models import QuestionAnswer, QuestionAggregate
 from scouting.models import (
     Season,
     Event,
@@ -23,9 +19,8 @@ from general.security import ret_message, has_access
 from .serializers import (
     ScoutFieldSerializer,
     ScoutFieldResultsSerializer,
-    SaveScoutFieldSerializer,
 )
-from django.db.models import Q, OuterRef
+from django.db.models import Q
 from rest_framework.response import Response
 from django.utils import timezone
 from django.conf import settings
@@ -46,33 +41,22 @@ class Init(APIView):
 
     def get_questions(self):
 
-        try:
-            current_season = Season.objects.get(current="y")
-        except Exception as e:
-            return ret_message(
-                "No season set, see an admin.",
-                True,
-                app_url + self.endpoint,
-                self.request.user.id,
-                e,
+        current_season = scouting.util.get_current_season()
+
+        if current_season is None:
+            return scouting.util.get_no_season_ret_message(
+                app_url + self.endpoint, self.request.user.id
+            )
+
+        current_event = scouting.util.get_event(current_season, "y")
+
+        if current_event is None:
+            return scouting.util.get_no_season_ret_message(
+                app_url + self.endpoint, self.request.user.id
             )
 
         # scout_questions = form.util.get_questions('field', 'y')
         scout_questions = form.util.get_questions_with_conditions("field")
-
-        try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current="y"))
-        except Exception as e:
-            return ret_message(
-                "No event set, see an admin.",
-                True,
-                app_url + self.endpoint,
-                self.request.user.id,
-                e,
-            )
-
-        teams = []
-        teams = Team.objects.filter(event=current_event).order_by("team_no")
 
         sfss = ScoutFieldSchedule.objects.filter(
             Q(st_time__lte=timezone.now())
@@ -146,7 +130,6 @@ class Init(APIView):
 
         return {
             "scoutQuestions": scout_questions,
-            "teams": teams,
             "scoutFieldSchedule": sfs,
             "matches": parsed_matches,
         }

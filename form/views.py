@@ -1,5 +1,4 @@
 from django.http import HttpResponse
-import pytz
 
 from django.db import transaction
 from django.db.models import Q
@@ -23,7 +22,7 @@ from form.serializers import (
     QuestionConditionSerializer,
 )
 from general.security import has_access, ret_message
-from scouting.models import Event, Season, ScoutField, ScoutPit, UserInfo, Match
+from scouting.models import Event, Season, ScoutField, ScoutPit, Match
 
 app_url = "form/"
 

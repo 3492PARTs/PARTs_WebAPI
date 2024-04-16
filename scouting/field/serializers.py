@@ -1,13 +1,6 @@
 from rest_framework import serializers
 
 
-class TeamSerializer(serializers.Serializer):
-    team_no = serializers.IntegerField()
-    team_nm = serializers.CharField()
-
-    checked = serializers.BooleanField(required=False)
-
-
 class MatchSerializer(serializers.Serializer):
     match_id = serializers.CharField(read_only=True)
     event_id = serializers.IntegerField(read_only=True)
@@ -148,7 +141,6 @@ class QuestionSerializer(serializers.Serializer):
 
 class ScoutFieldSerializer(serializers.Serializer):
     scoutQuestions = QuestionSerializer(many=True)
-    teams = TeamSerializer(many=True, required=False)
     scoutFieldSchedule = ScoutFieldScheduleSerializer()
     matches = MatchSerializer(many=True, required=False)
 
