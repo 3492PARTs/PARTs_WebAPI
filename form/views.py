@@ -11,7 +11,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 import alerts.util
 import form.util
 import user.util
-from form.models import Question, QuestionAnswer, FormType
+from form.models import FormType
 from form.serializers import (
     QuestionSerializer,
     SaveResponseSerializer,
