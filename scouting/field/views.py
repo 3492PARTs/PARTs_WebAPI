@@ -236,6 +236,7 @@ def get_field_results(team, endpoint, request, user=None):
     sqso = form.util.get_questions_with_conditions("field", None)
 
     for sqs in [sqsa, sqst, sqso]:
+        # Build table columns ------------------------------------
         for sq in sqs:
             scout_question = scouting.models.Question.objects.get(
                 Q(void_ind="n") & Q(question_id=sq["question_id"])
@@ -275,22 +276,22 @@ def get_field_results(team, endpoint, request, user=None):
                     }
                 )
 
-        sqas = QuestionAggregate.objects.filter(
+        qas = QuestionAggregate.objects.filter(
             Q(void_ind="n")
             & Q(active="y")
             & Q(questions__question_id__in=set(sq["question_id"] for sq in sqs))
         ).distinct()
         sqas_cnt = 1
-        for sqa in sqas:
+        for qa in qas:
             table_cols.append(
                 {
-                    "PropertyName": "ans_sqa" + str(sqa.question_aggregate_id),
+                    "PropertyName": "ans_sqa" + str(qa.question_aggregate_id),
                     "ColLabel": (
                         ""
                         if sqs[0].get("form_sub_typ", None) is None
                         else sqs[0]["form_sub_typ"][0:1].upper() + ": "
                     )
-                    + sqa.field_name,
+                    + qa.field_name,
                     "scorable": True,
                     "order": sqs[len(sqs) - 1]["order"] + sqas_cnt,
                 }
@@ -315,65 +316,69 @@ def get_field_results(team, endpoint, request, user=None):
         }
     )
 
+    # Responses to fetch
     if team is not None:
-        # get result for individual team
+        # get response for individual team
         sfs = ScoutField.objects.filter(
             Q(event=current_event) & Q(team_no_id=team) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     elif user is not None:
-        # get result for individual team
+        # get response for individual scout
         sfs = ScoutField.objects.filter(
             Q(event=current_event) & Q(user=user) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     else:
-        # get result for all teams
+        # get responses for all teams
         if settings.DEBUG:
+            # don't fetch all responses on local as it's too much
             sfs = ScoutField.objects.filter(
                 Q(event=current_event) & Q(void_ind="n")
             ).order_by("-time", "-scout_field_id")[:30]
         else:
+            # get everything
             sfs = ScoutField.objects.filter(
                 Q(event=current_event) & Q(void_ind="n")
             ).order_by("-time", "-scout_field_id")
 
+    # Loop over all the responses selected and put in table
     for sf in sfs:
-        sfas = QuestionAnswer.objects.filter(Q(response=sf.response) & Q(void_ind="n"))
+        qas = QuestionAnswer.objects.filter(Q(response=sf.response) & Q(void_ind="n"))
 
-        sa_obj = {}
-        for sfa in sfas:
-            sa_obj["ans" + str(sfa.question_id)] = sfa.answer
+        response = {}
+        for qa in qas:
+            response["ans" + str(qa.question_id)] = qa.answer
 
         # get aggregates
-        sqas = QuestionAggregate.objects.filter(
+        qas = QuestionAggregate.objects.filter(
             Q(void_ind="n") & Q(active="y") & Q(questions__form_typ="field")
         ).distinct()
 
-        for sqa in sqas:
+        for qa in qas:
             sum = 0
-            for q in sqa.questions.filter(Q(void_ind="n") & Q(active="y")):
+            for q in qa.questions.filter(Q(void_ind="n") & Q(active="y")):
                 for a in q.questionanswer_set.filter(
                     Q(void_ind="n") & Q(response=sf.response)
                 ):
                     if a.answer is not None and a.answer != "!EXIST":
                         sum += int(a.answer)
-            sa_obj["ans_sqa" + str(sqa.question_aggregate_id)] = sum
+            response["ans_sqa" + str(qa.question_aggregate_id)] = sum
 
-        sa_obj["match"] = sf.match.match_number if sf.match else None
-        sa_obj["user"] = sf.user.first_name + " " + sf.user.last_name
-        sa_obj["time"] = sf.time
-        sa_obj["user_id"] = sf.user.id
-        sa_obj["team"] = sf.team_no_id
-        sa_obj["scout_field_id"] = sf.scout_field_id
+        response["match"] = sf.match.match_number if sf.match else None
+        response["user"] = sf.user.first_name + " " + sf.user.last_name
+        response["time"] = sf.time
+        response["user_id"] = sf.user.id
+        response["team"] = sf.team_no_id
+        response["scout_field_id"] = sf.scout_field_id
 
         try:
             eti = EventTeamInfo.objects.get(
                 Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind="n")
             )
-            sa_obj["rank"] = eti.rank
+            response["rank"] = eti.rank
         except EventTeamInfo.DoesNotExist:
-            x = 1
+            response["rank"] = ""
 
-        field_scouting_responses.append(sa_obj)
+        field_scouting_responses.append(response)
 
     return {"scoutCols": table_cols, "scoutAnswers": field_scouting_responses}
 
