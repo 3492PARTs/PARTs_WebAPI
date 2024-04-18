@@ -235,8 +235,8 @@ def get_field_results(team, endpoint, request, user=None):
     sqst = form.util.get_questions_with_conditions("field", "teleop")
     sqso = form.util.get_questions_with_conditions("field", None)
 
+    # Build table columns ------------------------------------
     for sqs in [sqsa, sqst, sqso]:
-        # Build table columns ------------------------------------
         for sq in sqs:
             scout_question = scouting.models.Question.objects.get(
                 Q(void_ind="n") & Q(question_id=sq["question_id"])
@@ -315,6 +315,7 @@ def get_field_results(team, endpoint, request, user=None):
             "order": 99999999999,
         }
     )
+    # End Build table columns ------------------------------------
 
     # Responses to fetch
     if team is not None:
