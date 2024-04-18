@@ -446,18 +446,23 @@ def get_questions_with_conditions(form_typ: str, form_sub_typ: str = ""):
     questions = get_questions(form_typ, "y", form_sub_typ)
 
     for q in questions:
-        q["conditions"] = []
-        is_condition = False
-        question = Question.objects.get(question_id=q["question_id"])
-        for qc in question.condition_question_from.filter(
-            Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")
-        ):
-            q["conditions"].append(format_question_condition_values(qc))
+        # Only process the ones that are not conditions, because the conditions will be in their Question FROM - see below loop
+        if q["is_condition"] is "n":
+            q["conditions"] = []
+            question = Question.objects.get(question_id=q["question_id"])
 
-        qct = question.condition_question_to.filter(Q(void_ind="n") & Q(active="y"))
-        is_condition = len(qct) > 0
+            """ 
+                Question conditions FROM will have multiple entries in the condition table
+                indicating that they have multiple conditions TO. A condition TO is a 
+                question that shows when the condition has been met on the question FROM
+                So this loop gets all the conditions that could show for a question.
 
-        if not is_condition:
+            """
+            for qc in question.condition_question_from.filter(
+                Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")
+            ):
+                q["conditions"].append(format_question_condition_values(qc))
+
             questions_with_conditions.append(q)
 
     return questions_with_conditions

@@ -208,31 +208,28 @@ class Results(APIView):
             )
 
 
-# TODO: Have rowan clean this up
 def get_field_results(team, endpoint, request, user=None):
-    try:
-        current_season = Season.objects.get(current="y")
-    except Exception as e:
-        return ret_message(
-            "No season set, see an admin.", True, app_url + endpoint, request.user.id, e
+    current_season = scouting.util.get_current_season()
+
+    if current_season is None:
+        return scouting.util.get_no_season_ret_message(
+            app_url + endpoint, request.user.id
         )
 
-    try:
-        current_event = Event.objects.get(
-            Q(season=current_season) & Q(current="y") & Q(void_ind="n")
-        )
-    except Exception as e:
-        return ret_message(
-            "No event set, see an admin.", True, app_url + endpoint, request.user.id, e
+    current_event = scouting.util.get_event(current_season, "y")
+
+    if current_event is None:
+        return scouting.util.get_no_season_ret_message(
+            app_url + endpoint, request.user.id
         )
 
-    scout_cols = [
+    table_cols = [
         {"PropertyName": "team", "ColLabel": "Team No", "scorable": False, "order": 0},
         {"PropertyName": "rank", "ColLabel": "Rank", "scorable": False, "order": 1},
         {"PropertyName": "match", "ColLabel": "Match", "scorable": False, "order": 1},
     ]
 
-    scout_answers = []
+    field_scouting_responses = []
 
     sqsa = form.util.get_questions_with_conditions("field", "auto")
     sqst = form.util.get_questions_with_conditions("field", "teleop")
@@ -243,7 +240,7 @@ def get_field_results(team, endpoint, request, user=None):
             scout_question = scouting.models.Question.objects.get(
                 Q(void_ind="n") & Q(question_id=sq["question_id"])
             )
-            scout_cols.append(
+            table_cols.append(
                 {
                     "PropertyName": "ans" + str(sq["question_id"]),
                     "ColLabel": (
@@ -261,7 +258,7 @@ def get_field_results(team, endpoint, request, user=None):
                 scout_question = scouting.models.Question.objects.get(
                     Q(void_ind="n") & Q(question_id=c["question_to"]["question_id"])
                 )
-                scout_cols.append(
+                table_cols.append(
                     {
                         "PropertyName": "ans" + str(c["question_to"]["question_id"]),
                         "ColLabel": (
@@ -285,7 +282,7 @@ def get_field_results(team, endpoint, request, user=None):
         ).distinct()
         sqas_cnt = 1
         for sqa in sqas:
-            scout_cols.append(
+            table_cols.append(
                 {
                     "PropertyName": "ans_sqa" + str(sqa.question_aggregate_id),
                     "ColLabel": (
@@ -301,7 +298,7 @@ def get_field_results(team, endpoint, request, user=None):
 
             sqas_cnt += 1
 
-    scout_cols.append(
+    table_cols.append(
         {
             "PropertyName": "user",
             "ColLabel": "Scout",
@@ -309,7 +306,7 @@ def get_field_results(team, endpoint, request, user=None):
             "order": 9999999999,
         }
     )
-    scout_cols.append(
+    table_cols.append(
         {
             "PropertyName": "time",
             "ColLabel": "Time",
@@ -376,9 +373,9 @@ def get_field_results(team, endpoint, request, user=None):
         except EventTeamInfo.DoesNotExist:
             x = 1
 
-        scout_answers.append(sa_obj)
+        field_scouting_responses.append(sa_obj)
 
-    return {"scoutCols": scout_cols, "scoutAnswers": scout_answers}
+    return {"scoutCols": table_cols, "scoutAnswers": field_scouting_responses}
 
 
 class CheckIn(APIView):
