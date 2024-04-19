@@ -207,46 +207,6 @@ class Responses(APIView):
             )
 
 
-class RemovedResponses(APIView):
-    """
-    API endpoint to get any removed responses to calculate a delta
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "removed-responses/"
-
-    def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj) or has_access(
-            request.user.id, auth_view_obj
-        ):
-            try:
-                req = scouting.field.util.get_removed_responses(
-                    request.query_params.get("before_date_time", None)
-                )
-
-                if type(req) == Response:
-                    return req
-
-                serializer = ScoutFieldSerializer(req, many=True)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting removed responses.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
-
-
 class CheckIn(APIView):
     """
     API endpoint to let a field scout check in for thier shift

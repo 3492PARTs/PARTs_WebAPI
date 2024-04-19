@@ -196,11 +196,18 @@ def get_responses(request, team=None, user=None, after_date_time=None):
         "scoutAnswers": field_scouting_responses,
         "current_season": current_season,
         "current_event": current_event,
+        "removed_responses": get_removed_responses(after_date_time),
     }
 
 
 def get_removed_responses(before_date_time):
+    timeCondition = Q()
+
+    if before_date_time is not None:
+        timeCondition = Q(time__lte=before_date_time)
+
     removed = ScoutField.objects.filter(
-        Q(time__lte=before_date_time) & (Q(void_ind="y") | Q(response__void_ind="y"))
+        timeCondition & (Q(void_ind="y") | Q(response__void_ind="y"))
     )
+
     return removed

@@ -189,13 +189,6 @@ class ScoutResultAnswerSerializer(serializers.BaseSerializer):
         return instance
 
 
-class ScoutFieldResultsSerializer(serializers.Serializer):
-    scoutCols = ScoutColSerializer(many=True)
-    scoutAnswers = ScoutResultAnswerSerializer(many=True)
-    current_season = SeasonSerializer()
-    current_event = EventSerializer()
-
-
 class ScoutFieldSerializer(serializers.Serializer):
     scout_field_id = serializers.IntegerField()
     # response = serializers.IntegerField()
@@ -205,3 +198,11 @@ class ScoutFieldSerializer(serializers.Serializer):
     # time = serializers.DateTimeField()
     # match = serializers.IntegerField()
     # void_ind = serializers.CharField()
+
+
+class ScoutFieldResultsSerializer(serializers.Serializer):
+    scoutCols = ScoutColSerializer(many=True)
+    scoutAnswers = ScoutResultAnswerSerializer(many=True)
+    current_season = SeasonSerializer()
+    current_event = EventSerializer()
+    removed_responses = ScoutFieldSerializer(many=True)
