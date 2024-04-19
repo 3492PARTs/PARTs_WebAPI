@@ -35,7 +35,6 @@ from django.conf import settings
 from django.db.models.functions import Lower
 from django.db.models import Q
 from rest_framework.response import Response
-from ..field.views import get_field_results
 
 auth_obj = "scoutadmin"
 app_url = "scouting/admin/"
@@ -477,7 +476,7 @@ class SyncEventTeamInfo(APIView):
         return messages
 
     def get(self, request, format=None):
-        if True or has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, auth_obj):
             try:
                 req = self.sync_event_team_info(
                     int(request.query_params.get("force", "0"))
@@ -1210,7 +1209,9 @@ class ScoutingActivity(APIView):
                     "user": u,
                     "user_info": user_info,
                     "schedule": field_schedule,
-                    "results": get_field_results(None, self.endpoint, self.request, u),
+                    "results": scouting.field.util.get_field_results(
+                        None, self.request, u
+                    ),
                 }
             )
 

@@ -139,7 +139,7 @@ class QuestionSerializer(serializers.Serializer):
     is_condition = serializers.CharField()
 
 
-class ScoutFieldSerializer(serializers.Serializer):
+class ScoutFieldInitSerializer(serializers.Serializer):
     scoutQuestions = QuestionSerializer(many=True)
     scoutFieldSchedule = ScoutFieldScheduleSerializer()
     matches = MatchSerializer(many=True, required=False)
@@ -165,3 +165,14 @@ class ScoutResultAnswerSerializer(serializers.BaseSerializer):
 class ScoutFieldResultsSerializer(serializers.Serializer):
     scoutCols = ScoutColSerializer(many=True)
     scoutAnswers = ScoutResultAnswerSerializer(many=True)
+
+
+class ScoutFieldSerializer(serializers.Serializer):
+    scout_field_id = serializers.IntegerField()
+    # response = serializers.IntegerField()
+    # event = serializers.IntegerField()
+    # team_no = serializers.IntegerField()
+    # user = serializers.IntegerField()
+    # time = serializers.DateTimeField()
+    # match = serializers.IntegerField()
+    # void_ind = serializers.CharField()

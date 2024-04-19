@@ -2,28 +2,25 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import form.util
+import scouting.field
+import scouting.field.util
 import scouting.util
 import scouting.models
-from form.models import QuestionAnswer, QuestionAggregate
 from scouting.models import (
-    Season,
-    Event,
-    Team,
     ScoutFieldSchedule,
     ScoutField,
-    EventTeamInfo,
     Match,
 )
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
 from .serializers import (
-    ScoutFieldSerializer,
+    ScoutFieldInitSerializer,
     ScoutFieldResultsSerializer,
+    ScoutFieldSerializer,
 )
 from django.db.models import Q
 from rest_framework.response import Response
 from django.utils import timezone
-from django.conf import settings
 
 auth_obj = "scoutfield"
 auth_view_obj = "scoutFieldResults"
@@ -149,7 +146,7 @@ class Init(APIView):
                 if type(req) == Response:
                     return req
 
-                serializer = ScoutFieldSerializer(req)
+                serializer = ScoutFieldInitSerializer(req)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
@@ -168,22 +165,24 @@ class Init(APIView):
             )
 
 
-class Results(APIView):
+class Responses(APIView):
     """
     API endpoint to get the results of field scouting
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "results/"
+    endpoint = "responses/"
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj) or has_access(
             request.user.id, auth_view_obj
         ):
             try:
-                req = get_field_results(
-                    request.query_params.get("team", None), self.endpoint, self.request
+                req = scouting.field.util.get_responses(
+                    self.request,
+                    team=request.query_params.get("team", None),
+                    after_date_time=request.query_params.get("after_date_time", None),
                 )
 
                 if type(req) == Response:
@@ -193,7 +192,7 @@ class Results(APIView):
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
-                    "An error occurred while initializing.",
+                    "An error occurred while getting responses.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
@@ -208,180 +207,44 @@ class Results(APIView):
             )
 
 
-def get_field_results(team, endpoint, request, user=None):
-    current_season = scouting.util.get_current_season()
+class RemovedResponses(APIView):
+    """
+    API endpoint to get any removed responses to calculate a delta
+    """
 
-    if current_season is None:
-        return scouting.util.get_no_season_ret_message(
-            app_url + endpoint, request.user.id
-        )
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "removed-responses/"
 
-    current_event = scouting.util.get_event(current_season, "y")
-
-    if current_event is None:
-        return scouting.util.get_no_season_ret_message(
-            app_url + endpoint, request.user.id
-        )
-
-    table_cols = [
-        {"PropertyName": "team", "ColLabel": "Team No", "scorable": False, "order": 0},
-        {"PropertyName": "rank", "ColLabel": "Rank", "scorable": False, "order": 1},
-        {"PropertyName": "match", "ColLabel": "Match", "scorable": False, "order": 1},
-    ]
-
-    field_scouting_responses = []
-
-    sqsa = form.util.get_questions_with_conditions("field", "auto")
-    sqst = form.util.get_questions_with_conditions("field", "teleop")
-    sqso = form.util.get_questions_with_conditions("field", None)
-
-    # Build table columns ------------------------------------
-    for sqs in [sqsa, sqst, sqso]:
-        for sq in sqs:
-            scout_question = scouting.models.Question.objects.get(
-                Q(void_ind="n") & Q(question_id=sq["question_id"])
-            )
-            table_cols.append(
-                {
-                    "PropertyName": "ans" + str(sq["question_id"]),
-                    "ColLabel": (
-                        ""
-                        if sq.get("form_sub_typ", None) is None
-                        else sq["form_sub_typ"][0:1].upper() + ": "
-                    )
-                    + sq["question"],
-                    "scorable": scout_question.scorable,
-                    "order": sq["order"],
-                }
-            )
-
-            for c in sq.get("conditions", []):
-                scout_question = scouting.models.Question.objects.get(
-                    Q(void_ind="n") & Q(question_id=c["question_to"]["question_id"])
-                )
-                table_cols.append(
-                    {
-                        "PropertyName": "ans" + str(c["question_to"]["question_id"]),
-                        "ColLabel": (
-                            ""
-                            if c["question_to"].get("form_sub_typ", None) is None
-                            else c["question_to"]["form_sub_typ"][0:1].upper() + ": "
-                        )
-                        + "C: "
-                        + c["condition"]
-                        + " "
-                        + c["question_to"]["question"],
-                        "scorable": scout_question.scorable,
-                        "order": c["question_to"]["order"],
-                    }
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj) or has_access(
+            request.user.id, auth_view_obj
+        ):
+            try:
+                req = scouting.field.util.get_removed_responses(
+                    request.query_params.get("before_date_time", None)
                 )
 
-        qas = QuestionAggregate.objects.filter(
-            Q(void_ind="n")
-            & Q(active="y")
-            & Q(questions__question_id__in=set(sq["question_id"] for sq in sqs))
-        ).distinct()
-        sqas_cnt = 1
-        for qa in qas:
-            table_cols.append(
-                {
-                    "PropertyName": "ans_sqa" + str(qa.question_aggregate_id),
-                    "ColLabel": (
-                        ""
-                        if sqs[0].get("form_sub_typ", None) is None
-                        else sqs[0]["form_sub_typ"][0:1].upper() + ": "
-                    )
-                    + qa.field_name,
-                    "scorable": True,
-                    "order": sqs[len(sqs) - 1]["order"] + sqas_cnt,
-                }
-            )
+                if type(req) == Response:
+                    return req
 
-            sqas_cnt += 1
-
-    table_cols.append(
-        {
-            "PropertyName": "user",
-            "ColLabel": "Scout",
-            "scorable": False,
-            "order": 9999999999,
-        }
-    )
-    table_cols.append(
-        {
-            "PropertyName": "time",
-            "ColLabel": "Time",
-            "scorable": False,
-            "order": 99999999999,
-        }
-    )
-    # End Build table columns ------------------------------------
-
-    # Responses to fetch
-    if team is not None:
-        # get response for individual team
-        sfs = ScoutField.objects.filter(
-            Q(event=current_event) & Q(team_no_id=team) & Q(void_ind="n")
-        ).order_by("-time", "-scout_field_id")
-    elif user is not None:
-        # get response for individual scout
-        sfs = ScoutField.objects.filter(
-            Q(event=current_event) & Q(user=user) & Q(void_ind="n")
-        ).order_by("-time", "-scout_field_id")
-    else:
-        # get responses for all teams
-        if settings.DEBUG:
-            # don't fetch all responses on local as it's too much
-            sfs = ScoutField.objects.filter(
-                Q(event=current_event) & Q(void_ind="n")
-            ).order_by("-time", "-scout_field_id")[:30]
+                serializer = ScoutFieldSerializer(req, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting removed responses.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
         else:
-            # get everything
-            sfs = ScoutField.objects.filter(
-                Q(event=current_event) & Q(void_ind="n")
-            ).order_by("-time", "-scout_field_id")
-
-    # Loop over all the responses selected and put in table
-    for sf in sfs:
-        qas = QuestionAnswer.objects.filter(Q(response=sf.response) & Q(void_ind="n"))
-
-        response = {}
-        for qa in qas:
-            response["ans" + str(qa.question_id)] = qa.answer
-
-        # get aggregates
-        qas = QuestionAggregate.objects.filter(
-            Q(void_ind="n") & Q(active="y") & Q(questions__form_typ="field")
-        ).distinct()
-
-        for qa in qas:
-            sum = 0
-            for q in qa.questions.filter(Q(void_ind="n") & Q(active="y")):
-                for a in q.questionanswer_set.filter(
-                    Q(void_ind="n") & Q(response=sf.response)
-                ):
-                    if a.answer is not None and a.answer != "!EXIST":
-                        sum += int(a.answer)
-            response["ans_sqa" + str(qa.question_aggregate_id)] = sum
-
-        response["match"] = sf.match.match_number if sf.match else None
-        response["user"] = sf.user.first_name + " " + sf.user.last_name
-        response["time"] = sf.time
-        response["user_id"] = sf.user.id
-        response["team"] = sf.team_no_id
-        response["scout_field_id"] = sf.scout_field_id
-
-        try:
-            eti = EventTeamInfo.objects.get(
-                Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind="n")
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
             )
-            response["rank"] = eti.rank
-        except EventTeamInfo.DoesNotExist:
-            response["rank"] = ""
-
-        field_scouting_responses.append(response)
-
-    return {"scoutCols": table_cols, "scoutAnswers": field_scouting_responses}
 
 
 class CheckIn(APIView):
