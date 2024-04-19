@@ -142,7 +142,9 @@ def get_responses(request, team=None, user=None, after_date_time=None):
             # don't fetch all responses on local as it's too much
             sfs = ScoutField.objects.filter(
                 Q(event=current_event) & Q(void_ind="n")
-            ).order_by("-time", "-scout_field_id")[:30]
+            ).order_by(
+                "-time", "-scout_field_id"
+            )  # [:30]
         else:
             # get everything
             sfs = ScoutField.objects.filter(
@@ -189,7 +191,12 @@ def get_responses(request, team=None, user=None, after_date_time=None):
 
         field_scouting_responses.append(response)
 
-    return {"scoutCols": table_cols, "scoutAnswers": field_scouting_responses}
+    return {
+        "scoutCols": table_cols,
+        "scoutAnswers": field_scouting_responses,
+        "current_season": current_season,
+        "current_event": current_event,
+    }
 
 
 def get_removed_responses(before_date_time):
