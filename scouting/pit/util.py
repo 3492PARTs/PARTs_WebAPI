@@ -1,0 +1,104 @@
+from django.db.models import Q
+import cloudinary
+
+from form.models import QuestionAnswer
+from general.security import ret_message
+import scouting
+import form
+from scouting.models import EventTeamInfo, ScoutPit, ScoutPitImage, Team
+
+
+def get_responses(request, team=None):
+    current_season = scouting.util.get_current_season()
+
+    if current_season is None:
+        return scouting.util.get_no_season_ret_message(
+            "scouting.pit.util.get_responses", request.user.id
+        )
+
+    current_event = scouting.util.get_event(current_season, "y")
+
+    if current_event is None:
+        return scouting.util.get_no_season_ret_message(
+            "scouting.pit.util.get_responses", request.user.id
+        )
+
+    teamCondition = Q()
+    if team is not None:
+        teamCondition = Q(team_no=team)
+
+    teams = Team.objects.filter(teamCondition & Q(event=current_event)).order_by(
+        "team_no"
+    )
+
+    results = []
+    for t in teams:
+        try:
+            sp = ScoutPit.objects.get(
+                Q(team_no_id=t["team_no"]) & Q(event=current_event) & Q(void_ind="n")
+            )
+        except ScoutPit.DoesNotExist as e:
+            sp = ScoutPit()
+
+        spis = ScoutPitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=sp)).order_by(
+            "scout_pit_img_id"
+        )
+        pics = []
+        for spi in spis:
+            pics.append(
+                {
+                    "scout_pit_img_id": spi.scout_pit_img_id,
+                    "pic": cloudinary.CloudinaryImage(
+                        spi.img_id, version=spi.img_ver
+                    ).build_url(secure=True),
+                    "default": spi.default,
+                }
+            )
+
+        tmp = {
+            "teamNo": t.team_no,
+            "teamNm": t.team_nm,
+            "pics": pics,
+            "scout_pit_id": sp.scout_pit_id,
+        }
+
+        tmp_questions = []
+
+        try:
+            eti = EventTeamInfo.objects.get(
+                Q(event=current_event) & Q(team_no=t.team_no) & Q(void_ind="n")
+            )
+            tmp_questions.append({"question": "Rank", "answer": eti.rank})
+        except EventTeamInfo.DoesNotExist:
+            x = 1
+
+        questions = form.util.get_questions_with_conditions("pit")
+
+        for q in questions:
+            answer = QuestionAnswer.objects.get(
+                Q(response=sp.response)
+                & Q(void_ind="n")
+                & Q(question_id=q["question_id"])
+            )
+            tmp_questions.append({"question": q["question"], "answer": answer.answer})
+
+            for c in q.get("conditions", []):
+                answer = QuestionAnswer.objects.get(
+                    Q(response=sp.response)
+                    & Q(void_ind="n")
+                    & Q(question_id=c["question_to"]["question_id"])
+                )
+                tmp_questions.append(
+                    {
+                        "question": "C: "
+                        + c["condition"]
+                        + " "
+                        + c["question_to"]["question"],
+                        "answer": answer.answer,
+                    }
+                )
+
+        tmp["results"] = tmp_questions
+        results.append(tmp)
+
+    return results

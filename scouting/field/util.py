@@ -110,14 +110,14 @@ def get_responses(request, team=None, user=None, after_date_time=None):
 
     if current_season is None:
         return scouting.util.get_no_season_ret_message(
-            "scouting.field.util.get_field_results", request.user.id
+            "scouting.field.util.get_responses", request.user.id
         )
 
     current_event = scouting.util.get_event(current_season, "y")
 
     if current_event is None:
         return scouting.util.get_no_season_ret_message(
-            "scouting.field.util.get_field_results", request.user.id
+            "scouting.field.util.get_responses", request.user.id
         )
 
     # Pull responses by what input
