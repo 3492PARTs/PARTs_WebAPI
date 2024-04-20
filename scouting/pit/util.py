@@ -35,7 +35,10 @@ def get_responses(request, team=None):
     for t in teams:
         try:
             sp = ScoutPit.objects.get(
-                Q(team_no=t) & Q(event=current_event) & Q(void_ind="n")
+                Q(team_no=t)
+                & Q(event=current_event)
+                & Q(void_ind="n")
+                & Q(response__void_ind="n")
             )
         except ScoutPit.DoesNotExist as e:
             sp = None

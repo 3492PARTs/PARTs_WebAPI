@@ -1376,6 +1376,8 @@ class DeletePitResult(APIView):
                 sp = ScoutPit.objects.get(
                     scout_pit_id=request.query_params["scout_pit_id"]
                 )
+
+                sp.response.void_ind = "y"
                 sp.void_ind = "y"
                 sp.save()
 

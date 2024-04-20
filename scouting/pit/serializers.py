@@ -134,7 +134,7 @@ class ScoutAnswerSerializer(serializers.Serializer):
     team = serializers.CharField(required=False)
 
 
-class ScoutPitResultAnswerSerializer(serializers.Serializer):
+class ScoutPitResponseAnswerSerializer(serializers.Serializer):
     question = serializers.CharField()
     answer = serializers.CharField(required=False, allow_null=True)
 
@@ -150,7 +150,7 @@ class ScoutPitResponseSerializer(serializers.Serializer):
     teamNo = serializers.CharField()
     teamNm = serializers.CharField()
     pics = ScoutPitImageSerializer(many=True, required=False)
-    responses = ScoutPitResultAnswerSerializer(many=True)
+    responses = ScoutPitResponseAnswerSerializer(many=True)
 
 
 class ScoutPitResponsesSerializer(serializers.Serializer):

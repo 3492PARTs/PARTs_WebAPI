@@ -9,6 +9,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import alerts.util
 import form.util
+import scouting
 import user.util
 from form.models import FormType
 from form.serializers import (
@@ -162,12 +163,19 @@ class SaveAnswers(APIView):
                 if (
                     form_typ == "field" and has_access(request.user.id, "scoutfield")
                 ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
-                    try:
-                        current_event = Event.objects.get(
-                            Q(season=Season.objects.get(current="y")) & Q(current="y")
+                    current_season = scouting.util.get_current_season()
+
+                    if current_season is None:
+                        return scouting.util.get_no_season_ret_message(
+                            "form.views.SaveAnswers.post", request.user.id
                         )
-                    except Exception as e:
-                        raise Exception("No event set, see an admin")
+
+                    current_event = scouting.util.get_event(current_season, "y")
+
+                    if current_event is None:
+                        return scouting.util.get_no_season_ret_message(
+                            "form.views.SaveAnswers.post", request.user.id
+                        )
 
                     # Try to deserialize as a field or pit answer
                     serializer = SaveScoutSerializer(data=request.data)
@@ -178,6 +186,7 @@ class SaveAnswers(APIView):
                         )
 
                         if serializer.validated_data["form_typ"] == "field":
+                            # Build field scout object and check for match
                             try:
                                 m = Match.objects.get(
                                     match_id=serializer.validated_data.get(
@@ -187,20 +196,9 @@ class SaveAnswers(APIView):
                             except Match.DoesNotExist:
                                 m = None
 
-                        # with transaction.atomic():
-                        # Get response object if id was provided
-                        try:
-                            response = form.models.Response.objects.get(
-                                response_id=serializer.validated_data.get(
-                                    "response_id", None
-                                )
-                            )
-                        except form.models.Response.DoesNotExist:
                             response = form.models.Response(form_typ=form_type)
                             response.save()
 
-                        # Build field scout object and check for match
-                        if serializer.validated_data["form_typ"] == "field":
                             sf = ScoutField(
                                 event=current_event,
                                 team_no_id=serializer.validated_data["team"],
@@ -217,14 +215,23 @@ class SaveAnswers(APIView):
                                     Q(team_no_id=serializer.data["team"])
                                     & Q(void_ind="n")
                                     & Q(event=current_event)
-                                    & Q(response=response)
                                 )
+                                response = sp.response
+
+                                if response.void_ind is "y":
+                                    response = form.models.Response(form_typ=form_type)
+                                    response.save()
+                                    sp.response = response
+                                    sp.save()
                             except ScoutPit.DoesNotExist:
+                                response = form.models.Response(form_typ=form_type)
+                                response.save()
+
                                 sp = ScoutPit(
                                     event=current_event,
                                     team_no_id=serializer.data["team"],
                                     user_id=request.user.id,
-                                    response_id=response.response_id,
+                                    response=response,
                                     void_ind="n",
                                 )
                                 sp.save()
