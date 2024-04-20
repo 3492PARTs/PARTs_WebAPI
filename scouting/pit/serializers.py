@@ -150,11 +150,11 @@ class ScoutPitResponseSerializer(serializers.Serializer):
     teamNo = serializers.CharField()
     teamNm = serializers.CharField()
     pics = ScoutPitImageSerializer(many=True, required=False)
-    results = ScoutPitResultAnswerSerializer(many=True)
+    responses = ScoutPitResultAnswerSerializer(many=True)
 
 
 class ScoutPitResponsesSerializer(serializers.Serializer):
-    responses = ScoutPitResponseSerializer(many=True)
+    teams = ScoutPitResponseSerializer(many=True)
     current_season = SeasonSerializer()
     current_event = EventSerializer()
 

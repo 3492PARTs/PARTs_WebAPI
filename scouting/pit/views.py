@@ -147,7 +147,7 @@ class Responses(APIView):
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
-                    "An error occurred while getting pit results.",
+                    "An error occurred while getting pit responses.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,

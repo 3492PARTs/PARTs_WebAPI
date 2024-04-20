@@ -35,14 +35,15 @@ def get_responses(request, team=None):
     for t in teams:
         try:
             sp = ScoutPit.objects.get(
-                Q(team_no_id=t["team_no"]) & Q(event=current_event) & Q(void_ind="n")
+                Q(team_no=t) & Q(event=current_event) & Q(void_ind="n")
             )
         except ScoutPit.DoesNotExist as e:
-            sp = ScoutPit()
+            sp = None
 
         spis = ScoutPitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=sp)).order_by(
             "scout_pit_img_id"
         )
+
         pics = []
         for spi in spis:
             pics.append(
@@ -55,54 +56,57 @@ def get_responses(request, team=None):
                 }
             )
 
-        tmp = {
+        team_response = {
             "teamNo": t.team_no,
             "teamNm": t.team_nm,
             "pics": pics,
-            "scout_pit_id": sp.scout_pit_id,
+            "scout_pit_id": sp.scout_pit_id if sp is not None else None,
         }
 
-        tmp_questions = []
+        tmp_responses = []
 
         try:
             eti = EventTeamInfo.objects.get(
                 Q(event=current_event) & Q(team_no=t.team_no) & Q(void_ind="n")
             )
-            tmp_questions.append({"question": "Rank", "answer": eti.rank})
+            tmp_responses.append({"question": "Rank", "answer": eti.rank})
         except EventTeamInfo.DoesNotExist:
             x = 1
 
         questions = form.util.get_questions_with_conditions("pit")
 
-        for q in questions:
-            answer = QuestionAnswer.objects.get(
-                Q(response=sp.response)
-                & Q(void_ind="n")
-                & Q(question_id=q["question_id"])
-            )
-            tmp_questions.append({"question": q["question"], "answer": answer.answer})
-
-            for c in q.get("conditions", []):
+        if sp is not None:
+            for q in questions:
                 answer = QuestionAnswer.objects.get(
                     Q(response=sp.response)
                     & Q(void_ind="n")
-                    & Q(question_id=c["question_to"]["question_id"])
+                    & Q(question_id=q["question_id"])
                 )
-                tmp_questions.append(
-                    {
-                        "question": "C: "
-                        + c["condition"]
-                        + " "
-                        + c["question_to"]["question"],
-                        "answer": answer.answer,
-                    }
+                tmp_responses.append(
+                    {"question": q["question"], "answer": answer.answer}
                 )
 
-        tmp["results"] = tmp_questions
-        results.append(tmp)
+                for c in q.get("conditions", []):
+                    answer = QuestionAnswer.objects.get(
+                        Q(response=sp.response)
+                        & Q(void_ind="n")
+                        & Q(question_id=c["question_to"]["question_id"])
+                    )
+                    tmp_responses.append(
+                        {
+                            "question": "C: "
+                            + c["condition"]
+                            + " "
+                            + c["question_to"]["question"],
+                            "answer": answer.answer,
+                        }
+                    )
+
+        team_response["responses"] = tmp_responses
+        results.append(team_response)
 
     return {
-        "responses": results,
+        "teams": results,
         "current_season": current_season,
         "current_event": current_event,
     }

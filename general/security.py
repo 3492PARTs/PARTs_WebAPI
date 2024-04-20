@@ -56,7 +56,7 @@ def ret_message(message, error=False, path="", user_id=-1, exception=None):
 
         tb = traceback.format_exc()
 
-        tb = (tb[:75] + "..") if len(tb) > 75 else tb
+        tb = (tb[:4000] + "..") if len(tb) > 4000 else tb
 
         print("Error in: " + path)
         print("Message: " + message)
