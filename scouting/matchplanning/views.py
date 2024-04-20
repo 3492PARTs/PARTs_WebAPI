@@ -15,7 +15,6 @@ from scouting.matchplanning.serializers import (
     TeamNoteSerializer,
 )
 from scouting.models import Event, Team, Match, Season, TeamNotes
-from scouting.pit.views import get_pit_results
 
 auth_obj = "matchplanning"
 auth_view_obj_scout_field = "scoutFieldResults"

@@ -1,3 +1,4 @@
+import traceback
 from django.utils import timezone
 
 import user.util
@@ -44,6 +45,7 @@ def ret_message(message, error=False, path="", user_id=-1, exception=None):
     # TODO Make all of these optional in the DB
     if error:
         print("----------ERROR START----------")
+
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
@@ -51,6 +53,11 @@ def ret_message(message, error=False, path="", user_id=-1, exception=None):
             err_msg = "Ran into DoesNotExist exception finding user"
             print(err_msg)
             message += f"\n{err_msg}\n"
+
+        tb = traceback.format_exc()
+
+        tb = (tb[:75] + "..") if len(tb) > 75 else tb
+
         print("Error in: " + path)
         print("Message: " + message)
         print(
@@ -58,13 +65,19 @@ def ret_message(message, error=False, path="", user_id=-1, exception=None):
         )
         print("Exception: ")
         print(exception)
+
+        print("TraceBack: ")
+        print(tb)
+
         print("----------ERROR END----------")
+
         try:
             ErrorLog(
                 user=user,
                 path=path,
                 message=message,
                 exception=exception,
+                traceback=tb,
                 time=timezone.now(),
                 void_ind="n",
             ).save()
@@ -74,9 +87,9 @@ def ret_message(message, error=False, path="", user_id=-1, exception=None):
             try:
                 ErrorLog(
                     user=User.objects.get(id=-1),
-                    path=path,
+                    path="general.security.ret_message",
                     message=message,
-                    exception=exception,
+                    exception=e,
                     time=timezone.now(),
                     void_ind="n",
                 ).save()

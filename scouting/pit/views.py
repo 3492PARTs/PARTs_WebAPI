@@ -5,11 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 import scouting
 from form.models import QuestionAnswer, Question
 from scouting.models import Season, Team, Event, ScoutPit, EventTeamInfo, ScoutPitImage
+import scouting.pit
+import scouting.pit.util
 from .serializers import (
     InitSerializer,
     PitTeamDataSerializer,
     ScoutAnswerSerializer,
-    ScoutPitResultsSerializer,
+    ScoutPitResponseSerializer,
+    ScoutPitResponsesSerializer,
     TeamSerializer,
 )
 from rest_framework.views import APIView
@@ -117,42 +120,30 @@ class SavePicture(APIView):
             )
 
 
-class Results(APIView):
+class Responses(APIView):
     """
     API endpoint to get scout pit results for the selected teams
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "results/"
+    endpoint = "responses/"
 
-    def get_results(self, teams):
-
-        return get_pit_results(teams, self.endpoint, self.request)
-
-    def post(self, request, format=None):
+    def get(self, request, format=None):
         if (
             has_access(request.user.id, auth_obj)
             or has_access(request.user.id, auth_view_obj)
             or has_access(request.user.id, "scoutFieldResults")
         ):
             try:
-                serializer = TeamSerializer(data=request.data, many=True)
-                if not serializer.is_valid():
-                    return ret_message(
-                        "Invalid data",
-                        True,
-                        app_url + self.endpoint,
-                        request.user.id,
-                        serializer.errors,
-                    )
-
-                ret = self.get_results(serializer.data)
+                ret = scouting.pit.util.get_responses(
+                    request, request.query_params.get("team", None)
+                )
 
                 if type(ret) == Response:
                     return ret
 
-                serializer = ScoutPitResultsSerializer(ret, many=True)
+                serializer = ScoutPitResponsesSerializer(ret)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(

@@ -101,4 +101,8 @@ def get_responses(request, team=None):
         tmp["results"] = tmp_questions
         results.append(tmp)
 
-    return results
+    return {
+        "responses": results,
+        "current_season": current_season,
+        "current_event": current_event,
+    }
