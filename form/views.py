@@ -238,7 +238,7 @@ class SaveAnswers(APIView):
 
                         # Save the answers against the response object
                         for d in serializer.validated_data.get("question_answers", []):
-                            form.util.save_or_update_question_answer_with_conditions(
+                            form.util.save_or_update_question_with_conditions_answer(
                                 d, response
                             )
                     else:
@@ -265,7 +265,7 @@ class SaveAnswers(APIView):
 
                     # Save the answers against the response object
                     for d in serializer.validated_data.get("question_answers", []):
-                        form.util.save_or_update_question_answer_with_conditions(
+                        form.util.save_or_update_question_with_conditions_answer(
                             d, response
                         )
 

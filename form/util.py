@@ -250,7 +250,7 @@ def save_or_update_question_answer(question, response: Response):
         )
 
 
-def save_or_update_question_answer_with_conditions(question, response: Response):
+def save_or_update_question_with_conditions_answer(question, response: Response):
     # Get answer to update or save new
     save_or_update_question_answer(question, response)
 
