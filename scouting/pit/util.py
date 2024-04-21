@@ -60,8 +60,8 @@ def get_responses(request, team=None):
             )
 
         team_response = {
-            "teamNo": t.team_no,
-            "teamNm": t.team_nm,
+            "team_no": t.team_no,
+            "team_nm": t.team_nm,
             "pics": pics,
             "scout_pit_id": sp.scout_pit_id if sp is not None else None,
         }
