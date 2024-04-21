@@ -148,7 +148,7 @@ class SaveAnswers(APIView):
     endpoint = "save-answers/"
 
     def post(self, request, format=None):
-        success_msg = "Response saved successfully"
+        success_msg = "Response saved successfully."
         form_typ = request.data.get("form_typ", "")
 
         try:
@@ -208,6 +208,7 @@ class SaveAnswers(APIView):
                                 void_ind="n",
                             )
                             sf.save()
+                            success_msg = "Field response saved successfully."
                         else:
                             # Build or get pit scout object
                             try:
@@ -235,6 +236,7 @@ class SaveAnswers(APIView):
                                     void_ind="n",
                                 )
                                 sp.save()
+                            success_msg = "Pit response saved successfully."
 
                         # Save the answers against the response object
                         for d in serializer.validated_data.get("question_answers", []):
