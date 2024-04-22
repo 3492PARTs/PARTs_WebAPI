@@ -9,4 +9,5 @@ urlpatterns = [
     path("admin/", include("scouting.admin.urls")),
     path("match-planning/", include("scouting.matchplanning.urls")),
     path("teams/", views.Teams.as_view()),
+    path("schedules/", views.Schedules.as_view()),
 ]

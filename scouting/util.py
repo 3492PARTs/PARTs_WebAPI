@@ -1,7 +1,7 @@
 from django.db.models import Q
 
 from general.security import ret_message
-from scouting.models import Event, ScoutFieldSchedule, Season
+from scouting.models import Event, Schedule, ScheduleType, ScoutFieldSchedule, Season
 
 
 def get_current_season():
@@ -92,4 +92,120 @@ def format_scout_field_schedule_entry(fs: ScoutFieldSchedule):
             if fs.blue_three is None
             else fs.blue_three.first_name + " " + fs.blue_three.last_name[0:1]
         ),
+    }
+
+
+def get_current_scout_field_schedule(request):
+    current_season = get_current_season()
+
+    if current_season is None:
+        return get_no_season_ret_message(
+            "scouting.util.get_current_scout_field_schedule", request.user.id
+        )
+
+    current_event = get_event(current_season, "y")
+
+    if current_event is None:
+        return get_no_event_ret_message(
+            "scouting.util.get_current_scout_field_schedule", request.user.id
+        )
+
+    sfs = ScoutFieldSchedule.objects.filter(
+        Q(event=current_event) & Q(void_ind="n")
+    ).order_by("notification3", "st_time")
+
+    return sfs
+
+
+def get_current_schedule(request):
+    current_season = get_current_season()
+
+    if current_season is None:
+        return get_no_season_ret_message(
+            "scouting.util.get_current_scout_field_schedule", request.user.id
+        )
+
+    current_event = get_event(current_season, "y")
+
+    if current_event is None:
+        return get_no_event_ret_message(
+            "scouting.util.get_current_scout_field_schedule", request.user.id
+        )
+
+    schs = Schedule.objects.filter(Q(event=current_event) & Q(void_ind="n")).order_by(
+        "sch_typ", "notified", "st_time"
+    )
+
+    return schs
+
+
+def get_schedule_types():
+    return ScheduleType.objects.all().order_by("sch_nm")
+
+
+def parse_scout_field_schedule(s: ScoutFieldSchedule):
+    return {
+        "scout_field_sch_id": s.scout_field_sch_id,
+        "event_id": s.event_id,
+        "st_time": s.st_time,
+        "end_time": s.end_time,
+        "notification1": s.notification1,
+        "notification2": s.notification2,
+        "notification3": s.notification3,
+        "red_one_id": s.red_one,
+        "red_two_id": s.red_two,
+        "red_three_id": s.red_three,
+        "blue_one_id": s.blue_one,
+        "blue_two_id": s.blue_two,
+        "blue_three_id": s.blue_three,
+        "scouts": "R1: "
+        + (
+            ""
+            if s.red_one is None
+            else s.red_one.first_name + " " + s.red_one.last_name[0:1]
+        )
+        + "\nR2: "
+        + (
+            ""
+            if s.red_two is None
+            else s.red_two.first_name + " " + s.red_two.last_name[0:1]
+        )
+        + "\nR3: "
+        + (
+            ""
+            if s.red_three is None
+            else s.red_three.first_name + " " + s.red_three.last_name[0:1]
+        )
+        + "\nB1: "
+        + (
+            ""
+            if s.blue_one is None
+            else s.blue_one.first_name + " " + s.blue_one.last_name[0:1]
+        )
+        + "\nB2: "
+        + (
+            ""
+            if s.blue_two is None
+            else s.blue_two.first_name + " " + s.blue_two.last_name[0:1]
+        )
+        + "\nB3: "
+        + (
+            ""
+            if s.blue_three is None
+            else s.blue_three.first_name + " " + s.blue_three.last_name[0:1]
+        ),
+    }
+
+
+def parse_schedule(s: Schedule):
+    return {
+        "sch_id": s.sch_id,
+        "sch_typ": s.sch_typ.sch_typ,
+        "sch_nm": s.sch_typ.sch_nm,
+        "event_id": s.event.event_id,
+        "st_time": s.st_time,
+        "end_time": s.end_time,
+        "notified": s.notified,
+        "user": s.user,
+        "user_name": s.user.get_full_name(),
     }

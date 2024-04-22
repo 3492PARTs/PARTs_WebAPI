@@ -173,7 +173,7 @@ class SaveAnswers(APIView):
                     current_event = scouting.util.get_event(current_season, "y")
 
                     if current_event is None:
-                        return scouting.util.get_no_season_ret_message(
+                        return scouting.util.get_no_event_ret_message(
                             "form.views.SaveAnswers.post", request.user.id
                         )
 

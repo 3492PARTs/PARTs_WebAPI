@@ -19,7 +19,7 @@ def get_responses(request, team=None):
     current_event = scouting.util.get_event(current_season, "y")
 
     if current_event is None:
-        return scouting.util.get_no_season_ret_message(
+        return scouting.util.get_no_event_ret_message(
             "scouting.pit.util.get_responses", request.user.id
         )
 
