@@ -840,6 +840,13 @@ class Permissions(APIView):
     def get(self, request, format=None):
         try:
             serializer = PermissionSerializer(user.util.get_permissions(), many=True)
+
+            user_id = request.query_params.get("user_id", None)
+            if user_id is not None:
+                permissions = get_user_permissions(user_id)
+            else:
+                permissions = user.util.get_permissions()
+            serializer = PermissionSerializer(permissions, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
