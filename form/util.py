@@ -441,9 +441,13 @@ def format_question_condition_values(qc: QuestionCondition):
     }
 
 
-def get_questions_with_conditions(form_typ: str, form_sub_typ: str = ""):
+def get_questions_with_conditions(
+    form_typ: str,
+    form_sub_typ: str = "",
+    active: str = "y",
+):
     questions_with_conditions = []
-    questions = get_questions(form_typ, "y", form_sub_typ)
+    questions = get_questions(form_typ, active, form_sub_typ)
 
     for q in questions:
         # Only process the ones that are not conditions, because the conditions will be in their Question FROM - see below loop

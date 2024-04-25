@@ -15,27 +15,27 @@ class MatchSerializer(serializers.Serializer):
     blue_score = serializers.IntegerField()
     time = serializers.DateTimeField()
 
-    blue_one_id = serializers.IntegerField()
+    blue_one = serializers.IntegerField()
     blue_one_rank = serializers.IntegerField(allow_null=True)
     blue_one_field_response = serializers.BooleanField()
 
-    blue_two_id = serializers.IntegerField()
+    blue_two = serializers.IntegerField()
     blue_two_rank = serializers.IntegerField(allow_null=True)
     blue_two_field_response = serializers.BooleanField()
 
-    blue_three_id = serializers.IntegerField()
+    blue_three = serializers.IntegerField()
     blue_three_rank = serializers.IntegerField(allow_null=True)
     blue_three_field_response = serializers.BooleanField()
 
-    red_one_id = serializers.IntegerField()
+    red_one = serializers.IntegerField()
     red_one_rank = serializers.IntegerField(allow_null=True)
     red_one_field_response = serializers.BooleanField()
 
-    red_two_id = serializers.IntegerField()
+    red_two = serializers.IntegerField()
     red_two_rank = serializers.IntegerField(allow_null=True)
     red_two_field_response = serializers.BooleanField()
 
-    red_three_id = serializers.IntegerField()
+    red_three = serializers.IntegerField()
     red_three_rank = serializers.IntegerField(allow_null=True)
     red_three_field_response = serializers.BooleanField()
 

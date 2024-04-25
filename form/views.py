@@ -14,6 +14,7 @@ import user.util
 from form.models import FormType
 from form.serializers import (
     QuestionSerializer,
+    QuestionWithConditionsSerializer,
     SaveResponseSerializer,
     SaveScoutSerializer,
     QuestionInitializationSerializer,
@@ -37,10 +38,11 @@ class GetQuestions(APIView):
 
     def get(self, request, format=None):
         try:
-            questions = form.util.get_questions(
-                request.query_params["form_typ"], request.query_params.get("active", "")
+            questions = form.util.get_questions_with_conditions(
+                request.query_params["form_typ"],
+                active=request.query_params.get("active", ""),
             )
-            serializer = QuestionSerializer(questions, many=True)
+            serializer = QuestionWithConditionsSerializer(questions, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -163,20 +165,7 @@ class SaveAnswers(APIView):
                 if (
                     form_typ == "field" and has_access(request.user.id, "scoutfield")
                 ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
-                    current_season = scouting.util.get_current_season()
-
-                    if current_season is None:
-                        return scouting.util.get_no_season_ret_message(
-                            "form.views.SaveAnswers.post", request.user.id
-                        )
-
-                    current_event = scouting.util.get_event(current_season, "y")
-
-                    if current_event is None:
-                        return scouting.util.get_no_event_ret_message(
-                            "form.views.SaveAnswers.post", request.user.id
-                        )
-
+                    current_event = scouting.util.get_current_event()
                     # Try to deserialize as a field or pit answer
                     serializer = SaveScoutSerializer(data=request.data)
                     if serializer.is_valid():

@@ -176,6 +176,7 @@ class ScoutColSerializer(serializers.Serializer):
     PropertyName = serializers.CharField()
     ColLabel = serializers.CharField()
     order = serializers.CharField()
+    scorable = serializers.BooleanField()
 
 
 class ScoutResultAnswerSerializer(serializers.BaseSerializer):

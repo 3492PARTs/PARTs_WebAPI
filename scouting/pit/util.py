@@ -8,15 +8,10 @@ import form
 from scouting.models import EventTeamInfo, ScoutPit, ScoutPitImage, Team
 
 
-def get_responses(request, team=None):
+def get_responses(team=None):
     current_season = scouting.util.get_current_season()
 
     current_event = scouting.util.get_current_event()
-
-    if current_event is None:
-        return scouting.util.get_no_event_ret_message(
-            "scouting.pit.util.get_responses", request.user.id
-        )
 
     teamCondition = Q()
     if team is not None:

@@ -137,7 +137,7 @@ class Responses(APIView):
         ):
             try:
                 ret = scouting.pit.util.get_responses(
-                    request, request.query_params.get("team", None)
+                    request.query_params.get("team", None)
                 )
 
                 if type(ret) == Response:

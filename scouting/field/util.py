@@ -13,7 +13,12 @@ def build_table_columns():
     sqso = form.util.get_questions_with_conditions("field", None)
 
     table_cols = [
-        {"PropertyName": "team", "ColLabel": "Team No", "scorable": False, "order": 0},
+        {
+            "PropertyName": "team_no",
+            "ColLabel": "Team No",
+            "scorable": False,
+            "order": 0,
+        },
         {"PropertyName": "rank", "ColLabel": "Rank", "scorable": False, "order": 1},
         {"PropertyName": "match", "ColLabel": "Match", "scorable": False, "order": 1},
     ]
@@ -173,7 +178,7 @@ def get_responses(request, team=None, user=None, after_date_time=None):
         response["user"] = sf.user.first_name + " " + sf.user.last_name
         response["time"] = sf.time
         response["user_id"] = sf.user.id
-        response["team"] = sf.team_no_id
+        response["team_no"] = sf.team_no_id
         response["scout_field_id"] = sf.scout_field_id
 
         try:
