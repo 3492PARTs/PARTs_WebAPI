@@ -37,20 +37,7 @@ class Init(APIView):
     endpoint = "init/"
 
     def get_questions(self):
-
-        current_season = scouting.util.get_current_season()
-
-        if current_season is None:
-            return scouting.util.get_no_season_ret_message(
-                app_url + self.endpoint, self.request.user.id
-            )
-
-        current_event = scouting.util.get_current_event(current_season, "y")
-
-        if current_event is None:
-            return scouting.util.get_no_event_ret_message(
-                app_url + self.endpoint, self.request.user.id
-            )
+        current_event = scouting.util.get_current_event()
 
         # scout_questions = form.util.get_questions('field', 'y')
         scout_questions = form.util.get_questions_with_conditions("field")

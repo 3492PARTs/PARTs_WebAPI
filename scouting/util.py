@@ -96,19 +96,7 @@ def format_scout_field_schedule_entry(fs: ScoutFieldSchedule):
 
 
 def get_current_scout_field_schedule(request):
-    current_season = get_current_season()
-
-    if current_season is None:
-        return get_no_season_ret_message(
-            "scouting.util.get_current_scout_field_schedule", request.user.id
-        )
-
-    current_event = get_current_event(current_season, "y")
-
-    if current_event is None:
-        return get_no_event_ret_message(
-            "scouting.util.get_current_scout_field_schedule", request.user.id
-        )
+    current_event = get_current_event()
 
     sfs = ScoutFieldSchedule.objects.filter(
         Q(event=current_event) & Q(void_ind="n")
@@ -118,19 +106,7 @@ def get_current_scout_field_schedule(request):
 
 
 def get_current_schedule(request):
-    current_season = get_current_season()
-
-    if current_season is None:
-        return get_no_season_ret_message(
-            "scouting.util.get_current_scout_field_schedule", request.user.id
-        )
-
-    current_event = get_current_event(current_season, "y")
-
-    if current_event is None:
-        return get_no_event_ret_message(
-            "scouting.util.get_current_scout_field_schedule", request.user.id
-        )
+    current_event = get_current_event()
 
     schs = Schedule.objects.filter(Q(event=current_event) & Q(void_ind="n")).order_by(
         "sch_typ", "notified", "st_time"

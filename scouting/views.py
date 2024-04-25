@@ -26,19 +26,7 @@ class Teams(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                current_season = scouting.util.get_current_season()
-
-                if current_season is None:
-                    return scouting.util.get_no_season_ret_message(
-                        app_url + self.endpoint, self.request.user.id
-                    )
-
-                current_event = scouting.util.get_current_event(current_season, "y")
-
-                if current_event is None:
-                    return scouting.util.get_no_event_ret_message(
-                        app_url + self.endpoint, self.request.user.id
-                    )
+                current_event = scouting.util.get_current_event()
 
                 teams = (
                     Team.objects.annotate(
