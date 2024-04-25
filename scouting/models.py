@@ -17,19 +17,19 @@ from user.models import User
 class Season(models.Model):
     season_id = models.AutoField(primary_key=True)
     season = models.CharField(max_length=45)
-    current = models.CharField(max_length=1, default='n')
+    current = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.season_id) + ' ' + self.season
+        return str(self.season_id) + " " + self.season
 
 
 class Team(models.Model):
     team_no = models.IntegerField(primary_key=True)
     team_nm = models.CharField(max_length=255)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.team_no) + ' ' + self.team_nm
+        return str(self.team_no) + " " + self.team_nm
 
 
 class Event(models.Model):
@@ -49,12 +49,12 @@ class Event(models.Model):
     webcast_url = models.CharField(max_length=255, null=True)
     date_end = models.DateTimeField()
     timezone = models.CharField(max_length=255, null=True)
-    current = models.CharField(max_length=1, default='n')
-    competition_page_active = models.CharField(max_length=1, default='n')
-    void_ind = models.CharField(max_length=1, default='n')
+    current = models.CharField(max_length=1, default="n")
+    competition_page_active = models.CharField(max_length=1, default="n")
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f'{self.event_id} {self.event_nm}'
+        return f"{self.event_id} {self.event_nm}"
 
 
 class EventTeamInfo(models.Model):
@@ -67,23 +67,25 @@ class EventTeamInfo(models.Model):
     ties = models.IntegerField(null=True)
     rank = models.IntegerField(null=True)
     dq = models.IntegerField(null=True)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     class Meta:
-        unique_together = (('event', 'team_no'),)
+        unique_together = (("event", "team_no"),)
 
     def __str__(self):
-        return "Event {event}. Team {team}. ".format(event=self.event.event_id, team=self.team_no.team_no)
+        return "Event {event}. Team {team}. ".format(
+            event=self.event.event_id, team=self.team_no.team_no
+        )
 
 
 class CompetitionLevel(models.Model):
     comp_lvl_typ = models.CharField(primary_key=True, max_length=50)
     comp_lvl_typ_nm = models.CharField(max_length=255)
     comp_lvl_order = models.IntegerField()
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.comp_lvl_typ + ' ' + self.comp_lvl_typ_nm
+        return self.comp_lvl_typ + " " + self.comp_lvl_typ_nm
 
 
 class Match(models.Model):
@@ -91,25 +93,31 @@ class Match(models.Model):
     match_number = models.IntegerField()
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(
-        Team, models.PROTECT, related_name='red_one_team', null=True)
+        Team, models.PROTECT, related_name="red_one_team", null=True
+    )
     red_two = models.ForeignKey(
-        Team, models.PROTECT, related_name='red_two_team', null=True)
+        Team, models.PROTECT, related_name="red_two_team", null=True
+    )
     red_three = models.ForeignKey(
-        Team, models.PROTECT, related_name='red_three_team', null=True)
+        Team, models.PROTECT, related_name="red_three_team", null=True
+    )
     blue_one = models.ForeignKey(
-        Team, models.PROTECT, related_name='blue_one_team', null=True)
+        Team, models.PROTECT, related_name="blue_one_team", null=True
+    )
     blue_two = models.ForeignKey(
-        Team, models.PROTECT, related_name='blue_two_team', null=True)
+        Team, models.PROTECT, related_name="blue_two_team", null=True
+    )
     blue_three = models.ForeignKey(
-        Team, models.PROTECT, related_name='blue_three_team', null=True)
+        Team, models.PROTECT, related_name="blue_three_team", null=True
+    )
     red_score = models.IntegerField(null=True)
     blue_score = models.IntegerField(null=True)
     comp_level = models.ForeignKey(CompetitionLevel, models.PROTECT)
     time = models.DateTimeField(null=True)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f'match: {self.event} {self.comp_level} match no:{self.match_number}'
+        return f"match: {self.event} {self.comp_level} match no:{self.match_number}"
 
 
 class ScoutField(models.Model):
@@ -120,10 +128,10 @@ class ScoutField(models.Model):
     user = models.ForeignKey(User, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.scout_field_id
+        return f"sf id: {self.scout_field_id} {self.match} {self.user}"
 
 
 class ScoutPit(models.Model):
@@ -132,7 +140,7 @@ class ScoutPit(models.Model):
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
         return self.scout_pit_id
@@ -144,7 +152,7 @@ class ScoutPitImage(models.Model):
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
     default = models.BooleanField(default=False)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
         return self.scout_pit_img_id
@@ -155,24 +163,30 @@ class ScoutAuthGroups(models.Model):
     auth_group_id = models.ForeignKey(Group, models.PROTECT)
 
     def __str__(self):
-        return str(self.scout_group) + ' auth group: ' + str(self.auth_group_id)
+        return str(self.scout_group) + " auth group: " + str(self.auth_group_id)
 
 
 class ScoutFieldSchedule(models.Model):
     scout_field_sch_id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(
-        User, models.PROTECT, related_name='red_one_user', null=True)
+        User, models.PROTECT, related_name="red_one_user", null=True
+    )
     red_two = models.ForeignKey(
-        User, models.PROTECT, related_name='red_two_user', null=True)
+        User, models.PROTECT, related_name="red_two_user", null=True
+    )
     red_three = models.ForeignKey(
-        User, models.PROTECT, related_name='red_three_user', null=True)
+        User, models.PROTECT, related_name="red_three_user", null=True
+    )
     blue_one = models.ForeignKey(
-        User, models.PROTECT, related_name='blue_one_user', null=True)
+        User, models.PROTECT, related_name="blue_one_user", null=True
+    )
     blue_two = models.ForeignKey(
-        User, models.PROTECT, related_name='blue_two_user', null=True)
+        User, models.PROTECT, related_name="blue_two_user", null=True
+    )
     blue_three = models.ForeignKey(
-        User, models.PROTECT, related_name='blue_three_user', null=True)
+        User, models.PROTECT, related_name="blue_three_user", null=True
+    )
     red_one_check_in = models.DateTimeField(null=True)
     red_two_check_in = models.DateTimeField(null=True)
     red_three_check_in = models.DateTimeField(null=True)
@@ -184,10 +198,10 @@ class ScoutFieldSchedule(models.Model):
     notification1 = models.BooleanField(default=False)
     notification2 = models.BooleanField(default=False)
     notification3 = models.BooleanField(default=False)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.scout_field_sch_id + ' time: ' + self.st_time + ' - ' + self.end_time
+        return f"{self.scout_field_sch_id} time: {self.st_time} - {self.end_time}"
 
 
 class ScheduleType(models.Model):
@@ -195,7 +209,7 @@ class ScheduleType(models.Model):
     sch_nm = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.sch_typ + ' ' + self.sch_nm
+        return self.sch_typ + " " + self.sch_nm
 
 
 class Schedule(models.Model):
@@ -206,10 +220,18 @@ class Schedule(models.Model):
     st_time = models.DateTimeField()
     end_time = models.DateTimeField()
     notified = models.BooleanField(default=False)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.user.first_name + ' ' + self.user.last_name + ' time: ' + self.st_time + ' - ' + self.end_time
+        return (
+            self.user.first_name
+            + " "
+            + self.user.last_name
+            + " time: "
+            + self.st_time
+            + " - "
+            + self.end_time
+        )
 
 
 class TeamNotes(models.Model):
@@ -220,28 +242,30 @@ class TeamNotes(models.Model):
     user = models.ForeignKey(User, models.PROTECT)
     note = models.TextField()
     time = models.DateTimeField(default=django.utils.timezone.now)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return '{} {}'.format(self.team_note_id, self.team_no)
+        return "{} {}".format(self.team_note_id, self.team_no)
 
 
 class Question(models.Model):
     id = models.AutoField(primary_key=True)
-    question = models.ForeignKey(form.models.Question, models.PROTECT, related_name='scout_question')
+    question = models.ForeignKey(
+        form.models.Question, models.PROTECT, related_name="scout_question"
+    )
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     scorable = models.BooleanField(default=False)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return '{} {}'.format(self.id, self.question)
+        return "{} {}".format(self.id, self.question)
 
 
 class UserInfo(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, models.PROTECT, related_name='scouting_user_info')
+    user = models.ForeignKey(User, models.PROTECT, related_name="scouting_user_info")
     under_review = models.BooleanField(default=False)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return '{} {}'.format(self.id, self.user)
+        return "{} {}".format(self.id, self.user)

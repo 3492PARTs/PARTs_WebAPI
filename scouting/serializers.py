@@ -1,6 +1,37 @@
 from rest_framework import serializers
 
 
+class CompetitionLevelSerializer(serializers.Serializer):
+    comp_lvl_typ = serializers.CharField()
+    comp_lvl_typ_nm = serializers.CharField()
+    comp_lvl_order = serializers.IntegerField()
+
+
+class MatchSerializer(serializers.Serializer):
+    match_id = serializers.CharField(read_only=True)
+    event_id = serializers.IntegerField(read_only=True)
+    match_number = serializers.IntegerField()
+    red_score = serializers.IntegerField()
+    blue_score = serializers.IntegerField()
+    time = serializers.DateTimeField()
+    blue_one_id = serializers.IntegerField()
+    blue_one_rank = serializers.IntegerField(allow_null=True)
+    blue_two_id = serializers.IntegerField()
+    blue_two_rank = serializers.IntegerField(allow_null=True)
+    blue_three_id = serializers.IntegerField()
+    blue_three_rank = serializers.IntegerField(allow_null=True)
+    red_one_id = serializers.IntegerField()
+    red_one_rank = serializers.IntegerField(allow_null=True)
+    red_two_id = serializers.IntegerField()
+    red_two_rank = serializers.IntegerField(allow_null=True)
+    red_three_id = serializers.IntegerField()
+    red_three_rank = serializers.IntegerField(allow_null=True)
+
+    scout_field_result = serializers.BooleanField()
+
+    comp_level = CompetitionLevelSerializer(read_only=True)
+
+
 class TeamSerializer(serializers.Serializer):
     team_no = serializers.IntegerField()
     team_nm = serializers.CharField()

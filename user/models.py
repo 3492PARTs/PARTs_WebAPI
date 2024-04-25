@@ -1,6 +1,11 @@
 import django
 from django.db import models
-from django.contrib.auth.models import Permission, AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import (
+    Permission,
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 
 
 class UserLinks(models.Model):
@@ -11,7 +16,7 @@ class UserLinks(models.Model):
     order = models.IntegerField()
 
     def __str__(self):
-        return str(self.user_links_id) + ' ' + self.menu_name
+        return str(self.user_links_id) + " " + self.menu_name
 
 
 class PhoneType(models.Model):
@@ -20,7 +25,7 @@ class PhoneType(models.Model):
     phone_type = models.CharField(max_length=255)
 
     def __str__(self):
-        return str(self.phone_type_id) + ' ' + self.carrier + ' ' + self.phone_type
+        return str(self.phone_type_id) + " " + self.carrier + " " + self.phone_type
 
 
 class ProfileManager(BaseUserManager):
@@ -41,8 +46,13 @@ class ProfileManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, username, password, first_name, last_name):
-        user = self.create_user(email=email, username=username,
-                                first_name=first_name, last_name=last_name, password=password)
+        user = self.create_user(
+            email=email,
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+            password=password,
+        )
         user.is_superuser = True
         user.is_active = True
         user.save(using=self._db)
@@ -62,23 +72,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50, null=False)
     last_name = models.CharField(max_length=50, null=False)
     phone = models.CharField(max_length=10, blank=True, null=True)
-    phone_type = models.ForeignKey(
-        PhoneType, models.PROTECT, blank=True, null=True)
+    phone_type = models.ForeignKey(PhoneType, models.PROTECT, blank=True, null=True)
     discord_user_id = models.CharField(max_length=1000, blank=True, null=True)
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
 
     # sets what the user will log in with
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = "username"
 
     # what is required by the model (do not put username and password here, this is used for the create superuser function which has those by default)
-    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ["email", "first_name", "last_name"]
 
     # user manager class
     objects = ProfileManager()
 
     def __str__(self):
-        return "User name: {}, email: {} ".format(self.username, self.email)
+        return f"User name: {self.username} email: {self.email} "
 
     def has_perm(self, perm, obj=None):
         # TODO revisit this
@@ -89,4 +98,4 @@ class User(AbstractBaseUser, PermissionsMixin):
         return True
 
     def get_full_name(self):
-        return f'{self.first_name} {self.last_name}'
+        return f"{self.first_name} {self.last_name}"
