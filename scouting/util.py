@@ -1,38 +1,38 @@
 from django.db.models import Q
 
 from general.security import ret_message
-from scouting.models import Event, Schedule, ScheduleType, ScoutFieldSchedule, Season
+from scouting.models import (
+    Event,
+    EventTeamInfo,
+    Match,
+    Schedule,
+    ScheduleType,
+    ScoutFieldSchedule,
+    Season,
+    Team,
+)
 
 
 def get_current_season():
     try:
         current_season = Season.objects.get(current="y")
+        return current_season
     except Season.DoesNotExist as e:
-        current_season = None
-
-    return current_season
+        raise Exception("No season set, see an admin.")
 
 
-def get_event(season: Season, current: str = None):
+def get_current_event():
     try:
-        current_event = Q()
-
-        if current is not None:
-            current_event = Q(current=current)
-
-        event = Event.objects.get(Q(season=season) & current_event)
+        event = Event.objects.get(Q(season=get_current_season()) & Q(current="y"))
+        return event
     except Event.DoesNotExist as e:
-        event = None
+        raise Exception("No event set, see an admin.")
+
+
+def get_events(season: Season):
+    event = Event.objects.filter(Q(season=season))
 
     return event
-
-
-def get_no_season_ret_message(endpoint: str, user_id: int):
-    return ret_message("No season set, see an admin.", True, endpoint, user_id)
-
-
-def get_no_event_ret_message(endpoint: str, user_id: int):
-    return ret_message("No event set, see an admin.", True, endpoint, user_id)
 
 
 def format_scout_field_schedule_entry(fs: ScoutFieldSchedule):
@@ -103,7 +103,7 @@ def get_current_scout_field_schedule(request):
             "scouting.util.get_current_scout_field_schedule", request.user.id
         )
 
-    current_event = get_event(current_season, "y")
+    current_event = get_current_event(current_season, "y")
 
     if current_event is None:
         return get_no_event_ret_message(
@@ -125,7 +125,7 @@ def get_current_schedule(request):
             "scouting.util.get_current_scout_field_schedule", request.user.id
         )
 
-    current_event = get_event(current_season, "y")
+    current_event = get_current_event(current_season, "y")
 
     if current_event is None:
         return get_no_event_ret_message(
@@ -209,3 +209,71 @@ def parse_schedule(s: Schedule):
         "user": s.user,
         "user_name": s.user.get_full_name(),
     }
+
+
+def get_matches(event: Event):
+
+    matches = Match.objects.filter(Q(event=event) & Q(void_ind="n")).order_by(
+        "comp_level__comp_lvl_order", "match_number"
+    )
+
+    parsed_matches = []
+    for m in matches:
+
+        eti_blue_one = get_event_team_info(m.blue_one, event)
+        eti_blue_two = get_event_team_info(m.blue_two, event)
+        eti_blue_three = get_event_team_info(m.blue_three, event)
+
+        eti_red_one = get_event_team_info(m.red_one, event)
+        eti_red_two = get_event_team_info(m.red_two, event)
+        eti_red_three = get_event_team_info(m.red_three, event)
+
+        parsed_matches.append(
+            {
+                "match_id": m.match_id,
+                "event_id": m.event.event_id,
+                "match_number": m.match_number,
+                "red_score": m.red_score,
+                "blue_score": m.blue_score,
+                "time": m.time,
+                "blue_one_id": m.blue_one.team_no,
+                "blue_one_rank": (None if eti_blue_one is None else eti_blue_one.rank),
+                "blue_one_field_response": match_team_has_result(m, m.blue_one),
+                "blue_two_id": m.blue_two.team_no,
+                "blue_two_rank": (None if eti_blue_two is None else eti_blue_two.rank),
+                "blue_two_field_response": match_team_has_result(m, m.blue_two),
+                "blue_three_id": m.blue_three.team_no,
+                "blue_three_rank": (
+                    None if eti_blue_three is None else eti_blue_three.rank
+                ),
+                "blue_three_field_response": match_team_has_result(m, m.blue_three),
+                "red_one_id": m.red_one.team_no,
+                "red_one_rank": (None if eti_red_one is None else eti_red_one.rank),
+                "red_one_field_response": match_team_has_result(m, m.red_one),
+                "red_two_id": m.red_two.team_no,
+                "red_two_rank": (None if eti_red_two is None else eti_red_two.rank),
+                "red_two_field_response": match_team_has_result(m, m.red_two),
+                "red_three_id": m.red_three.team_no,
+                "red_three_rank": (
+                    None if eti_red_three is None else eti_red_three.rank
+                ),
+                "red_three_field_response": match_team_has_result(m, m.red_three),
+                "comp_level": m.comp_level,
+                "scout_field_result": len(m.scoutfield_set.all()) > 0,
+            }
+        )
+
+    return parsed_matches
+
+
+def get_event_team_info(team: Team, event: Event):
+    try:
+        info = team.eventteaminfo_set.get(Q(event=event) & Q(void_ind="n"))
+    except EventTeamInfo.DoesNotExist:
+        info = None
+
+    return info
+
+
+def match_team_has_result(match: Match, team: Team) -> bool:
+    return len(match.scoutfield_set.filter(Q(void_ind="n") & Q(team_no=team))) > 0

@@ -45,7 +45,7 @@ class Init(APIView):
                 app_url + self.endpoint, self.request.user.id
             )
 
-        current_event = scouting.util.get_event(current_season, "y")
+        current_event = scouting.util.get_current_event(current_season, "y")
 
         if current_event is None:
             return scouting.util.get_no_event_ret_message(
