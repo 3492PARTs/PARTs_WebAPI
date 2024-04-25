@@ -95,7 +95,7 @@ def format_scout_field_schedule_entry(fs: ScoutFieldSchedule):
     }
 
 
-def get_current_scout_field_schedule(request):
+def get_current_scout_field_schedule():
     current_event = get_current_event()
 
     sfs = ScoutFieldSchedule.objects.filter(
@@ -105,7 +105,7 @@ def get_current_scout_field_schedule(request):
     return sfs
 
 
-def get_current_schedule(request):
+def get_current_schedule():
     current_event = get_current_event()
 
     schs = Schedule.objects.filter(Q(event=current_event) & Q(void_ind="n")).order_by(

@@ -110,11 +110,11 @@ class Schedules(APIView):
                 types = scouting.util.get_schedule_types()
                 sch = list(
                     scouting.util.parse_schedule(s)
-                    for s in scouting.util.get_current_schedule(request)
+                    for s in scouting.util.get_current_schedule()
                 )
                 field_sch = list(
                     scouting.util.parse_scout_field_schedule(s)
-                    for s in scouting.util.get_current_scout_field_schedule(request)
+                    for s in scouting.util.get_current_scout_field_schedule()
                 )
 
                 serializer = SchedulesSerializer(

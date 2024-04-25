@@ -166,12 +166,6 @@ class QuestionSerializer(serializers.Serializer):
     is_condition = serializers.CharField()
 
 
-class ScoutFieldInitSerializer(serializers.Serializer):
-    scoutQuestions = QuestionSerializer(many=True)
-    scoutFieldSchedule = ScoutFieldScheduleSerializer()
-    matches = MatchSerializer(many=True, required=False)
-
-
 class SaveScoutFieldSerializer(serializers.Serializer):
     scoutQuestions = QuestionSerializer(many=True)
     team = serializers.CharField()
