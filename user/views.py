@@ -110,7 +110,7 @@ class TokenRefreshView(APIView):
             return Response(serializer.validated_data)
         except Exception as e:
             return ret_message(
-                "An error occurred while authenticating, please log in again.",
+                "An error occurred while reauthenticating, please log in again.",
                 True,
                 app_url + self.endpoint,
                 -1,
