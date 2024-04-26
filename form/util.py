@@ -14,6 +14,7 @@ from form.models import (
     QuestionCondition,
 )
 from scouting.models import Season, ScoutField, ScoutPit, Event
+import form.util
 
 
 def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
@@ -451,7 +452,7 @@ def get_questions_with_conditions(
 
     for q in questions:
         # Only process the ones that are not conditions, because the conditions will be in their Question FROM - see below loop
-        if q["is_condition"] is "n":
+        if q["is_condition"] == "n":
             q["conditions"] = []
             question = Question.objects.get(question_id=q["question_id"])
 
@@ -470,3 +471,34 @@ def get_questions_with_conditions(
             questions_with_conditions.append(q)
 
     return questions_with_conditions
+
+
+def get_question_with_conditions_response_answers(response: Response):
+    answers = []
+
+    questions = get_questions_with_conditions(response.form_typ.form_typ)
+
+    for question in questions:
+        try:
+            spa = QuestionAnswer.objects.get(
+                Q(response=response) & Q(question_id=question["question_id"])
+            )
+        except QuestionAnswer.DoesNotExist as e:
+            spa = QuestionAnswer(answer="")
+
+        question["answer"] = spa.answer
+
+        for c in question.get("conditions", []):
+            try:
+                spa = QuestionAnswer.objects.get(
+                    Q(response=response)
+                    & Q(question_id=c["question_to"]["question_id"])
+                )
+            except QuestionAnswer.DoesNotExist as e:
+                spa = QuestionAnswer(answer="")
+
+            c["question_to"]["answer"] = spa.answer
+
+        answers.append(question)
+
+    return answers

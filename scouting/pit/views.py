@@ -7,6 +7,7 @@ from form.models import QuestionAnswer, Question
 from scouting.models import Season, Team, Event, ScoutPit, EventTeamInfo, ScoutPitImage
 import scouting.pit
 import scouting.pit.util
+import scouting.util
 from .serializers import (
     InitSerializer,
     PitTeamDataSerializer,
@@ -39,28 +40,7 @@ class SavePicture(APIView):
     endpoint = "save-picture/"
 
     def save_file(self, file, team_no):
-
-        try:
-            current_season = Season.objects.get(current="y")
-        except Exception as e:
-            return ret_message(
-                "No season set, see an admin.",
-                True,
-                app_url + self.endpoint,
-                self.request.user.id,
-                e,
-            )
-
-        try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current="y"))
-        except Exception as e:
-            return ret_message(
-                "No event set, see an admin.",
-                True,
-                app_url + self.endpoint,
-                self.request.user.id,
-                e,
-            )
+        current_event = scouting.util.get_current_event()
 
         if not allowed_file(file.content_type):
             return ret_message(
@@ -218,84 +198,41 @@ class TeamData(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "team-data/"
 
-    def get_questions(self, team_num):
-
-        try:
-            current_season = Season.objects.get(current="y")
-        except Exception as e:
-            return ret_message(
-                "No season set, see an admin.",
-                True,
-                app_url + self.endpoint,
-                self.request.user.id,
-                e,
-            )
-
-        try:
-            current_event = Event.objects.get(Q(season=current_season) & Q(current="y"))
-        except Exception as e:
-            return ret_message(
-                "No event set, see an admin",
-                True,
-                app_url + self.endpoint,
-                self.request.user.id,
-                e,
-            )
-
-        sp = ScoutPit.objects.get(
-            Q(team_no=team_num) & Q(void_ind="n") & Q(event=current_event)
-        )
-
-        scout_questions = []
-
-        sqs = form.util.get_questions_with_conditions("pit")
-
-        pics = []
-        for sq in sqs:
-            try:
-                spa = QuestionAnswer.objects.get(
-                    Q(response_id=sp.response_id) & Q(question_id=sq["question_id"])
-                )
-            except Exception as e:
-                spa = QuestionAnswer(answer="")
-
-            sq["answer"] = spa.answer
-
-            for c in sq.get("conditions", []):
-                try:
-                    spa = QuestionAnswer.objects.get(
-                        Q(response_id=sp.response_id)
-                        & Q(question_id=c["question_to"]["question_id"])
-                    )
-                except Exception as e:
-                    spa = QuestionAnswer(answer="")
-
-                c["question_to"]["answer"] = spa.answer
-            scout_questions.append(sq)
-
-        for pic in sp.scoutpitimage_set.filter(Q(void_ind="n")):
-            pics.append(
-                {
-                    "scout_pit_img_id": pic.scout_pit_img_id,
-                    "pic": cloudinary.CloudinaryImage(
-                        pic.img_id, version=pic.img_ver
-                    ).build_url(secure=True),
-                    "default": pic.default,
-                }
-            )
-
-        return {
-            "response_id": sp.response_id,
-            "questions": scout_questions,
-            "pics": pics,
-        }
-
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.get_questions(request.query_params.get("team_num", None))
+                current_event = scouting.util.get_current_event()
+
+                sp = ScoutPit.objects.get(
+                    Q(team_no=request.query_params.get("team_num", None))
+                    & Q(void_ind="n")
+                    & Q(response__void_ind="n")
+                    & Q(event=current_event)
+                )
+
+                scout_questions = (
+                    form.util.get_question_with_conditions_response_answers(sp.response)
+                )
+
+                pics = []
+
+                for pic in sp.scoutpitimage_set.filter(Q(void_ind="n")):
+                    pics.append(
+                        {
+                            "scout_pit_img_id": pic.scout_pit_img_id,
+                            "pic": cloudinary.CloudinaryImage(
+                                pic.img_id, version=pic.img_ver
+                            ).build_url(secure=True),
+                            "default": pic.default,
+                        }
+                    )
+
                 serializer = PitTeamDataSerializer(
-                    req,
+                    {
+                        "response_id": sp.response_id,
+                        "questions": scout_questions,
+                        "pics": pics,
+                    }
                 )
                 return Response(serializer.data)
             except Exception as e:
