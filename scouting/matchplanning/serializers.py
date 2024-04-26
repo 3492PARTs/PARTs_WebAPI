@@ -93,8 +93,8 @@ class ScoutResultAnswerSerializer(serializers.BaseSerializer):
 
 class TeamNoteSerializer(serializers.Serializer):
     team_note_id = serializers.IntegerField(read_only=True)
-    team_no = TeamSerializer()
-    match = serializers.IntegerField(read_only=True)
+    team_no = serializers.IntegerField()
+    match_id = serializers.CharField(read_only=True)
     note = serializers.CharField()
     time = serializers.DateTimeField()
 
@@ -111,5 +111,5 @@ class MatchPlanningSerializer(serializers.Serializer):
 class SaveTeamNoteSerializer(serializers.Serializer):
     team_note_id = serializers.IntegerField(read_only=True)
     team_no = serializers.IntegerField()
-    match = serializers.IntegerField(allow_null=True, required=False)
+    match_id = serializers.CharField(allow_null=True, required=False, allow_blank=True)
     note = serializers.CharField()
