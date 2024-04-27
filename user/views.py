@@ -100,6 +100,8 @@ class TokenRefreshView(APIView):
     endpoint = "token/refresh/"
 
     def post(self, request, format=None):
+        print("refresh")
+        print(request.data)
         try:
             serializer = TokenRefreshSerializer(data=request.data)
             if not serializer.is_valid():

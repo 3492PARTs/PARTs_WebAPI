@@ -26,25 +26,16 @@ class TeamCheckedSerializer(serializers.Serializer):
 class TeamCreateSerializer(serializers.Serializer):
     team_no = serializers.CharField()
     team_nm = serializers.CharField()
-    void_ind = serializers.CharField(default='n')
+    void_ind = serializers.CharField(default="n")
 
     def create(self, validated_data):
-        t = Team(team_no=validated_data['team_no'], team_nm=validated_data['team_nm'],
-                 void_ind=validated_data['void_ind'])
+        t = Team(
+            team_no=validated_data["team_no"],
+            team_nm=validated_data["team_nm"],
+            void_ind=validated_data["void_ind"],
+        )
         t.save()
         return t
-
-
-'''
-class EventSerializer(serializers.ModelSerializer):
-    # TODO Why did i do this??????? Why is there only one team here?
-    team_no = TeamSerializer(required=False)
-    checked = serializers.BooleanField(required=False)
-
-    class Meta:
-        model = Event
-        fields = '__all__'
-'''
 
 
 class EventSerializer(serializers.Serializer):
@@ -52,19 +43,29 @@ class EventSerializer(serializers.Serializer):
         pass
 
     def create(self, validated_data):
-        e = Event(season_id=validated_data['season_id'], event_nm=validated_data['event_nm'],
-                  date_st=validated_data['date_st'], event_cd=validated_data['event_cd'],
-                  event_url=validated_data.get('event_url', None), address=validated_data['address'],
-                  city=validated_data['city'], state_prov=validated_data['state_prov'],
-                  postal_code=validated_data['postal_code'], location_name=validated_data['location_name'],
-                  gmaps_url=validated_data.get('gmaps_url', None), webcast_url=validated_data.get('webcast_url', None),
-                  date_end=validated_data['date_end'], timezone=validated_data['timezone'],
-                  current=validated_data['current'], competition_page_active=validated_data['competition_page_active'],
-                  void_ind=validated_data['void_ind'])
+        e = Event(
+            season_id=validated_data["season_id"],
+            event_nm=validated_data["event_nm"],
+            date_st=validated_data["date_st"],
+            event_cd=validated_data["event_cd"],
+            event_url=validated_data.get("event_url", None),
+            address=validated_data["address"],
+            city=validated_data["city"],
+            state_prov=validated_data["state_prov"],
+            postal_code=validated_data["postal_code"],
+            location_name=validated_data["location_name"],
+            gmaps_url=validated_data.get("gmaps_url", None),
+            webcast_url=validated_data.get("webcast_url", None),
+            date_end=validated_data["date_end"],
+            timezone=validated_data["timezone"],
+            current=validated_data["current"],
+            competition_page_active=validated_data["competition_page_active"],
+            void_ind=validated_data["void_ind"],
+        )
         e.save()
         return e
 
-    event_id = serializers.IntegerField(required=False)
+    event_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField()
     event_nm = serializers.CharField()
     date_st = serializers.DateTimeField()
@@ -81,7 +82,7 @@ class EventSerializer(serializers.Serializer):
     timezone = serializers.CharField()
     current = serializers.CharField()
     competition_page_active = serializers.CharField()
-    void_ind = serializers.CharField(default='n')
+    void_ind = serializers.CharField(default="n")
 
 
 """
@@ -199,15 +200,18 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
 
 class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
     def create(self, validated_data):
-        sfs = ScoutFieldSchedule(event_id=validated_data['event_id'], st_time=validated_data['st_time'],
-                                 end_time=validated_data['end_time'],
-                                 red_one_id=validated_data.get('red_one_id', None),
-                                 red_two_id=validated_data.get('red_two_id', None),
-                                 red_three_id=validated_data.get('red_three_id', None),
-                                 blue_one_id=validated_data.get('blue_one_id', None),
-                                 blue_two_id=validated_data.get('blue_two_id', None),
-                                 blue_three_id=validated_data.get('blue_three_id', None),
-                                 void_ind=validated_data['void_ind'])
+        sfs = ScoutFieldSchedule(
+            event_id=validated_data["event_id"],
+            st_time=validated_data["st_time"],
+            end_time=validated_data["end_time"],
+            red_one_id=validated_data.get("red_one_id", None),
+            red_two_id=validated_data.get("red_two_id", None),
+            red_three_id=validated_data.get("red_three_id", None),
+            blue_one_id=validated_data.get("blue_one_id", None),
+            blue_two_id=validated_data.get("blue_two_id", None),
+            blue_three_id=validated_data.get("blue_three_id", None),
+            void_ind=validated_data["void_ind"],
+        )
         sfs.save()
         return sfs
 
@@ -215,14 +219,14 @@ class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
     event_id = serializers.IntegerField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
-    notified = serializers.CharField(default='n')
+    notified = serializers.CharField(default="n")
     red_one_id = serializers.IntegerField(allow_null=True)
     red_two_id = serializers.IntegerField(allow_null=True)
     red_three_id = serializers.IntegerField(allow_null=True)
     blue_one_id = serializers.IntegerField(allow_null=True)
     blue_two_id = serializers.IntegerField(allow_null=True)
     blue_three_id = serializers.IntegerField(allow_null=True)
-    void_ind = serializers.CharField(default='n')
+    void_ind = serializers.CharField(default="n")
 
 
 class ScoutPitScheduleSerializer(serializers.Serializer):
@@ -261,21 +265,25 @@ class QuestionSerializer(serializers.Serializer):
     active = serializers.CharField()
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField(required=False, allow_blank=True)
-    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_typ = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    form_sub_nm = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoptions_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True)
+        required=False, allow_null=True, many=True
+    )
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
 class ScoutAdminQuestionInitSerializer(serializers.Serializer):
     questionTypes = QuestionTypeSerializer(many=True)
-    scoutQuestionSubTypes = FormSubTypeSerializer(
-        many=True, required=False)
+    scoutQuestionSubTypes = FormSubTypeSerializer(many=True, required=False)
     scoutQuestions = QuestionSerializer(many=True)
 
 
@@ -295,7 +303,7 @@ class ScoutFieldSerializer(serializers.Serializer):
 
 class InitSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
-    #events = EventTeamSerializer(many=True)
+    # events = EventTeamSerializer(many=True)
     currentSeason = SeasonSerializer(required=False)
     currentEvent = EventSerializer(required=False)
     userGroups = GroupSerializer(many=True)
@@ -333,4 +341,3 @@ class UserActivitySerializer(serializers.Serializer):
     user_info = ScoutingUserInfoSerializer()
     results = ScoutFieldResultsSerializer()
     schedule = ScoutFieldScheduleSerializer(many=True)
-

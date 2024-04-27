@@ -132,11 +132,14 @@ def save_question(question):
     required = question.get("required", "n")
     required = required if required != "" else "n"
 
+    form_sub_type = question.get("form_sub_typ", None)
+    form_sub_type = form_sub_type if form_sub_type != "" else None
+
     if question.get("question_id", None) is not None:
         q = Question.objects.get(question_id=question["question_id"])
         q.question = question["question"]
         q.question_typ_id = question["question_typ"]["question_typ"]
-        q.form_sub_typ_id = question.get("form_sub_typ", None)
+        q.form_sub_typ_id = form_sub_type
         q.order = question["order"]
         q.required = required
         q.active = question["active"]
@@ -144,7 +147,7 @@ def save_question(question):
         q = Question(
             question_typ_id=question["question_typ"]["question_typ"],
             form_typ_id=question["form_typ"],
-            form_sub_typ_id=question.get("form_sub_typ", None),
+            form_sub_typ_id=form_sub_type,
             question=question["question"],
             order=question["order"],
             active=question["active"],

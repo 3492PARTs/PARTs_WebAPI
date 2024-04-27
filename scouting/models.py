@@ -223,15 +223,7 @@ class Schedule(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return (
-            self.user.first_name
-            + " "
-            + self.user.last_name
-            + " time: "
-            + self.st_time
-            + " - "
-            + self.end_time
-        )
+        return f"{self.user.get_full_name()} {self.st_time} {self.end_time}"
 
 
 class TeamNotes(models.Model):

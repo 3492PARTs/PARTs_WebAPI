@@ -1,3 +1,4 @@
+from ast import Match
 import datetime
 import json
 from django.conf import settings
@@ -6,7 +7,19 @@ from django.db.models import Q
 import pytz
 import requests
 
-from scouting.models import Event, Season, Team
+from form.models import QuestionAnswer, Response
+from general.security import ret_message
+from scouting.models import (
+    Event,
+    EventTeamInfo,
+    Schedule,
+    ScoutField,
+    ScoutFieldSchedule,
+    ScoutPit,
+    Season,
+    Team,
+    TeamNotes,
+)
 
 
 def load_event(e):
@@ -140,3 +153,50 @@ def load_event(e):
                     + "\n"
                 )
     return messages
+
+
+def delete_event(event_id):
+    e = Event.objects.get(event_id=event_id)
+
+    teams_at_event = Team.objects.filter(event=e)
+    for t in teams_at_event:
+        t.event_set.remove(e)
+
+    scout_fields = ScoutField.objects.filter(event=e)
+    for sf in scout_fields:
+        scout_field_answers = QuestionAnswer.objects.filter(response=sf.response)
+        for sfa in scout_field_answers:
+            sfa.delete()
+        sf.delete()
+        Response.objects.filter(response=sf.response).delete()
+
+    scout_pits = ScoutPit.objects.filter(event=e)
+    for sp in scout_pits:
+        scout_pit_answers = QuestionAnswer.objects.filter(response=sp.response)
+        for spa in scout_pit_answers:
+            spa.delete()
+        sp.delete()
+
+    matches = Match.objects.filter(event=e)
+    for m in matches:
+        m.delete()
+
+    scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
+    for sfs in scout_field_schedules:
+        sfs.delete()
+
+    schedules = Schedule.objects.filter(event=e)
+    for s in schedules:
+        s.delete()
+
+    notes = TeamNotes.objects.filter(event=e)
+    for n in notes:
+        n.delete()
+
+    event_team_infos = EventTeamInfo.objects.filter(event=e)
+    for eti in event_team_infos:
+        eti.delete()
+
+    e.delete()
+
+    return ret_message("Successfully deleted event: " + e.event_nm)
