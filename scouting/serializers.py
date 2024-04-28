@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 
 class SeasonSerializer(serializers.Serializer):
-    season_id = serializers.IntegerField(read_only=True)
+    season_id = serializers.IntegerField()
     season = serializers.CharField()
     current = serializers.CharField()
 
@@ -35,8 +35,8 @@ class CompetitionLevelSerializer(serializers.Serializer):
 
 
 class MatchSerializer(serializers.Serializer):
-    match_id = serializers.CharField(read_only=True)
-    event_id = serializers.IntegerField(read_only=True)
+    match_id = serializers.CharField()
+    event_id = serializers.IntegerField()
     match_number = serializers.IntegerField()
     red_score = serializers.IntegerField()
     blue_score = serializers.IntegerField()
