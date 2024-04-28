@@ -7,21 +7,97 @@ from django.db.models import Q, Case, When
 from general.security import has_access, ret_message
 import scouting
 from scouting.models import EventTeamInfo, Match, ScoutPit, Team
-from scouting.serializers import MatchSerializer, SchedulesSerializer, TeamSerializer
+import scouting.models
+from scouting.serializers import (
+    AllScoutInfoSerializer,
+    EventSerializer,
+    MatchSerializer,
+    ScheduleSerializer,
+    ScheduleTypeSerializer,
+    ScoutFieldScheduleSerializer,
+    SeasonSerializer,
+    TeamSerializer,
+)
 import scouting.util
 
 auth_obj = "scouting"
 app_url = "scouting/"
 
 
-class Teams(APIView):
+class Season(APIView):
+    """
+    API endpoint to get the list of seasons
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "season/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                seasons = scouting.models.Season.objects.all()
+
+                serializer = SeasonSerializer(seasons, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting seasons.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class Event(APIView):
+    """
+    API endpoint to get the list of events
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "event/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                events = scouting.models.Event.objects.filter(void_ind="n")
+
+                serializer = EventSerializer(events, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting events.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class Team(APIView):
     """
     API endpoint to get the current list of teams
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "teams/"
+    endpoint = "team/"
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -29,7 +105,7 @@ class Teams(APIView):
                 current_event = scouting.util.get_current_event()
 
                 teams = (
-                    Team.objects.annotate(
+                    scouting.models.Team.objects.annotate(
                         pit_result=Case(
                             When(
                                 team_no__in=ScoutPit.objects.filter(
@@ -63,14 +139,14 @@ class Teams(APIView):
             )
 
 
-class Matches(APIView):
+class Match(APIView):
     """
     API endpoint to get the current list of matches
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "matches/"
+    endpoint = "match/"
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
@@ -95,39 +171,150 @@ class Matches(APIView):
             )
 
 
-class Schedules(APIView):
+class Schedule(APIView):
     """
-    API endpoint to get all schedules
+    API endpoint to get schedules
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "schedules/"
+    endpoint = "schedule/"
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                types = scouting.util.get_schedule_types()
                 sch = list(
                     scouting.util.parse_schedule(s)
                     for s in scouting.util.get_current_schedule()
                 )
+
+                serializer = ScheduleSerializer(sch, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting schedules.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class ScoutFieldSchedule(APIView):
+    """
+    API endpoint to get scout field schedules
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "scout-field-schedule/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
                 field_sch = list(
                     scouting.util.parse_scout_field_schedule(s)
                     for s in scouting.util.get_current_scout_field_schedule()
                 )
 
-                serializer = SchedulesSerializer(
-                    {
-                        "schedule_types": types,
-                        "schedule": sch,
-                        "field_schedule": field_sch,
-                    }
-                )
+                serializer = ScoutFieldScheduleSerializer(field_sch, many=True)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
-                    "An error occurred while getting teams.",
+                    "An error occurred while getting scout field schedules.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class ScheduleType(APIView):
+    """
+    API endpoint to get all schedule types
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "schedule-type/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                types = scouting.util.get_schedule_types()
+
+                serializer = ScheduleTypeSerializer(types, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting schedule types.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class AllScoutingInfo(APIView):
+    """
+    API endpoint to get the list info needed to populate the scouting app under one call
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "all-scouting-info/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                seasons = Season.get(self, request).data
+                events = Event.get(self, request).data
+                teams = Team.get(self, request).data
+                matches = Match.get(self, request).data
+                schedules = Schedule.get(self, request).data
+                scout_field_schedules = ScoutFieldSchedule.get(self, request).data
+                schedule_types = ScheduleType.get(self, request).data
+
+                serializer = AllScoutInfoSerializer(
+                    data={
+                        "seasons": seasons,
+                        "events": events,
+                        "teams": teams,
+                        "matches": matches,
+                        "schedules": schedules,
+                        "scout_field_schedules": scout_field_schedules,
+                        "schedule_types": schedule_types,
+                    }
+                )
+
+                if not serializer.is_valid():
+                    raise Exception(serializer.errors)
+
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting all scouting info.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,

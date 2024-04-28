@@ -55,17 +55,9 @@ class Init(APIView):
     def init(self):
         seasons = Season.objects.all().order_by("season")
 
-        try:
-            current_season = Season.objects.get(current="y")
-        except Exception as e:
-            current_season = Season()
+        current_season = scouting.util.get_current_season()
 
-        try:
-            current_event = Event.objects.get(
-                Q(season=current_season) & Q(current="y") & Q(void_ind="n")
-            )
-        except Exception as e:
-            current_event = Event()
+        current_event = scouting.util.get_current_event()
 
         user_groups = []
         try:

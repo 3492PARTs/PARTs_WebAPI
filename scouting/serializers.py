@@ -1,6 +1,33 @@
 from rest_framework import serializers
 
 
+class SeasonSerializer(serializers.Serializer):
+    season_id = serializers.IntegerField(read_only=True)
+    season = serializers.CharField()
+    current = serializers.CharField()
+
+
+class EventSerializer(serializers.Serializer):
+    event_id = serializers.IntegerField()
+    season_id = serializers.IntegerField()
+    event_nm = serializers.CharField()
+    date_st = serializers.DateTimeField()
+    date_end = serializers.DateTimeField()
+    event_cd = serializers.CharField()
+    event_url = serializers.CharField(required=False, allow_null=True)
+    address = serializers.CharField()
+    city = serializers.CharField()
+    state_prov = serializers.CharField()
+    postal_code = serializers.CharField()
+    location_name = serializers.CharField()
+    gmaps_url = serializers.CharField(required=False, allow_null=True)
+    webcast_url = serializers.CharField(required=False, allow_null=True)
+    timezone = serializers.CharField()
+    current = serializers.CharField()
+    competition_page_active = serializers.CharField()
+    void_ind = serializers.CharField(default="n")
+
+
 class CompetitionLevelSerializer(serializers.Serializer):
     comp_lvl_typ = serializers.CharField()
     comp_lvl_typ_nm = serializers.CharField()
@@ -96,7 +123,11 @@ class ScheduleTypeSerializer(serializers.Serializer):
     sch_nm = serializers.CharField()
 
 
-class SchedulesSerializer(serializers.Serializer):
-    field_schedule = ScoutFieldScheduleSerializer(many=True, required=False)
-    schedule = ScheduleSerializer(many=True, required=False)
-    schedule_types = ScheduleTypeSerializer(many=True, required=False)
+class AllScoutInfoSerializer(serializers.Serializer):
+    seasons = SeasonSerializer(many=True)
+    events = EventSerializer(many=True)
+    teams = TeamSerializer(many=True)
+    matches = MatchSerializer(many=True)
+    schedules = ScheduleSerializer(many=True)
+    scout_field_schedules = ScoutFieldScheduleSerializer(many=True)
+    schedule_types = ScheduleTypeSerializer(many=True)
