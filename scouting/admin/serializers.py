@@ -336,8 +336,6 @@ class ScoutingUserInfoSerializer(serializers.Serializer):
     under_review = serializers.BooleanField(required=False)
 
 
-class UserActivitySerializer(serializers.Serializer):
+class UserScoutingUserInfoSerializer(serializers.Serializer):
     user = UserSerializer()
     user_info = ScoutingUserInfoSerializer()
-    results = ScoutFieldResultsSerializer()
-    schedule = ScoutFieldScheduleSerializer(many=True)

@@ -1124,50 +1124,19 @@ class SavePhoneType(APIView):
             )
 
 
-class ScoutingActivity(APIView):
+class ScoutingUserInfo(APIView):
     """
-    API endpoint to get activity of scouters
+    API endpoint to get scouters user info
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "scout-activity/"
+    endpoint = "scouting-user-info/"
 
     def init(self):
-        try:
-            current_season = Season.objects.get(current="y")
-        except Exception as e:
-            current_season = Season()
-
-        try:
-            current_event = Event.objects.get(
-                Q(season=current_season) & Q(current="y") & Q(void_ind="n")
-            )
-        except Exception as e:
-            current_event = Event()
-
         user_results = []
         users = user.util.get_users(1, 0)
         for u in users:
-            field_schedule = []
-            sfss = ScoutFieldSchedule.objects.filter(
-                Q(void_ind="n")
-                & Q(event=current_event)
-                & (
-                    Q(red_one=u)
-                    | Q(red_two=u)
-                    | Q(red_three=u)
-                    | Q(blue_one=u)
-                    | Q(blue_two=u)
-                    | Q(blue_three=u)
-                )
-            ).order_by("st_time")
-
-            for fs in sfss:
-                field_schedule.append(
-                    scouting.util.format_scout_field_schedule_entry(fs)
-                )
-
             try:
                 user_info = u.scouting_user_info.get(void_ind="n")
             except UserInfo.DoesNotExist:
@@ -1177,10 +1146,6 @@ class ScoutingActivity(APIView):
                 {
                     "user": u,
                     "user_info": user_info,
-                    "schedule": field_schedule,
-                    "results": scouting.field.util.get_field_results(
-                        None, self.request, u
-                    ),
                 }
             )
 
@@ -1190,7 +1155,7 @@ class ScoutingActivity(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.init()
-                serializer = UserActivitySerializer(req, many=True)
+                serializer = UserScoutingUserInfoSerializer(req, many=True)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
