@@ -15,14 +15,6 @@ class TeamSerializer(serializers.Serializer):
     checked = serializers.BooleanField(required=False)
 
 
-class TeamCheckedSerializer(serializers.Serializer):
-    team_no = serializers.IntegerField()
-    team_nm = serializers.CharField()
-
-    # this is bc I need a default checked team serializer
-    checked = serializers.BooleanField(default=True)
-
-
 class TeamCreateSerializer(serializers.Serializer):
     team_no = serializers.CharField()
     team_nm = serializers.CharField()
@@ -113,8 +105,6 @@ class EventTeamSerializer(serializers.Serializer):
     timezone = serializers.CharField()
     current = serializers.CharField()
     competition_page_active = serializers.CharField()
-
-    team_no = TeamCheckedSerializer(required=False, many=True)
 
 
 """

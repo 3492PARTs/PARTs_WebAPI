@@ -41,8 +41,8 @@ def save_user(data):
     user.is_active = data["user"]["is_active"]
     user.save()
 
-    if "groups" in data:
-        for d in data["groups"]:
+    if "groups" in data["user"]:
+        for d in data["user"]["groups"]:
             groups.append(d["name"])
             aug = user.groups.filter(name=d["name"]).exists()
             if not aug:

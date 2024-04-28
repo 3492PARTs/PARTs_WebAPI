@@ -106,8 +106,3 @@ class GetAlertsSerializer(serializers.Serializer):
     alert_subject = serializers.CharField()
     alert_body = serializers.CharField()
     staged_time = serializers.DateTimeField()
-
-
-class SaveUserSerializer(serializers.Serializer):
-    user = UserSerializer()
-    groups = GroupSerializer(many=True)

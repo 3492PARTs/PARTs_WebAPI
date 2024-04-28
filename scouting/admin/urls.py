@@ -11,7 +11,6 @@ urlpatterns = [
     path("toggle-competition-page/", ToggleCompetitionPage.as_view()),
     path("sync-matches/", SyncMatches.as_view()),
     path("sync-event-team-info/", SyncEventTeamInfo.as_view()),
-    path("season-events/", SeasonEvents.as_view()),
     path("add-season/", AddSeason.as_view()),
     path("delete-season/", DeleteSeason.as_view()),
     path("add-event/", AddEvent.as_view()),

@@ -29,7 +29,6 @@ from .serializers import (
     UserSerializer,
     UserUpdateSerializer,
     GetAlertsSerializer,
-    SaveUserSerializer,
     PermissionSerializer,
 )
 from .models import User, UserLinks
@@ -1007,7 +1006,7 @@ class SaveUser(APIView):
     endpoint = "save/"
 
     def post(self, request, format=None):
-        serializer = SaveUserSerializer(data=request.data)
+        serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message(
                 "Invalid data",

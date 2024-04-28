@@ -53,12 +53,6 @@ class Init(APIView):
     endpoint = "init/"
 
     def init(self):
-        seasons = Season.objects.all().order_by("season")
-
-        current_season = scouting.util.get_current_season()
-
-        current_event = scouting.util.get_current_event()
-
         user_groups = []
         try:
             user_groups = user.util.get_groups().filter(
@@ -72,21 +66,6 @@ class Init(APIView):
             user_groups = []
 
         phone_types = user.util.get_phone_types()
-
-        fieldSchedule = []
-
-        fsf = (
-            ScoutFieldSchedule.objects.select_related(
-                "red_one", "red_two", "red_three", "blue_one", "blue_two", "blue_three"
-            )
-            .filter(event=current_event, void_ind="n")
-            .order_by("notification3", "st_time")
-        )
-
-        for fs in fsf:
-            fieldSchedule.append(scouting.util.format_scout_field_schedule_entry(fs))
-
-        teams = Team.objects.filter(void_ind="n").order_by("team_no")
 
         scoutQuestionType = FormType.objects.all()
 
@@ -110,43 +89,6 @@ class Init(APIView):
             except Exception as e:
                 return ret_message(
                     "An error occurred while initializing.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
-
-
-class SeasonEvents(APIView):
-    """
-    API endpoint to get the events for a season
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "season-events/"
-
-    def get_events(self, season_id):
-        return Event.objects.filter(
-            Q(season__season_id=season_id) & Q(void_ind="n")
-        ).order_by(Lower("event_nm"))
-
-    def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.get_events(request.query_params.get("season_id", None))
-                serializer = EventTeamSerializer(req, many=True)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting events.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
