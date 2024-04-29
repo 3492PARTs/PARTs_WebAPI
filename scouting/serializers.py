@@ -40,7 +40,7 @@ class MatchSerializer(serializers.Serializer):
     match_number = serializers.IntegerField()
     red_score = serializers.IntegerField()
     blue_score = serializers.IntegerField()
-    time = serializers.DateTimeField()
+    time = serializers.DateTimeField(allow_null=True)
 
     blue_one = serializers.IntegerField()
     blue_one_rank = serializers.IntegerField(allow_null=True)
