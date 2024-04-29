@@ -208,7 +208,7 @@ class SaveAnswers(APIView):
                                 )
                                 response = sp.response
 
-                                if response.void_ind is "y":
+                                if response.void_ind == "y":
                                     response = form.models.Response(form_typ=form_type)
                                     response.save()
                                     sp.response = response
