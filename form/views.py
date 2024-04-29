@@ -29,7 +29,7 @@ from scouting.models import Event, Season, ScoutField, ScoutPit, Match
 app_url = "form/"
 
 
-class QuestionsView(APIView):
+class QuestionView(APIView):
     """
     API endpoint to init form editor
     """
@@ -88,8 +88,7 @@ class QuestionsView(APIView):
             )
 
 
-
-class GetFormInit(APIView):
+class FormInitView(APIView):
     """
     API endpoint to init form editor
     """
@@ -133,7 +132,7 @@ class GetFormInit(APIView):
             )
 
 
-class SaveAnswers(APIView):
+class SaveAnswersView(APIView):
     """
     API endpoint to save answers
     """
@@ -332,7 +331,7 @@ class SaveAnswers(APIView):
             )
 
 
-class GetResponse(APIView):
+class ResponseView(APIView):
     """
     API endpoint to get a form response
     """
@@ -362,7 +361,7 @@ class GetResponse(APIView):
             )
 
 
-class GetResponses(APIView):
+class ResponsesView(APIView):
     """
     API endpoint to get a form responses
     """
