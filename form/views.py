@@ -29,7 +29,7 @@ from scouting.models import Event, Season, ScoutField, ScoutPit, Match
 app_url = "form/"
 
 
-class GetQuestions(APIView):
+class QuestionsView(APIView):
     """
     API endpoint to init form editor
     """
@@ -52,6 +52,41 @@ class GetQuestions(APIView):
                 request.user.id,
                 e,
             )
+
+    def post(self, request, format=None):
+        serializer = QuestionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message(
+                "Invalid data",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                serializer.errors,
+            )
+
+        if has_access(request.user.id, "admin") or has_access(
+            request.user.id, "scoutadmin"
+        ):
+            try:
+                with transaction.atomic():
+                    form.util.save_question(serializer.validated_data)
+                return ret_message("Saved question successfully.")
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while saving the question.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
 
 
 class GetFormInit(APIView):
@@ -84,48 +119,6 @@ class GetFormInit(APIView):
             except Exception as e:
                 return ret_message(
                     "An error occurred while initializing.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
-
-
-class SaveQuestion(APIView):
-    """API endpoint to save new questions"""
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "save-question/"
-
-    def post(self, request, format=None):
-        serializer = QuestionSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                serializer.errors,
-            )
-
-        if has_access(request.user.id, "admin") or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            try:
-                with transaction.atomic():
-                    form.util.save_question(serializer.validated_data)
-                return ret_message("Saved question successfully.")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving the question.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
