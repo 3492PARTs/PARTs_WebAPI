@@ -66,7 +66,7 @@ class MatchSerializer(serializers.Serializer):
     red_three_rank = serializers.IntegerField(allow_null=True)
     red_three_field_response = serializers.BooleanField()
 
-    comp_level = CompetitionLevelSerializer(read_only=True)
+    comp_level = CompetitionLevelSerializer()
 
 
 class TeamSerializer(serializers.Serializer):
@@ -92,11 +92,11 @@ class ScheduleSerializer(serializers.Serializer):
     sch_id = serializers.IntegerField()
     sch_typ = serializers.CharField()
     sch_nm = serializers.CharField()
-    event_id = serializers.IntegerField(read_only=True)
+    event_id = serializers.IntegerField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
     notified = serializers.BooleanField()
-    user = UserSerializer(required=False, allow_null=True, read_only=True)
+    user = UserSerializer(required=False, allow_null=True)
     user_name = serializers.CharField(read_only=True)
 
 
