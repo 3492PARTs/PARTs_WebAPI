@@ -21,7 +21,7 @@ class EventSerializer(serializers.Serializer):
     postal_code = serializers.CharField()
     location_name = serializers.CharField()
     gmaps_url = serializers.CharField(required=False, allow_null=True)
-    webcast_url = serializers.CharField(required=False, allow_null=True)
+    webcast_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     timezone = serializers.CharField()
     current = serializers.CharField()
     competition_page_active = serializers.CharField()
