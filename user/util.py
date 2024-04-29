@@ -31,30 +31,30 @@ def get_users(active, admin):
 
 def save_user(data):
     groups = []
-    user = User.objects.get(username=data["user"]["username"])
-    user.first_name = data["user"]["first_name"]
-    user.last_name = data["user"]["last_name"]
-    user.email = data["user"]["email"].lower()
-    user.discord_user_id = data["user"]["discord_user_id"]
-    user.phone = data["user"]["phone"]
-    user.phone_type_id = data["user"].get("phone_type_id", None)
-    user.is_active = data["user"]["is_active"]
-    user.save()
+    u = User.objects.get(username=data["username"])
+    u.first_name = data["first_name"]
+    u.last_name = data["last_name"]
+    u.email = data["email"].lower()
+    u.discord_user_id = data["discord_user_id"]
+    u.phone = data["phone"]
+    u.phone_type_id = data.get("phone_type_id", None)
+    u.is_active = data["is_active"]
+    u.save()
 
-    if "groups" in data["user"]:
-        for d in data["user"]["groups"]:
+    if "groups" in data:
+        for d in data["groups"]:
             groups.append(d["name"])
-            aug = user.groups.filter(name=d["name"]).exists()
+            aug = u.groups.filter(name=d["name"]).exists()
             if not aug:
                 group = Group.objects.get(name=d["name"])
-                user.groups.add(group)
+                u.groups.add(group)
 
-        user_groups = user.groups.filter(~Q(name__in=groups))
+        user_groups = u.groups.filter(~Q(name__in=groups))
 
         for user_group in user_groups:
-            user_group.user_set.remove(user)
+            user_group.user_set.remove(u)
 
-    return user
+    return u
 
 
 def get_user_groups(user_id: int):

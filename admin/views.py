@@ -17,41 +17,6 @@ from rest_framework.response import Response
 auth_obj = "admin"
 app_url = "admin/"
 
-
-class Init(APIView):
-    """
-    API endpoint to get all the init values for the admin screen
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "init/"
-
-    def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                user_groups = user.util.get_groups()
-                phone_types = user.util.get_phone_types()
-                req = {"userGroups": user_groups, "phoneTypes": phone_types}
-                serializer = InitSerializer(req)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while initializing.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
-
-
 class ErrorLogView(APIView):
     """
     API endpoint to get errors for the admin screen
