@@ -43,14 +43,14 @@ auth_obj = "scoutadmin"
 app_url = "scouting/admin/"
 
 
-class Init(APIView):
+class ScoutAuthGroupsView(APIView):
     """
-    API endpoint to get all the init values for the scout admin screen
+    API endpoint to get auth groups available to the scouting admin screen
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "init/"
+    endpoint = "scout-auth-group/"
 
     def init(self):
         user_groups = []
@@ -81,8 +81,14 @@ class Init(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.init()
-                serializer = InitSerializer(req)
+                sags = ScoutAuthGroups.objects.all().order_by("auth_group_id__name")
+
+                groups = []
+
+                for sag in sags:
+                    groups.append(sag.auth_group_id)
+
+                serializer = GroupSerializer(groups, many=True)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(

@@ -4,7 +4,7 @@ from .views import *
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path("init/", Init.as_view()),
+    path("scout-auth-group/", ScoutAuthGroupsView.as_view()),
     path("sync-season/", SyncSeason.as_view()),
     path("sync-event/", SyncEvent.as_view()),
     path("set-season/", SetSeason.as_view()),
