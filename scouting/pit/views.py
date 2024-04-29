@@ -75,7 +75,7 @@ class SavePicture(APIView):
                 e,
             )
 
-        return ret_message("Saved Image Successfully.")
+        return ret_message("Saved pit image successfully.")
 
     def post(self, request, format=None):
         if has_access(request.user.id, auth_obj):
