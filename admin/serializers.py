@@ -15,7 +15,7 @@ class GroupSerializer(serializers.Serializer):
 
 
 class PhoneTypeSerializer(serializers.Serializer):
-    phone_type_id = serializers.IntegerField(read_only=True)
+    phone_type_id = serializers.IntegerField()
     carrier = serializers.CharField()
     phone_type = serializers.CharField()
 

@@ -65,8 +65,6 @@ class Init(APIView):
         except Exception as e:
             user_groups = []
 
-        phone_types = user.util.get_phone_types()
-
         scoutQuestionType = FormType.objects.all()
 
         return {
@@ -993,57 +991,6 @@ class NotifyUsers(APIView):
             except Exception as e:
                 return ret_message(
                     "An error occurred while notifying the users.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
-
-
-class SavePhoneType(APIView):
-    """API endpoint to save phone types"""
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "save-phone-type/"
-
-    def save_phone_type(self, data):
-
-        if data.get("phone_type_id", None) is not None:
-            pt = PhoneType.objects.get(phone_type_id=data["phone_type_id"])
-            pt.phone_type = data["phone_type"]
-            pt.carrier = data["carrier"]
-            pt.save()
-        else:
-            PhoneType(phone_type=data["phone_type"], carrier=data["carrier"]).save()
-
-        return ret_message("Successfully saved phone type.")
-
-    def post(self, request, format=None):
-        serializer = PhoneTypeSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                serializer.errors,
-            )
-
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.save_phone_type(serializer.validated_data)
-                return req
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving phone type.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,

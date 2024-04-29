@@ -25,7 +25,6 @@ urlpatterns = [
     # path('toggle-option/', ToggleOption.as_view()),
     path("save-scout-field-schedule-entry/", SaveScoutFieldScheduleEntry.as_view()),
     path("notify-users/", NotifyUsers.as_view()),
-    path("save-phone-type/", SavePhoneType.as_view()),
     path("scouting-user-info/", ScoutingUserInfo.as_view()),
     path("delete-field-result/", DeleteFieldResult.as_view()),
     path("delete-pit-result/", DeletePitResult.as_view()),
