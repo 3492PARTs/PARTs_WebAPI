@@ -311,7 +311,7 @@ def get_question_aggregates(form_typ: str):
     season = Q()
 
     if form_typ == "field" or form_typ == "pit":
-        current_season = Season.objects.get(current="y")
+        current_season = scouting.util.get_current_season()
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
@@ -370,9 +370,9 @@ def save_question_aggregate(data):
     for q in questions:
         qa.questions.add(q)
 
-    remove = Question.objects.filter(
-        Q(question__in=qa.questions.all()) & ~Q(question__in=questions)
-    )
+    qa.save()
+
+    remove = qa.questions.all().filter(~Q(question_id__in=set(q.question_id for q in questions)))
     for r in remove:
         qa.questions.remove(r)
 

@@ -1,7 +1,7 @@
 from django.urls import path
 
-from .views import SaveAnswersView, FormInitView, QuestionView, ResponseView, ResponsesView, \
-    QuestionAggregateView, QuestionAggregateTypeView, QuestionConditionView
+from .views import SaveAnswersView, FormInitView, ResponseView, ResponsesView, \
+    QuestionAggregateView, QuestionAggregateTypeView, QuestionConditionView, QuestionView
 
 urlpatterns = [
     path('question/', QuestionView.as_view()),

@@ -31,10 +31,10 @@ app_url = "form/"
 
 class QuestionView(APIView):
     """
-    API endpoint to init form editor
+    API endpoint to get questions
     """
 
-    endpoint = "get-questions/"
+    endpoint = "questions/"
 
     def get(self, request, format=None):
         try:
@@ -49,24 +49,24 @@ class QuestionView(APIView):
                 "An error occurred while getting questions.",
                 True,
                 app_url + self.endpoint,
-                request.user.id,
+                -1,
                 e,
             )
 
     def post(self, request, format=None):
-        serializer = QuestionSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                serializer.errors,
-            )
-
         if has_access(request.user.id, "admin") or has_access(
             request.user.id, "scoutadmin"
         ):
+            serializer = QuestionSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    serializer.errors,
+                )
+
             try:
                 with transaction.atomic():
                     form.util.save_question(serializer.validated_data)
