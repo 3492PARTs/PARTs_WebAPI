@@ -52,32 +52,6 @@ class ScoutAuthGroupsView(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "scout-auth-group/"
 
-    def init(self):
-        user_groups = []
-        try:
-            user_groups = user.util.get_groups().filter(
-                id__in=list(
-                    ScoutAuthGroups.objects.all().values_list(
-                        "auth_group_id", flat=True
-                    )
-                )
-            )
-        except Exception as e:
-            user_groups = []
-
-        scoutQuestionType = FormType.objects.all()
-
-        return {
-            "seasons": seasons,
-            "currentSeason": current_season,
-            "currentEvent": current_event,
-            "userGroups": user_groups,
-            "phoneTypes": phone_types,
-            "fieldSchedule": fieldSchedule,  # 'pitSchedule': pitSchedule,
-            "scoutQuestionType": scoutQuestionType,
-            "teams": teams,
-        }
-
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
@@ -344,6 +318,7 @@ class SyncEventTeamInfo(APIView):
     API endpoint to sync the info for a teams at an event
     """
 
+    # commented out so the server can call to update
     # authentication_classes = (JWTAuthentication,)
     # permission_classes = (IsAuthenticated,)
     endpoint = "sync-event-team-info/"

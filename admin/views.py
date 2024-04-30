@@ -17,6 +17,7 @@ from rest_framework.response import Response
 auth_obj = "admin"
 app_url = "admin/"
 
+
 class ErrorLogView(APIView):
     """
     API endpoint to get errors for the admin screen
@@ -148,7 +149,7 @@ class ScoutAuthGroupsView(APIView):
             )
 
 
-class PhoneType(APIView):
+class PhoneTypeView(APIView):
     """
     API endpoint to get all phone types
     """
