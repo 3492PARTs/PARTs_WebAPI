@@ -7,7 +7,7 @@ from django.db.models import Q
 import pytz
 import requests
 
-from form.models import QuestionAnswer, Response
+from form.models import QuestionAnswer
 from general.security import ret_message
 from scouting.models import (
     Event,
@@ -19,6 +19,7 @@ from scouting.models import (
     Season,
     Team,
     TeamNotes,
+    Match
 )
 
 
@@ -168,14 +169,19 @@ def delete_event(event_id):
         for sfa in scout_field_answers:
             sfa.delete()
         sf.delete()
-        Response.objects.filter(response=sf.response).delete()
+        sf.response.delete()
 
     scout_pits = ScoutPit.objects.filter(event=e)
     for sp in scout_pits:
         scout_pit_answers = QuestionAnswer.objects.filter(response=sp.response)
         for spa in scout_pit_answers:
             spa.delete()
+
+        for spi in sp.scoutpitimage_set.all():
+            spi.delete()
+
         sp.delete()
+        sp.response.delete()
 
     matches = Match.objects.filter(event=e)
     for m in matches:

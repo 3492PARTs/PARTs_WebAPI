@@ -97,7 +97,7 @@ class ScheduleSerializer(serializers.Serializer):
     end_time = serializers.DateTimeField()
     notified = serializers.BooleanField()
     user = UserSerializer(required=False, allow_null=True)
-    user_name = serializers.CharField(read_only=True)
+    user_name = serializers.CharField(required=False, allow_null=True)
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):

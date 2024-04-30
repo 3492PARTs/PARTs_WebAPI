@@ -65,22 +65,3 @@ class InitSerializer(serializers.Serializer):
     scheduleTypes = ScheduleTypeSerializer(many=True, required=False)
 
 
-class ScheduleSaveSerializer(serializers.Serializer):
-    def create(self, validated_data):
-        event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
-
-        s = Schedule(event=event, st_time=validated_data['st_time'],
-                     end_time=validated_data['end_time'],
-                     user_id=validated_data.get('user', None),
-                     sch_typ_id=validated_data.get('sch_typ', None),
-                     void_ind=validated_data['void_ind'])
-        s.save()
-        return s
-
-    sch_id = serializers.IntegerField(required=False, allow_null=True)
-    sch_typ = serializers.CharField()
-    st_time = serializers.DateTimeField()
-    end_time = serializers.DateTimeField()
-    notified = serializers.BooleanField(default=False)
-    user = serializers.IntegerField(allow_null=True)
-    void_ind = serializers.CharField(default='n')
