@@ -110,11 +110,17 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     notification3 = serializers.BooleanField()
 
     red_one_id = UserSerializer(required=False, allow_null=True)
+    red_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
     red_two_id = UserSerializer(required=False, allow_null=True)
+    red_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
     red_three_id = UserSerializer(required=False, allow_null=True)
+    red_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
     blue_one_id = UserSerializer(required=False, allow_null=True)
+    blue_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
     blue_two_id = UserSerializer(required=False, allow_null=True)
+    blue_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
     blue_three_id = UserSerializer(required=False, allow_null=True)
+    blue_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
     scouts = serializers.CharField()
 
 

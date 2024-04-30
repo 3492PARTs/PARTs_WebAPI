@@ -129,11 +129,17 @@ def parse_scout_field_schedule(s: ScoutFieldSchedule):
         "notification2": s.notification2,
         "notification3": s.notification3,
         "red_one_id": s.red_one,
+        "red_one_check_in": s.red_one_check_in,
         "red_two_id": s.red_two,
+        "red_two_check_in": s.red_two_check_in,
         "red_three_id": s.red_three,
+        "red_three_check_in": s.red_three_check_in,
         "blue_one_id": s.blue_one,
+        "blue_one_check_in": s.blue_one_check_in,
         "blue_two_id": s.blue_two,
+        "blue_two_check_in": s.blue_two_check_in,
         "blue_three_id": s.blue_three,
+        "blue_three_check_in": s.blue_three_check_in,
         "scouts": "R1: "
         + (
             ""
