@@ -496,7 +496,7 @@ class ToggleCompetitionPage(APIView):
                 odne,
             )
 
-        return ret_message("Successfully  activated competition page.")
+        return ret_message("Successfully toggled competition page.")
 
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
