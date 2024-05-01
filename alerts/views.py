@@ -3,8 +3,6 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from alerts.util import (
-    stage_all_field_schedule_alerts,
-    stage_schedule_alerts,
     send_alerts,
     dismiss_alert,
     stage_alerts,
@@ -79,12 +77,11 @@ class DismissAlert(APIView):
 
 
 class RunAlerts(APIView):
-    """API endpoint to stage user alerts"""
+    """API endpoint to run alerts"""
 
     endpoint = "run/"
 
     def get(self, request, format=None):
-
         try:
             ret = stage_alerts()
             ret += send_alerts()

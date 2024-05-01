@@ -6,7 +6,6 @@ from django.utils import timezone
 
 from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
 from general import send_message
-from general.security import ret_message, has_access
 from scouting.models import Event, ScoutFieldSchedule, Schedule
 from user.models import User
 import user.util

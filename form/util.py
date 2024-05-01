@@ -1,8 +1,12 @@
 from django.db.models import Q
 from django.db.models.functions import Lower
 
+import user.util
+import alerts.util
+import form.models
 import scouting.models
 from form.models import (
+    FormType,
     Question,
     Response,
     QuestionAnswer,
@@ -13,8 +17,7 @@ from form.models import (
     QuestionAggregateType,
     QuestionCondition,
 )
-from scouting.models import Season, ScoutField, ScoutPit, Event
-import form.util
+from scouting.models import Match, Season, ScoutField, ScoutPit, Event
 
 
 def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
@@ -372,7 +375,9 @@ def save_question_aggregate(data):
 
     qa.save()
 
-    remove = qa.questions.all().filter(~Q(question_id__in=set(q.question_id for q in questions)))
+    remove = qa.questions.all().filter(
+        ~Q(question_id__in=set(q.question_id for q in questions))
+    )
     for r in remove:
         qa.questions.remove(r)
 
@@ -505,3 +510,147 @@ def get_question_with_conditions_response_answers(response: Response):
         answers.append(question)
 
     return answers
+
+
+def save_field_response(data, user_id):
+    current_event = scouting.util.get_current_event()
+    # Build field scout object and check for match
+    try:
+        m = Match.objects.get(match_id=data.get("match_id", None))
+    except Match.DoesNotExist:
+        m = None
+
+    form_type = FormType.objects.get(form_typ=data["form_typ"])
+
+    response = form.models.Response(form_typ=form_type)
+    response.save()
+
+    sf = ScoutField(
+        event=current_event,
+        team_no_id=data["team"],
+        match=m,
+        user_id=user_id,
+        response_id=response.response_id,
+        void_ind="n",
+    )
+    sf.save()
+
+    # Save the answers against the response object
+    for d in data.get("question_answers", []):
+        save_or_update_question_with_conditions_answer(d, response)
+
+    # Check if previous match is missing any results
+    """
+    if (
+        m is not None
+        and m.match_number > 1
+        and len(m.scoutfield_set.filter(void_ind="n")) == 1
+    ):
+        prev_m = Match.objects.get(
+            Q(void_ind="n")
+            & Q(event=m.event)
+            & Q(comp_level=m.comp_level)
+            & Q(match_number=m.match_number - 1)
+        )
+
+        sfs = prev_m.scoutfield_set.filter(void_ind="n")
+
+        if len(set(sf.team_no for sf in sfs)) < 6:
+            users = ""
+            for sf in sfs:
+                users += sf.user.get_full_name() + ", "
+            users = users[0 : len(users) - 2]
+            alert = alerts.util.stage_scout_admin_alerts(
+                f"Match: {prev_m.match_number} is missing a result.",
+                f"We have results from: {users}",
+            )
+
+            for a in alert:
+                for acct in ["txt", "notification"]:
+                    alerts.util.stage_alert_channel_send(
+                        a, acct
+                    )
+
+    # Check if user is under review and notify lead scouts
+    try:
+        user_info = request.user.scouting_user_info.get(
+            void_ind="n"
+        )
+    except UserInfo.DoesNotExist:
+        user_info = {}
+
+    if user_info and user_info.under_review:
+        alert = alerts.util.stage_scout_admin_alerts(
+            f"Scout under review, {request.user.get_full_name()}, logged a new response.",
+            f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}\n@{sf.time.astimezone(pytz.timezone(sf.event.timezone)).strftime("%m/%d/%Y, %I:%M%p")}',
+        )
+
+        for a in alert:
+            for acct in ["txt", "notification"]:
+                alerts.util.stage_alert_channel_send(
+                    a, acct
+                )
+    """
+    return sf
+
+
+def save_pit_response(data, user_id):
+    current_event = scouting.util.get_current_event()
+
+    form_type = FormType.objects.get(form_typ=data["form_typ"])
+    # Build or get pit scout object
+    try:
+        sp = ScoutPit.objects.get(
+            Q(team_no_id=data["team"]) & Q(void_ind="n") & Q(event=current_event)
+        )
+        response = sp.response
+
+        if response.void_ind == "y":
+            response = form.models.Response(form_typ=form_type)
+            response.save()
+            sp.response = response
+            sp.save()
+    except ScoutPit.DoesNotExist:
+        response = form.models.Response(form_typ=form_type)
+        response.save()
+
+        sp = ScoutPit(
+            event=current_event,
+            team_no_id=data["team"],
+            user_id=user_id,
+            response=response,
+            void_ind="n",
+        )
+        sp.save()
+
+    # Save the answers against the response object
+    for d in data.get("question_answers", []):
+        save_or_update_question_with_conditions_answer(d, response)
+
+    return sp
+
+
+def save_response(data):
+    form_type = FormType.objects.get(form_typ=data["form_typ"])
+
+    # with transaction.atomic():
+    response = form.models.Response(form_typ=form_type)
+    response.save()
+
+    # Save the answers against the response object
+    for d in data.get("question_answers", []):
+        save_or_update_question_with_conditions_answer(d, response)
+
+    alert = []
+    users = user.util.get_users_with_permission("site_forms_notif")
+    for u in users:
+        alert.append(
+            alerts.util.stage_alert(
+                u,
+                form_type.form_nm,
+                "A new response has been logged.",
+            )
+        )
+    for a in alert:
+        for acct in ["email", "message", "notification"]:
+            alerts.util.stage_alert_channel_send(a, acct)

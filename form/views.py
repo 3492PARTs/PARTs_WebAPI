@@ -24,7 +24,7 @@ from form.serializers import (
     QuestionConditionSerializer,
 )
 from general.security import has_access, ret_message
-from scouting.models import Event, Season, ScoutField, ScoutPit, Match
+from scouting.models import ScoutField, ScoutPit, Match
 
 app_url = "form/"
 
@@ -102,10 +102,11 @@ class FormInitView(APIView):
     endpoint = "form-init/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, "admin") or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            try:
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+
                 questions = form.util.get_questions(request.query_params["form_typ"])
                 question_types = form.util.get_question_types()
                 form_sub_types = form.util.get_form_sub_types(
@@ -119,20 +120,21 @@ class FormInitView(APIView):
                     }
                 )
                 return Response(serializer.data)
-            except Exception as e:
+
+            else:
                 return ret_message(
-                    "An error occurred while initializing.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while initializing form.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
@@ -146,14 +148,12 @@ class SaveAnswersView(APIView):
     endpoint = "save-answers/"
 
     def post(self, request, format=None):
-        success_msg = "Response saved successfully."
-        form_typ = request.data.get("form_typ", "")
-
         try:
+            success_msg = "Response saved successfully."
+            form_typ = request.data.get("form_typ", "")
             # with transaction.atomic():
             if form_typ in ["field", "pit"]:
                 # field and pit responses must be authenticated
-
                 # Without a user id report unauthenticated
                 if request.user.id is None:
                     return HttpResponse("Unauthorized", status=401)
@@ -161,73 +161,19 @@ class SaveAnswersView(APIView):
                 if (
                     form_typ == "field" and has_access(request.user.id, "scoutfield")
                 ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
-                    current_event = scouting.util.get_current_event()
                     # Try to deserialize as a field or pit answer
                     serializer = SaveScoutSerializer(data=request.data)
                     if serializer.is_valid():
-                        # Get form type object
-                        form_type = FormType.objects.get(
-                            form_typ=serializer.validated_data["form_typ"]
-                        )
-
                         if serializer.validated_data["form_typ"] == "field":
-                            # Build field scout object and check for match
-                            try:
-                                m = Match.objects.get(
-                                    match_id=serializer.validated_data.get(
-                                        "match_id", None
-                                    )
-                                )
-                            except Match.DoesNotExist:
-                                m = None
-
-                            response = form.models.Response(form_typ=form_type)
-                            response.save()
-
-                            sf = ScoutField(
-                                event=current_event,
-                                team_no_id=serializer.validated_data["team"],
-                                match=m,
-                                user_id=request.user.id,
-                                response_id=response.response_id,
-                                void_ind="n",
+                            form.util.save_field_response(
+                                serializer.validated_data, request.user.id
                             )
-                            sf.save()
                             success_msg = "Field response saved successfully."
                         else:
-                            # Build or get pit scout object
-                            try:
-                                sp = ScoutPit.objects.get(
-                                    Q(team_no_id=serializer.data["team"])
-                                    & Q(void_ind="n")
-                                    & Q(event=current_event)
-                                )
-                                response = sp.response
-
-                                if response.void_ind == "y":
-                                    response = form.models.Response(form_typ=form_type)
-                                    response.save()
-                                    sp.response = response
-                                    sp.save()
-                            except ScoutPit.DoesNotExist:
-                                response = form.models.Response(form_typ=form_type)
-                                response.save()
-
-                                sp = ScoutPit(
-                                    event=current_event,
-                                    team_no_id=serializer.data["team"],
-                                    user_id=request.user.id,
-                                    response=response,
-                                    void_ind="n",
-                                )
-                                sp.save()
-                            success_msg = "Pit response saved successfully."
-
-                        # Save the answers against the response object
-                        for d in serializer.validated_data.get("question_answers", []):
-                            form.util.save_or_update_question_with_conditions_answer(
-                                d, response
+                            form.util.save_pit_response(
+                                serializer.validated_data, request.user.id
                             )
+                            success_msg = "Pit response saved successfully."
                     else:
                         # Serializer is not valid
                         raise Exception("Invalid Data")
@@ -242,88 +188,9 @@ class SaveAnswersView(APIView):
                 # regular response
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
-                    form_type = FormType.objects.get(
-                        form_typ=serializer.validated_data["form_typ"]
-                    )
-
-                    # with transaction.atomic():
-                    response = form.models.Response(form_typ=form_type)
-                    response.save()
-
-                    # Save the answers against the response object
-                    for d in serializer.validated_data.get("question_answers", []):
-                        form.util.save_or_update_question_with_conditions_answer(
-                            d, response
-                        )
-
-                    alert = []
-                    users = user.util.get_users_with_permission("site_forms_notif")
-                    for u in users:
-                        alert.append(
-                            alerts.util.stage_alert(
-                                u,
-                                form_type.form_nm,
-                                "A new response has been logged.",
-                            )
-                        )
-                    for a in alert:
-                        for acct in ["email", "message", "notification"]:
-                            alerts.util.stage_alert_channel_send(a, acct)
+                    form.util.save_response(serializer.validated_data)
                 else:
                     raise Exception("Invalid Data")
-
-            # Check if previous match is missing any results
-            """
-            if (
-                m is not None
-                and m.match_number > 1
-                and len(m.scoutfield_set.filter(void_ind="n")) == 1
-            ):
-                prev_m = Match.objects.get(
-                    Q(void_ind="n")
-                    & Q(event=m.event)
-                    & Q(comp_level=m.comp_level)
-                    & Q(match_number=m.match_number - 1)
-                )
-
-                sfs = prev_m.scoutfield_set.filter(void_ind="n")
-
-                if len(set(sf.team_no for sf in sfs)) < 6:
-                    users = ""
-                    for sf in sfs:
-                        users += sf.user.get_full_name() + ", "
-                    users = users[0 : len(users) - 2]
-                    alert = alerts.util.stage_scout_admin_alerts(
-                        f"Match: {prev_m.match_number} is missing a result.",
-                        f"We have results from: {users}",
-                    )
-
-                    for a in alert:
-                        for acct in ["txt", "notification"]:
-                            alerts.util.stage_alert_channel_send(
-                                a, acct
-                            )
-
-            # Check if user is under review and notify lead scouts
-            try:
-                user_info = request.user.scouting_user_info.get(
-                    void_ind="n"
-                )
-            except UserInfo.DoesNotExist:
-                user_info = {}
-
-            if user_info and user_info.under_review:
-                alert = alerts.util.stage_scout_admin_alerts(
-                    f"Scout under review, {request.user.get_full_name()}, logged a new response.",
-                    f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}\n@{sf.time.astimezone(pytz.timezone(sf.event.timezone)).strftime("%m/%d/%Y, %I:%M%p")}',
-                )
-
-                for a in alert:
-                    for acct in ["txt", "notification"]:
-                        alerts.util.stage_alert_channel_send(
-                            a, acct
-                        )
-            """
             return ret_message(success_msg)
         except Exception as e:
             return ret_message(
@@ -343,25 +210,25 @@ class ResponseView(APIView):
     endpoint = "get-response/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, "admin"):
-            try:
+        try:
+            if has_access(request.user.id, "admin"):
                 response = form.util.get_response(request.query_params["response_id"])
                 serializer = QuestionSerializer(response, many=True)
                 return Response(serializer.data)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while getting responses.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while getting responses.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
@@ -373,25 +240,25 @@ class ResponsesView(APIView):
     endpoint = "get-responses/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, "admin"):
-            try:
+        try:
+            if has_access(request.user.id, "admin"):
                 responses = form.util.get_responses(request.query_params["form_typ"])
                 serializer = ResponseSerializer(responses, many=True)
                 return Response(serializer.data)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while getting responses.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while getting responses.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
@@ -405,63 +272,63 @@ class QuestionAggregateView(APIView):
     endpoint = "question-aggregate/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, "admin") or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            try:
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
                 qas = form.util.get_question_aggregates(
                     request.query_params["form_typ"]
                 )
                 serializer = QuestionAggregateSerializer(qas, many=True)
                 return Response(serializer.data)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while getting question aggregates.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while getting question aggregates.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
     def post(self, request, format=None):
-        serializer = QuestionAggregateSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                serializer.errors,
-            )
-
-        if has_access(request.user.id, "admin") or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            try:
-                with transaction.atomic():
-                    form.util.save_question_aggregate(serializer.validated_data)
-                return ret_message("Saved question aggregate successfully")
-            except Exception as e:
+        try:
+            serializer = QuestionAggregateSerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "An error occurred while saving the question aggregate.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
+                    serializer.errors,
                 )
-        else:
+
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                with transaction.atomic():
+                    form.util.save_question_aggregate(serializer.validated_data)
+                return ret_message("Saved question aggregate successfully")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while saving the question aggregate.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
@@ -499,59 +366,59 @@ class QuestionConditionView(APIView):
     endpoint = "question-condition/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, "admin") or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            try:
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
                 qas = form.util.get_question_condition(request.query_params["form_typ"])
                 serializer = QuestionConditionSerializer(qas, many=True)
                 return Response(serializer.data)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while getting question conditions.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while getting question conditions.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
     def post(self, request, format=None):
-        serializer = QuestionConditionSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                serializer.errors,
-            )
-
-        if has_access(request.user.id, "admin") or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            try:
-                with transaction.atomic():
-                    form.util.save_question_condition(serializer.validated_data)
-                return ret_message("Saved question condition successfully")
-            except Exception as e:
+        try:
+            serializer = QuestionConditionSerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "An error occurred while saving the question condition.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
+                    serializer.errors,
                 )
-        else:
+
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                with transaction.atomic():
+                    form.util.save_question_condition(serializer.validated_data)
+                return ret_message("Saved question condition successfully")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while saving the question condition.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
