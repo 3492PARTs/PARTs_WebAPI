@@ -24,7 +24,7 @@ auth_obj = "scouting"
 app_url = "scouting/"
 
 
-class Season(APIView):
+class SeasonView(APIView):
     """
     API endpoint to get the list of seasons
     """
@@ -36,7 +36,7 @@ class Season(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                seasons = scouting.models.Season.objects.all()
+                seasons = scouting.util.get_all_seasons()
 
                 serializer = SeasonSerializer(seasons, many=True)
                 return Response(serializer.data)
@@ -57,7 +57,7 @@ class Season(APIView):
             )
 
 
-class Event(APIView):
+class EventView(APIView):
     """
     API endpoint to get the list of events
     """
@@ -69,7 +69,7 @@ class Event(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                events = scouting.models.Event.objects.filter(void_ind="n")
+                events = scouting.util.get_all_events()
 
                 serializer = EventSerializer(events, many=True)
                 return Response(serializer.data)
@@ -90,7 +90,7 @@ class Event(APIView):
             )
 
 
-class Team(APIView):
+class TeamView(APIView):
     """
     API endpoint to get the current list of teams
     """
@@ -102,23 +102,7 @@ class Team(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                current_event = scouting.util.get_current_event()
-
-                teams = (
-                    scouting.models.Team.objects.annotate(
-                        pit_result=Case(
-                            When(
-                                team_no__in=ScoutPit.objects.filter(
-                                    Q(event=current_event) & Q(void_ind="n")
-                                ).values_list("team_no", flat=True),
-                                then=1,
-                            ),
-                            default=0,
-                        )
-                    )
-                    .filter(event=current_event)
-                    .order_by("team_no")
-                )
+                teams = scouting.util.get_current_teams()
 
                 serializer = TeamSerializer(teams, many=True)
                 return Response(serializer.data)
@@ -139,7 +123,7 @@ class Team(APIView):
             )
 
 
-class Match(APIView):
+class MatchView(APIView):
     """
     API endpoint to get the current list of matches
     """
@@ -171,7 +155,7 @@ class Match(APIView):
             )
 
 
-class Schedule(APIView):
+class ScheduleView(APIView):
     """
     API endpoint to get schedules
     """
@@ -183,10 +167,7 @@ class Schedule(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                sch = list(
-                    scouting.util.parse_schedule(s)
-                    for s in scouting.util.get_current_schedule()
-                )
+                sch = scouting.util.get_current_schedule_parsed()
 
                 serializer = ScheduleSerializer(sch, many=True)
                 return Response(serializer.data)
@@ -207,7 +188,7 @@ class Schedule(APIView):
             )
 
 
-class ScoutFieldSchedule(APIView):
+class ScoutFieldScheduleView(APIView):
     """
     API endpoint to get scout field schedules
     """
@@ -219,10 +200,7 @@ class ScoutFieldSchedule(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                field_sch = list(
-                    scouting.util.parse_scout_field_schedule(s)
-                    for s in scouting.util.get_current_scout_field_schedule()
-                )
+                field_sch = scouting.util.get_current_scout_field_schedule_parsed()
 
                 serializer = ScoutFieldScheduleSerializer(field_sch, many=True)
                 return Response(serializer.data)
@@ -243,7 +221,7 @@ class ScoutFieldSchedule(APIView):
             )
 
 
-class ScheduleType(APIView):
+class ScheduleTypeView(APIView):
     """
     API endpoint to get all schedule types
     """
@@ -288,16 +266,18 @@ class AllScoutingInfo(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                seasons = Season.get(self, request).data
-                events = Event.get(self, request).data
-                teams = Team.get(self, request).data
-                matches = Match.get(self, request).data
-                schedules = Schedule.get(self, request).data
-                scout_field_schedules = ScoutFieldSchedule.get(self, request).data
-                schedule_types = ScheduleType.get(self, request).data
+                seasons = scouting.util.get_all_seasons()
+                events = scouting.util.get_all_events()
+                teams = scouting.util.get_current_teams()
+                matches = scouting.util.get_matches(scouting.util.get_current_event())
+                schedules = scouting.util.get_current_schedule_parsed()
+                scout_field_schedules = (
+                    scouting.util.get_current_scout_field_schedule_parsed()
+                )
+                schedule_types = scouting.util.get_schedule_types()
 
                 serializer = AllScoutInfoSerializer(
-                    data={
+                    {
                         "seasons": seasons,
                         "events": events,
                         "teams": teams,
@@ -308,8 +288,8 @@ class AllScoutingInfo(APIView):
                     }
                 )
 
-                if not serializer.is_valid():
-                    raise Exception(serializer.errors)
+                # if not serializer.is_valid():
+                #    raise Exception(serializer.errors)
 
                 return Response(serializer.data)
             except Exception as e:

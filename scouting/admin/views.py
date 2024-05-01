@@ -1046,7 +1046,9 @@ class NotifyUser(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 with transaction.atomic():
-                    scout_field_sch_id = request.query_params.get("scout_field_sch_id", None)
+                    scout_field_sch_id = request.query_params.get(
+                        "scout_field_sch_id", None
+                    )
                     sch_id = request.query_params.get("sch_id", None)
                     if scout_field_sch_id is not None:
                         req = self.notify_users(scout_field_sch_id)

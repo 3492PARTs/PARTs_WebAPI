@@ -19,7 +19,7 @@ from scouting.models import (
     Season,
     Team,
     TeamNotes,
-    Match
+    Match,
 )
 
 

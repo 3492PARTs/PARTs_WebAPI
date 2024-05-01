@@ -222,13 +222,16 @@ class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
 
 class ScheduleSaveSerializer(serializers.Serializer):
     def create(self, validated_data):
-        event = Event.objects.get(Q(current='y') & Q(void_ind='n'))
+        event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
 
-        s = Schedule(event=event, st_time=validated_data['st_time'],
-                     end_time=validated_data['end_time'],
-                     user_id=validated_data.get('user', None),
-                     sch_typ_id=validated_data.get('sch_typ', None),
-                     void_ind=validated_data['void_ind'])
+        s = Schedule(
+            event=event,
+            st_time=validated_data["st_time"],
+            end_time=validated_data["end_time"],
+            user_id=validated_data.get("user", None),
+            sch_typ_id=validated_data.get("sch_typ", None),
+            void_ind=validated_data["void_ind"],
+        )
         s.save()
         return s
 
@@ -238,8 +241,7 @@ class ScheduleSaveSerializer(serializers.Serializer):
     end_time = serializers.DateTimeField()
     notified = serializers.BooleanField(default=False)
     user = serializers.IntegerField(allow_null=True)
-    void_ind = serializers.CharField(default='n')
-
+    void_ind = serializers.CharField(default="n")
 
 
 class ScoutPitScheduleSerializer(serializers.Serializer):

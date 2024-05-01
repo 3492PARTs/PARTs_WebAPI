@@ -4,7 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 
 import scouting
 from form.models import QuestionAnswer, Question
-from scouting.models import Season, Team, Event, ScoutPit, EventTeamInfo, ScoutPitImage
+from scouting.models import (
+    Season,
+    Team,
+    Event,
+    ScoutPit,
+    EventTeamInfo,
+    ScoutPitImage,
+)
 import scouting.pit
 import scouting.pit.util
 import scouting.util
