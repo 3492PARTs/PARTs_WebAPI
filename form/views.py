@@ -54,37 +54,41 @@ class QuestionView(APIView):
             )
 
     def post(self, request, format=None):
-        if has_access(request.user.id, "admin") or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            serializer = QuestionSerializer(data=request.data)
-            if not serializer.is_valid():
-                return ret_message(
-                    "Invalid data",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    serializer.errors,
-                )
+        try:
+            if request.user.id is None:
+                return HttpResponse("Unauthorized", status=401)
 
-            try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = QuestionSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        serializer.errors,
+                    )
+
                 with transaction.atomic():
                     form.util.save_question(serializer.validated_data)
+
                 return ret_message("Saved question successfully.")
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while saving the question.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while saving the question.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 

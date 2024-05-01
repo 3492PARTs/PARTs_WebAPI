@@ -268,7 +268,7 @@ def stage_alert_channel_send(alert: Alert, alert_comm_typ: str):
 
 
 def send_alerts():
-    message = ""
+    message = "send alerts\n"
 
     acss = AlertChannelSend.objects.filter(
         Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(void_ind="n")
@@ -381,3 +381,11 @@ def dismiss_alert(alert_channel_send_id: str, user_id: str):
     )
     acs.dismissed_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     acs.save()
+
+
+def stage_alerts():
+    ret = "all field alerts\n"
+    ret += stage_all_field_schedule_alerts()
+    ret += "schedule alerts\n"
+    ret += stage_schedule_alerts()
+    return ret
