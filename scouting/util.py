@@ -201,17 +201,21 @@ def get_matches(event: Event):
 
     parsed_matches = []
     for m in matches:
+        parsed_matches.append(parse_match(m))
 
-        eti_blue_one = get_event_team_info(m.blue_one, event)
-        eti_blue_two = get_event_team_info(m.blue_two, event)
-        eti_blue_three = get_event_team_info(m.blue_three, event)
+    return parsed_matches
 
-        eti_red_one = get_event_team_info(m.red_one, event)
-        eti_red_two = get_event_team_info(m.red_two, event)
-        eti_red_three = get_event_team_info(m.red_three, event)
 
-        parsed_matches.append(
-            {
+def parse_match(m: Match):
+    eti_blue_one = get_event_team_info(m.blue_one, m.event)
+    eti_blue_two = get_event_team_info(m.blue_two, m.event)
+    eti_blue_three = get_event_team_info(m.blue_three, m.event)
+
+    eti_red_one = get_event_team_info(m.red_one, m.event)
+    eti_red_two = get_event_team_info(m.red_two, m.event)
+    eti_red_three = get_event_team_info(m.red_three, m.event)
+
+    return {
                 "match_id": m.match_id,
                 "event_id": m.event.event_id,
                 "match_number": m.match_number,
@@ -243,10 +247,6 @@ def get_matches(event: Event):
                 "comp_level": m.comp_level,
                 "scout_field_result": len(m.scoutfield_set.all()) > 0,
             }
-        )
-
-    return parsed_matches
-
 
 def get_event_team_info(team: Team, event: Event):
     try:
