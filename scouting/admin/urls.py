@@ -5,13 +5,13 @@ from .views import *
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path("scout-auth-group/", ScoutAuthGroupsView.as_view()),
-    path("sync-season/", SyncSeason.as_view()),
-    path("sync-event/", SyncEvent.as_view()),
+    path("sync-season/", SyncSeasonView.as_view()),
+    path("sync-event/", SyncEventView.as_view()),
     path("set-season/", SetSeason.as_view()),
     path("toggle-competition-page/", ToggleCompetitionPage.as_view()),
-    path("sync-matches/", SyncMatches.as_view()),
-    path("sync-event-team-info/", SyncEventTeamInfo.as_view()),
-    path("add-season/", AddSeason.as_view()),
+    path("sync-matches/", SyncMatchesView.as_view()),
+    path("sync-event-team-info/", SyncEventTeamInfoView.as_view()),
+    path("season/", SeasonView.as_view()),
     path("delete-season/", DeleteSeason.as_view()),
     path("add-event/", AddEvent.as_view()),
     path("add-team/", AddTeam.as_view()),

@@ -9,10 +9,13 @@ import requests
 
 from form.models import QuestionAnswer
 from general.security import ret_message
+import scouting
 from scouting.models import (
+    CompetitionLevel,
     Event,
     EventTeamInfo,
     Schedule,
+    ScoutAuthGroups,
     ScoutField,
     ScoutFieldSchedule,
     ScoutPit,
@@ -21,9 +24,96 @@ from scouting.models import (
     TeamNotes,
     Match,
 )
+import scouting.util
 
 
-def load_event(e):
+def delete_event(event_id):
+    e = Event.objects.get(event_id=event_id)
+
+    teams_at_event = Team.objects.filter(event=e)
+    for t in teams_at_event:
+        t.event_set.remove(e)
+
+    scout_fields = ScoutField.objects.filter(event=e)
+    for sf in scout_fields:
+        scout_field_answers = QuestionAnswer.objects.filter(response=sf.response)
+        for sfa in scout_field_answers:
+            sfa.delete()
+        sf.delete()
+        sf.response.delete()
+
+    scout_pits = ScoutPit.objects.filter(event=e)
+    for sp in scout_pits:
+        scout_pit_answers = QuestionAnswer.objects.filter(response=sp.response)
+        for spa in scout_pit_answers:
+            spa.delete()
+
+        for spi in sp.scoutpitimage_set.all():
+            spi.delete()
+
+        sp.delete()
+        sp.response.delete()
+
+    matches = Match.objects.filter(event=e)
+    for m in matches:
+        m.delete()
+
+    scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
+    for sfs in scout_field_schedules:
+        sfs.delete()
+
+    schedules = Schedule.objects.filter(event=e)
+    for s in schedules:
+        s.delete()
+
+    notes = TeamNotes.objects.filter(event=e)
+    for n in notes:
+        n.delete()
+
+    event_team_infos = EventTeamInfo.objects.filter(event=e)
+    for eti in event_team_infos:
+        eti.delete()
+
+    e.delete()
+
+    return ret_message("Successfully deleted event: " + e.event_nm)
+
+
+def get_scout_auth_groups():
+    sags = ScoutAuthGroups.objects.all().order_by("auth_group_id__name")
+
+    groups = list(sag.auth_group_id for sag in sags)
+
+    return groups
+
+
+def sync_season(season_id):
+    season = Season.objects.get(season_id=season_id)
+
+    r = requests.get(
+        "https://www.thebluealliance.com/api/v3/team/frc3492/events/"
+        + str(season.season),
+        headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+    )
+    r = json.loads(r.text)
+
+    messages = ""
+    for e in r:
+        messages += scouting.admin.util.load_event(e)
+
+    return messages
+
+
+def sync_event(event_cd: str):
+    r = requests.get(
+        "https://www.thebluealliance.com/api/v3/event/" + event_cd,
+        headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+    )
+    r = json.loads(r.text)
+
+    if r.get("Error", None) is not None:
+        raise Exception(r["Error"])
+
     insert = []
     season = Season.objects.get(season=e["year"])
     time_zone = (
@@ -153,56 +243,194 @@ def load_event(e):
                     + e["event_cd"]
                     + "\n"
                 )
+    return ret_message(messages)
+
+
+def sync_matches():
+    event = scouting.util.get_current_event()
+
+    insert = []
+    messages = ""
+    r = requests.get(
+        "https://www.thebluealliance.com/api/v3/event/" + event.event_cd + "/matches",
+        headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+    )
+    r = json.loads(r.text)
+    match_number = ""
+    try:
+        for e in r:
+            match_number = e.get("match_number", 0)
+            red_one = Team.objects.get(
+                Q(team_no=e["alliances"]["red"]["team_keys"][0].replace("frc", ""))
+                & Q(void_ind="n")
+            )
+            red_two = Team.objects.get(
+                Q(team_no=e["alliances"]["red"]["team_keys"][1].replace("frc", ""))
+                & Q(void_ind="n")
+            )
+            red_three = Team.objects.get(
+                Q(team_no=e["alliances"]["red"]["team_keys"][2].replace("frc", ""))
+                & Q(void_ind="n")
+            )
+            blue_one = Team.objects.get(
+                Q(team_no=e["alliances"]["blue"]["team_keys"][0].replace("frc", ""))
+                & Q(void_ind="n")
+            )
+            blue_two = Team.objects.get(
+                Q(team_no=e["alliances"]["blue"]["team_keys"][1].replace("frc", ""))
+                & Q(void_ind="n")
+            )
+            blue_three = Team.objects.get(
+                Q(team_no=e["alliances"]["blue"]["team_keys"][2].replace("frc", ""))
+                & Q(void_ind="n")
+            )
+            red_score = e["alliances"]["red"].get("score", None)
+            blue_score = e["alliances"]["blue"].get("score", None)
+            comp_level = CompetitionLevel.objects.get(
+                Q(comp_lvl_typ=e.get("comp_level", " ")) & Q(void_ind="n")
+            )
+            time = (
+                datetime.datetime.fromtimestamp(
+                    e["time"], pytz.timezone("America/New_York")
+                )
+                if e["time"]
+                else None
+            )
+            match_key = e["key"]
+
+            try:
+                match = Match.objects.get(Q(match_id=match_key) & Q(void_ind="n"))
+
+                match.red_one = red_one
+                match.red_two = red_two
+                match.red_three = red_three
+                match.blue_one = blue_one
+                match.blue_two = blue_two
+                match.blue_three = blue_three
+                match.red_score = red_score
+                match.blue_score = blue_score
+                match.comp_level = comp_level
+                match.time = time
+
+                match.save()
+                messages += (
+                    "(UPDATE) "
+                    + event.event_nm
+                    + " "
+                    + comp_level.comp_lvl_typ_nm
+                    + " "
+                    + str(match_number)
+                    + " "
+                    + match_key
+                    + "\n"
+                )
+            except Match.DoesNotExist as odne:
+                match = Match(
+                    match_id=match_key,
+                    match_number=match_number,
+                    event=event,
+                    red_one=red_one,
+                    red_two=red_two,
+                    red_three=red_three,
+                    blue_one=blue_one,
+                    blue_two=blue_two,
+                    blue_three=blue_three,
+                    red_score=red_score,
+                    blue_score=blue_score,
+                    comp_level=comp_level,
+                    time=time,
+                    void_ind="n",
+                )
+                match.save()
+                messages += (
+                    "(ADD) "
+                    + event.event_nm
+                    + " "
+                    + comp_level.comp_lvl_typ_nm
+                    + " "
+                    + str(match_number)
+                    + " "
+                    + match_key
+                    + "\n"
+                )
+    except:
+        messages += "(ERROR) " + event.event_nm + " " + match_number + "\n"
     return messages
 
 
-def delete_event(event_id):
-    e = Event.objects.get(event_id=event_id)
+def sync_event_team_info(force: int):
+    messages = ""
+    event = Event.objects.get(current="y")
 
-    teams_at_event = Team.objects.filter(event=e)
-    for t in teams_at_event:
-        t.event_set.remove(e)
+    now = datetime.datetime.combine(timezone.now(), datetime.time.min)
+    date_st = datetime.datetime.combine(event.date_st, datetime.time.min)
+    date_end = datetime.datetime.combine(event.date_end, datetime.time.min)
 
-    scout_fields = ScoutField.objects.filter(event=e)
-    for sf in scout_fields:
-        scout_field_answers = QuestionAnswer.objects.filter(response=sf.response)
-        for sfa in scout_field_answers:
-            sfa.delete()
-        sf.delete()
-        sf.response.delete()
+    # Only sync information if the event is active or forcing an update
+    if force == 1 or date_st <= now <= date_end:
+        r = requests.get(
+            "https://www.thebluealliance.com/api/v3/event/"
+            + event.event_cd
+            + "/rankings",
+            headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+        )
+        r = json.loads(r.text)
 
-    scout_pits = ScoutPit.objects.filter(event=e)
-    for sp in scout_pits:
-        scout_pit_answers = QuestionAnswer.objects.filter(response=sp.response)
-        for spa in scout_pit_answers:
-            spa.delete()
+        if r is None:
+            return "Nothing to sync"
 
-        for spi in sp.scoutpitimage_set.all():
-            spi.delete()
+        for e in r.get("rankings", []):
+            matches_played = e.get("matches_played", 0)
+            qual_average = e.get("qual_average", 0)
+            losses = e.get("record", 0).get("losses", 0)
+            wins = e.get("record", 0).get("wins", 0)
+            ties = e.get("record", 0).get("ties", 0)
+            rank = e.get("rank", 0)
+            dq = e.get("dq", 0)
+            team = Team.objects.get(
+                Q(team_no=e["team_key"].replace("frc", "")) & Q(void_ind="n")
+            )
 
-        sp.delete()
-        sp.response.delete()
+            try:
+                eti = EventTeamInfo.objects.get(
+                    Q(event=event) & Q(team_no=team) & Q(void_ind="n")
+                )
 
-    matches = Match.objects.filter(event=e)
-    for m in matches:
-        m.delete()
+                eti.matches_played = matches_played
+                eti.qual_average = qual_average
+                eti.losses = losses
+                eti.wins = wins
+                eti.ties = ties
+                eti.rank = rank
+                eti.dq = dq
 
-    scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
-    for sfs in scout_field_schedules:
-        sfs.delete()
+                eti.save()
+                messages += (
+                    "(UPDATE) " + event.event_nm + " " + str(team.team_no) + "\n"
+                )
+            except EventTeamInfo.DoesNotExist as odne:
+                eti = EventTeamInfo(
+                    event=event,
+                    team_no=team,
+                    matches_played=matches_played,
+                    qual_average=qual_average,
+                    losses=losses,
+                    wins=wins,
+                    ties=ties,
+                    rank=rank,
+                    dq=dq,
+                )
+                eti.save()
+                messages += "(ADD) " + event.event_nm + " " + str(team.team_no) + "\n"
+    else:
+        messages = "No active event"
+    return messages
 
-    schedules = Schedule.objects.filter(event=e)
-    for s in schedules:
-        s.delete()
 
-    notes = TeamNotes.objects.filter(event=e)
-    for n in notes:
-        n.delete()
+def save_season(season):
+    try:
+        season = Season.objects.get(season=season)
+    except Season.DoesNotExist as e:
+        season = Season(season=season, current="n").save()
 
-    event_team_infos = EventTeamInfo.objects.filter(event=e)
-    for eti in event_team_infos:
-        eti.delete()
-
-    e.delete()
-
-    return ret_message("Successfully deleted event: " + e.event_nm)
+    return season

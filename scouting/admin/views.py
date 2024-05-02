@@ -12,8 +12,8 @@ import scouting.models
 import scouting.util
 import scouting.admin.util
 import user.util
-from form.models import Question, QuestionAnswer, FormType
-from user.models import User, PhoneType
+from form.models import Question
+from user.models import User
 
 from .serializers import *
 from scouting.models import (
@@ -35,7 +35,6 @@ from rest_framework.views import APIView
 from general.security import has_access, ret_message
 import requests
 from django.conf import settings
-from django.db.models.functions import Lower
 from django.db.models import Q
 from rest_framework.response import Response
 
@@ -53,35 +52,29 @@ class ScoutAuthGroupsView(APIView):
     endpoint = "scout-auth-group/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                sags = ScoutAuthGroups.objects.all().order_by("auth_group_id__name")
-
-                groups = []
-
-                for sag in sags:
-                    groups.append(sag.auth_group_id)
-
+        try:
+            if has_access(request.user.id, auth_obj):
+                groups = scouting.admin.util.get_scout_auth_groups()
                 serializer = GroupSerializer(groups, many=True)
                 return Response(serializer.data)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while initializing.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while initializing.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
-class SyncSeason(APIView):
+class SyncSeasonView(APIView):
     """
     API endpoint to sync a season
     """
@@ -90,45 +83,31 @@ class SyncSeason(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "sync-season/"
 
-    def sync_season(self, season_id):
-        season = Season.objects.get(season_id=season_id)
-
-        r = requests.get(
-            "https://www.thebluealliance.com/api/v3/team/frc3492/events/"
-            + str(season.season),
-            headers={"X-TBA-Auth-Key": settings.TBA_KEY},
-        )
-        r = json.loads(r.text)
-
-        messages = ""
-        for e in r:
-            messages += scouting.admin.util.load_event(e)
-
-        return messages
-
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.sync_season(request.query_params.get("season_id", None))
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.admin.util.sync_season(
+                    request.query_params.get("season_id", None)
+                )
                 return ret_message(req)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while syncing the season/event/teams.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while syncing the season.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
-class SyncEvent(APIView):
+class SyncEventView(APIView):
     """
     API endpoint to sync an event
     """
@@ -138,182 +117,60 @@ class SyncEvent(APIView):
     endpoint = "sync-event/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                r = requests.get(
-                    "https://www.thebluealliance.com/api/v3/event/"
-                    + request.query_params.get("event_cd", None),
-                    headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+        try:
+            if has_access(request.user.id, auth_obj):
+                return scouting.admin.util.sync_event(
+                    request.query_params.get("event_cd", None)
                 )
-                r = json.loads(r.text)
-
-                if r.get("Error", None) is not None:
-                    return ret_message(
-                        r["Error"], True, app_url + self.endpoint, request.user.id
-                    )
-                return ret_message(scouting.admin.util.load_event(r))
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while syncing the season/event/teams.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while syncing the event.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
-class SyncMatches(APIView):
+class SyncMatchesView(APIView):
     """
-    API endpoint to sync a season
+    API endpoint to sync a match
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "sync-matches/"
 
-    def sync_matches(self):
-        event = Event.objects.get(current="y")
-
-        insert = []
-        messages = ""
-        r = requests.get(
-            "https://www.thebluealliance.com/api/v3/event/"
-            + event.event_cd
-            + "/matches",
-            headers={"X-TBA-Auth-Key": settings.TBA_KEY},
-        )
-        r = json.loads(r.text)
-        match_number = ""
-        try:
-            for e in r:
-                match_number = e.get("match_number", 0)
-                red_one = Team.objects.get(
-                    Q(team_no=e["alliances"]["red"]["team_keys"][0].replace("frc", ""))
-                    & Q(void_ind="n")
-                )
-                red_two = Team.objects.get(
-                    Q(team_no=e["alliances"]["red"]["team_keys"][1].replace("frc", ""))
-                    & Q(void_ind="n")
-                )
-                red_three = Team.objects.get(
-                    Q(team_no=e["alliances"]["red"]["team_keys"][2].replace("frc", ""))
-                    & Q(void_ind="n")
-                )
-                blue_one = Team.objects.get(
-                    Q(team_no=e["alliances"]["blue"]["team_keys"][0].replace("frc", ""))
-                    & Q(void_ind="n")
-                )
-                blue_two = Team.objects.get(
-                    Q(team_no=e["alliances"]["blue"]["team_keys"][1].replace("frc", ""))
-                    & Q(void_ind="n")
-                )
-                blue_three = Team.objects.get(
-                    Q(team_no=e["alliances"]["blue"]["team_keys"][2].replace("frc", ""))
-                    & Q(void_ind="n")
-                )
-                red_score = e["alliances"]["red"].get("score", None)
-                blue_score = e["alliances"]["blue"].get("score", None)
-                comp_level = CompetitionLevel.objects.get(
-                    Q(comp_lvl_typ=e.get("comp_level", " ")) & Q(void_ind="n")
-                )
-                time = (
-                    datetime.datetime.fromtimestamp(
-                        e["time"], pytz.timezone("America/New_York")
-                    )
-                    if e["time"]
-                    else None
-                )
-                match_key = e["key"]
-
-                try:
-                    match = Match.objects.get(Q(match_id=match_key) & Q(void_ind="n"))
-
-                    match.red_one = red_one
-                    match.red_two = red_two
-                    match.red_three = red_three
-                    match.blue_one = blue_one
-                    match.blue_two = blue_two
-                    match.blue_three = blue_three
-                    match.red_score = red_score
-                    match.blue_score = blue_score
-                    match.comp_level = comp_level
-                    match.time = time
-
-                    match.save()
-                    messages += (
-                        "(UPDATE) "
-                        + event.event_nm
-                        + " "
-                        + comp_level.comp_lvl_typ_nm
-                        + " "
-                        + str(match_number)
-                        + " "
-                        + match_key
-                        + "\n"
-                    )
-                except ObjectDoesNotExist as odne:
-                    match = Match(
-                        match_id=match_key,
-                        match_number=match_number,
-                        event=event,
-                        red_one=red_one,
-                        red_two=red_two,
-                        red_three=red_three,
-                        blue_one=blue_one,
-                        blue_two=blue_two,
-                        blue_three=blue_three,
-                        red_score=red_score,
-                        blue_score=blue_score,
-                        comp_level=comp_level,
-                        time=time,
-                        void_ind="n",
-                    )
-                    match.save()
-                    messages += (
-                        "(ADD) "
-                        + event.event_nm
-                        + " "
-                        + comp_level.comp_lvl_typ_nm
-                        + " "
-                        + str(match_number)
-                        + " "
-                        + match_key
-                        + "\n"
-                    )
-        except:
-            messages += "(EROR) " + event.event_nm + " " + match_number + "\n"
-        return messages
-
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.sync_matches()
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.admin.util.sync_matches()
                 return ret_message(req)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while syncing matches.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while syncing matches.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
-class SyncEventTeamInfo(APIView):
+class SyncEventTeamInfoView(APIView):
     """
     API endpoint to sync the info for a teams at an event
     """
@@ -323,95 +180,27 @@ class SyncEventTeamInfo(APIView):
     # permission_classes = (IsAuthenticated,)
     endpoint = "sync-event-team-info/"
 
-    def sync_event_team_info(self, force: int):
-        messages = ""
-        event = Event.objects.get(current="y")
-
-        now = datetime.datetime.combine(timezone.now(), datetime.time.min)
-        date_st = datetime.datetime.combine(event.date_st, datetime.time.min)
-        date_end = datetime.datetime.combine(event.date_end, datetime.time.min)
-        if force == 1 or date_st <= now <= date_end:
-            r = requests.get(
-                "https://www.thebluealliance.com/api/v3/event/"
-                + event.event_cd
-                + "/rankings",
-                headers={"X-TBA-Auth-Key": settings.TBA_KEY},
-            )
-            r = json.loads(r.text)
-
-            if r is None:
-                return "Nothing to sync"
-
-            for e in r.get("rankings", []):
-                matches_played = e.get("matches_played", 0)
-                qual_average = e.get("qual_average", 0)
-                losses = e.get("record", 0).get("losses", 0)
-                wins = e.get("record", 0).get("wins", 0)
-                ties = e.get("record", 0).get("ties", 0)
-                rank = e.get("rank", 0)
-                dq = e.get("dq", 0)
-                team = Team.objects.get(
-                    Q(team_no=e["team_key"].replace("frc", "")) & Q(void_ind="n")
-                )
-
-                try:
-                    eti = EventTeamInfo.objects.get(
-                        Q(event=event) & Q(team_no=team) & Q(void_ind="n")
-                    )
-
-                    eti.matches_played = matches_played
-                    eti.qual_average = qual_average
-                    eti.losses = losses
-                    eti.wins = wins
-                    eti.ties = ties
-                    eti.rank = rank
-                    eti.dq = dq
-
-                    eti.save()
-                    messages += (
-                        "(UPDATE) " + event.event_nm + " " + str(team.team_no) + "\n"
-                    )
-                except ObjectDoesNotExist as odne:
-                    eti = EventTeamInfo(
-                        event=event,
-                        team_no=team,
-                        matches_played=matches_played,
-                        qual_average=qual_average,
-                        losses=losses,
-                        wins=wins,
-                        ties=ties,
-                        rank=rank,
-                        dq=dq,
-                    )
-                    eti.save()
-                    messages += (
-                        "(ADD) " + event.event_nm + " " + str(team.team_no) + "\n"
-                    )
-        else:
-            messages = "No active event"
-        return messages
-
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.sync_event_team_info(
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.admin.util.sync_event_team_info(
                     int(request.query_params.get("force", "0"))
                 )
                 return ret_message(req)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while syncing event team info.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while syncing event team info.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
@@ -520,48 +309,44 @@ class ToggleCompetitionPage(APIView):
             )
 
 
-class AddSeason(APIView):
+class SeasonView(APIView):
     """
     API endpoint to add a season
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "add-season/"
+    endpoint = "season/"
 
-    def add(self, season):
+    def post(self, request, format=None):
         try:
-            Season.objects.get(season=season)
-            return ret_message(
-                "Season not added. Season " + season + " already exists.",
-                True,
-                app_url + self.endpoint,
-                self.request.user.id,
-            )
-        except Exception as e:
-            Season(season=season, current="n").save()
-
-        return ret_message("Successfully added season: " + season)
-
-    def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
+            if has_access(request.user.id, auth_obj):
+                serializer = EventSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        serializer.errors,
+                    )
                 req = self.add(request.query_params.get("season", None))
+                ret_message("Successfully added season: " + season)
                 return req
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while setting the season.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
                 )
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while setting the season.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
             )
 
 
