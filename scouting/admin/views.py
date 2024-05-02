@@ -593,8 +593,8 @@ class ScoutFieldScheduleView(APIView):
                 )
 
             if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.save_scout_schedule(serializer)
-                return req
+                scouting.admin.util.save_scout_schedule(serializer.validated_data)
+                return ret_message("Saved field schedule entry")
             else:
                 return ret_message(
                     "You do not have access.",
@@ -604,7 +604,7 @@ class ScoutFieldScheduleView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while saving the schedule entry.",
+                "An error occurred while saving the field schedule entry.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
