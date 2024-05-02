@@ -647,8 +647,8 @@ def save_schedule(data):
         )
     else:
         s = Schedule.objects.get(sch_id=data["sch_id"])
-        s.user = data.get("user", None)
-        s.sch_typ_id = data.get("sch_typ", None)
+        s.user.pk = data.get("user", None)
+        s.sch_typ.sch_typ = data.get("sch_typ", None)
         s.st_time = data["st_time"]
         s.end_time = data["end_time"]
         s.void_ind = data["void_ind"]

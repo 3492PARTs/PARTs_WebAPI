@@ -594,7 +594,7 @@ class ScoutFieldScheduleView(APIView):
 
             if has_access(request.user.id, auth_obj):
                 scouting.admin.util.save_scout_schedule(serializer.validated_data)
-                return ret_message("Saved field schedule entry")
+                return ret_message("Saved field schedule entry.")
             else:
                 return ret_message(
                     "You do not have access.",
@@ -632,8 +632,8 @@ class ScheduleView(APIView):
                 )
 
             if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.save_schedule(serializer.validated_data)
-                return req
+                scouting.admin.util.save_schedule(serializer.validated_data)
+                return ret_message("Saved schedule entry.")
             else:
                 return ret_message(
                     "You do not have access.",
