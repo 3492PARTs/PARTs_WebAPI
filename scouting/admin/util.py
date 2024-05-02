@@ -7,7 +7,7 @@ from django.db.models import Q
 import pytz
 import requests
 
-from form.models import QuestionAnswer
+from form.models import Question, QuestionAnswer
 from general.security import ret_message
 import scouting
 from scouting.models import (
@@ -23,8 +23,12 @@ from scouting.models import (
     Team,
     TeamNotes,
     Match,
+    UserInfo,
 )
 import scouting.util
+import scouting.models
+import alerts.util
+import user.util
 
 
 def delete_event(event_id):
@@ -427,10 +431,278 @@ def sync_event_team_info(force: int):
     return messages
 
 
-def save_season(season):
+def add_season(year: str):
     try:
-        season = Season.objects.get(season=season)
+        season = Season.objects.get(season=year)
     except Season.DoesNotExist as e:
-        season = Season(season=season, current="n").save()
+        season = Season(season=year, current="n").save()
 
     return season
+
+
+def save_season(data):
+    if data.get("season_id", None) is not None:
+        season = Season.objects.get(season_id=data["season_id"])
+    else:
+        season = Season(season=data["season"], current=data["current"]).save()
+
+    return season
+
+
+def delete_season(season_id):
+    season = Season.objects.get(season_id=season_id)
+
+    events = Event.objects.filter(season=season)
+    for e in events:
+        delete_event(e.event_id)
+
+    scout_questions = scouting.models.Question.objects.filter(season=season)
+    for sq in scout_questions:
+        sq.delete()
+        sq.question.delete()  # this is the scout question which is an extension model for scouting questions
+
+    season.delete()
+
+    return ret_message("Successfully deleted season: " + season.season)
+
+
+def save_event(data):
+    if (data.get("event_id", None)) is not None:
+        event = Event.objects.get(event_id=data["event_id"])
+        event.season.season_id = data["season_id"]
+        event.event_nm = data["event_nm"]
+        event.date_st = data["date_st"]
+        event.event_cd = data["event_cd"]
+        event.event_url = data.get("event_url", None)
+        event.address = data["address"]
+        event.city = data["city"]
+        event.state_prov = data["state_prov"]
+        event.postal_code = data["postal_code"]
+        event.location_name = data["location_name"]
+        event.gmaps_url = data.get("gmaps_url", None)
+        event.webcast_url = data.get("webcast_url", None)
+        event.date_end = data["date_end"]
+        event.timezone = data["timezone"]
+        event.current = data["current"]
+        event.competition_page_active = data["competition_page_active"]
+        event.void_ind = data["void_ind"]
+    else:
+        event = Event(
+            season_id=data["season_id"],
+            event_nm=data["event_nm"],
+            date_st=data["date_st"],
+            event_cd=data["event_cd"],
+            event_url=data.get("event_url", None),
+            address=data["address"],
+            city=data["city"],
+            state_prov=data["state_prov"],
+            postal_code=data["postal_code"],
+            location_name=data["location_name"],
+            gmaps_url=data.get("gmaps_url", None),
+            webcast_url=data.get("webcast_url", None),
+            date_end=data["date_end"],
+            timezone=data["timezone"],
+            current=data["current"],
+            competition_page_active=data["competition_page_active"],
+            void_ind=data["void_ind"],
+        )
+
+    event.save()
+    return event
+
+
+def link_team_to_Event(data):
+    messages = ""
+
+    for t in data.get("teams", []):
+        try:  # TODO it doesn't throw an error, and re-linking many to many only keeps one entry in the table for the link
+            if t.get("checked", False):
+                team = Team.objects.get(team_no=t["team_no"], void_ind="n")
+                e = Event.objects.get(event_id=data["event_id"], void_ind="n")
+                team.event_set.add(e)
+                messages += (
+                    "(ADD) Added team: "
+                    + str(t["team_no"])
+                    + " "
+                    + t["team_nm"]
+                    + " to event: "
+                    + e.event_cd
+                    + "\n"
+                )
+        except IntegrityError:
+            messages += (
+                "(NO ADD) Team: "
+                + str(t["team_no"])
+                + " "
+                + t["team_nm"]
+                + " already at event: "
+                + e.event_cd
+                + "\n"
+            )
+
+    return messages
+
+
+def remove_link_team_to_Event(data):
+    messages = ""
+
+    for t in data.get("team_no", []):
+        try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
+            if not t.get("checked", True):
+                team = Team.objects.get(team_no=t["team_no"], void_ind="n")
+                e = Event.objects.get(event_id=data["event_id"], void_ind="n")
+                team.event_set.remove(e)
+                messages += (
+                    "(REMOVE) Removed team: "
+                    + str(t["team_no"])
+                    + " "
+                    + t["team_nm"]
+                    + " from event: "
+                    + e.event_cd
+                    + "\n"
+                )
+        except IntegrityError:
+            messages += (
+                "(NO REMOVE) Team: "
+                + str(t["team_no"])
+                + " "
+                + t["team_nm"]
+                + " from event: "
+                + e.event_cd
+                + "\n"
+            )
+
+    return messages
+
+
+def save_scout_schedule(data):
+    if data["end_time"] <= data["st_time"]:
+        raise Exception("End time can't come before start.")
+
+    if data.get("scout_field_sch_id", None) is None:
+        sfs = ScoutFieldSchedule(
+            event_id=data["event_id"],
+            st_time=data["st_time"],
+            end_time=data["end_time"],
+            red_one_id=data.get("red_one_id", None),
+            red_two_id=data.get("red_two_id", None),
+            red_three_id=data.get("red_three_id", None),
+            blue_one_id=data.get("blue_one_id", None),
+            blue_two_id=data.get("blue_two_id", None),
+            blue_three_id=data.get("blue_three_id", None),
+            void_ind=data["void_ind"],
+        )
+    else:
+        sfs = ScoutFieldSchedule.objects.get(
+            scout_field_sch_id=data["scout_field_sch_id"]
+        )
+        sfs.red_one_id = data.get("red_one_id", None)
+        sfs.red_two_id = data.get("red_two_id", None)
+        sfs.red_three_id = data.get("red_three_id", None)
+        sfs.blue_one_id = data.get("blue_one_id", None)
+        sfs.blue_two_id = data.get("blue_two_id", None)
+        sfs.blue_three_id = data.get("blue_three_id", None)
+        sfs.st_time = data["st_time"]
+        sfs.end_time = data["end_time"]
+        sfs.void_ind = data["void_ind"]
+
+    sfs.save()
+    return sfs
+
+
+def save_schedule(data):
+    if data["end_time"] <= data["st_time"]:
+        raise Exception("End time can't come before start.")
+
+    if data.get("sch_id", None) is None:
+        event = scouting.util.get_current_event()
+
+        s = Schedule(
+            event=event,
+            st_time=data["st_time"],
+            end_time=data["end_time"],
+            user_id=data.get("user", None),
+            sch_typ_id=data.get("sch_typ", None),
+            void_ind=data["void_ind"],
+        )
+    else:
+        s = Schedule.objects.get(sch_id=data["sch_id"])
+        s.user = data.get("user", None)
+        s.sch_typ_id = data.get("sch_typ", None)
+        s.st_time = data["st_time"]
+        s.end_time = data["end_time"]
+        s.void_ind = data["void_ind"]
+
+    s.save()
+    return s
+
+
+def notify_user(id):
+    sch = Schedule.objects.get(sch_id=id)
+    message = alerts.util.stage_schedule_alert(sch)
+    alerts.util.send_alerts()
+    sch.notified = True
+    sch.save()
+
+    return message
+
+
+def notify_users(id):
+    event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
+    sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=id)
+    message = alerts.util.stage_field_schedule_alerts(-1, [sfs], event)
+    alerts.util.send_alerts()
+    return message
+
+
+def get_scouting_user_info():
+    user_results = []
+    users = user.util.get_users(1, 0)
+    for u in users:
+        try:
+            user_info = u.scouting_user_info.get(void_ind="n")
+        except UserInfo.DoesNotExist:
+            user_info = {}
+
+        user_results.append(
+            {
+                "user": u,
+                "user_info": user_info,
+            }
+        )
+
+    return user_results
+
+
+def toggle_user_under_review(user_id):
+    try:
+        ui = UserInfo.objects.get(Q(user__id=user_id) & Q(void_ind="n"))
+    except UserInfo.DoesNotExist:
+        ui = UserInfo(
+            user=User.objects.get(id=user_id),
+            under_review=False,
+        )
+
+    ui.under_review = not ui.under_review
+
+    ui.save()
+
+
+def get_scout_field_schedule(id):
+    return ScoutFieldSchedule.objects.get(scout_field_sch_id=id)
+
+
+def void_field_response(id):
+    sf = ScoutField.objects.get(scout_field_id=id)
+    sf.void_ind = "y"
+    sf.save()
+    return sf
+
+
+def void_scout_pit_response(id):
+    sp = ScoutPit.objects.get(scout_pit_id=id)
+
+    sp.response.void_ind = "y"
+    sp.void_ind = "y"
+    sp.save()
+    return sp

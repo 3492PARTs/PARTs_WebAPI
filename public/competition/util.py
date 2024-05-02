@@ -4,7 +4,7 @@ from scouting.models import Event, Match, Team
 import scouting.util
 
 
-def get_competition_information(self):
+def get_competition_information():
     event = Event.objects.get(
         Q(current="y") & Q(competition_page_active="y") & Q(void_ind="n")
     )

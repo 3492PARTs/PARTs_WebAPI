@@ -4,7 +4,7 @@ from scouting.models import Team, Event, ScoutFieldSchedule, Schedule
 
 
 class SeasonSerializer(serializers.Serializer):
-    season_id = serializers.IntegerField(read_only=True)
+    season_id = serializers.IntegerField(required=False, allow_null=True)
     season = serializers.CharField()
     current = serializers.CharField()
 
@@ -32,32 +32,6 @@ class TeamCreateSerializer(serializers.Serializer):
 
 
 class EventSerializer(serializers.Serializer):
-    def update(self, instance, validated_data):
-        pass
-
-    def create(self, validated_data):
-        e = Event(
-            season_id=validated_data["season_id"],
-            event_nm=validated_data["event_nm"],
-            date_st=validated_data["date_st"],
-            event_cd=validated_data["event_cd"],
-            event_url=validated_data.get("event_url", None),
-            address=validated_data["address"],
-            city=validated_data["city"],
-            state_prov=validated_data["state_prov"],
-            postal_code=validated_data["postal_code"],
-            location_name=validated_data["location_name"],
-            gmaps_url=validated_data.get("gmaps_url", None),
-            webcast_url=validated_data.get("webcast_url", None),
-            date_end=validated_data["date_end"],
-            timezone=validated_data["timezone"],
-            current=validated_data["current"],
-            competition_page_active=validated_data["competition_page_active"],
-            void_ind=validated_data["void_ind"],
-        )
-        e.save()
-        return e
-
     event_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField()
     event_nm = serializers.CharField()
@@ -190,22 +164,6 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
 
 
 class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
-    def create(self, validated_data):
-        sfs = ScoutFieldSchedule(
-            event_id=validated_data["event_id"],
-            st_time=validated_data["st_time"],
-            end_time=validated_data["end_time"],
-            red_one_id=validated_data.get("red_one_id", None),
-            red_two_id=validated_data.get("red_two_id", None),
-            red_three_id=validated_data.get("red_three_id", None),
-            blue_one_id=validated_data.get("blue_one_id", None),
-            blue_two_id=validated_data.get("blue_two_id", None),
-            blue_three_id=validated_data.get("blue_three_id", None),
-            void_ind=validated_data["void_ind"],
-        )
-        sfs.save()
-        return sfs
-
     scout_field_sch_id = serializers.IntegerField(required=False, allow_null=True)
     event_id = serializers.IntegerField()
     st_time = serializers.DateTimeField()
@@ -221,20 +179,6 @@ class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
 
 
 class ScheduleSaveSerializer(serializers.Serializer):
-    def create(self, validated_data):
-        event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
-
-        s = Schedule(
-            event=event,
-            st_time=validated_data["st_time"],
-            end_time=validated_data["end_time"],
-            user_id=validated_data.get("user", None),
-            sch_typ_id=validated_data.get("sch_typ", None),
-            void_ind=validated_data["void_ind"],
-        )
-        s.save()
-        return s
-
     sch_id = serializers.IntegerField(required=False, allow_null=True)
     sch_typ = serializers.CharField()
     st_time = serializers.DateTimeField()
