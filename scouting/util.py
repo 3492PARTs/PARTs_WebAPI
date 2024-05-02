@@ -15,7 +15,7 @@ from scouting.models import (
 
 
 def get_all_seasons():
-    return Season.objects.all()
+    return Season.objects.all().order_by("season")
 
 
 def get_current_season():

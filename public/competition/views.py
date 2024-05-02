@@ -17,9 +17,12 @@ class Init(APIView):
 
     def get(self, request, format=None):
         try:
-            req = public.competition.util.get_competition_information()
-            serializer = CompetitionInformationSerializer(req)
-            return Response(serializer.data)
+            try:
+                req = public.competition.util.get_competition_information()
+                serializer = CompetitionInformationSerializer(req)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message("No event")
         except Exception as e:
             return ret_message(
                 "An error occurred while getting competition page information.",

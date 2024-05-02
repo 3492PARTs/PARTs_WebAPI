@@ -1,35 +1,16 @@
-import datetime
-import pytz
-from django.db import IntegrityError, transaction
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.utils import json
-from django.utils import timezone
 
-import alerts.util
+
 import scouting.models
 import scouting.util
 import scouting.admin.util
-import user.util
-from form.models import Question
-from user.models import User
 
 from .serializers import *
 from scouting.models import (
-    Schedule,
     Season,
     Event,
-    ScoutAuthGroups,
-    ScoutFieldSchedule,
-    Team,
-    CompetitionLevel,
-    Match,
-    EventTeamInfo,
-    ScoutField,
-    ScoutPit,
-    TeamNotes,
-    UserInfo,
 )
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
@@ -119,8 +100,10 @@ class SyncEventView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                return scouting.admin.util.sync_event(
-                    request.query_params.get("event_cd", None)
+                return ret_message(
+                    scouting.admin.util.sync_event(
+                        request.query_params.get("event_cd", None)
+                    )
                 )
             else:
                 return ret_message(
@@ -329,8 +312,7 @@ class SeasonView(APIView):
                 req = scouting.admin.util.add_season(
                     serializer.validated_data["season"]
                 )
-                ret_message("Successfully added season: " + req.season)
-                return req
+                return ret_message("Successfully added season: " + req.season)
             else:
                 return ret_message(
                     "You do not have access.",

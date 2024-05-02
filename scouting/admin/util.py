@@ -6,8 +6,9 @@ from django.db import IntegrityError
 from django.db.models import Q
 import pytz
 import requests
+from django.utils import timezone
 
-from form.models import Question, QuestionAnswer
+from form.models import QuestionAggregate, QuestionAnswer, QuestionCondition
 from general.security import ret_message
 import scouting
 from scouting.models import (
@@ -33,6 +34,9 @@ import user.util
 
 def delete_event(event_id):
     e = Event.objects.get(event_id=event_id)
+
+    if e.current == "y":
+        raise Exception("Cannot delete current event.")
 
     teams_at_event = Team.objects.filter(event=e)
     for t in teams_at_event:
@@ -103,7 +107,8 @@ def sync_season(season_id):
 
     messages = ""
     for e in r:
-        messages += scouting.admin.util.load_event(e)
+        messages += sync_event(e["key"])
+        messages += "------------------------------------------------\n"
 
     return messages
 
@@ -113,10 +118,10 @@ def sync_event(event_cd: str):
         "https://www.thebluealliance.com/api/v3/event/" + event_cd,
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    r = json.loads(r.text)
+    e = json.loads(r.text)
 
-    if r.get("Error", None) is not None:
-        raise Exception(r["Error"])
+    if e.get("Error", None) is not None:
+        raise Exception(e["Error"])
 
     insert = []
     season = Season.objects.get(season=e["year"])
@@ -247,7 +252,7 @@ def sync_event(event_cd: str):
                     + e["event_cd"]
                     + "\n"
                 )
-    return ret_message(messages)
+    return messages
 
 
 def sync_matches():
@@ -434,8 +439,10 @@ def sync_event_team_info(force: int):
 def add_season(year: str):
     try:
         season = Season.objects.get(season=year)
+        raise Exception("Season already exists.")
     except Season.DoesNotExist as e:
-        season = Season(season=year, current="n").save()
+        season = Season(season=year, current="n")
+        season.save()
 
     return season
 
@@ -452,6 +459,9 @@ def save_season(data):
 def delete_season(season_id):
     season = Season.objects.get(season_id=season_id)
 
+    if season.current == "y":
+        raise Exception("Cannot delete current season.")
+
     events = Event.objects.filter(season=season)
     for e in events:
         delete_event(e.event_id)
@@ -459,6 +469,16 @@ def delete_season(season_id):
     scout_questions = scouting.models.Question.objects.filter(season=season)
     for sq in scout_questions:
         sq.delete()
+        for qc in sq.question.condition_question_from.all():
+            qc.delete()
+        for qc in sq.question.condition_question_to.all():
+            qc.delete()
+        for qc in sq.question.questionaggregate_set.all():
+            qc.delete()
+        for qc in sq.question.questionoption_set.all():
+            qc.delete()
+        for qc in sq.question.questionanswer_set.all():
+            qc.delete()
         sq.question.delete()  # this is the scout question which is an extension model for scouting questions
 
     season.delete()
