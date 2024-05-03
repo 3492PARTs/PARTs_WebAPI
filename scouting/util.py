@@ -297,3 +297,7 @@ def get_event_team_info(team: Team, event: Event):
 
 def match_team_has_result(match: Match, team: Team) -> bool:
     return len(match.scoutfield_set.filter(Q(void_ind="n") & Q(team_no=team))) > 0
+
+
+def get_scout_field_schedule(id):
+    return ScoutFieldSchedule.objects.get(scout_field_sch_id=id)

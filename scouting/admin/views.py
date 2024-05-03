@@ -766,7 +766,7 @@ class MarkScoutPresentView(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                sfs = scouting.admin.util.get_scout_field_schedule(
+                sfs = scouting.util.get_scout_field_schedule(
                     request.query_params.get("scout_field_sch_id", None)
                 )
                 user_id = int(request.query_params.get("user_id", None))

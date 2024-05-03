@@ -708,10 +708,6 @@ def toggle_user_under_review(user_id):
     ui.save()
 
 
-def get_scout_field_schedule(id):
-    return ScoutFieldSchedule.objects.get(scout_field_sch_id=id)
-
-
 def void_field_response(id):
     sf = ScoutField.objects.get(scout_field_id=id)
     sf.void_ind = "y"

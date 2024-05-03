@@ -1,10 +1,11 @@
 from django.db.models import Q
 from django.conf import settings
+from django.utils import timezone
 
 from form.models import QuestionAggregate, QuestionAnswer
 import scouting
 import form
-from scouting.models import EventTeamInfo, ScoutField
+from scouting.models import EventTeamInfo, ScoutField, ScoutFieldSchedule
 
 
 def build_table_columns():
@@ -211,3 +212,32 @@ def get_removed_responses(before_date_time):
     )
 
     return removed
+
+
+def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
+    check_in = False
+    if sfs.red_one and not sfs.red_one_check_in and sfs.red_one.id == user_id:
+        sfs.red_one_check_in = timezone.now()
+        check_in = True
+    elif sfs.red_two and not sfs.red_two_check_in and sfs.red_two.id == user_id:
+        sfs.red_two_check_in = timezone.now()
+        check_in = True
+    elif sfs.red_three and not sfs.red_three_check_in and sfs.red_three.id == user_id:
+        sfs.red_three_check_in = timezone.now()
+        check_in = True
+    elif sfs.blue_one and not sfs.blue_one_check_in and sfs.blue_one.id == user_id:
+        sfs.blue_one_check_in = timezone.now()
+        check_in = True
+    elif sfs.blue_two and not sfs.blue_two_check_in and sfs.blue_two.id == user_id:
+        sfs.blue_two_check_in = timezone.now()
+        check_in = True
+    elif (
+        sfs.blue_three and not sfs.blue_three_check_in and sfs.blue_three.id == user_id
+    ):
+        sfs.blue_three_check_in = timezone.now()
+        check_in = True
+
+    if check_in:
+        sfs.save()
+        return "Successfully checked in scout for their shift."
+    return ""
