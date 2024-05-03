@@ -2,8 +2,8 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path("save-picture/", SavePicture.as_view()),
-    path("responses/", Responses.as_view()),
-    path("team-data/", TeamData.as_view()),
-    path("set-default-pit-image/", SetDefaultPitImage.as_view()),
+    path("save-picture/", SavePictureView.as_view()),
+    path("responses/", ResponsesView.as_view()),
+    path("team-data/", TeamDataView.as_view()),
+    path("set-default-pit-image/", SetDefaultPitImageView.as_view()),
 ]

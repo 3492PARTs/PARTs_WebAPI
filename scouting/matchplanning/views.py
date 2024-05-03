@@ -17,7 +17,7 @@ auth_view_obj_scout_field = "scoutFieldResults"
 app_url = "scouting/match-planning/"
 
 
-class TeamNotes(APIView):
+class TeamNotesView(APIView):
     """API endpoint to get team notes"""
 
     endpoint = "team-notes/"
@@ -25,29 +25,29 @@ class TeamNotes(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj) or has_access(
-            request.user.id, auth_view_obj_scout_field
-        ):
-            try:
+        try:
+            if has_access(request.user.id, auth_obj) or has_access(
+                request.user.id, auth_view_obj_scout_field
+            ):
                 req = scouting.matchplanning.util.get_parsed_team_noes(
                     request.query_params.get("team_no", None)
                 )
                 serializer = TeamNoteSerializer(req, many=True)
                 return Response(serializer.data)
-            except Exception as e:
+            else:
                 return ret_message(
-                    "An error occurred while getting team notes.",
+                    "You do not have access.",
                     True,
                     app_url + self.endpoint,
-                    exception=e,
+                    request.user.id,
                 )
 
-        else:
+        except Exception as e:
             return ret_message(
-                "You do not have access.",
+                "An error occurred while getting team notes.",
                 True,
                 app_url + self.endpoint,
-                request.user.id,
+                exception=e,
             )
 
     def post(self, request, format=None):

@@ -103,3 +103,82 @@ def get_responses(team=None):
         "current_season": current_season,
         "current_event": current_event,
     }
+
+
+def save_robot_picture(file, team_no):
+    current_event = scouting.util.get_current_event()
+
+    if not allowed_file(file.content_type):
+        raise Exception("Invalid file type.")
+
+    sp = ScoutPit.objects.get(
+        Q(event=current_event)
+        & Q(team_no_id=team_no)
+        & Q(void_ind="n")
+        & Q(response__void_ind="n")
+    )
+
+    response = cloudinary.uploader.upload(file)
+
+    ScoutPitImage(
+        scout_pit=sp,
+        img_id=response["public_id"],
+        img_ver=str(response["version"]),
+    ).save()
+
+    return ret_message("Saved pit image successfully.")
+
+
+def allowed_file(filename):
+    """Returns whether a filename's extension indicates that it is an image.
+    :param str filename: A filename.
+    :return: Whether the filename has an recognized image file extension
+    :rtype: bool"""
+    return filename.rsplit("/", 1)[1].lower() in {"png", "jpg", "jpeg", "gif"}
+
+
+def set_default_team_image(id):
+    spi = ScoutPitImage.objects.get(Q(void_ind="n") & Q(scout_pit_img_id=id))
+
+    for pi in spi.scout_pit.scoutpitimage_set.filter(Q(void_ind="n")):
+        pi.default = False
+        pi.save()
+
+    spi.default = True
+    spi.save()
+
+    return spi
+
+
+def get_team_data(team_no=None):
+    current_event = scouting.util.get_current_event()
+
+    sp = ScoutPit.objects.get(
+        Q(team_no=team_no)
+        & Q(void_ind="n")
+        & Q(response__void_ind="n")
+        & Q(event=current_event)
+    )
+
+    scout_questions = form.util.get_question_with_conditions_response_answers(
+        sp.response
+    )
+
+    pics = []
+
+    for pic in sp.scoutpitimage_set.filter(Q(void_ind="n")):
+        pics.append(
+            {
+                "scout_pit_img_id": pic.scout_pit_img_id,
+                "pic": cloudinary.CloudinaryImage(
+                    pic.img_id, version=pic.img_ver
+                ).build_url(secure=True),
+                "default": pic.default,
+            }
+        )
+
+    return {
+        "response_id": sp.response_id,
+        "questions": scout_questions,
+        "pics": pics,
+    }
