@@ -272,11 +272,7 @@ def get_response(response_id: int):
     questions = get_questions(res.form_typ, "y")
 
     for question in questions:
-        question["answer"] = QuestionAnswer.objects.get(
-            Q(question_id=question.get("question_id"))
-            & Q(response=res)
-            & Q(void_ind="n")
-        ).answer
+        question["answer"] = get_response_question_answer(res, question["question_id"])
 
     return questions
 
@@ -291,11 +287,9 @@ def get_responses(form_typ: int):
         questions = get_questions(res.form_typ, "y")
 
         for question in questions:
-            question["answer"] = QuestionAnswer.objects.get(
-                Q(question_id=question.get("question_id"))
-                & Q(response=res)
-                & Q(void_ind="n")
-            ).answer
+            question["answer"] = get_response_question_answer(
+                res, question["question_id"]
+            )
 
         responses.append(
             {
@@ -307,6 +301,17 @@ def get_responses(form_typ: int):
         )
 
     return responses
+
+
+def get_response_question_answer(response: form.models.Response, question_id: int):
+    try:
+        answer = QuestionAnswer.objects.get(
+            Q(question_id=question_id) & Q(response=response) & Q(void_ind="n")
+        ).answer
+    except QuestionAnswer.DoesNotExist:
+        answer = "!FOUND"
+
+    return answer
 
 
 def get_question_aggregates(form_typ: str):
