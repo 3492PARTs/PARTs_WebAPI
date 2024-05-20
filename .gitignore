@@ -1,4 +1,5 @@
 dump.json
+db.json
 api/settings_dev.py
 keys/
 logs/
