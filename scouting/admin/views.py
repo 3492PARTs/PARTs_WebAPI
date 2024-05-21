@@ -541,7 +541,7 @@ class RemoveTeamToEventView(APIView):
 
     def post(self, request, format=None):
         try:
-            serializer = EventTeamSerializer(data=request.data)
+            serializer = EventSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
                     "Invalid data",

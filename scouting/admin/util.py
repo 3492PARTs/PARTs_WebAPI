@@ -566,9 +566,9 @@ def link_team_to_Event(data):
 def remove_link_team_to_Event(data):
     messages = ""
 
-    for t in data.get("team_no", []):
+    for t in data.get("teams", []):
         try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
-            if not t.get("checked", True):
+            if t.get("checked", False):
                 team = Team.objects.get(team_no=t["team_no"], void_ind="n")
                 e = Event.objects.get(event_id=data["event_id"], void_ind="n")
                 team.event_set.remove(e)

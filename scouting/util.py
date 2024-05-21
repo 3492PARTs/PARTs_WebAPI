@@ -44,8 +44,11 @@ def get_events(season: Season):
     return event
 
 
-def get_current_teams():
-    current_event = get_current_event()
+def get_teams(current: bool):
+    current_event = Q()
+    if current:
+        ce = get_current_event()
+        current_event = Q(event=ce)
 
     teams = (
         Team.objects.annotate(
@@ -59,7 +62,7 @@ def get_current_teams():
                 default=0,
             )
         )
-        .filter(event=current_event)
+        .filter(current_event)
         .order_by("team_no")
     )
 

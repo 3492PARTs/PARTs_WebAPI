@@ -7,9 +7,18 @@ class SeasonSerializer(serializers.Serializer):
     current = serializers.CharField()
 
 
+class TeamSerializer(serializers.Serializer):
+    team_no = serializers.IntegerField()
+    team_nm = serializers.CharField()
+
+    checked = serializers.BooleanField(required=False)
+    pit_result = serializers.IntegerField(required=False)
+
+
 class EventSerializer(serializers.Serializer):
     event_id = serializers.IntegerField()
     season_id = serializers.IntegerField()
+    teams = TeamSerializer(many=True, required=False)
     event_nm = serializers.CharField()
     date_st = serializers.DateTimeField()
     date_end = serializers.DateTimeField()
@@ -21,7 +30,9 @@ class EventSerializer(serializers.Serializer):
     postal_code = serializers.CharField()
     location_name = serializers.CharField(required=False, allow_null=True)
     gmaps_url = serializers.CharField(required=False, allow_null=True)
-    webcast_url = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    webcast_url = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
     timezone = serializers.CharField(required=False, allow_null=True)
     current = serializers.CharField()
     competition_page_active = serializers.CharField()
@@ -67,14 +78,6 @@ class MatchSerializer(serializers.Serializer):
     red_three_field_response = serializers.BooleanField()
 
     comp_level = CompetitionLevelSerializer()
-
-
-class TeamSerializer(serializers.Serializer):
-    team_no = serializers.IntegerField()
-    team_nm = serializers.CharField()
-
-    checked = serializers.BooleanField(required=False)
-    pit_result = serializers.IntegerField()
 
 
 class UserSerializer(serializers.Serializer):
