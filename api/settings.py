@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 DEBUG_PROPAGATE_EXCEPTIONS = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 
-ALLOWED_HOSTS = ["parts.bduke.dev", "192.168.1.41", "partsuat.bduke.dev"]
+ALLOWED_HOSTS = ["parts.bduke.dev", "192.168.1.41", "parts3492.bduke.dev"]
 
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
 
@@ -61,11 +61,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    "https://parts3492.org",
-    "https://www.parts3492.org",
-    "https://parts3492uat.bduke.dev",
-    "https://www.parts3492uat.bduke.dev",
-    "http://192.168.1.41:49156",
+    "https://parts3492.bduke.dev",
+    "https://www.parts3492.bduke.dev",
 ]
 
 ROOT_URLCONF = "api.urls"
