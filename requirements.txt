@@ -12,9 +12,9 @@ six
 wheel
 cryptography
 dj-database-url
-#uwsgi
+uwsgi
 Pillow
-#psycopg2-binary
+psycopg2-binary
 PyJWT>=2.3.0
 sqlparse>=0.4.2
 toml>=0.10.2
