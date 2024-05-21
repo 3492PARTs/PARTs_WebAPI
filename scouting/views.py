@@ -102,7 +102,9 @@ class TeamView(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                teams = scouting.util.get_current_teams()
+                teams = scouting.util.get_teams(
+                    request.query_params.get("current", False) in ["true", True]
+                )
 
                 serializer = TeamSerializer(teams, many=True)
                 return Response(serializer.data)
@@ -268,7 +270,7 @@ class AllScoutingInfo(APIView):
             try:
                 seasons = scouting.util.get_all_seasons()
                 events = scouting.util.get_all_events()
-                teams = scouting.util.get_current_teams()
+                teams = scouting.util.get_teams(True)
                 matches = scouting.util.get_matches(scouting.util.get_current_event())
                 schedules = scouting.util.get_current_schedule_parsed()
                 scout_field_schedules = (

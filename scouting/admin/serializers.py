@@ -32,21 +32,24 @@ class TeamCreateSerializer(serializers.Serializer):
 
 
 class EventSerializer(serializers.Serializer):
-    event_id = serializers.IntegerField(required=False, allow_null=True)
+    event_id = serializers.IntegerField()
     season_id = serializers.IntegerField()
+    teams = TeamSerializer(many=True, required=False)
     event_nm = serializers.CharField()
     date_st = serializers.DateTimeField()
     date_end = serializers.DateTimeField()
     event_cd = serializers.CharField()
-    event_url = serializers.CharField(required=False)
-    address = serializers.CharField()
+    event_url = serializers.CharField(required=False, allow_null=True)
+    address = serializers.CharField(required=False, allow_null=True)
     city = serializers.CharField()
     state_prov = serializers.CharField()
     postal_code = serializers.CharField()
-    location_name = serializers.CharField()
-    gmaps_url = serializers.CharField(required=False)
-    webcast_url = serializers.CharField(required=False)
-    timezone = serializers.CharField()
+    location_name = serializers.CharField(required=False, allow_null=True)
+    gmaps_url = serializers.CharField(required=False, allow_null=True)
+    webcast_url = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
+    timezone = serializers.CharField(required=False, allow_null=True)
     current = serializers.CharField()
     competition_page_active = serializers.CharField()
     void_ind = serializers.CharField(default="n")
@@ -60,26 +63,6 @@ class EventCreateSerializer(serializers.ModelSerializer):
         model = Event
         fields = '__all__'
 """
-
-
-class EventTeamSerializer(serializers.Serializer):
-    event_id = serializers.IntegerField()
-    season_id = serializers.IntegerField(read_only=True)
-    event_nm = serializers.CharField()
-    date_st = serializers.DateTimeField()
-    date_end = serializers.DateTimeField()
-    event_cd = serializers.CharField()
-    event_url = serializers.CharField(allow_null=True)
-    address = serializers.CharField()
-    city = serializers.CharField()
-    state_prov = serializers.CharField()
-    postal_code = serializers.CharField()
-    location_name = serializers.CharField()
-    gmaps_url = serializers.CharField(allow_null=True)
-    webcast_url = serializers.CharField(allow_null=True)
-    timezone = serializers.CharField()
-    current = serializers.CharField()
-    competition_page_active = serializers.CharField()
 
 
 """

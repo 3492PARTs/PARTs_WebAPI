@@ -35,7 +35,7 @@ class Team(models.Model):
 class Event(models.Model):
     event_id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
-    team_no = models.ManyToManyField(Team)
+    teams = models.ManyToManyField(Team)
     event_nm = models.CharField(max_length=255)
     date_st = models.DateTimeField()
     event_cd = models.CharField(unique=True, max_length=10)
