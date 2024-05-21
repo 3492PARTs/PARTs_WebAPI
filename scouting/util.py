@@ -45,26 +45,26 @@ def get_events(season: Season):
 
 
 def get_teams(current: bool):
-    current_event = Q()
     if current:
-        ce = get_current_event()
-        current_event = Q(event=ce)
+        current_event = get_current_event()
 
-    teams = (
-        Team.objects.annotate(
-            pit_result=Case(
-                When(
-                    team_no__in=ScoutPit.objects.filter(
-                        Q(event=current_event) & Q(void_ind="n")
-                    ).values_list("team_no", flat=True),
-                    then=1,
-                ),
-                default=0,
+        teams = (
+            Team.objects.annotate(
+                pit_result=Case(
+                    When(
+                        team_no__in=ScoutPit.objects.filter(
+                            Q(event=current_event) & Q(void_ind="n")
+                        ).values_list("team_no", flat=True),
+                        then=1,
+                    ),
+                    default=0,
+                )
             )
+            .filter(event=current_event)
+            .order_by("team_no")
         )
-        .filter(current_event)
-        .order_by("team_no")
-    )
+    else:
+        teams = Team.objects.all().order_by("team_no")
 
     return teams
 
