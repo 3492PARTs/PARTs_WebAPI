@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.conf import settings
 
 import user.util
 import alerts.util
@@ -653,9 +654,9 @@ def save_response(data):
             alerts.util.stage_alert(
                 u,
                 form_type.form_nm,
-                "A new response has been logged.",
+                f'<a href="{settings.FRONTEND_ADDRESS}{"contact" if form_type.form_typ == "team-cntct" else "join/team-application"}?response_id={response.response_id}">A new response has been logged.</a>',
             )
         )
     for a in alert:
-        for acct in ["email", "message", "notification"]:
+        for acct in ["email", "notification"]:
             alerts.util.stage_alert_channel_send(a, acct)

@@ -188,7 +188,8 @@ class SaveAnswersView(APIView):
                 # regular response
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
-                    form.util.save_response(serializer.validated_data)
+                    with transaction.atomic():
+                        form.util.save_response(serializer.validated_data)
                 else:
                     raise Exception("Invalid Data")
             return ret_message(success_msg)
