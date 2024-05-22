@@ -279,6 +279,15 @@ def get_response(response_id: int):
     return questions
 
 
+def delete_response(response_id: int):
+    res = Response.objects.get(response_id=response_id)
+
+    res.void_ind = "y"
+    res.save()
+
+    return res
+
+
 def get_responses(form_typ: int):
     responses = []
     resps = Response.objects.filter(

@@ -201,7 +201,7 @@ class ResponseView(APIView):
     API endpoint to get a form response
     """
 
-    endpoint = "get-response/"
+    endpoint = "response/"
 
     def get(self, request, format=None):
         try:
@@ -218,7 +218,28 @@ class ResponseView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while getting responses.",
+                "An error occurred while getting the response.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+    def delete(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin"):
+                form.util.delete_response(request.query_params["response_id"])
+                return ret_message("Successfully deleted the response.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred deleting the response.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
@@ -231,7 +252,7 @@ class ResponsesView(APIView):
     API endpoint to get a form responses
     """
 
-    endpoint = "get-responses/"
+    endpoint = "responses/"
 
     def get(self, request, format=None):
         try:
