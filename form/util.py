@@ -283,6 +283,7 @@ def delete_response(response_id: int):
     res = Response.objects.get(response_id=response_id)
 
     res.void_ind = "y"
+    res._change_reason = "User deleted"
     res.save()
 
     return res

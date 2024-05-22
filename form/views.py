@@ -201,6 +201,9 @@ class ResponseView(APIView):
     API endpoint to get a form response
     """
 
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
     endpoint = "response/"
 
     def get(self, request, format=None):
@@ -251,6 +254,9 @@ class ResponsesView(APIView):
     """
     API endpoint to get a form responses
     """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     endpoint = "responses/"
 
