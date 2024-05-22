@@ -1,17 +1,12 @@
 from django.http import HttpResponse
 
 from django.db import transaction
-from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-import alerts.util
 import form.util
-import scouting
-import user.util
-from form.models import FormType
 from form.serializers import (
     QuestionSerializer,
     QuestionWithConditionsSerializer,
@@ -24,7 +19,6 @@ from form.serializers import (
     QuestionConditionSerializer,
 )
 from general.security import has_access, ret_message
-from scouting.models import ScoutField, ScoutPit, Match
 
 app_url = "form/"
 
@@ -188,8 +182,7 @@ class SaveAnswersView(APIView):
                 # regular response
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
-                    with transaction.atomic():
-                        form.util.save_response(serializer.validated_data)
+                    form.util.save_response(serializer.validated_data)
                 else:
                     raise Exception("Invalid Data")
             return ret_message(success_msg)

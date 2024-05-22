@@ -1,5 +1,6 @@
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.db import transaction
 from django.conf import settings
 
 import user.util
@@ -639,13 +640,13 @@ def save_pit_response(data, user_id):
 def save_response(data):
     form_type = FormType.objects.get(form_typ=data["form_typ"])
 
-    # with transaction.atomic():
-    response = form.models.Response(form_typ=form_type)
-    response.save()
+    with transaction.atomic():
+        response = form.models.Response(form_typ=form_type)
+        response.save()
 
-    # Save the answers against the response object
-    for d in data.get("question_answers", []):
-        save_or_update_question_with_conditions_answer(d, response)
+        # Save the answers against the response object
+        for d in data.get("question_answers", []):
+            save_or_update_question_with_conditions_answer(d, response)
 
     alert = []
     users = user.util.get_users_with_permission("site_forms_notif")
