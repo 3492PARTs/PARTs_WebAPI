@@ -1,17 +1,12 @@
 from django.http import HttpResponse
 
 from django.db import transaction
-from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-import alerts.util
 import form.util
-import scouting
-import user.util
-from form.models import FormType
 from form.serializers import (
     QuestionSerializer,
     QuestionWithConditionsSerializer,
@@ -24,7 +19,6 @@ from form.serializers import (
     QuestionConditionSerializer,
 )
 from general.security import has_access, ret_message
-from scouting.models import ScoutField, ScoutPit, Match
 
 app_url = "form/"
 
@@ -207,7 +201,10 @@ class ResponseView(APIView):
     API endpoint to get a form response
     """
 
-    endpoint = "get-response/"
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    endpoint = "response/"
 
     def get(self, request, format=None):
         try:
@@ -224,7 +221,28 @@ class ResponseView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while getting responses.",
+                "An error occurred while getting the response.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+    def delete(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin"):
+                form.util.delete_response(request.query_params["response_id"])
+                return ret_message("Successfully deleted the response.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred deleting the response.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
@@ -237,7 +255,10 @@ class ResponsesView(APIView):
     API endpoint to get a form responses
     """
 
-    endpoint = "get-responses/"
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    endpoint = "responses/"
 
     def get(self, request, format=None):
         try:

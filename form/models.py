@@ -8,16 +8,17 @@
 
 import django
 from django.db import models
+from simple_history.models import HistoricalRecords
 
 
 class QuestionType(models.Model):
     question_typ = models.CharField(primary_key=True, max_length=50)
     question_typ_nm = models.CharField(max_length=255)
-    is_list = models.CharField(max_length=1, default='n')
-    void_ind = models.CharField(max_length=1, default='n')
+    is_list = models.CharField(max_length=1, default="n")
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.question_typ + ' ' + self.question_typ_nm
+        return self.question_typ + " " + self.question_typ_nm
 
 
 class FormType(models.Model):
@@ -25,7 +26,7 @@ class FormType(models.Model):
     form_nm = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.form_typ + ' ' + self.form_nm
+        return self.form_typ + " " + self.form_nm
 
 
 class FormSubType(models.Model):
@@ -35,7 +36,7 @@ class FormSubType(models.Model):
     order = models.IntegerField()
 
     def __str__(self):
-        return self.form_sub_typ + ' ' + self.form_sub_nm
+        return self.form_sub_typ + " " + self.form_sub_nm
 
 
 class Question(models.Model):
@@ -46,43 +47,47 @@ class Question(models.Model):
     question = models.CharField(max_length=1000)
     order = models.IntegerField()
     required = models.CharField(max_length=1)
-    active = models.CharField(max_length=1, default='y')
-    void_ind = models.CharField(max_length=1, default='n')
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.question_id) + ' ' + self.question
+        return str(self.question_id) + " " + self.question
 
 
 class QuestionOption(models.Model):
     question_opt_id = models.AutoField(primary_key=True)
     option = models.CharField(max_length=255)
     question = models.ForeignKey(Question, models.PROTECT)
-    active = models.CharField(max_length=1, default='y')
-    void_ind = models.CharField(max_length=1, default='n')
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.question_opt_id) + ' ' + self.option
+        return str(self.question_opt_id) + " " + self.option
 
 
 class QuestionCondition(models.Model):
     question_condition_id = models.AutoField(primary_key=True)
     condition = models.CharField(max_length=1000)
-    question_from = models.ForeignKey(Question, models.PROTECT, related_name='condition_question_from')
-    question_to = models.ForeignKey(Question, models.PROTECT, related_name='condition_question_to')
-    active = models.CharField(max_length=1, default='y')
-    void_ind = models.CharField(max_length=1, default='n')
+    question_from = models.ForeignKey(
+        Question, models.PROTECT, related_name="condition_question_from"
+    )
+    question_to = models.ForeignKey(
+        Question, models.PROTECT, related_name="condition_question_to"
+    )
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.question_condition_id) + ' ' + self.condition
+        return str(self.question_condition_id) + " " + self.condition
 
 
 class QuestionAggregateType(models.Model):
     question_aggregate_typ = models.CharField(primary_key=True, max_length=10)
     question_aggregate_nm = models.CharField(max_length=255)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.question_aggregate_typ + ' ' + self.question_aggregate_nm
+        return self.question_aggregate_typ + " " + self.question_aggregate_nm
 
 
 class QuestionAggregate(models.Model):
@@ -90,30 +95,32 @@ class QuestionAggregate(models.Model):
     question_aggregate_typ = models.ForeignKey(QuestionAggregateType, models.PROTECT)
     questions = models.ManyToManyField(Question)
     field_name = models.CharField(max_length=1000)
-    active = models.CharField(max_length=1, default='y')
-    void_ind = models.CharField(max_length=1, default='n')
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.question_aggregate_id) + ' ' + str(self.question_aggregate_typ)
+        return str(self.question_aggregate_id) + " " + str(self.question_aggregate_typ)
 
 
 class Response(models.Model):
     response_id = models.AutoField(primary_key=True)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
+    history = HistoricalRecords()
 
     def __str__(self):
-        return str(self.response_id) + ' ' + str(self.form_typ)
+        return str(self.response_id) + " " + str(self.form_typ)
 
 
 class QuestionAnswer(models.Model):
     question_answer_id = models.AutoField(primary_key=True)
-    response = models.ForeignKey(Response, models.PROTECT, null=True, related_name='form_response')
+    response = models.ForeignKey(
+        Response, models.PROTECT, null=True, related_name="form_response"
+    )
     question = models.ForeignKey(Question, models.PROTECT)
     answer = models.TextField(blank=True, null=True)
-    void_ind = models.CharField(max_length=1, default='n')
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.question_answer_id) + ' ' + str(self.answer)
-
+        return str(self.question_answer_id) + " " + str(self.answer)

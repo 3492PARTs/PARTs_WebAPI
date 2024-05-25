@@ -1,5 +1,7 @@
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.db import transaction
+from django.conf import settings
 
 import user.util
 import alerts.util
@@ -275,6 +277,16 @@ def get_response(response_id: int):
         question["answer"] = get_response_question_answer(res, question["question_id"])
 
     return questions
+
+
+def delete_response(response_id: int):
+    res = Response.objects.get(response_id=response_id)
+
+    res.void_ind = "y"
+    res._change_reason = "User deleted"
+    res.save()
+
+    return res
 
 
 def get_responses(form_typ: int):
@@ -638,13 +650,13 @@ def save_pit_response(data, user_id):
 def save_response(data):
     form_type = FormType.objects.get(form_typ=data["form_typ"])
 
-    # with transaction.atomic():
-    response = form.models.Response(form_typ=form_type)
-    response.save()
+    with transaction.atomic():
+        response = form.models.Response(form_typ=form_type)
+        response.save()
 
-    # Save the answers against the response object
-    for d in data.get("question_answers", []):
-        save_or_update_question_with_conditions_answer(d, response)
+        # Save the answers against the response object
+        for d in data.get("question_answers", []):
+            save_or_update_question_with_conditions_answer(d, response)
 
     alert = []
     users = user.util.get_users_with_permission("site_forms_notif")
@@ -653,9 +665,9 @@ def save_response(data):
             alerts.util.stage_alert(
                 u,
                 form_type.form_nm,
-                "A new response has been logged.",
+                f'<a href="{settings.FRONTEND_ADDRESS}{"contact" if form_type.form_typ == "team-cntct" else "join/team-application"}?response_id={response.response_id}">A new response has been logged.</a>',
             )
         )
     for a in alert:
-        for acct in ["email", "message", "notification"]:
+        for acct in ["email", "notification"]:
             alerts.util.stage_alert_channel_send(a, acct)
