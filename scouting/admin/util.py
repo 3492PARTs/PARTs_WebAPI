@@ -29,6 +29,7 @@ from scouting.models import (
 import scouting.util
 import scouting.models
 import alerts.util
+from user.models import User
 import user.util
 
 
@@ -391,9 +392,11 @@ def sync_event_team_info(force: int):
         for e in r.get("rankings", []):
             matches_played = e.get("matches_played", 0)
             qual_average = e.get("qual_average", 0)
-            losses = e.get("record", 0).get("losses", 0)
-            wins = e.get("record", 0).get("wins", 0)
-            ties = e.get("record", 0).get("ties", 0)
+            losses = (
+                e["record"].get("losses", 0) if e.get("record", 0) is not None else 0
+            )
+            wins = e["record"].get("wins", 0) if e.get("record", 0) is not None else 0
+            ties = e["record"].get("ties", 0) if e.get("record", 0) is not None else 0
             rank = e.get("rank", 0)
             dq = e.get("dq", 0)
             team = Team.objects.get(

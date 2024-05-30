@@ -24,6 +24,7 @@ import alerts.util
 import user.util
 from .serializers import (
     GroupSerializer,
+    RetMessageSerializer,
     UserCreationSerializer,
     UserLinksSerializer,
     UserSerializer,
@@ -108,13 +109,23 @@ class TokenRefreshView(APIView):
 
             return Response(serializer.validated_data)
         except Exception as e:
-            return ret_message(
+            return Response(
+                RetMessageSerializer(
+                    {
+                        "retMessage": "An error occurred while reauthenticating, please log in again.",
+                        "error": True,
+                    }
+                ).data
+            )
+        """
+            ret_message(
                 "An error occurred while reauthenticating, please log in again.",
                 True,
                 app_url + self.endpoint,
                 -1,
                 e,
             )
+        """
 
 
 class UserLogIn(ModelBackend):
