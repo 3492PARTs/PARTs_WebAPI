@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
-from django.contrib.auth.password_validation import validate_password, get_default_password_validators
+from django.contrib.auth.password_validation import (
+    validate_password,
+    get_default_password_validators,
+)
 from django.core.validators import ValidationError
 
 
@@ -32,7 +35,9 @@ class UserSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     is_active = serializers.BooleanField()
     phone = serializers.CharField(allow_blank=True)
-    discord_user_id = serializers.CharField(required=False, allow_null=True)
+    discord_user_id = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
 
     groups = GroupSerializer(many=True, required=False)
     phone_type = PhoneTypeSerializer(required=False, allow_null=True)
@@ -45,6 +50,7 @@ class UserCreationSerializer(serializers.Serializer):
     """
     User serializer, used only for validation of fields upon user registration.
     """
+
     username = serializers.CharField(required=True)
     email = serializers.CharField(required=True)
     password1 = serializers.CharField(required=True)
@@ -53,16 +59,23 @@ class UserCreationSerializer(serializers.Serializer):
     last_name = serializers.CharField(required=True)
 
     class Meta:
-        fields = ['username', 'email', 'password1',
-                  'password2', 'first_name', 'last_name']
+        fields = [
+            "username",
+            "email",
+            "password1",
+            "password2",
+            "first_name",
+            "last_name",
+        ]
 
     def validate_password1(self, validated_data):
         try:
             validate_password(
-                validated_data, password_validators=get_default_password_validators())
+                validated_data, password_validators=get_default_password_validators()
+            )
 
         except ValidationError as e:
-            raise serializers.ValidationError({'password': str(e)})
+            raise serializers.ValidationError({"password": str(e)})
         return validated_data
 
 
@@ -93,8 +106,3 @@ class GetAlertsSerializer(serializers.Serializer):
     alert_subject = serializers.CharField()
     alert_body = serializers.CharField()
     staged_time = serializers.DateTimeField()
-
-
-class SaveUserSerializer(serializers.Serializer):
-    user = UserSerializer()
-    groups = GroupSerializer(many=True)

@@ -1,16 +1,23 @@
 from django.urls import path
 
-from .views import SaveAnswers, GetFormInit, SaveQuestion, GetQuestions, GetResponse, GetResponses, \
-    QuestionAggregateView, QuestionAggregateTypeView, QuestionConditionView
+from .views import (
+    SaveAnswersView,
+    FormInitView,
+    ResponseView,
+    ResponsesView,
+    QuestionAggregateView,
+    QuestionAggregateTypeView,
+    QuestionConditionView,
+    QuestionView,
+)
 
 urlpatterns = [
-    path('get-questions/', GetQuestions.as_view()),
-    path('save-answers/', SaveAnswers.as_view()),
-    path('form-init/', GetFormInit.as_view()),
-    path('save-question/', SaveQuestion.as_view()),
-    path('get-response/', GetResponse.as_view()),
-    path('get-responses/', GetResponses.as_view()),
-    path('question-aggregate/', QuestionAggregateView.as_view()),
-    path('question-aggregate-types/', QuestionAggregateTypeView.as_view()),
-    path('question-condition/', QuestionConditionView.as_view()),
+    path("question/", QuestionView.as_view()),
+    path("save-answers/", SaveAnswersView.as_view()),
+    path("form-init/", FormInitView.as_view()),
+    path("response/", ResponseView.as_view()),
+    path("responses/", ResponsesView.as_view()),
+    path("question-aggregate/", QuestionAggregateView.as_view()),
+    path("question-aggregate-types/", QuestionAggregateTypeView.as_view()),
+    path("question-condition/", QuestionConditionView.as_view()),
 ]

@@ -1,6 +1,33 @@
 from rest_framework import serializers
 
 
+class SeasonSerializer(serializers.Serializer):
+    season_id = serializers.IntegerField(read_only=True)
+    season = serializers.CharField()
+    current = serializers.CharField()
+
+
+class EventSerializer(serializers.Serializer):
+    event_id = serializers.IntegerField(required=False)
+    season_id = serializers.IntegerField()
+    event_nm = serializers.CharField()
+    date_st = serializers.DateTimeField()
+    date_end = serializers.DateTimeField()
+    event_cd = serializers.CharField()
+    event_url = serializers.CharField(required=False)
+    address = serializers.CharField()
+    city = serializers.CharField()
+    state_prov = serializers.CharField()
+    postal_code = serializers.CharField()
+    location_name = serializers.CharField()
+    gmaps_url = serializers.CharField(required=False)
+    webcast_url = serializers.CharField(required=False)
+    timezone = serializers.CharField()
+    current = serializers.CharField()
+    competition_page_active = serializers.CharField()
+    void_ind = serializers.CharField(default="n")
+
+
 class TeamSerializer(serializers.Serializer):
     team_no = serializers.IntegerField()
     team_nm = serializers.CharField()
@@ -37,13 +64,18 @@ class QuestionConditionQuestionSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_typ = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    form_sub_nm = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True)
+        required=False, allow_null=True, many=True
+    )
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
@@ -69,13 +101,18 @@ class QuestionSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    form_sub_nm = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    form_sub_typ = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    form_sub_nm = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
     form_typ = serializers.CharField()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True)
+        required=False, allow_null=True, many=True
+    )
 
     answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
@@ -88,7 +125,6 @@ class QuestionSerializer(serializers.Serializer):
 
 class InitSerializer(serializers.Serializer):
     scoutQuestions = QuestionSerializer(many=True)
-    teams = TeamSerializer(many=True, required=False)
     comp_teams = TeamSerializer(many=True, required=False)
 
 
@@ -98,7 +134,7 @@ class ScoutAnswerSerializer(serializers.Serializer):
     team = serializers.CharField(required=False)
 
 
-class ScoutPitResultAnswerSerializer(serializers.Serializer):
+class ScoutPitResponseAnswerSerializer(serializers.Serializer):
     question = serializers.CharField()
     answer = serializers.CharField(required=False, allow_null=True)
 
@@ -109,12 +145,18 @@ class ScoutPitImageSerializer(serializers.Serializer):
     default = serializers.BooleanField()
 
 
-class ScoutPitResultsSerializer(serializers.Serializer):
+class ScoutPitResponseSerializer(serializers.Serializer):
     scout_pit_id = serializers.IntegerField()
-    teamNo = serializers.CharField()
-    teamNm = serializers.CharField()
+    team_no = serializers.IntegerField()
+    team_nm = serializers.CharField()
     pics = ScoutPitImageSerializer(many=True, required=False)
-    results = ScoutPitResultAnswerSerializer(many=True)
+    responses = ScoutPitResponseAnswerSerializer(many=True)
+
+
+class ScoutPitResponsesSerializer(serializers.Serializer):
+    teams = ScoutPitResponseSerializer(many=True)
+    current_season = SeasonSerializer()
+    current_event = EventSerializer()
 
 
 class PitTeamDataSerializer(serializers.Serializer):

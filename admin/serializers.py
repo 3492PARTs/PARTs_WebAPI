@@ -15,7 +15,7 @@ class GroupSerializer(serializers.Serializer):
 
 
 class PhoneTypeSerializer(serializers.Serializer):
-    phone_type_id = serializers.IntegerField(read_only=True)
+    phone_type_id = serializers.IntegerField(required=False)
     carrier = serializers.CharField()
     phone_type = serializers.CharField()
 
@@ -45,6 +45,7 @@ class ErrorLogSerializer(serializers.Serializer):
     path = serializers.CharField()
     message = serializers.CharField()
     exception = serializers.CharField()
+    traceback = serializers.CharField()
     time = serializers.DateTimeField()
 
     user = UserSerializer(required=False)

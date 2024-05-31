@@ -24,12 +24,12 @@ import alerts.util
 import user.util
 from .serializers import (
     GroupSerializer,
+    RetMessageSerializer,
     UserCreationSerializer,
     UserLinksSerializer,
     UserSerializer,
     UserUpdateSerializer,
     GetAlertsSerializer,
-    SaveUserSerializer,
     PermissionSerializer,
 )
 from .models import User, UserLinks
@@ -109,13 +109,23 @@ class TokenRefreshView(APIView):
 
             return Response(serializer.validated_data)
         except Exception as e:
-            return ret_message(
-                "An error occurred while authenticating, please log in again.",
+            return Response(
+                RetMessageSerializer(
+                    {
+                        "retMessage": "An error occurred while reauthenticating, please log in again.",
+                        "error": True,
+                    }
+                ).data
+            )
+        """
+            ret_message(
+                "An error occurred while reauthenticating, please log in again.",
                 True,
                 app_url + self.endpoint,
                 -1,
                 e,
             )
+        """
 
 
 class UserLogIn(ModelBackend):
@@ -840,6 +850,13 @@ class Permissions(APIView):
     def get(self, request, format=None):
         try:
             serializer = PermissionSerializer(user.util.get_permissions(), many=True)
+
+            user_id = request.query_params.get("user_id", None)
+            if user_id is not None:
+                permissions = get_user_permissions(user_id)
+            else:
+                permissions = user.util.get_permissions()
+            serializer = PermissionSerializer(permissions, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -1000,7 +1017,7 @@ class SaveUser(APIView):
     endpoint = "save/"
 
     def post(self, request, format=None):
-        serializer = SaveUserSerializer(data=request.data)
+        serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message(
                 "Invalid data",
