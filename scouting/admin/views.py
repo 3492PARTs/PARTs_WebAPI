@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 import scouting.models
 import scouting.util
 import scouting.admin.util
+import scouting.field.util
 
 from .serializers import *
 from scouting.models import (
@@ -14,7 +15,6 @@ from scouting.models import (
 )
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
-import requests
 from django.conf import settings
 from django.db.models import Q
 from rest_framework.response import Response
@@ -165,18 +165,10 @@ class SyncEventTeamInfoView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.sync_event_team_info(
-                    int(request.query_params.get("force", "0"))
-                )
-                return ret_message(req)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
+            req = scouting.admin.util.sync_event_team_info(
+                int(request.query_params.get("force", "0"))
+            )
+            return ret_message(req)
         except Exception as e:
             return ret_message(
                 "An error occurred while syncing event team info.",
@@ -770,11 +762,10 @@ class MarkScoutPresentView(APIView):
                     request.query_params.get("scout_field_sch_id", None)
                 )
                 user_id = int(request.query_params.get("user_id", None))
-                return ret_message(scouting.field.views.check_in_scout(sfs, user_id))
+                return ret_message(scouting.field.util.check_in_scout(sfs, user_id))
             except Exception as e:
                 return ret_message(
-                    "An error occurred while changing the scout"
-                    "s under review status.",
+                    "An error occurred while marking the scout" " present.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
