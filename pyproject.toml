@@ -50,6 +50,15 @@ urllib3 = "2.2.3"
 yarl = "1.11.1"
 
 
+[tool.poetry.group.dev.dependencies]
+pipdeptree = "^2.23.4"
+
+
+[tool.poetry.group.wvnet.dependencies]
+gunicorn = "23.0.0"
+uwsgi = "2.0.27"
+mysqlclient = "2.2.4"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
