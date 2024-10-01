@@ -50,9 +50,15 @@ urllib3 = "2.2.3"
 yarl = "1.11.1"
 
 
+[tool.poetry.group.dev]
+optional = true
+
 [tool.poetry.group.dev.dependencies]
 pipdeptree = "^2.23.4"
 
+
+[tool.poetry.group.wvnet]
+optional = true
 
 [tool.poetry.group.wvnet.dependencies]
 gunicorn = "23.0.0"
