@@ -71,6 +71,7 @@ optional = true
 [tool.poetry.group.uat.dependencies]
 gunicorn = "23.0.0"
 uwsgi = "2.0.27"
+wheel = "*"
 psycopg2-binary = "*"
 
 [build-system]
