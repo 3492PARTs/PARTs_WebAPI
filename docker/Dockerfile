@@ -18,7 +18,7 @@ RUN set -ex \
     postgresql-client \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
-    && apt-get update && apt-get install -y --no-install-recommends $RUN_DEPS \
+    && apt update && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy in your requirements file
@@ -35,11 +35,12 @@ RUN set -ex \
     libpcre3-dev \
     libpq-dev \
     " \
-    && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
-    && apt-get install gcc \
+    && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
+    && apt install -y --no-install-recommends uwsgi \
+    && pip install --upgrade pip \
     && pip install "poetry==$POETRY_VERSION" \
     && poetry --version \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
+    && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
