@@ -4,6 +4,8 @@ FROM python:3.11.3-slim
 ARG APP_USER=appuser
 RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
 
+ENV POETRY_VERSION=1.0.5
+
 # Install packages needed to run your application (not build deps):
 #   mime-support -- for mime types when serving static files
 #   postgresql-client -- for running database commands
@@ -34,7 +36,7 @@ RUN set -ex \
     libpq-dev \
     " \
     && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
-    && pip install --no-cache-dir -r /requirements.txt \
+    && pip install "poetry==$POETRY_VERSION" \
     \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/*
@@ -43,6 +45,9 @@ RUN set -ex \
 RUN mkdir /code/
 WORKDIR /code/
 ADD ./ /code/
+
+# Install dependencies:
+RUN poetry install
 
 # uWSGI will listen on this port
 EXPOSE 9090
