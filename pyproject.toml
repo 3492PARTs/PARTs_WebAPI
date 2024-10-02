@@ -72,6 +72,7 @@ optional = true
 gunicorn = "23.0.0"
 uwsgi = "2.0.27"
 wheel = "*"
+setuptools = "*"
 psycopg2-binary = "*"
 
 [build-system]
