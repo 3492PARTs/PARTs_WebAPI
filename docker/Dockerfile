@@ -47,7 +47,7 @@ WORKDIR /code/
 ADD ./ /code/
 
 # Install dependencies:
-RUN poetry install
+RUN poetry install --with uat
 
 # uWSGI will listen on this port
 EXPOSE 9090
