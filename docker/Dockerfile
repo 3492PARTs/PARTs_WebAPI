@@ -22,7 +22,7 @@ RUN set -ex \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy in your requirements file
-ADD requirements.txt /requirements.txt
+# ADD requirements.txt /requirements.txt
 
 # OR, if you're using a directory for your requirements, copy everything (comment out the above and uncomment this if so):
 # ADD requirements /requirements
@@ -36,6 +36,7 @@ RUN set -ex \
     libpq-dev \
     " \
     && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
+    && apt-get install gcc \
     && pip install "poetry==$POETRY_VERSION" \
     && poetry --version \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
