@@ -4,6 +4,8 @@ FROM python:3.11.3-slim
 ARG APP_USER=appuser
 RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
 
+ENV POETRY_VERSION=1.8.3
+
 # Install packages needed to run your application (not build deps):
 #   mime-support -- for mime types when serving static files
 #   postgresql-client -- for running database commands
@@ -16,14 +18,13 @@ RUN set -ex \
     postgresql-client \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
-    && apt-get update && apt-get install -y --no-install-recommends $RUN_DEPS \
+    && apt update && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy in your requirements file
-ADD requirements.txt /requirements.txt
-
-# OR, if you're using a directory for your requirements, copy everything (comment out the above and uncomment this if so):
-# ADD requirements /requirements
+# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
+RUN mkdir /code/
+WORKDIR /code/
+ADD ./ /code/
 
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
@@ -33,16 +34,17 @@ RUN set -ex \
     libpcre3-dev \
     libpq-dev \
     " \
-    && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
-    && pip install --no-cache-dir -r /requirements.txt \
-    \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
+    && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
+    && pip install "poetry==$POETRY_VERSION" \
+    && poetry --version \
+    &&  poetry install --with uat \
+    && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-RUN mkdir /code/
-WORKDIR /code/
-ADD ./ /code/
+
+
+# Install dependencies:
+#RUN poetry install --with uat
 
 # uWSGI will listen on this port
 EXPOSE 9090
