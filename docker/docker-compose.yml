@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   parts_webapi:
     container_name: ${CONTAINER_NAME}
