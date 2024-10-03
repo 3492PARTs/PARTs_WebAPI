@@ -61,13 +61,12 @@ ENV DJANGO_SETTINGS_MODULE=api.settings
 ENV UWSGI_WSGI_FILE=api/wsgi.py
 
 # Base uWSGI configuration (you shouldn't need to change these):
-ENV UWSGI_SOCKET=:9090
+ENV UWSGI_HTTP=:9090
 ENV UWSGI_MASTER=1
 ENV UWSGI_HTTP_AUTO_CHUNKED=1
 ENV UWSGI_HTTP_KEEPALIVE=1
 ENV UWSGI_LAZY_APPS=1
 ENV UWSGI_WSGI_ENV_BEHAVIOR=holy
-ENV UWSGI_PLUGINS=python3
 
 # Number of uWSGI workers and threads per worker (customize as needed):
 ENV UWSGI_WORKERS=2 
