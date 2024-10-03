@@ -21,11 +21,10 @@ RUN set -ex \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy in your requirements file
-# ADD requirements.txt /requirements.txt
-
-# OR, if you're using a directory for your requirements, copy everything (comment out the above and uncomment this if so):
-# ADD requirements /requirements
+# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
+RUN mkdir /code/
+WORKDIR /code/
+ADD ./ /code/
 
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
@@ -36,18 +35,16 @@ RUN set -ex \
     libpq-dev \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
-    && apt install -y --no-install-recommends uwsgi \
-    && apt install -y --no-install-recommends uwsgi-plugin-python3 \
-    && pip install --upgrade pip \
     && pip install "poetry==$POETRY_VERSION" \
     && poetry --version \
+    &&  poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-RUN mkdir /code/
-WORKDIR /code/
-ADD ./ /code/
+
+
+# Install dependencies:
+#RUN poetry install --with uat
 
 # Install dependencies:
 RUN poetry install --with uat
