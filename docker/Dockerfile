@@ -18,11 +18,11 @@ RUN set -ex \
     postgresql-client \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
-    && apt update && apt install -y --no-install-recommends $RUN_DEPS \
+    && apt-get update && apt-get install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy in your requirements file
-# ADD requirements.txt /requirements.txt
+ADD requirements.txt /requirements.txt
 
 # OR, if you're using a directory for your requirements, copy everything (comment out the above and uncomment this if so):
 # ADD requirements /requirements
@@ -35,14 +35,11 @@ RUN set -ex \
     libpcre3-dev \
     libpq-dev \
     " \
-    && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
-    && apt install -y --no-install-recommends uwsgi \
-    && apt install -y --no-install-recommends uwsgi-plugin-python3 \
-    && pip install --upgrade pip \
+    && apt-get update && apt-get install -y --no-install-recommends $BUILD_DEPS \
     && pip install "poetry==$POETRY_VERSION" \
-    && poetry --version \
-    && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
-    && rm -rf /var/lib/apt/lists/*
+    && poetry --version 
+#    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
+#    && rm -rf /var/lib/apt/lists/*
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 RUN mkdir /code/
@@ -50,7 +47,7 @@ WORKDIR /code/
 ADD ./ /code/
 
 # Install dependencies:
-RUN poetry install --with uat
+RUN poetry install
 
 # uWSGI will listen on this port
 EXPOSE 9090
@@ -67,13 +64,12 @@ ENV DJANGO_SETTINGS_MODULE=api.settings
 ENV UWSGI_WSGI_FILE=api/wsgi.py
 
 # Base uWSGI configuration (you shouldn't need to change these):
-ENV UWSGI_SOCKET=:9090
+ENV UWSGI_HTTP=:9090
 ENV UWSGI_MASTER=1
 ENV UWSGI_HTTP_AUTO_CHUNKED=1
 ENV UWSGI_HTTP_KEEPALIVE=1
 ENV UWSGI_LAZY_APPS=1
 ENV UWSGI_WSGI_ENV_BEHAVIOR=holy
-ENV UWSGI_PLUGINS=python3
 
 # Number of uWSGI workers and threads per worker (customize as needed):
 ENV UWSGI_WORKERS=2 
