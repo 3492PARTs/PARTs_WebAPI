@@ -46,9 +46,6 @@ RUN set -ex \
 # Install dependencies:
 #RUN poetry install --with uat
 
-# Install dependencies:
-RUN poetry install --with uat
-
 # uWSGI will listen on this port
 EXPOSE 9090
 
