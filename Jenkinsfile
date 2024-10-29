@@ -9,7 +9,7 @@ node {
             app = docker.build("bduke97/parts_webapi", "-f ./docker/Dockerfile .")
         }
         if (env.BRANCH_NAME == 'uat') {
-            app = docker.build("bduke97/parts_weapi", "-f ./Dockerfile.uat .")
+            app = docker.build("bduke97/parts_weapi", "-f ./docker/Dockerfile.uat .")
         }
        
     }
