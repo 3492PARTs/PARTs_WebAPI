@@ -48,14 +48,7 @@ node {
             withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                 app.inside {
                     sh '''
-                    sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -v "$USER"@192.168.1.43
-                    '''
-
-                    sh '''
-                    sshpass -p "$PASS" sftp -o StrictHostKeyChecking=no -v "$USER"@192.168.1.43 <<EOF
-                    ls
-                    rm *
-                    EOF
+                    cd docker && python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp
                     '''
 
                     sh '''
