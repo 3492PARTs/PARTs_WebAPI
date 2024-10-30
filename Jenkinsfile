@@ -8,7 +8,7 @@ node {
         if (env.BRANCH_NAME == 'main') {
             app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
         }
-        if (env.BRANCH_NAME == 'uat') {
+        else {
             app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
         }
        
@@ -25,7 +25,7 @@ node {
     */
 
     stage('Push image') {
-        if (env.BRANCH_NAME == 'uat') {
+        if (env.BRANCH_NAME != 'main') {
             docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
                 app.push("${env.BUILD_NUMBER}")
                 app.push("latest")
@@ -55,8 +55,7 @@ node {
                 }
             }
         }
-
-        if (env.BRANCH_NAME == 'uat') {
+        else {
             sh '''
             ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
             '''
