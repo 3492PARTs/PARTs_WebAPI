@@ -12,7 +12,7 @@ def recursive_delete(sftp, remote_path):
 
     for entry in sftp.listdir(remote_path):
         full_path = remote_path + "/" + entry
-        print(full_path)
+        print(f"Deleting {full_path}")
         if sftp.isdir(full_path):
             recursive_delete(sftp, full_path)
             sftp.rmdir(full_path)
