@@ -26,6 +26,8 @@ RUN mkdir /code/
 WORKDIR /code/
 ADD ./ /code/
 
+RUN rm ./poetry.toml
+
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
 RUN set -ex \
@@ -36,8 +38,9 @@ RUN set -ex \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && pip install "poetry==$POETRY_VERSION" \
-    && poetry --version \
-    &&  poetry install --with uat \
+    && poetry config virtualenvs.create false \
+    && poetry config --list \
+    && poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
