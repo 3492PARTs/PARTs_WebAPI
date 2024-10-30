@@ -19,9 +19,11 @@ def recursive_delete(sftp, remote_path, files_to_keep=[]):
             if not any(
                 f in full_path for f in files_to_keep
             ):  # Check if directory is empty (excluding kept files)
+                print(f"Try Deleted directory: {full_path}")
                 sftp.rmdir(full_path)
                 print(f"Deleted directory: {full_path}")
         elif entry not in files_to_keep:  # Check if file is not in the keep list
+            print(f"Try Deleting file: {full_path}")
             sftp.remove(full_path)
             print(f"Deleting file: {full_path}")
 
