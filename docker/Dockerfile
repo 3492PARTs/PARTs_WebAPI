@@ -18,8 +18,7 @@ RUN set -ex \
     postgresql-client \
     python3.11 \
     python3.11-dev \
-    python3.11-pip \
-    python3.11-distutils \
+    python3-pip \
     openssh-client \
     sshpass \
     " \
@@ -41,8 +40,8 @@ RUN set -ex \
     libpq-dev \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
-    && pip3.11 install "poetry==$POETRY_VERSION" \
-    && pip3.11 install pysftp \
+    && python-3.11 -m pip install "poetry==$POETRY_VERSION" \
+    && python-3.11 -m pip install pysftp \
     && poetry --version \
     && poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
