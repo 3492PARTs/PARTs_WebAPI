@@ -42,10 +42,7 @@ RUN set -ex \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && python3.11 -m pip install "poetry==$POETRY_VERSION" \
     && python3.11 -m pip install pysftp \
-    && poetry --version \
-    && poetry install --with uat \
-    && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
-    && rm -rf /var/lib/apt/lists/* \
+    && poetry install --with wvnet \
     && mv .venv venv
 
 RUN ls -la
