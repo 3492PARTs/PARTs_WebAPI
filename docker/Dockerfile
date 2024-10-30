@@ -16,7 +16,7 @@ RUN set -ex \
     libpcre3 \
     mime-support \
     postgresql-client \
-    python3.11-full \
+    python3.11 \
     python3-pip \
     sshpass \
     " \
