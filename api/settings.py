@@ -15,9 +15,17 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-if os.getenv("DOCKER_ENVIRONMENT").lower() not in ("true", "1", "t"):
-    # Initialise environment variables
-    load_dotenv("/home/parts3492/domains/api.parts3492.org/code/api/.env")
+file_path = "/home/parts3492/domains/api.parts3492.org/code/api/.env"
+# Initialise environment variables
+if os.path.isfile(file_path):
+
+    load_dotenv(file_path)
+
+file_path = "api/.env"
+# Initialise environment variables
+if os.path.isfile(file_path):
+
+    load_dotenv(file_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +46,8 @@ ALLOWED_HOSTS = [
     "partsuat.bduke.dev",
     "192.168.1.41",
     "parts3492.bduke.dev",
+    "127.0.0.1",
+    "localhost",
 ]
 
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
@@ -75,6 +85,8 @@ CORS_ORIGIN_WHITELIST = [
     "https://www.parts3492.org",
     "https://parts3492.bduke.dev",
     "https://www.parts3492.bduke.dev",
+    "http://127.0.0.1",
+    "http://localhost:4200",
 ]
 
 ROOT_URLCONF = "api.urls"
@@ -103,7 +115,11 @@ WSGI_APPLICATION = "api.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": os.getenv("DB_ENGINE"),
-        "NAME": os.getenv("DB_NAME"),
+        "NAME": (
+            os.getenv("DB_NAME")
+            if os.getenv("DB_ENGINE") != "django.db.backends.sqlite3"
+            else os.path.join(BASE_DIR, "db.sqlite3")
+        ),
         "USER": os.getenv("DB_USER"),
         "PASSWORD": os.getenv("DB_PASSWORD"),
         "HOST": os.getenv("DB_HOST"),
