@@ -1,6 +1,6 @@
 services:
   parts_webapi:
-    container_name: ${CONTAINER_NAME}
+    container_name: ${CONTAINER_NAME}preprod
     build:
       dockerfile: ./Dockerfile.preprod
     environment:
