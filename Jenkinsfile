@@ -6,10 +6,10 @@ node {
 
     stage('Build image') {  
         if (env.BRANCH_NAME == 'uat') {
-            app = docker.build("bduke97/parts_webapi", "-f ./docker/Dockerfile .")
+            app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
         }
         if (env.BRANCH_NAME == 'uat3') {
-            app = docker.build("bduke97/parts_webapi", "-f ./docker/Dockerfile.uat .")
+            app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
         }
        
     }
