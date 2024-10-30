@@ -40,8 +40,8 @@ RUN set -ex \
     libpq-dev \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
-    && pip install "poetry==$POETRY_VERSION" \
-    && pip install pysftp \
+    && pip3.11 install "poetry==$POETRY_VERSION" \
+    && pip3.11 install pysftp \
     && poetry --version \
     && poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
