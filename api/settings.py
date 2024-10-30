@@ -20,13 +20,15 @@ file_path = "/home/parts3492/domains/api.parts3492.org/code/api/.env"
 if os.path.isfile(file_path):
 
     load_dotenv(file_path)
+else:
+    file_path = "api/.env"
+    # Initialise environment variables
+    if os.path.isfile(file_path):
 
-file_path = "api/.env"
-# Initialise environment variables
-if os.path.isfile(file_path):
+        load_dotenv(file_path)
 
-    load_dotenv(file_path)
-
+for env_var in os.environ:
+    print(f"{env_var} = {os.environ[env_var]}")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
