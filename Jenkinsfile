@@ -8,7 +8,7 @@ node {
         if (env.BRANCH_NAME == 'main') {
             app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
         }
-        if (env.BRANCH_NAME == 'uat') {
+        else {
             app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
         }
        
@@ -25,7 +25,7 @@ node {
     */
 
     stage('Push image') {
-        if (env.BRANCH_NAME == 'uat') {
+        if (env.BRANCH_NAME != 'main') {
             docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
                 app.push("${env.BUILD_NUMBER}")
                 app.push("latest")
@@ -42,7 +42,11 @@ node {
                     '''
 
                     sh '''
-                    python3.11 delete_remote_files.py vhost90-public.wvnet.edu "$USER" "$PASS" /domains/api.parts3492.org/code/
+                    python3.11 delete_remote_files.py vhost90-public.wvnet.edu "$USER" "$PASS" /domains/api.parts3492.org/code/ --keep jwt-key jwt-key.pub .env
+                    '''
+
+                    sh '''
+                    rm delete_remote_files.py
                     '''
 
                     sh '''
@@ -55,8 +59,7 @@ node {
                 }
             }
         }
-
-        if (env.BRANCH_NAME == 'uat') {
+        else {
             sh '''
             ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
             '''
