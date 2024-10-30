@@ -48,24 +48,20 @@ node {
             withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                 app.inside {
                     sh '''
-                    mkdir ~/.ssh && touch ~/.ssh/known_hosts
-                    '''
-
-                    sh '''
-                    ssh-keyscan -H 192.168.1.43 >> ~/.ssh/known_hosts
+                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H 192.168.1.43 >> ~/.ssh/known_hosts
                     '''
 
                     sh '''
                     cd docker && python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp
                     '''
-/*
+
                     sh '''
                     sshpass -p "$PASS" sftp -o StrictHostKeyChecking=no "$USER"@192.168.1.43 <<EOF
                     cd /home/brandon/tmp
                     put -r /code/*
                     quit
                     EOF
-                    '''*/
+                    '''
                 }
             }
         }
