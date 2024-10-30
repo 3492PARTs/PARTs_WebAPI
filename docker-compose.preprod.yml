@@ -2,6 +2,7 @@ services:
   parts_webapi:
     container_name: ${CONTAINER_NAME}preprod
     build:
+      context: ./
       dockerfile: ./Dockerfile.preprod
     environment:
       DJANGO_MANAGEPY_MIGRATE: "on"
