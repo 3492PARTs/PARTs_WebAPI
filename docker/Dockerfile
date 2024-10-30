@@ -19,6 +19,7 @@ RUN set -ex \
     python3.11 \
     python3.11-dev \
     python3-pip \
+    openssh \
     sshpass \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
@@ -45,5 +46,3 @@ RUN set -ex \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/* \
     && mv .venv venv
-
-RUN ssh
