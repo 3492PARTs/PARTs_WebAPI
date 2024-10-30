@@ -47,5 +47,3 @@ RUN set -ex \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/* \
     && mv .venv venv
-
-RUN mkdir /home/ubuntu/.ssh

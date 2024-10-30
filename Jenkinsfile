@@ -48,6 +48,10 @@ node {
             withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                 app.inside {
                     sh '''
+                    mkdir .ssh
+                    '''
+
+                    sh '''
                     ssh-keyscan -H 192.168.1.43 >> ~/.ssh/known_hosts
                     '''
 
