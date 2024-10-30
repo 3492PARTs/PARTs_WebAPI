@@ -19,7 +19,7 @@ RUN set -ex \
     python3.11 \
     python3.11-dev \
     python3-pip \
-    openssh \
+    openssh-client \
     sshpass \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
