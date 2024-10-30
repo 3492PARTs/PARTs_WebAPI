@@ -17,6 +17,7 @@ RUN set -ex \
     mime-support \
     postgresql-client \
     sshpass \
+    openssh \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
