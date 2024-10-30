@@ -41,6 +41,7 @@ RUN set -ex \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && pip install "poetry==$POETRY_VERSION" \
+    && pip install pysftp \
     && poetry --version \
     &&  poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
