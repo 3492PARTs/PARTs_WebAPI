@@ -39,6 +39,8 @@ RUN set -ex \
     build-essential \
     libpcre3-dev \
     libpq-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && python3.11 -m pip install "poetry==$POETRY_VERSION" \
