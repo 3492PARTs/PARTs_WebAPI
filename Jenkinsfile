@@ -48,7 +48,7 @@ node {
             withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                 app.inside {
                     sh '''
-                    mkdir .ssh
+                    mkdir ~/.ssh && touch ~/.ssh/known_hosts
                     '''
 
                     sh '''
