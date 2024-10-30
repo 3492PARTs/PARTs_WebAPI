@@ -27,8 +27,6 @@ else:
 
         load_dotenv(file_path)
 
-for env_var in os.environ:
-    print(f"{env_var} = {os.environ[env_var]}")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
