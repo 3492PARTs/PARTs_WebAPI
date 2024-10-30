@@ -5,10 +5,10 @@ node {
     }
 
     stage('Build image') {  
-        if (env.BRANCH_NAME == 'uat') {
+        if (env.BRANCH_NAME == 'main') {
             app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
         }
-        if (env.BRANCH_NAME == 'uat3') {
+        if (env.BRANCH_NAME == 'uat') {
             app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
         }
        
@@ -25,7 +25,7 @@ node {
     */
 
     stage('Push image') {
-        if (env.BRANCH_NAME == 'uat3') {
+        if (env.BRANCH_NAME == 'uat') {
             docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
                 app.push("${env.BUILD_NUMBER}")
                 app.push("latest")
@@ -34,30 +34,20 @@ node {
     }
 
     stage('Deploy') {
-        if (env.BRANCH_NAME == 'uat') {
-            /*withCredentials([usernamePassword(credentialsId: 'parts-server', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+        if (env.BRANCH_NAME == 'main') {
+            withCredentials([usernamePassword(credentialsId: 'parts-server', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                 app.inside {
                     sh '''
-                    sshpass -p "$PASS" sftp -o StrictHostKeyChecking=no "$USER"@vhost90-public.wvnet.edu:public_html/ <<EOF
-                    ls
-                    EOF
-                    '''
-                }
-            }*/
-
-            withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                app.inside {
-                    sh '''
-                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H 192.168.1.43 >> ~/.ssh/known_hosts
+                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H vhost90-public.wvnet.edu >> ~/.ssh/known_hosts
                     '''
 
                     sh '''
-                    python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp
+                    python3.11 delete_remote_files.py vhost90-public.wvnet.edu "$USER" "$PASS" /domains/api.parts3492.org/code/
                     '''
 
                     sh '''
-                    sshpass -p "$PASS" sftp -o StrictHostKeyChecking=no "$USER"@192.168.1.43 <<EOF
-                    cd /home/brandon/tmp
+                    sshpass -p "$PASS" sftp -o StrictHostKeyChecking=no "$USER"@vhost90-public.wvnet.edu <<EOF
+                    cd /domains/api.parts3492.org/code
                     put -r /code/*
                     quit
                     EOF
@@ -66,7 +56,7 @@ node {
             }
         }
 
-        if (env.BRANCH_NAME == 'uat3') {
+        if (env.BRANCH_NAME == 'uat') {
             sh '''
             ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
             '''
