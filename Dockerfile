@@ -48,5 +48,3 @@ RUN set -ex \
     && python3.11 -m pip install pysftp \
     && poetry install --with wvnet \
     && mv .venv venv
-
-RUN ls -la
