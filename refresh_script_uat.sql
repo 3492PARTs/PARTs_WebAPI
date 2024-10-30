@@ -1,3 +1,0 @@
-GRANT ALL ON ALL TABLES IN SCHEMA public to parts_uat;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public to parts_uat;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA public to parts_uat;

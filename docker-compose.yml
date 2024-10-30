@@ -1,8 +1,7 @@
-version: "3.8"
-
 services:
   parts_webapi:
     container_name: ${CONTAINER_NAME}
+    image: bduke97/parts_webapi:latest
     environment:
       DJANGO_MANAGEPY_MIGRATE: "on"
       SECRET_KEY: ${SECRET_KEY}
@@ -22,9 +21,8 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       DEBUG: ${DEBUG}
-    build:
-      context: ../
-      dockerfile: ./docker/Dockerfile
+    volumes:
+      - ./keys:/code/keys
     ports:
       - "${API_PORT}:9090"
     restart: always
