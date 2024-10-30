@@ -15,6 +15,7 @@ RUN set -ex \
     && RUN_DEPS=" \
     libpcre3 \
     mime-support \
+    mysql-client \
     postgresql-client \
     python3.11 \
     python3.11-dev \
