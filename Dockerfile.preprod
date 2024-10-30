@@ -22,7 +22,7 @@ RUN set -ex \
     python3-pip \
     python3-dev \
     libapache2-mod-wsgi-py3.11 \
-    apache2
+    apache2 \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
