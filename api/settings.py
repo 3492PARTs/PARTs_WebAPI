@@ -13,10 +13,14 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+if os.getenv("DOCKER_ENVIRONMENT").lower() not in ("true", "1", "t"):
+    # Initialise environment variables
+    load_dotenv("/home/parts3492/domains/api.parts3492.org/code/api/.env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -25,10 +29,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
-DEBUG_PROPAGATE_EXCEPTIONS = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
+DEBUG = os.getenv("DEBUG").lower() in ("true", "1", "t")
+DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 
-ALLOWED_HOSTS = ["partsuat.bduke.dev", "192.168.1.41", "parts3492.bduke.dev"]
+ALLOWED_HOSTS = [
+    "parts3492.org",
+    "api.parts3492.org",
+    "partsuat.bduke.dev",
+    "192.168.1.41",
+    "parts3492.bduke.dev",
+]
 
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
 
@@ -61,6 +71,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
+    "https://parts3492.org",
+    "https://www.parts3492.org",
     "https://parts3492.bduke.dev",
     "https://www.parts3492.bduke.dev",
 ]
@@ -90,7 +102,7 @@ WSGI_APPLICATION = "api.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": os.getenv("DB_ENGINE"),
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
         "PASSWORD": os.getenv("DB_PASSWORD"),
@@ -98,11 +110,6 @@ DATABASES = {
         "PORT": os.getenv("DB_PORT"),
     }
 }
-
-"""
-sequence reset for postgres
-    python3 manage.py sqlsequencereset user
-"""
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -192,14 +199,14 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.getenv("EMAIL_PORT")
 
 # Cloudinary
-os.environ["CLOUDINARY_URL"] = os.getenv("CLOUDINARY_URL", "")
+os.environ["CLOUDINARY_URL"] = os.getenv("CLOUDINARY_URL")
 
-TBA_KEY = "vOi134WDqMjUjGslV08r9ElOGoiWAU8LtSMxMBPziTVertNPmsdUqBOY8cYnyb7u"
+TBA_KEY = os.getenv("TBA_KEY")
 
-DISCORD_NOTIFICATION_WEBHOOK = os.getenv("DISCORD_NOTIFICATION_WEBHOOK", "")
+DISCORD_NOTIFICATION_WEBHOOK = os.getenv("DISCORD_NOTIFICATION_WEBHOOK")
 
 WEBPUSH_SETTINGS = {
     "VAPID_PUBLIC_KEY": os.getenv("VAPID_PUBLIC_KEY"),
     "VAPID_PRIVATE_KEY": os.getenv("VAPID_PRIVATE_KEY"),
-    "VAPID_ADMIN_EMAIL": "team3492@gmail.com",
+    "VAPID_ADMIN_EMAIL": os.getenv("VAPID_ADMIN_EMAIL"),
 }
