@@ -1,7 +1,8 @@
 services:
   parts_webapi:
     container_name: ${CONTAINER_NAME}
-    image: bduke97/parts_webapi:latest
+    build:
+      dockerfile: ./Dockerfile.preprod
     environment:
       DJANGO_MANAGEPY_MIGRATE: "on"
       SECRET_KEY: ${SECRET_KEY}
@@ -25,7 +26,7 @@ services:
     volumes:
       - ./keys:/code/keys
     ports:
-      - "${API_PORT}:9090"
+      - "9080:9090"
     restart: always
     labels:
       com.centurylinklabs.watchtower.enable: false
