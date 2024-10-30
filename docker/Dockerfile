@@ -1,8 +1,8 @@
-FROM python:3.11.3-slim
+FROM ubuntu:22.04
 
-# Create a group and user to run our app
-ARG APP_USER=appuser
-RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
+RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
+
+RUN apt update && apt upgrade -y
 
 ENV POETRY_VERSION=1.8.3
 
@@ -17,7 +17,6 @@ RUN set -ex \
     mime-support \
     postgresql-client \
     sshpass \
-    openssh \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
@@ -28,6 +27,7 @@ RUN mkdir /code/
 WORKDIR /code/
 ADD ./ /code/
 
+RUN python -v
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
 RUN set -ex \
