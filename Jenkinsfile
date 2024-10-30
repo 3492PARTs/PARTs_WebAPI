@@ -54,14 +54,14 @@ node {
                     sh '''
                     cd docker && python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp
                     '''
-
+/*
                     sh '''
                     sshpass -p "$PASS" sftp -o StrictHostKeyChecking=no "$USER"@192.168.1.43 <<EOF
                     cd /home/brandon/tmp
                     put -r /code/*
                     quit
                     EOF
-                    '''
+                    '''*/
                 }
             }
         }
