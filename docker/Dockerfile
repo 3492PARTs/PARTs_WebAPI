@@ -28,7 +28,7 @@ RUN mkdir /code/
 WORKDIR /code/
 ADD ./ /code/
 
-RUN python -v
+RUN python3.11 -v
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
 RUN set -ex \
