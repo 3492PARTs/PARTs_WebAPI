@@ -52,7 +52,7 @@ node {
                     '''
 
                     sh '''
-                    cd docker && python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp
+                    python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp
                     '''
 
                     sh '''
@@ -68,7 +68,7 @@ node {
 
         if (env.BRANCH_NAME == 'uat3') {
             sh '''
-            ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI/docker && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
+            ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
             '''
         } 
     }
