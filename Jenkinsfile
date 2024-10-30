@@ -48,6 +48,12 @@ node {
             withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                 app.inside {
                     sh '''
+                    python --version
+                    '''
+                    sh '''
+                    pip show pysftp
+                    '''
+                    sh '''
                     cd docker && python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp
                     '''
 

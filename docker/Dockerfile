@@ -19,7 +19,6 @@ RUN set -ex \
     python3.11 \
     python3.11-dev \
     python3-pip \
-    pysftp \
     openssh-client \
     sshpass \
     " \
@@ -42,8 +41,9 @@ RUN set -ex \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && pip install "poetry==$POETRY_VERSION" \
+    && pip install pysftp \
     && poetry --version \
-    &&  poetry install --with uat \
+    && poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/* \
     && mv .venv venv
