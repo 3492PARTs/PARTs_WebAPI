@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 DEBUG_PROPAGATE_EXCEPTIONS = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 
-ALLOWED_HOSTS = ["parts.bduke.dev", "192.168.1.41", "parts3492.bduke.dev"]
+ALLOWED_HOSTS = ["partsuat.bduke.dev", "192.168.1.41", "parts3492.bduke.dev"]
 
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
 
