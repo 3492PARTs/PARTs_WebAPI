@@ -18,6 +18,7 @@ RUN set -ex \
     postgresql-client \
     python3.11 \
     python3-pip \
+    openssh \
     sshpass \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
