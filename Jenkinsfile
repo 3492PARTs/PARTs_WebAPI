@@ -46,6 +46,10 @@ node {
                     '''
 
                     sh '''
+                    rm delete_remote_files.py
+                    '''
+
+                    sh '''
                     sshpass -p "$PASS" sftp -o StrictHostKeyChecking=no "$USER"@vhost90-public.wvnet.edu <<EOF
                     cd /domains/api.parts3492.org/code
                     put -r /code/*
