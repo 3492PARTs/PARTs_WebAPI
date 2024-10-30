@@ -16,6 +16,7 @@ RUN set -ex \
     libpcre3 \
     mime-support \
     postgresql-client \
+    python3.11 \
     sshpass \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
