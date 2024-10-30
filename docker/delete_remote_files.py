@@ -1,5 +1,6 @@
 import pysftp
 import argparse
+from pysftp.CnOpts import CnOpts
 
 
 def recursive_delete(sftp, remote_path):
@@ -29,8 +30,11 @@ def main():
     parser.add_argument("remote_path", type=str, help="Remote path to delete")
     args = parser.parse_args()
 
+    cnopts = CnOpts()
+    cnopts.hostkeys = None
+
     with pysftp.Connection(
-        host=args.host, username=args.username, password=args.password
+        host=args.host, username=args.username, password=args.password, cnopts=cnopts
     ) as sftp:
         recursive_delete(sftp, args.remote_path)
 
