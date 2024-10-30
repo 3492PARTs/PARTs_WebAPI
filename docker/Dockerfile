@@ -16,7 +16,8 @@ RUN set -ex \
     libpcre3 \
     mime-support \
     postgresql-client \
-    python3.11 \
+    python3.11-full \
+    python3-pip \
     sshpass \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
@@ -28,7 +29,6 @@ RUN mkdir /code/
 WORKDIR /code/
 ADD ./ /code/
 
-RUN python3.11
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
 RUN set -ex \
