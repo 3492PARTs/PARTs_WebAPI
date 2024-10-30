@@ -18,7 +18,8 @@ RUN set -ex \
     postgresql-client \
     python3.11 \
     python3.11-dev \
-    python3-pip \
+    python3.11-pip \
+    python3.11-distutils \
     openssh-client \
     sshpass \
     " \
