@@ -36,7 +36,6 @@ RUN set -ex \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && pip install "poetry==$POETRY_VERSION" \
-    && poetry --version \
     && poetry config virtualenvs.create = false \
     && poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
