@@ -48,9 +48,6 @@ node {
             withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                 app.inside {
                     sh '''
-                    python --version
-                    '''
-                    sh '''
                     pip show pysftp
                     '''
                     sh '''
