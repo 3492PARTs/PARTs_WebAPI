@@ -39,10 +39,6 @@ RUN set -ex \
     && pip install "poetry==$POETRY_VERSION" \
     && poetry --version \
     &&  poetry install --with uat \
-    && poetry config --list 
-    #&& apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
-    #&& rm -rf /var/lib/apt/lists/*
-
-RUN ls -la
-
-RUN mv .venv venv
+    && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
+    && rm -rf /var/lib/apt/lists/* \
+    && mv .venv venv
