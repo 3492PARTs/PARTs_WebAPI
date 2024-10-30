@@ -43,7 +43,7 @@ RUN set -ex \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && python3.11 -m pip install "poetry==$POETRY_VERSION" \
     && python3.11 -m pip install pysftp \
-    && python3.11 poetry install --with wvnet \
+    && poetry install --with wvnet \
     && mv .venv venv
 
 RUN ls -la
