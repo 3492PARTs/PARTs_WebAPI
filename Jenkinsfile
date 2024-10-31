@@ -44,15 +44,11 @@ node {
                     '''
 
                     sh '''
-                    python3.11 delete_remote_files.py vhost90-public.wvnet.edu "$USER" "$PASS" /domains/api.parts3492.org/code --exclude_dirs venv logs --keep jwt-key jwt-key.pub .env
+                    python3.11 /scripts/delete_remote_files.py vhost90-public.wvnet.edu "$USER" "$PASS" /domains/api.parts3492.org/code --exclude_dirs venv logs --keep jwt-key jwt-key.pub .env
                     '''
 
                     sh '''
-                    rm delete_remote_files.py
-                    '''
-
-                    sh '''
-                    python3.11 upload_directory.py vhost90-public.wvnet.edu "$USER" "$PASS" /code/ /domains/api.parts3492.org/code
+                    python3.11 /scripts/upload_directory.py vhost90-public.wvnet.edu "$USER" "$PASS" /code/ /domains/api.parts3492.org/code
                     '''
                 }
 
