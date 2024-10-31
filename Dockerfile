@@ -52,4 +52,3 @@ RUN set -ex \
     && python3.11 -m pip install pipdeptree \
     && poetry install --with wvnet \
     && pipdeptree > requirements.txt \
-    && rm -r ./venv \
