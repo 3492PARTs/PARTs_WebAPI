@@ -43,12 +43,13 @@ DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 ALLOWED_HOSTS = [
     "parts3492.org",
     "api.parts3492.org",
-    "partsuat.bduke.dev",
-    "192.168.1.41",
-    "parts3492.bduke.dev",
-    "127.0.0.1",
-    "localhost",
 ]
+
+if DEBUG:
+    ALLOWED_HOSTS.append("127.0.0.1")
+    ALLOWED_HOSTS.append("localhost")
+    ALLOWED_HOSTS.append("192.168.1.41")
+    ALLOWED_HOSTS.append("parts3492.bduke.dev")
 
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
 
@@ -83,11 +84,13 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = [
     "https://parts3492.org",
     "https://www.parts3492.org",
-    "https://parts3492.bduke.dev",
-    "https://www.parts3492.bduke.dev",
-    "http://127.0.0.1",
-    "http://localhost:4200",
 ]
+
+if DEBUG:
+    CORS_ORIGIN_WHITELIST.append("https://parts3492.bduke.dev")
+    CORS_ORIGIN_WHITELIST.append("https://www.parts3492.bduke.dev")
+    CORS_ORIGIN_WHITELIST.append("http://127.0.0.1")
+    CORS_ORIGIN_WHITELIST.append("http://localhost:4200")
 
 ROOT_URLCONF = "api.urls"
 
