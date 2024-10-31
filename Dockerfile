@@ -26,13 +26,13 @@ RUN set -ex \
     wget \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
-    && apt update && apt install -y --no-install-recommends $RUN_DEPS \
+    && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /scripts/
 WORKDIR /scripts/
 RUN wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
-    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py.py
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 RUN mkdir /code/
