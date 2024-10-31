@@ -5,7 +5,7 @@ node {
     }
 
     stage('Build image') {  
-        if (env.BRANCH_NAME == 'main') {
+        if (env.BRANCH_NAME != 'main') {
             app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
         }
         else {
@@ -33,10 +33,12 @@ node {
         }  
     }
 
+    //parts-server vhost90-public.wvnet.edu
+
     stage('Deploy') {
-        if (env.BRANCH_NAME == 'main') {
-            withCredentials([usernamePassword(credentialsId: 'parts-server', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                app.inside {
+        if (env.BRANCH_NAME != 'main') {
+            withCredentials([usernamePassword(credentialsId: 'omv', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                /*app.inside {
                     sh '''
                     mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H vhost90-public.wvnet.edu >> ~/.ssh/known_hosts
                     '''
@@ -51,6 +53,24 @@ node {
 
                     sh '''
                     python3.11 upload_directory.py vhost90-public.wvnet.edu "$USER" "$PASS" /code/ /domains/api.parts3492.org/code
+                    '''
+                }*/
+
+                app.inside {
+                    sh '''
+                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H 192.168.1.41 >> ~/.ssh/known_hosts
+                    '''
+
+                    sh '''
+                    python3.11 delete_remote_files.py 192.168.1.41 "$USER" "$PASS" /home/brandon/tmp --keep jwt-key jwt-key.pub .env venv
+                    '''
+
+                    sh '''
+                    rm delete_remote_files.py
+                    '''
+
+                    sh '''
+                    python3.11 upload_directory.py 192.168.1.41 "$USER" "$PASS" /code/ /home/brandon/tmp
                     '''
                 }
             }
