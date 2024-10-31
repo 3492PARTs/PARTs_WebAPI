@@ -33,7 +33,7 @@ RUN mkdir /code/
 WORKDIR /code/
 ADD ./ /code/
 
-RUN rm ./poetry.toml
+RUN rm ./poetry.toml && touch ./api/wsgi.py
 
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
