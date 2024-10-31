@@ -23,6 +23,7 @@ RUN set -ex \
     python3-dev \
     openssh-client \
     sshpass \
+    wget \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
