@@ -49,6 +49,6 @@ RUN set -ex \
     && python3.11 -m pip install pipdeptree \
     && poetry install --with wvnet \
     && mv .venv venv \
-    && source ./venv/bin/activate \
+    && . ./venv/bin/activate \
     && pipdeptree > requirements.txt \
     && rm -r ./venv \
