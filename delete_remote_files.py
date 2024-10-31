@@ -1,59 +1,59 @@
 import pysftp
 import argparse
+import os
 
 
-def recursive_delete(sftp, remote_path, files_to_keep=[]):
-    """Recursively deletes files and directories on an SFTP server, excluding files in the provided list.
+def recursive_delete(sftp, remote_path, exclude_dirs=[], keep_files=[]):
+    """Recursively deletes files and directories on an SFTP server, excluding specified directories and keeping specified files.
 
     Args:
         sftp: An open SFTP connection.
         remote_path: The path to the directory to delete.
-        files_to_keep (list, optional): A list of filenames (without directory path) to keep within the directory. Defaults to [].
+        exclude_dirs (list, optional): A list of directory names to exclude. Defaults to [].
+        keep_files (list, optional): A list of filenames to keep. Defaults to [].
     """
 
     for entry in sftp.listdir(remote_path):
-        full_path = remote_path + "/" + entry
+        full_path = os.path.join(remote_path, entry)
 
         if sftp.isdir(full_path):
-            recursive_delete(sftp, full_path, files_to_keep)
-
-            print(full_path)
-            print(files_to_keep)
-
-            if not any(
-                f in full_path for f in files_to_keep
-            ):  # Check if directory is empty (excluding kept files)
-                try:
-                    print(f"Try Deleted directory: {full_path}")
-                    sftp.rmdir(full_path)
-                    print(f"Deleted directory: {full_path}")
-                except OSError as o:
-                    print(f"Error deleting directory: {o}")
-        elif entry not in files_to_keep:  # Check if file is not in the keep list
+            if entry not in exclude_dirs:
+                recursive_delete(sftp, full_path, exclude_dirs, keep_files)
+                if sftp.listdir(full_path) == []:
+                    try:
+                        print(f"Try Deleted directory: {full_path}")
+                        sftp.rmdir(full_path)
+                        print(f"Deleted directory")
+                    except OSError as o:
+                        print(f"Error deleting directory: {o}")
+        elif entry not in keep_files:
             print(f"Try Deleting file: {full_path}")
             sftp.remove(full_path)
-            print(f"Deleting file: {full_path}")
+            print(f"Deleted file")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Recursively delete files on an SFTP server, excluding a list"
+        description="Recursively delete files on an SFTP server, excluding specified directories and keeping specified files"
     )
     parser.add_argument("host", type=str, help="SFTP host")
     parser.add_argument("username", type=str, help="SFTP username")
     parser.add_argument("password", type=str, help="SFTP password")
     parser.add_argument("remote_path", type=str, help="Remote path to delete")
     parser.add_argument(
-        "--keep", nargs="+", type=str, help="List of filenames to keep (excluding path)"
+        "--exclude_dirs", nargs="+", type=str, help="List of directory names to exclude"
+    )
+    parser.add_argument(
+        "--keep_files", nargs="+", type=str, help="List of filenames to keep"
     )
     args = parser.parse_args()
 
     with pysftp.Connection(
         host=args.host, username=args.username, password=args.password
     ) as sftp:
-        files_to_keep = args.keep or []  # Handle empty list from argument
-
-        recursive_delete(sftp, args.remote_path, files_to_keep)
+        exclude_dirs = args.exclude_dirs or []
+        keep_files = args.keep_files or []
+        recursive_delete(sftp, args.remote_path, exclude_dirs, keep_files)
 
 
 if __name__ == "__main__":

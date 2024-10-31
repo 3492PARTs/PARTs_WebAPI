@@ -33,6 +33,8 @@ RUN mkdir /code/
 WORKDIR /code/
 ADD ./ /code/
 
+RUN rm ./poetry.toml
+
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
 RUN set -ex \
@@ -45,10 +47,8 @@ RUN set -ex \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
     && python3.11 -m pip install "poetry==$POETRY_VERSION" \
-    && python3.11 -m pip install pysftp \
+    && poetry config virtualenvs.create false \
     && python3.11 -m pip install pipdeptree \
     && poetry install --with wvnet \
-    && mv .venv venv
-    && source ./venv/bin/activate
-    && pipdeptree > requirements.txt
-    && rm -r ./venv
+    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt \
+    && python3.11 -m pip install pysftp \
