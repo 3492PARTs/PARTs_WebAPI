@@ -62,7 +62,7 @@ node {
                     '''
 
                     sh '''
-                    python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp --keep jwt-key jwt-key.pub .env venv
+                    python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp --exclude_dirs venv --keep jwt-key jwt-key.pub .env
                     '''
 
                     sh '''
