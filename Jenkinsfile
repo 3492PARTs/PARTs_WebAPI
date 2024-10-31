@@ -1,80 +1,98 @@
 node {
-    def app
-    stage('Clone repository') {
-        checkout scm
-    }
+    env.BUILD_NO = env.BUILD_DISPLAY_NAME
 
-    stage('Build image') {  
-        if (env.BRANCH_NAME == 'main') {
-            app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
-        }
-        else {
-            app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
-        }
-       
-    }
+    try {
+        def app
 
-    /*
-    stage('Test image') {
-  
-
-        app.inside {
-            sh 'echo "Tests passed"'
-        }
-    }
-    */
-
-    stage('Push image') {
-        if (env.BRANCH_NAME != 'main') {
-            docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                app.push("${env.BUILD_NUMBER}")
-                app.push("latest")
-            }
-        }  
-    }
-
-    //parts-server vhost90-public.wvnet.edu
-
-    stage('Deploy') {
-        if (env.BRANCH_NAME == 'main') {
-            withCredentials([usernamePassword(credentialsId: 'parts-server', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                app.inside {
-                    sh '''
-                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H vhost90-public.wvnet.edu >> ~/.ssh/known_hosts
-                    '''
-
-                    sh '''
-                    python3.11 /scripts/delete_remote_files.py vhost90-public.wvnet.edu "$USER" "$PASS" /domains/api.parts3492.org/code --exclude_dirs venv logs --keep jwt-key jwt-key.pub .env
-                    '''
-
-                    sh '''
-                    python3.11 /scripts/upload_directory.py vhost90-public.wvnet.edu "$USER" "$PASS" /code/ /domains/api.parts3492.org/code
-                    '''
-                }
-
-                /*app.inside {
-                    sh '''
-                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H 192.168.1.43 >> ~/.ssh/known_hosts
-                    '''
-
-                    sh '''
-                    python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp --exclude_dirs venv --keep jwt-key jwt-key.pub .env
-                    '''
-
-                    sh '''
-                    rm delete_remote_files.py
-                    '''
-
-                    sh '''
-                    python3.11 upload_directory.py 192.168.1.43 "$USER" "$PASS" /code/ /home/brandon/tmp
-                    '''
-                }*/
-            }
-        }
-        else {
+        withCredentials([string(credentialsId: 'github-status', variable: 'PASSWORD')]) {
+            env.SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
             sh '''
-            ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
+                curl -X POST https://api.github.com/repos/3492PARTs/PARTs_WebAPI/statuses/$SHA \
+                    -H "Authorization: token $PASSWORD" \
+                    -H "Content-Type: application/json" \
+                    -d '{"state":"pending", "description":"Build '\$BUILD_NO' pending", "context":"Jenkins Build"}'
             '''
-        } 
+        }
+
+        stage('Clone repository') {
+            checkout scm
+        }
+
+        stage('Build image') {  
+            if (env.BRANCH_NAME == 'main') {
+                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
+            }
+            else {
+                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
+            }
+            
+        }
+
+        /*
+        stage('Test image') {
+
+
+            app.inside {
+                sh 'echo "Tests passed"'
+            }
+        }
+        */
+
+        stage('Push image') {
+            if (env.BRANCH_NAME != 'main') {
+                docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+                    app.push("${env.BUILD_NUMBER}")
+                    app.push("latest")
+                }
+            }  
+        }
+
+        //parts-server vhost90-public.wvnet.edu
+
+        stage('Deploy') {
+            if (env.BRANCH_NAME == 'main') {
+                env.ENV_HOST = "vhost90-public.wvnet.edu"
+                withCredentials([usernamePassword(credentialsId: 'parts-server', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    app.inside {
+                        sh '''
+                        mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H $ENV_HOST >> ~/.ssh/known_hosts
+                        '''
+
+                        sh '''
+                        python3.11 /scripts/delete_remote_files.py $ENV_HOST "$USER" "$PASS" /domains/api.parts3492.org/code --exclude_dirs venv logs --keep jwt-key jwt-key.pub .env
+                        '''
+
+                        sh '''
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /code/ /domains/api.parts3492.org/code
+                        '''
+                    }
+                }
+            }
+            else {
+                sh '''
+                ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
+                '''
+            } 
+        }
+
+        env.RESULT = 'success'
+    }
+    catch (e) {
+        // error handling, if needed
+        // throw the exception to jenkins
+        env.RESULT = 'error'
+        throw e
+    } 
+    finally {
+        // some common final reporting in all cases (success or failure)
+        withCredentials([string(credentialsId: 'github-status', variable: 'PASSWORD')]) {
+                env.SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                sh '''
+                    curl -X POST https://api.github.com/repos/3492PARTs/PARTs_WebAPI/statuses/$SHA \
+                        -H "Authorization: token $PASSWORD" \
+                        -H "Content-Type: application/json" \
+                        -d '{"state":"'\$RESULT'", "description":"Build '\$BUILD_NO' '\$RESULT'", "context":"Jenkins Build"}'
+                '''
+            }
     }
 }
