@@ -58,11 +58,11 @@ node {
 
                 app.inside {
                     sh '''
-                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H 192.168.1.41 >> ~/.ssh/known_hosts
+                    mkdir ~/.ssh && touch ~/.ssh/known_hosts && ssh-keyscan -H 192.168.1.43 >> ~/.ssh/known_hosts
                     '''
 
                     sh '''
-                    python3.11 delete_remote_files.py 192.168.1.41 "$USER" "$PASS" /home/brandon/tmp --keep jwt-key jwt-key.pub .env venv
+                    python3.11 delete_remote_files.py 192.168.1.43 "$USER" "$PASS" /home/brandon/tmp --keep jwt-key jwt-key.pub .env venv
                     '''
 
                     sh '''
@@ -70,7 +70,7 @@ node {
                     '''
 
                     sh '''
-                    python3.11 upload_directory.py 192.168.1.41 "$USER" "$PASS" /code/ /home/brandon/tmp
+                    python3.11 upload_directory.py 192.168.1.43 "$USER" "$PASS" /code/ /home/brandon/tmp
                     '''
                 }
             }
