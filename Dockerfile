@@ -51,4 +51,4 @@ RUN set -ex \
     && python3.11 -m pip install pysftp \
     && python3.11 -m pip install pipdeptree \
     && poetry install --with wvnet \
-    && pipdeptree > requirements.txt \
+    && pipdeptree -fl --exclude poetry --exclude pysftp --exclude pipdeptree > requirements.txt \
