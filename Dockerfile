@@ -51,3 +51,4 @@ RUN set -ex \
     && mv .venv venv
     && source ./venv/bin/activate
     && pipdeptree > requirements.txt
+    && rm -r ./venv

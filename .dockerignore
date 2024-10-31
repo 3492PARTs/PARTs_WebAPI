@@ -4,6 +4,8 @@
 **/.env
 **/.git
 **/.gitignore
+**/.github
+**/.idea
 **/.project
 **/.settings
 **/.toolstarget
