@@ -26,13 +26,13 @@ from .serializers import (
     GroupSerializer,
     RetMessageSerializer,
     UserCreationSerializer,
-    UserLinksSerializer,
+    LinkSerializer,
     UserSerializer,
     UserUpdateSerializer,
     GetAlertsSerializer,
     PermissionSerializer,
 )
-from .models import User, UserLinks
+from .models import User, Link
 from general.security import (
     get_user_groups,
     get_user_permissions,
@@ -725,30 +725,30 @@ class UserData(APIView):
 
 class UserLinksView(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to get Link a user has based on permissions
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "user-links/"
+    endpoint = "user-Link/"
 
-    def get_links(self):
+    def get_Link(self):
         permissions = get_user_permissions(self.request.user.id)
 
-        user_links = UserLinks.objects.filter(
-            permission__in=[per.id for per in permissions]
+        user_Link = Link.objects.filter(
+            Q(permission__in=[per.id for per in permissions]) | Q(permission_id__isnull=True)
         ).order_by("order")
 
-        return user_links
+        return user_Link
 
     def get(self, request, format=None):
         try:
-            req = self.get_links()
-            serializer = UserLinksSerializer(req, many=True)
+            req = self.get_Link()
+            serializer = LinkSerializer(req, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
-                "An error occurred while getting user links.",
+                "An error occurred while getting user Link.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,

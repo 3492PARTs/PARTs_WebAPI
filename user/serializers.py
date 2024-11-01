@@ -87,8 +87,8 @@ class UserUpdateSerializer(serializers.Serializer):
     image = serializers.ImageField(required=False)
 
 
-class UserLinksSerializer(serializers.Serializer):
-    user_links_id = serializers.IntegerField(read_only=True)
+class LinkSerializer(serializers.Serializer):
+    link_id = serializers.IntegerField(read_only=True)
     permission = PermissionSerializer()
     menu_name = serializers.CharField()
     routerlink = serializers.CharField()
