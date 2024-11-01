@@ -1,7 +1,7 @@
 services:
   parts_webapi:
     container_name: ${CONTAINER_NAME}
-    image: bduke97/parts_webapi:latest
+    image: bduke97/parts_webapi:${TAG}
     environment:
       DJANGO_MANAGEPY_MIGRATE: "on"
       SECRET_KEY: ${SECRET_KEY}

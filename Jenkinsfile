@@ -70,7 +70,7 @@ node {
             }
             else {
                 sh '''
-                ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && docker stop parts_webapi_uat && docker rm parts_webapi_uat && docker compose up -d"
+                ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && TAG=$BRANCH_NAME docker compose pull && TAG=$BRANCH_NAME docker compose up -d --force-recreate"
                 '''
             } 
         }
