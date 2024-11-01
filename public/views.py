@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.conf import settings
 
 
 app_url = "public/"
@@ -11,4 +12,4 @@ class APIStatus(APIView):
     """
 
     def get(self, request, format=None):
-        return Response(200)
+        return Response({"branch": settings.ENVIRONMENT})

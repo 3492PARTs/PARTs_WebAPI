@@ -53,6 +53,7 @@ if DEBUG:
 
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
 
+ENVIRONMENT = os.getenv("ENVIRONMENT")
 # Application definition
 
 INSTALLED_APPS = [
