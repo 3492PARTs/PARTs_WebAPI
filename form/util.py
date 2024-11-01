@@ -279,6 +279,19 @@ def get_response(response_id: int):
     return questions
 
 
+def save_response(data):
+    if data.get("response_id", None) is None:
+        response = Response()
+    else:
+        response = Response.objects.get(response_id=data["response_id"])
+
+    response.form_typ_id = data["form_typ"]
+    response.time = data["time"]
+    response.archive_ind = data["archive_ind"]
+
+    response.save()
+
+
 def delete_response(response_id: int):
     res = Response.objects.get(response_id=response_id)
 
@@ -289,10 +302,10 @@ def delete_response(response_id: int):
     return res
 
 
-def get_responses(form_typ: int):
+def get_responses(form_typ: int, archive_ind: str):
     responses = []
     resps = Response.objects.filter(
-        Q(form_typ__form_typ=form_typ) & Q(void_ind="n")
+        Q(form_typ__form_typ=form_typ) & Q(archive_ind=archive_ind) & Q(void_ind="n")
     ).order_by("-time")
 
     for res in resps:
@@ -308,6 +321,7 @@ def get_responses(form_typ: int):
                 "response_id": res.response_id,
                 "form_typ": res.form_typ.form_typ,
                 "time": res.time,
+                "archive_ind": res.archive_ind,
                 "questionanswer_set": questions,
             }
         )
@@ -647,7 +661,7 @@ def save_pit_response(data, user_id):
     return sp
 
 
-def save_response(data):
+def save_answers(data):
     form_type = FormType.objects.get(form_typ=data["form_typ"])
 
     with transaction.atomic():

@@ -182,7 +182,7 @@ class SaveAnswersView(APIView):
                 # regular response
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
-                    form.util.save_response(serializer.validated_data)
+                    form.util.save_answers(serializer.validated_data)
                 else:
                     raise Exception("Invalid Data")
             return ret_message(success_msg)
@@ -228,6 +228,38 @@ class ResponseView(APIView):
                 e,
             )
 
+    def post(self, request, format=None):
+        serializer = ResponseSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message(
+                "Invalid data",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                serializer.errors,
+            )
+
+        if has_access(request.user.id, "admin"):
+            try:
+                with transaction.atomic():
+                    form.util.save_response(serializer.validated_data)
+                    return ret_message("Saved response successfully")
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while saving the response.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
     def delete(self, request, format=None):
         try:
             if has_access(request.user.id, "admin"):
@@ -263,7 +295,10 @@ class ResponsesView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, "admin"):
-                responses = form.util.get_responses(request.query_params["form_typ"])
+                responses = form.util.get_responses(
+                    request.query_params["form_typ"],
+                    request.query_params.get("archive_ind", "n"),
+                )
                 serializer = ResponseSerializer(responses, many=True)
                 return Response(serializer.data)
             else:

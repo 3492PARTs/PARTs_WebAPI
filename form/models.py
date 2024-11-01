@@ -106,6 +106,7 @@ class Response(models.Model):
     response_id = models.AutoField(primary_key=True)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
+    archive_ind = models.CharField(max_length=1, default="n")
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 

@@ -79,6 +79,7 @@ class ResponseSerializer(serializers.Serializer):
     form_typ = serializers.CharField()
     time = serializers.DateTimeField()
     questionanswer_set = QuestionSerializer(many=True)
+    archive_ind = serializers.CharField()
 
 
 class QuestionAggregateTypeSerializer(serializers.Serializer):
