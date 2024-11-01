@@ -4,6 +4,10 @@ node {
     try {
         def app
 
+        stage('Clone repository') {
+            checkout scm
+        }
+
         withCredentials([string(credentialsId: 'github-status', variable: 'PASSWORD')]) {
             env.SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
             sh '''
@@ -12,10 +16,6 @@ node {
                     -H "Content-Type: application/json" \
                     -d '{"state":"pending", "description":"Build '\$BUILD_NO' pending", "context":"Jenkins Build"}'
             '''
-        }
-
-        stage('Clone repository') {
-            checkout scm
         }
 
         stage('Build image') {  
