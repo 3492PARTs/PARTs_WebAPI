@@ -4,7 +4,7 @@ from django.db.models.functions import Lower, Concat
 
 import user
 from scouting.models import ScoutAuthGroups
-from user.models import User, PhoneType
+from user.models import User, PhoneType, Link
 
 
 def get_users(active, admin):
@@ -155,3 +155,22 @@ def run_security_audit():
             users_ret.append(u)
 
     return users_ret
+
+def get_links():
+    return Link.objects.all().order_by("order")
+
+def save_link(data):
+    if data.get("link_id", None) is None:
+        link = Link()
+    else:
+        link = Link.objects.get(link_id=data["link_id"])
+    
+    link.menu_name = data["menu_name"]
+    link.permission_id = None if data.get("permission", None) is None else data.get("permission", None).get("id", None)
+    link.routerlink = data["routerlink"]
+    link.order = data["order"]
+
+    link.save()
+
+def delete_link(link_id: int):
+    Link.objects.get(link_id=link_id).delete()

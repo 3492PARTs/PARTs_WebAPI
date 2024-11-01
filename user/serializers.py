@@ -88,8 +88,8 @@ class UserUpdateSerializer(serializers.Serializer):
 
 
 class LinkSerializer(serializers.Serializer):
-    link_id = serializers.IntegerField(read_only=True)
-    permission = PermissionSerializer()
+    link_id = serializers.IntegerField(allow_null=True, required=False)
+    permission = PermissionSerializer(allow_null=True, required=False)
     menu_name = serializers.CharField()
     routerlink = serializers.CharField()
     order = serializers.IntegerField()
