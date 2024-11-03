@@ -175,6 +175,7 @@ class SaveScoutFieldSerializer(serializers.Serializer):
 class ScoutColSerializer(serializers.Serializer):
     PropertyName = serializers.CharField()
     ColLabel = serializers.CharField()
+    Width = serializers.CharField(required=False)
     order = serializers.CharField()
     scorable = serializers.BooleanField()
 

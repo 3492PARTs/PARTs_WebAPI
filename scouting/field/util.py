@@ -17,11 +17,24 @@ def build_table_columns():
         {
             "PropertyName": "team_no",
             "ColLabel": "Team No",
+            "Width": "200px",
             "scorable": False,
             "order": 0,
         },
-        {"PropertyName": "rank", "ColLabel": "Rank", "scorable": False, "order": 1},
-        {"PropertyName": "match", "ColLabel": "Match", "scorable": False, "order": 1},
+        {
+            "PropertyName": "rank",
+            "ColLabel": "Rank",
+            "Width": "200px",
+            "scorable": False,
+            "order": 1,
+        },
+        {
+            "PropertyName": "match",
+            "ColLabel": "Match",
+            "Width": "200px",
+            "scorable": False,
+            "order": 1,
+        },
     ]
 
     for sqs in [sqsa, sqst, sqso]:
@@ -38,6 +51,7 @@ def build_table_columns():
                         else sq["form_sub_typ"][0:1].upper() + ": "
                     )
                     + sq["question"],
+                    "Width": "200px",
                     "scorable": scout_question.scorable,
                     "order": sq["order"],
                 }
@@ -59,6 +73,7 @@ def build_table_columns():
                         + c["condition"]
                         + " "
                         + c["question_to"]["question"],
+                        "Width": "200px",
                         "scorable": scout_question.scorable,
                         "order": c["question_to"]["order"],
                     }
@@ -80,6 +95,7 @@ def build_table_columns():
                         else sqs[0]["form_sub_typ"][0:1].upper() + ": "
                     )
                     + qa.field_name,
+                    "Width": "200px",
                     "scorable": True,
                     "order": sqs[len(sqs) - 1]["order"] + sqas_cnt,
                 }
@@ -91,6 +107,7 @@ def build_table_columns():
         {
             "PropertyName": "user",
             "ColLabel": "Scout",
+            "Width": "200px",
             "scorable": False,
             "order": 9999999999,
         }
@@ -99,6 +116,7 @@ def build_table_columns():
         {
             "PropertyName": "time",
             "ColLabel": "Time",
+            "Width": "200px",
             "scorable": False,
             "order": 99999999999,
         }
