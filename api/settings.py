@@ -46,7 +46,8 @@ ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 ALLOWED_HOSTS = [
     # "192.168.1.41",
-    "parts3492.bduke.dev"
+    "parts3492.bduke.dev",
+    "partsuat.bduke.dev",
 ]
 
 if ENVIRONMENT == "main":
