@@ -40,20 +40,27 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG").lower() in ("true", "1", "t")
 DEBUG_PROPAGATE_EXCEPTIONS = DEBUG
 
-ALLOWED_HOSTS = [
-    "parts3492.org",
-    "api.parts3492.org",
-]
-
-if DEBUG:
-    ALLOWED_HOSTS.append("127.0.0.1")
-    ALLOWED_HOSTS.append("localhost")
-    ALLOWED_HOSTS.append("192.168.1.41")
-    ALLOWED_HOSTS.append("parts3492.bduke.dev")
-
 FRONTEND_ADDRESS = os.getenv("FRONTEND_ADDRESS")
 
 ENVIRONMENT = os.getenv("ENVIRONMENT")
+
+ALLOWED_HOSTS = [
+    # "192.168.1.41",
+    "parts3492.bduke.dev"
+]
+
+if ENVIRONMENT == "main":
+    ALLOWED_HOSTS = [
+        "parts3492.org",
+        "api.parts3492.org",
+    ]
+if ENVIRONMENT == "local":
+    ALLOWED_HOSTS = [
+        "127.0.0.1",
+        "localhost",
+    ]
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -83,15 +90,21 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    "https://parts3492.org",
-    "https://www.parts3492.org",
+    "https://parts3492.bduke.dev",
+    "https://www.parts3492.bduke.dev",
 ]
 
-if DEBUG:
-    CORS_ORIGIN_WHITELIST.append("https://parts3492.bduke.dev")
-    CORS_ORIGIN_WHITELIST.append("https://www.parts3492.bduke.dev")
-    CORS_ORIGIN_WHITELIST.append("http://127.0.0.1")
-    CORS_ORIGIN_WHITELIST.append("http://localhost:4200")
+if ENVIRONMENT == "main":
+    CORS_ORIGIN_WHITELIST = [
+        "https://parts3492.org",
+        "https://www.parts3492.org",
+    ]
+
+if ENVIRONMENT == "local":
+    CORS_ORIGIN_WHITELIST = [
+        "http://127.0.0.1",
+        "http://localhost:4200",
+    ]
 
 ROOT_URLCONF = "api.urls"
 
