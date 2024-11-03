@@ -17,21 +17,21 @@ def build_table_columns():
         {
             "PropertyName": "team_no",
             "ColLabel": "Team No",
-            "Width": "200px",
+            "Width": "75px",
             "scorable": False,
             "order": 0,
         },
         {
             "PropertyName": "rank",
             "ColLabel": "Rank",
-            "Width": "200px",
+            "Width": "50px",
             "scorable": False,
             "order": 1,
         },
         {
             "PropertyName": "match",
             "ColLabel": "Match",
-            "Width": "200px",
+            "Width": "50px",
             "scorable": False,
             "order": 1,
         },
@@ -51,7 +51,7 @@ def build_table_columns():
                         else sq["form_sub_typ"][0:1].upper() + ": "
                     )
                     + sq["question"],
-                    "Width": "200px",
+                    "Width": sq["table_col_width"],
                     "scorable": scout_question.scorable,
                     "order": sq["order"],
                 }
@@ -73,7 +73,7 @@ def build_table_columns():
                         + c["condition"]
                         + " "
                         + c["question_to"]["question"],
-                        "Width": "200px",
+                        "Width": c["question_to"]["table_col_width"],
                         "scorable": scout_question.scorable,
                         "order": c["question_to"]["order"],
                     }
@@ -94,8 +94,9 @@ def build_table_columns():
                         if sqs[0].get("form_sub_typ", None) is None
                         else sqs[0]["form_sub_typ"][0:1].upper() + ": "
                     )
+                    + "AGG: "
                     + qa.field_name,
-                    "Width": "200px",
+                    "Width": "100px",
                     "scorable": True,
                     "order": sqs[len(sqs) - 1]["order"] + sqas_cnt,
                 }
@@ -107,7 +108,7 @@ def build_table_columns():
         {
             "PropertyName": "user",
             "ColLabel": "Scout",
-            "Width": "200px",
+            "Width": "100px",
             "scorable": False,
             "order": 9999999999,
         }
@@ -116,7 +117,7 @@ def build_table_columns():
         {
             "PropertyName": "time",
             "ColLabel": "Time",
-            "Width": "200px",
+            "Width": "150px",
             "scorable": False,
             "order": 99999999999,
         }

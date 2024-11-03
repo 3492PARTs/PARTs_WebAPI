@@ -90,6 +90,7 @@ def format_question_values(q: Question):
         "question_id": q.question_id,
         "season_id": season,
         "question": q.question,
+        "table_col_width": q.table_col_width,
         "order": q.order,
         "required": q.required,
         "active": q.active,
@@ -143,6 +144,7 @@ def save_question(question):
     if question.get("question_id", None) is not None:
         q = Question.objects.get(question_id=question["question_id"])
         q.question = question["question"]
+        q.table_col_width = question["table_col_width"]
         q.question_typ_id = question["question_typ"]["question_typ"]
         q.form_sub_typ_id = form_sub_type
         q.order = question["order"]
@@ -154,6 +156,7 @@ def save_question(question):
             form_typ_id=question["form_typ"],
             form_sub_typ_id=form_sub_type,
             question=question["question"],
+            table_col_width=["table_col_width"],
             order=question["order"],
             active=question["active"],
             required=required,
