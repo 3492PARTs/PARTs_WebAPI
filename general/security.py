@@ -1,7 +1,7 @@
 import traceback
 from django.utils import timezone
 
-import user.util
+import json
 from admin.models import ErrorLog
 from user.serializers import RetMessageSerializer
 from rest_framework.response import Response
@@ -41,7 +41,9 @@ def get_user_groups(user_id):
     return augs
 
 
-def ret_message(message, error=False, path="", user_id=-1, exception=None):
+def ret_message(
+    message, error=False, path="", user_id=-1, exception=None, error_message=""
+):
     # TODO Make all of these optional in the DB
     if error:
         print("----------ERROR START----------")
@@ -99,6 +101,20 @@ def ret_message(message, error=False, path="", user_id=-1, exception=None):
                 print(e)
 
             return Response(
-                RetMessageSerializer({"retMessage": message, "error": error}).data
+                RetMessageSerializer(
+                    {
+                        "retMessage": message,
+                        "error": error,
+                        "errorMessage": json.dumps(error_message),
+                    }
+                ).data
             )
-    return Response(RetMessageSerializer({"retMessage": message, "error": error}).data)
+    return Response(
+        RetMessageSerializer(
+            {
+                "retMessage": message,
+                "error": error,
+                "errorMessage": json.dumps(error_message),
+            }
+        ).data
+    )

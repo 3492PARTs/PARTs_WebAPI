@@ -144,6 +144,7 @@ class SaveAnswersView(APIView):
     def post(self, request, format=None):
         try:
             success_msg = "Response saved successfully."
+            error_msg = "An error occurred while saving answers."
             form_typ = request.data.get("form_typ", "")
             # with transaction.atomic():
             if form_typ in ["field", "pit"]:
@@ -170,7 +171,13 @@ class SaveAnswersView(APIView):
                             success_msg = "Pit response saved successfully."
                     else:
                         # Serializer is not valid
-                        raise Exception(serializer.errors)
+                        return ret_message(
+                            error_msg,
+                            True,
+                            app_url + self.endpoint,
+                            request.user.id,
+                            error_message=serializer.errors,
+                        )
                 else:
                     return ret_message(
                         "You do not have access.",
@@ -184,11 +191,17 @@ class SaveAnswersView(APIView):
                 if serializer.is_valid():
                     form.util.save_answers(serializer.validated_data)
                 else:
-                    raise Exception(serializer.errors)
+                    return ret_message(
+                        error_msg,
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
             return ret_message(success_msg)
         except Exception as e:
             return ret_message(
-                f"An error occurred while saving answers.\n{e}",
+                error_msg,
                 True,
                 app_url + self.endpoint,
                 request.user.id,

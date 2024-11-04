@@ -98,6 +98,7 @@ class LinkSerializer(serializers.Serializer):
 class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
     error = serializers.BooleanField()
+    errorMessage = serializers.CharField(required=False)
 
 
 class GetAlertsSerializer(serializers.Serializer):
