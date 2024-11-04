@@ -60,6 +60,7 @@ class QuestionConditionQuestionSerializer(serializers.Serializer):
     season_id = serializers.IntegerField(read_only=True)
 
     question = serializers.CharField()
+    table_col_width = serializers.CharField()
     order = serializers.IntegerField()
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
@@ -97,6 +98,7 @@ class QuestionSerializer(serializers.Serializer):
     season_id = serializers.IntegerField(read_only=True)
 
     question = serializers.CharField()
+    table_col_width = serializers.CharField()
     order = serializers.IntegerField()
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()

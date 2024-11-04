@@ -203,6 +203,7 @@ class QuestionSerializer(serializers.Serializer):
     season_id = serializers.IntegerField(read_only=True)
 
     question = serializers.CharField()
+    table_col_width = serializers.CharField()
     order = serializers.IntegerField()
     active = serializers.CharField()
     question_typ = serializers.CharField()
