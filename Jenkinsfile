@@ -70,7 +70,12 @@ node {
             }
             else {
                 sh '''
-                ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI && TAG=$BRANCH_NAME docker compose pull && TAG=$BRANCH_NAME docker compose up -d --force-recreate"
+                ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "cd /home/brandon/PARTs_WebAPI \
+                && git fetch \
+                && git switch $BRANCH_NAME \
+                && git pull \
+                && TAG=$BRANCH_NAME docker compose pull \
+                && TAG=$BRANCH_NAME docker compose up -d --force-recreate"
                 '''
             } 
         }
