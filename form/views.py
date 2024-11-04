@@ -170,7 +170,7 @@ class SaveAnswersView(APIView):
                             success_msg = "Pit response saved successfully."
                     else:
                         # Serializer is not valid
-                        raise Exception("Invalid Data")
+                        raise Exception(serializer.errors)
                 else:
                     return ret_message(
                         "You do not have access.",
@@ -184,11 +184,11 @@ class SaveAnswersView(APIView):
                 if serializer.is_valid():
                     form.util.save_answers(serializer.validated_data)
                 else:
-                    raise Exception("Invalid Data")
+                    raise Exception(serializer.errors)
             return ret_message(success_msg)
         except Exception as e:
             return ret_message(
-                "An error occurred while saving answers.",
+                f"An error occurred while saving answers.\n{e}",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
