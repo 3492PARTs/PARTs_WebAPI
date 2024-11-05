@@ -59,7 +59,7 @@ node {
                         '''
 
                         sh '''
-                        python3.11 /scripts/delete_remote_files.py $ENV_HOST "$USER" "$PASS" /domains/api.parts3492.org/code --exclude_dirs venv logs --keep jwt-key jwt-key.pub .env
+                        python3.11 /scripts/delete_remote_files.py $ENV_HOST "$USER" "$PASS" /domains/api.parts3492.org/code --exclude_dirs venv logs scripts --keep jwt-key jwt-key.pub .env
                         '''
 
                         sh '''
