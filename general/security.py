@@ -42,7 +42,7 @@ def get_user_groups(user_id):
 
 
 def ret_message(
-    message, error=False, path="", user_id=-1, exception=None, error_message=""
+    message, error=False, path="", user_id=-1, exception=None, error_message=None
 ):
     # TODO Make all of these optional in the DB
     if error:
@@ -105,7 +105,11 @@ def ret_message(
                     {
                         "retMessage": message,
                         "error": error,
-                        "errorMessage": json.dumps(error_message),
+                        "errorMessage": (
+                            json.dumps(error_message)
+                            if error_message is not None
+                            else ""
+                        ),
                     }
                 ).data
             )
@@ -114,7 +118,9 @@ def ret_message(
             {
                 "retMessage": message,
                 "error": error,
-                "errorMessage": json.dumps(error_message),
+                "errorMessage": (
+                    json.dumps(error_message) if error_message is not None else ""
+                ),
             }
         ).data
     )
