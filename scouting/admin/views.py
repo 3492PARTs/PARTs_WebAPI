@@ -188,7 +188,7 @@ class SetSeasonEventView(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "set-season-event/"
 
-    def set(self, season_id, event_id):
+    def set(self, season_id, event_id, competition_page_active):
         msg = ""
 
         Season.objects.filter(current="y").update(current="n")
@@ -203,8 +203,11 @@ class SetSeasonEventView(APIView):
             )
             event = Event.objects.get(event_id=event_id)
             event.current = "y"
+            event.competition_page_active = competition_page_active
             event.save()
             msg += "\nSuccessfully set the event to: " + event.event_nm
+
+            msg += f"\nCompetition page {'active' if competition_page_active == 'y' else 'inactive'}"
 
         return ret_message(msg)
 
@@ -214,6 +217,7 @@ class SetSeasonEventView(APIView):
                 req = self.set(
                     request.query_params.get("season_id", None),
                     request.query_params.get("event_id", None),
+                    request.query_params.get("competition_page_active", "n"),
                 )
                 return req
             except Exception as e:
@@ -230,53 +234,6 @@ class SetSeasonEventView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-            )
-
-
-class ToggleCompetitionView(APIView):
-    """
-    API endpoint to toggle a scout field question
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "toggle-competition-page/"
-
-    def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                try:
-                    event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
-
-                    if event.competition_page_active == "n":
-                        event.competition_page_active = "y"
-                    else:
-                        event.competition_page_active = "n"
-                    event.save()
-                except ObjectDoesNotExist as odne:
-                    return ret_message(
-                        "No active event, can't activate competition page",
-                        True,
-                        app_url + self.endpoint,
-                        self.request.user.id,
-                        odne,
-                    )
-
-                return ret_message("Successfully toggled competition page.")
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while toggling the competition page.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
             )
 
 

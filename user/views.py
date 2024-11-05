@@ -26,13 +26,13 @@ from .serializers import (
     GroupSerializer,
     RetMessageSerializer,
     UserCreationSerializer,
-    UserLinksSerializer,
+    LinkSerializer,
     UserSerializer,
     UserUpdateSerializer,
     GetAlertsSerializer,
     PermissionSerializer,
 )
-from .models import User, UserLinks
+from .models import User, Link
 from general.security import (
     get_user_groups,
     get_user_permissions,
@@ -725,30 +725,30 @@ class UserData(APIView):
 
 class UserLinksView(APIView):
     """
-    API endpoint to get links a user has based on permissions
+    API endpoint to get Link a user has based on permissions
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "user-links/"
+    endpoint = "user-Link/"
 
-    def get_links(self):
+    def get_Link(self):
         permissions = get_user_permissions(self.request.user.id)
 
-        user_links = UserLinks.objects.filter(
-            permission__in=[per.id for per in permissions]
+        user_Link = Link.objects.filter(
+            Q(permission__in=[per.id for per in permissions]) | Q(permission_id__isnull=True)
         ).order_by("order")
 
-        return user_links
+        return user_Link
 
     def get(self, request, format=None):
         try:
-            req = self.get_links()
-            serializer = UserLinksSerializer(req, many=True)
+            req = self.get_Link()
+            serializer = LinkSerializer(req, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
-                "An error occurred while getting user links.",
+                "An error occurred while getting user Link.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
@@ -1066,6 +1066,83 @@ class SecurityAudit(APIView):
             except Exception as e:
                 return ret_message(
                     "An error occurred while running security audit.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+class Links(APIView):
+    """
+    API endpoint to get groups and its permissions, either all or by user
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "links/"
+
+    def get(self, request, format=None):
+        try:
+            links = user.util.get_links()
+            serializer = LinkSerializer(links, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting links.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+    def post(self, request, format=None):
+        serializer = LinkSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message(
+                "Invalid data",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                serializer.errors,
+            )
+
+        if has_access(request.user.id, "admin"):
+            try:
+                with transaction.atomic():
+                    user.util.save_link(serializer.validated_data)
+                    return ret_message("Saved link successfully")
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while saving the link.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+    def delete(self, request, format=None):
+        if has_access(request.user.id, "admin"):
+            try:
+                with transaction.atomic():
+                    user.util.delete_link(request.query_params.get("link_id", None))
+                    return ret_message("Deleted link successfully")
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while deleting the link.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,

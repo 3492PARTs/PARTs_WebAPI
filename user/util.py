@@ -4,7 +4,7 @@ from django.db.models.functions import Lower, Concat
 
 import user
 from scouting.models import ScoutAuthGroups
-from user.models import User, PhoneType
+from user.models import User, PhoneType, Link
 
 
 def get_users(active, admin):
@@ -73,6 +73,15 @@ def get_all_user_groups(user_id: int = None):
 
 def get_phone_types():
     return PhoneType.objects.all().order_by("carrier")
+
+
+def delete_phone_type(phone_type_id: int):
+    phone_type = PhoneType.objects.get(phone_type_id=phone_type_id)
+
+    if phone_type.user_set.exists():
+        raise ValueError("Can't delete, there are users tied to this phone type.")
+
+    phone_type.delete()
 
 
 def get_users_in_group(name: str):
@@ -155,3 +164,29 @@ def run_security_audit():
             users_ret.append(u)
 
     return users_ret
+
+
+def get_links():
+    return Link.objects.all().order_by("order")
+
+
+def save_link(data):
+    if data.get("link_id", None) is None:
+        link = Link()
+    else:
+        link = Link.objects.get(link_id=data["link_id"])
+
+    link.menu_name = data["menu_name"]
+    link.permission_id = (
+        None
+        if data.get("permission", None) is None
+        else data.get("permission", None).get("id", None)
+    )
+    link.routerlink = data["routerlink"]
+    link.order = data["order"]
+
+    link.save()
+
+
+def delete_link(link_id: int):
+    Link.objects.get(link_id=link_id).delete()

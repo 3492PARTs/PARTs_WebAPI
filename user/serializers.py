@@ -87,9 +87,9 @@ class UserUpdateSerializer(serializers.Serializer):
     image = serializers.ImageField(required=False)
 
 
-class UserLinksSerializer(serializers.Serializer):
-    user_links_id = serializers.IntegerField(read_only=True)
-    permission = PermissionSerializer()
+class LinkSerializer(serializers.Serializer):
+    link_id = serializers.IntegerField(allow_null=True, required=False)
+    permission = PermissionSerializer(allow_null=True, required=False)
     menu_name = serializers.CharField()
     routerlink = serializers.CharField()
     order = serializers.IntegerField()
@@ -98,6 +98,7 @@ class UserLinksSerializer(serializers.Serializer):
 class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
     error = serializers.BooleanField()
+    errorMessage = serializers.CharField(required=False)
 
 
 class GetAlertsSerializer(serializers.Serializer):

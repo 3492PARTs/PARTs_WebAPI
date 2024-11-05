@@ -8,7 +8,12 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import user.util
 from scouting.models import ScoutAuthGroups
 from user.models import PhoneType
-from .serializers import ErrorLogSerializer, InitSerializer, GroupSerializer, PhoneTypeSerializer
+from .serializers import (
+    ErrorLogSerializer,
+    InitSerializer,
+    GroupSerializer,
+    PhoneTypeSerializer,
+)
 from .models import ErrorLog
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
@@ -159,14 +164,16 @@ class PhoneTypeView(APIView):
     endpoint = "phone-type/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj) or has_access(request.user.id, "scoutadmin"):
+        if has_access(request.user.id, auth_obj) or has_access(
+            request.user.id, "scoutadmin"
+        ):
             try:
                 phone_types = user.util.get_phone_types()
                 serializer = PhoneTypeSerializer(phone_types, many=True)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
-                    "An error occurred while getting phone types.",
+                    "An error occurred while getting the phone types.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
@@ -195,17 +202,21 @@ class PhoneTypeView(APIView):
             try:
                 data = serializer.validated_data
                 if data.get("phone_type_id", None) is not None:
-                    pt = user.models.PhoneType.objects.get(phone_type_id=data["phone_type_id"])
+                    pt = user.models.PhoneType.objects.get(
+                        phone_type_id=data["phone_type_id"]
+                    )
                     pt.phone_type = data["phone_type"]
                     pt.carrier = data["carrier"]
                     pt.save()
                 else:
-                    user.models.PhoneType(phone_type=data["phone_type"], carrier=data["carrier"]).save()
+                    user.models.PhoneType(
+                        phone_type=data["phone_type"], carrier=data["carrier"]
+                    ).save()
 
-                return ret_message("Successfully saved phone type.")
+                return ret_message("Successfully saved the phone type.")
             except Exception as e:
                 return ret_message(
-                    "An error occurred while saving phone type.",
+                    "An error occurred while saving the phone type.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
@@ -217,4 +228,25 @@ class PhoneTypeView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+            )
+
+    def delete(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin"):
+                user.util.delete_phone_type(request.query_params["phone_type_id"])
+                return ret_message("Successfully deleted the phone type.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred deleting the phone type.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
             )

@@ -45,6 +45,7 @@ class Question(models.Model):
     form_sub_typ = models.ForeignKey(FormSubType, models.PROTECT, null=True)
     question_typ = models.ForeignKey(QuestionType, models.PROTECT)
     question = models.CharField(max_length=1000)
+    table_col_width = models.CharField(max_length=255)
     order = models.IntegerField()
     required = models.CharField(max_length=1)
     active = models.CharField(max_length=1, default="y")
@@ -106,6 +107,7 @@ class Response(models.Model):
     response_id = models.AutoField(primary_key=True)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
+    archive_ind = models.CharField(max_length=1, default="n")
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 

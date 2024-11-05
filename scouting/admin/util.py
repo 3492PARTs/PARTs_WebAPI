@@ -372,6 +372,8 @@ def sync_event_team_info(force: int):
     messages = ""
     event = Event.objects.get(current="y")
 
+    sync_event(event.event_cd)
+
     now = datetime.datetime.combine(timezone.now(), datetime.time.min)
     date_st = datetime.datetime.combine(event.date_st, datetime.time.min)
     date_end = datetime.datetime.combine(event.date_end, datetime.time.min)

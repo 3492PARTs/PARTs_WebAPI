@@ -8,7 +8,6 @@ urlpatterns = [
     path("sync-season/", SyncSeasonView.as_view()),
     path("sync-event/", SyncEventView.as_view()),
     path("set-season-event/", SetSeasonEventView.as_view()),
-    path("toggle-competition-page/", ToggleCompetitionView.as_view()),
     path("sync-matches/", SyncMatchesView.as_view()),
     path("sync-event-team-info/", SyncEventTeamInfoView.as_view()),
     path("season/", SeasonView.as_view()),
