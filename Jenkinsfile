@@ -1,6 +1,8 @@
 node {
     env.BUILD_NO = env.BUILD_DISPLAY_NAME
 
+    env.FORMATTED_BRANCH_NAME = env.BRANCH_NAME.replaceAll("/", "-")
+
     try {
         def app
 
@@ -41,7 +43,7 @@ node {
         stage('Push image') {
             if (env.BRANCH_NAME != 'main') {
                 docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                    app.push("${env.BRANCH_NAME}")
+                    app.push("${env.FORMATTED_BRANCH_NAME}")
                     //app.push("latest")
                 }
             }  
@@ -74,8 +76,8 @@ node {
                 && git fetch \
                 && git switch $BRANCH_NAME \
                 && git pull \
-                && TAG=$BRANCH_NAME docker compose pull \
-                && TAG=$BRANCH_NAME docker compose up -d --force-recreate"
+                && TAG=$FORMATTED_BRANCH_NAME docker compose pull \
+                && TAG=$FORMATTED_BRANCH_NAME docker compose up -d --force-recreate"
                 '''
             } 
         }
