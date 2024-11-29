@@ -145,8 +145,8 @@ class Webhook(APIView):
 
     def post(self, request, format=None):
         try:
-            print(request)
-            match request["data"]:
+            print(request.META)
+            match request.data["message_type"]:
                 case "verification":
                     serializer = VerificationMessageSerializer(data=request.data)
                     if serializer.is_valid():
