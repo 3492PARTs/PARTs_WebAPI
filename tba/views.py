@@ -1,7 +1,7 @@
+from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-
-
+from tba.serializers import EventUpdatedSerializer, VerificationMessageSerializer
 
 from rest_framework.views import APIView
 
@@ -10,6 +10,7 @@ from general.security import has_access, ret_message
 
 auth_obj = "scoutadmin"
 app_url = "tba/"
+
 
 class SyncSeasonView(APIView):
     """
@@ -133,3 +134,27 @@ class SyncEventTeamInfoView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class EventScheduleUpdated(APIView):
+    """API endpoint to receive a TBA webhook for event updated"""
+
+    #authentication_classes = (JWTAuthentication,)
+    #permission_classes = (IsAuthenticated,)
+    endpoint = "event-schedule-updated/"
+
+    def post(self, request, format=None):
+        serializer = VerificationMessageSerializer(data=request.data)
+        if serializer.is_valid():
+            tba.util.save_message(serializer.validated_data)
+            return Response(200)
+
+        serializer = EventUpdatedSerializer(data=request.data)
+        if serializer.is_valid():
+            tba.util.save_message(serializer.validated_data)
+            tba.util.save_tba_match(serializer.validated_data)
+            return Response(200)
+
+        ret_message('Invalid data', True, app_url + self.endpoint, exception=request.data,
+                    error_message=serializer.errors)
+        return Response(500)

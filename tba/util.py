@@ -18,6 +18,7 @@ from scouting.models import (
 )
 import scouting.util
 import scouting.models
+from tba.models import Message
 
 tba_url = "https://www.thebluealliance.com/api/v3"
 
@@ -168,83 +169,9 @@ def sync_matches():
     matches = json.loads(request.text)
     match_number = ""
     try:
-        for match_ in matches:
-            match_number = match_.get("match_number", 0)
-            red_one = Team.objects.get(
-                Q(team_no=match_["alliances"]["red"]["team_keys"][0].replace("frc", ""))
-                & Q(void_ind="n")
-            )
-            red_two = Team.objects.get(
-                Q(team_no=match_["alliances"]["red"]["team_keys"][1].replace("frc", ""))
-                & Q(void_ind="n")
-            )
-            red_three = Team.objects.get(
-                Q(team_no=match_["alliances"]["red"]["team_keys"][2].replace("frc", ""))
-                & Q(void_ind="n")
-            )
-            blue_one = Team.objects.get(
-                Q(team_no=match_["alliances"]["blue"]["team_keys"][0].replace("frc", ""))
-                & Q(void_ind="n")
-            )
-            blue_two = Team.objects.get(
-                Q(team_no=match_["alliances"]["blue"]["team_keys"][1].replace("frc", ""))
-                & Q(void_ind="n")
-            )
-            blue_three = Team.objects.get(
-                Q(team_no=match_["alliances"]["blue"]["team_keys"][2].replace("frc", ""))
-                & Q(void_ind="n")
-            )
-            red_score = match_["alliances"]["red"].get("score", None)
-            blue_score = match_["alliances"]["blue"].get("score", None)
-            comp_level = CompetitionLevel.objects.get(
-                Q(comp_lvl_typ=match_.get("comp_level", " ")) & Q(void_ind="n")
-            )
-            time = (
-                datetime.datetime.fromtimestamp(
-                    match_["time"], pytz.timezone("America/New_York")
-                )
-                if match_["time"]
-                else None
-            )
-            match_key = match_["key"]
-
-            try:
-                match = Match.objects.get(Q(match_id=match_key))
-
-                match.red_one = red_one
-                match.red_two = red_two
-                match.red_three = red_three
-                match.blue_one = blue_one
-                match.blue_two = blue_two
-                match.blue_three = blue_three
-                match.red_score = red_score
-                match.blue_score = blue_score
-                match.comp_level = comp_level
-                match.time = time
-                match.void_ind="n"
-
-                match.save()
-                messages += f"(UPDATE) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
-
-            except Match.DoesNotExist as odne:
-                match = Match(
-                    match_id=match_key,
-                    match_number=match_number,
-                    event=event,
-                    red_one=red_one,
-                    red_two=red_two,
-                    red_three=red_three,
-                    blue_one=blue_one,
-                    blue_two=blue_two,
-                    blue_three=blue_three,
-                    red_score=red_score,
-                    blue_score=blue_score,
-                    comp_level=comp_level,
-                    time=time,
-                    void_ind="n",
-                )
-                match.save()
-                messages += f"(ADD) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
+        for match in matches:
+            match_number = match.get("match_number", 0)
+            messages += save_tba_match(event, match)
     except Exception as e:
         messages += f"(ERROR) {event.event_nm} {match_number} {e}\n"
     return messages
@@ -317,3 +244,88 @@ def sync_event_team_info(force: int):
     else:
         messages = "No active event"
     return messages
+
+
+def save_tba_match(tba_match):
+    event = Event.objects.get(event_cd=tba_match["event_key"])
+    messages = ""
+    match_number = tba_match.get("match_number", 0)
+    red_one = Team.objects.get(
+        Q(team_no=tba_match["alliances"]["red"]["team_keys"][0].replace("frc", ""))
+        & Q(void_ind="n")
+    )
+    red_two = Team.objects.get(
+        Q(team_no=tba_match["alliances"]["red"]["team_keys"][1].replace("frc", ""))
+        & Q(void_ind="n")
+    )
+    red_three = Team.objects.get(
+        Q(team_no=tba_match["alliances"]["red"]["team_keys"][2].replace("frc", ""))
+        & Q(void_ind="n")
+    )
+    blue_one = Team.objects.get(
+        Q(team_no=tba_match["alliances"]["blue"]["team_keys"][0].replace("frc", ""))
+        & Q(void_ind="n")
+    )
+    blue_two = Team.objects.get(
+        Q(team_no=tba_match["alliances"]["blue"]["team_keys"][1].replace("frc", ""))
+        & Q(void_ind="n")
+    )
+    blue_three = Team.objects.get(
+        Q(team_no=tba_match["alliances"]["blue"]["team_keys"][2].replace("frc", ""))
+        & Q(void_ind="n")
+    )
+    red_score = tba_match["alliances"]["red"].get("score", None)
+    blue_score = tba_match["alliances"]["blue"].get("score", None)
+    comp_level = CompetitionLevel.objects.get(
+        Q(comp_lvl_typ=tba_match.get("comp_level", " ")) & Q(void_ind="n")
+    )
+    time = (
+        datetime.datetime.fromtimestamp(
+            tba_match["time"], pytz.timezone("America/New_York")
+        )
+        if tba_match["time"]
+        else None
+    )
+    match_key = tba_match["key"]
+
+    try:
+        match = Match.objects.get(Q(match_id=match_key))
+
+        match.red_one = red_one
+        match.red_two = red_two
+        match.red_three = red_three
+        match.blue_one = blue_one
+        match.blue_two = blue_two
+        match.blue_three = blue_three
+        match.red_score = red_score
+        match.blue_score = blue_score
+        match.comp_level = comp_level
+        match.time = time
+        match.void_ind = "n"
+
+        match.save()
+        messages += f"(UPDATE) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
+    except Match.DoesNotExist as odne:
+        match = Match(
+            match_id=match_key,
+            match_number=match_number,
+            event=event,
+            red_one=red_one,
+            red_two=red_two,
+            red_three=red_three,
+            blue_one=blue_one,
+            blue_two=blue_two,
+            blue_three=blue_three,
+            red_score=red_score,
+            blue_score=blue_score,
+            comp_level=comp_level,
+            time=time,
+            void_ind="n",
+        )
+        match.save()
+        messages += f"(ADD) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
+
+    return  messages
+
+def save_message(message):
+    Message(message_type=message["message_type"], message_data=message["message_data"]).save()

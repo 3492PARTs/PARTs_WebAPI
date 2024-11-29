@@ -80,6 +80,7 @@ def ret_message(
                 message=message,
                 exception=exception,
                 traceback=tb,
+                error_message=error_message,
                 time=timezone.now(),
                 void_ind="n",
             ).save()
@@ -92,6 +93,7 @@ def ret_message(
                     path="general.security.ret_message",
                     message=message,
                     exception=e,
+                    error_message=error_message,
                     time=timezone.now(),
                     void_ind="n",
                 ).save()
