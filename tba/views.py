@@ -1,3 +1,4 @@
+import json
 from hashlib import sha256
 import hmac
 from rest_framework.response import Response
@@ -149,13 +150,20 @@ class Webhook(APIView):
 
     def post(self, request, format=None):
         try:
+            print("-------------------------")
             print(request.META)
+            print("-------------------------")
             print(settings.TBA_WEBHOOK_SECRET)
+            print("-------------------------")
             print(sha256(settings.TBA_WEBHOOK_SECRET.encode("utf-8")).hexdigest())
+            json_str = json.dumps(request.data, ensure_ascii=True)
+            print(json_str)
+            print("-------------------------")
             h = hmac.new(
-                settings.TBA_WEBHOOK_SECRET.encode("utf-8"), request.data.encode("utf-8"), sha256
+                settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
             ).hexdigest()
             print(h)
+            print("-------------------------")
             match request.data["message_type"]:
                 case "verification":
                     serializer = VerificationMessageSerializer(data=request.data)
