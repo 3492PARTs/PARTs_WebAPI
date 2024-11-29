@@ -149,7 +149,8 @@ class Webhook(APIView):
     def post(self, request, format=None):
         try:
             print(request.META)
-            print(sha256(settings.TBA_WEBHOOK_SECRET).hexdigest())
+            print(settings.TBA_WEBHOOK_SECRET)
+            print(sha256(settings.TBA_WEBHOOK_SECRET.encode("utf-8")).hexdigest())
             match request.data["message_type"]:
                 case "verification":
                     serializer = VerificationMessageSerializer(data=request.data)
