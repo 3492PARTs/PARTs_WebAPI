@@ -8,7 +8,7 @@ class MatchVideoSerializer(serializers.Serializer):
 
 class AllianceSerializer(serializers.Serializer):
     score = serializers.CharField()
-    teams = serializers.ListField(child=serializers.CharField())
+    team_keys = serializers.ListField(child=serializers.CharField())
 
 
 class AlliancesSerializer(serializers.Serializer):
