@@ -141,7 +141,7 @@ class Webhook(APIView):
 
     #authentication_classes = (JWTAuthentication,)
     #permission_classes = (IsAuthenticated,)
-    endpoint = "event-schedule-updated/"
+    endpoint = "webhook/"
 
     def post(self, request, format=None):
         try:
