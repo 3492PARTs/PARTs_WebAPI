@@ -45,6 +45,7 @@ class ErrorLogSerializer(serializers.Serializer):
     path = serializers.CharField()
     message = serializers.CharField()
     exception = serializers.CharField()
+    error_message = serializers.CharField()
     traceback = serializers.CharField()
     time = serializers.DateTimeField()
 
