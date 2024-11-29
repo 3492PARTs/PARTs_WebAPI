@@ -147,20 +147,24 @@ class Webhook(APIView):
         try:
             if tba.util.verify_tba_webhook_call(request):
                 print(request.data)
+                tba.util.save_message(request.data)
                 match request.data["message_type"]:
                     case "verification":
                         serializer = VerificationMessageSerializer(data=request.data)
                         if serializer.is_valid():
-                            tba.util.save_message(serializer.validated_data)
                             return Response(200)
+                        else:
+                            ret_message('Webhook Error - Verification', True, app_url + self.endpoint, error_message=serializer.errors)
+                            return Response(500)
                     case "match_score":
                         serializer = EventUpdatedSerializer(data=request.data)
                         if serializer.is_valid():
-                            tba.util.save_message(serializer.validated_data)
                             tba.util.save_tba_match(serializer.validated_data)
                             return Response(200)
+                        else:
+                            ret_message('Webhook Error - Match Score', True, app_url + self.endpoint, error_message=serializer.errors)
+                            return Response(500)
                     case _:
-                        tba.util.save_message(request.data)
                         return Response(200)
             else:
                 ret_message('Webhook Error', True, app_url + self.endpoint, error_message="Unauthenticated")
