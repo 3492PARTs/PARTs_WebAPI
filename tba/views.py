@@ -136,25 +136,33 @@ class SyncEventTeamInfoView(APIView):
             )
 
 
-class EventScheduleUpdated(APIView):
-    """API endpoint to receive a TBA webhook for event updated"""
+class Webhook(APIView):
+    """API endpoint to receive a TBA webhook"""
 
     #authentication_classes = (JWTAuthentication,)
     #permission_classes = (IsAuthenticated,)
     endpoint = "event-schedule-updated/"
 
     def post(self, request, format=None):
-        serializer = VerificationMessageSerializer(data=request.data)
-        if serializer.is_valid():
-            tba.util.save_message(serializer.validated_data)
-            return Response(200)
-
-        serializer = EventUpdatedSerializer(data=request.data)
-        if serializer.is_valid():
-            tba.util.save_message(serializer.validated_data)
-            tba.util.save_tba_match(serializer.validated_data)
-            return Response(200)
-
-        ret_message('Invalid data', True, app_url + self.endpoint, exception=request.data,
-                    error_message=serializer.errors)
-        return Response(500)
+        try:
+            ret_message('Webhook TEST', True, app_url + self.endpoint, exception=request,
+                        error_message=request.data)
+            match request["data"]:
+                case "verification":
+                    serializer = VerificationMessageSerializer(data=request.data)
+                    if serializer.is_valid():
+                        tba.util.save_message(serializer.validated_data)
+                        return Response(200)
+                case "match_score":
+                    serializer = EventUpdatedSerializer(data=request.data)
+                    if serializer.is_valid():
+                        tba.util.save_message(serializer.validated_data)
+                        tba.util.save_tba_match(serializer.validated_data)
+                        return Response(200)
+                case _:
+                    tba.util.save_message(request.data)
+                    return Response(200)
+        except Exception as e:
+            ret_message('Webhook Error', True, app_url + self.endpoint, exception=e,
+                        error_message=request.data)
+            return Response(500)
