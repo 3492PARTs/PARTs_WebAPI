@@ -1,6 +1,3 @@
-import json
-from hashlib import sha256
-import hmac
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -144,43 +141,30 @@ class SyncEventTeamInfoView(APIView):
 class Webhook(APIView):
     """API endpoint to receive a TBA webhook"""
 
-    #authentication_classes = (JWTAuthentication,)
-    #permission_classes = (IsAuthenticated,)
     endpoint = "webhook/"
 
     def post(self, request, format=None):
         try:
-            print("-------------------------")
-            print(request.META)
-            print("-------------------------")
-            print(settings.TBA_WEBHOOK_SECRET)
-            print("-------------------------")
-            print(sha256(settings.TBA_WEBHOOK_SECRET.encode("utf-8")).hexdigest())
-            json_str = json.dumps(request.data, ensure_ascii=True)
-            print(json_str)
-            print("-------------------------")
-            h = hmac.new(
-                settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
-            ).hexdigest()
-            print(h)
-            print("-------------------------")
-            print(h == request.META.get("HTTP_X_TBA_HMAC", None))
-            match request.data["message_type"]:
-                case "verification":
-                    serializer = VerificationMessageSerializer(data=request.data)
-                    if serializer.is_valid():
-                        tba.util.save_message(serializer.validated_data)
+            if tba.util.verify_tba_webhook_call(request):
+                match request.data["message_type"]:
+                    case "verification":
+                        serializer = VerificationMessageSerializer(data=request.data)
+                        if serializer.is_valid():
+                            tba.util.save_message(serializer.validated_data)
+                            return Response(200)
+                    case "match_score":
+                        serializer = EventUpdatedSerializer(data=request.data)
+                        if serializer.is_valid():
+                            tba.util.save_message(serializer.validated_data)
+                            tba.util.save_tba_match(serializer.validated_data)
+                            return Response(200)
+                    case _:
+                        tba.util.save_message(request.data)
                         return Response(200)
-                case "match_score":
-                    serializer = EventUpdatedSerializer(data=request.data)
-                    if serializer.is_valid():
-                        tba.util.save_message(serializer.validated_data)
-                        tba.util.save_tba_match(serializer.validated_data)
-                        return Response(200)
-                case _:
-                    tba.util.save_message(request.data)
-                    return Response(200)
+            else:
+                ret_message('Webhook Error', True, app_url + self.endpoint, error_message="Unauthenticated")
         except Exception as e:
             ret_message('Webhook Error', True, app_url + self.endpoint, exception=e,
                         error_message=request.data)
-            return Response(500)
+
+        return Response(500)

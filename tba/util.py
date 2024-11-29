@@ -1,6 +1,8 @@
 import requests
 import datetime
 import json
+from hashlib import sha256
+import hmac
 from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Q
@@ -327,5 +329,13 @@ def save_tba_match(tba_match):
 
     return  messages
 
+
 def save_message(message):
     Message(message_type=message["message_type"], message_data=message["message_data"]).save()
+
+def verify_tba_webhook_call(request):
+    json_str = json.dumps(request.data, ensure_ascii=True)
+    hmac_hex = hmac.new(
+        settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
+    ).hexdigest()
+    return hmac_hex == request.META.get("HTTP_X_TBA_HMAC", None)
