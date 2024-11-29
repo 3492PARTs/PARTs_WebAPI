@@ -99,160 +99,135 @@ def get_scout_auth_groups():
 def sync_season(season_id):
     season = Season.objects.get(season_id=season_id)
 
-    r = requests.get(
-        "https://www.thebluealliance.com/api/v3/team/frc3492/events/"
-        + str(season.season),
+    request = requests.get(
+        f"https://www.thebluealliance.com/api/v3/team/frc3492/events/{season.season}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    r = json.loads(r.text)
+    request = json.loads(request.text)
 
     messages = ""
-    for e in r:
-        messages += sync_event(e["key"])
+    for event in request:
+        messages += sync_event(event["key"])
         messages += "------------------------------------------------\n"
 
     return messages
 
 
 def sync_event(event_cd: str):
-    r = requests.get(
-        "https://www.thebluealliance.com/api/v3/event/" + event_cd,
+    request = requests.get(
+        f"https://www.thebluealliance.com/api/v3/event/{event_cd}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    e = json.loads(r.text)
+    tba_event = json.loads(request.text)
 
-    if e.get("Error", None) is not None:
-        raise Exception(e["Error"])
+    if tba_event.get("Error", None) is not None:
+        raise Exception(tba_event["Error"])
 
-    insert = []
-    season = Season.objects.get(season=e["year"])
+    season = Season.objects.get(season=tba_event["year"])
     time_zone = (
-        e.get("timezone") if e.get("timezone", None) is not None else "America/New_York"
+        tba_event.get("timezone")
+        if tba_event.get("timezone", None) is not None
+        else "America/New_York"
     )
+
     event_ = {
-        "event_nm": e["name"],
-        "date_st": datetime.datetime.strptime(e["start_date"], "%Y-%m-%d").astimezone(
-            pytz.timezone(time_zone)
+        "event_nm": tba_event["name"],
+        "date_st": datetime.datetime.strptime(
+            tba_event["start_date"], "%Y-%m-%d"
+        ).astimezone(pytz.timezone(time_zone)),
+        "date_end": datetime.datetime.strptime(
+            tba_event["end_date"], "%Y-%m-%d"
+        ).astimezone(pytz.timezone(time_zone)),
+        "event_cd": tba_event["key"],
+        "event_url": tba_event.get("event_url", None),
+        "gmaps_url": tba_event.get("gmaps_url", None),
+        "address": tba_event.get("address", None),
+        "city": tba_event.get("city", None),
+        "state_prov": tba_event.get("state_prov", None),
+        "postal_code": tba_event.get("postal_code", None),
+        "location_name": tba_event.get("location_name", None),
+        "timezone": tba_event.get("timezone", "America/New_York"),
+        "webcast_url": (
+            tba_event["webcasts"][0]["channel"]
+            if len(tba_event["webcasts"]) > 0
+            else ""
         ),
-        "date_end": datetime.datetime.strptime(e["end_date"], "%Y-%m-%d").astimezone(
-            pytz.timezone(time_zone)
-        ),
-        "event_cd": e["key"],
-        "event_url": e.get("event_url", None),
-        "gmaps_url": e.get("gmaps_url", None),
-        "address": e.get("address", None),
-        "city": e.get("city", None),
-        "state_prov": e.get("state_prov", None),
-        "postal_code": e.get("postal_code", None),
-        "location_name": e.get("location_name", None),
-        "timezone": e.get("timezone", "America/New_York"),
-        "webcast_url": e["webcasts"][0]["channel"] if len(e["webcasts"]) > 0 else "",
         "teams": [],
         "teams_to_keep": [],
     }
 
-    s = requests.get(
-        "https://www.thebluealliance.com/api/v3/event/" + e["key"] + "/teams",
+    request = requests.get(
+        f"https://www.thebluealliance.com/api/v3/event/{tba_event['key']}/teams",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    s = json.loads(s.text)
+    tba_teams = json.loads(request.text)
 
-    for t in s:
+    for t in tba_teams:
         event_["teams"].append({"team_no": t["team_number"], "team_nm": t["nickname"]})
 
         event_["teams_to_keep"].append(t["team_number"])
 
-    insert.append(event_)
-
     messages = ""
-    for e in insert:
+    try:
+        event = Event.objects.get(event_cd=event_["event_cd"])
+        event.void_ind = "n"
+        event.date_st = event_["date_st"]
+        event.date_end = event_["date_end"]
 
+        messages += "(NO ADD) Already have event: " + event_["event_cd"] + "\n"
+    except Event.DoesNotExist as e:
+        event = Event(
+            season=season,
+            event_cd=event_["event_cd"],
+            date_st=event_["date_st"],
+            date_end=event_["date_end"],
+            current="n",
+            competition_page_active="n",
+            void_ind="n",
+        )
+
+        event.save(force_insert=True)
+        messages += "(ADD) Added event: " + e["event_cd"] + "\n"
+
+    event.event_nm = event_["event_nm"]
+    event.event_url = event_["event_url"]
+    event.address = event_["address"]
+    event.city = event_["city"]
+    event.state_prov = event_["state_prov"]
+    event.postal_code = event_["postal_code"]
+    event.location_name = event_["location_name"]
+    event.gmaps_url = event_["gmaps_url"]
+    event.webcast_url = event_["webcast_url"]
+    event.timezone = event_["timezone"]
+    event.save()
+
+    # remove teams that have been removed from an event
+    teams = Team.objects.filter(
+        ~Q(team_no__in=event_["teams_to_keep"]) & Q(event=event)
+    )
+    for team in teams:
+        team.event_set.remove(event)
+        messages += f"(REMOVE) Removed team: {team_['team_no']} {team_['team_nm']} from event: {event_['event_cd']}\n"
+
+    for team_ in event_["teams"]:
         try:
-            Event(
-                season=season,
-                event_nm=e["event_nm"],
-                date_st=e["date_st"],
-                date_end=e["date_end"],
-                event_cd=e["event_cd"],
-                event_url=e["event_url"],
-                address=e["address"],
-                city=e["city"],
-                state_prov=e["state_prov"],
-                postal_code=e["postal_code"],
-                location_name=e["location_name"],
-                gmaps_url=e["gmaps_url"],
-                webcast_url=e["webcast_url"],
-                timezone=e["timezone"],
-                current="n",
-                competition_page_active="n",
-                void_ind="n",
-            ).save(force_insert=True)
-            messages += "(ADD) Added event: " + e["event_cd"] + "\n"
+            team = Team(
+                team_no=team_["team_no"], team_nm=team_["team_nm"], void_ind="n"
+            )
+            team.save(force_insert=True)
+            messages += f"(ADD) Added team: {team_['team_no']} {team_['team_nm']}\n"
         except IntegrityError:
-            event = Event.objects.get(Q(event_cd=e["event_cd"]) & Q(void_ind="n"))
-            event.date_st = e["date_st"]
-            event.event_url = e["event_url"]
-            event.address = e["address"]
-            event.city = e["city"]
-            event.state_prov = e["state_prov"]
-            event.postal_code = e["postal_code"]
-            event.location_name = e["location_name"]
-            event.gmaps_url = e["gmaps_url"]
-            event.webcast_url = e["webcast_url"]
-            event.date_end = e["date_end"]
-            event.timezone = e["timezone"]
-            event.save()
+            team = Team.objects.get(team_no=team_["team_no"])
+            messages += (
+                f"(NO ADD) Already have team: {team_['team_no']} {team_['team_nm']}\n"
+            )
 
-            messages += "(NO ADD) Already have event: " + e["event_cd"] + "\n"
+        try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
+            team.event_set.add(event)
+            messages += f"(LINK) Added team: {team_['team_no']} {team_['team_nm']} to event: {event_['event_cd']}\n"
+        except IntegrityError:
+            messages += f"(NO LINK) Team: {team_['team_no']} {team_['team_nm']} already at event: {event_['event_cd']}\n"
 
-        # remove teams that have been removed from an event
-        event = Event.objects.get(event_cd=e["event_cd"], void_ind="n")
-        teams = Team.objects.filter(~Q(team_no__in=e["teams_to_keep"]) & Q(event=event))
-        for team in teams:
-            team.event_set.remove(event)
-
-        for t in e["teams"]:
-
-            try:
-                Team(team_no=t["team_no"], team_nm=t["team_nm"], void_ind="n").save(
-                    force_insert=True
-                )
-                messages += (
-                    "(ADD) Added team: " + str(t["team_no"]) + " " + t["team_nm"] + "\n"
-                )
-            except IntegrityError:
-                messages += (
-                    "(NO ADD) Already have team: "
-                    + str(t["team_no"])
-                    + " "
-                    + t["team_nm"]
-                    + "\n"
-                )
-
-            try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
-                team = Team.objects.get(team_no=t["team_no"])
-                team.event_set.add(
-                    Event.objects.get(event_cd=e["event_cd"], void_ind="n")
-                )
-                messages += (
-                    "(LINK) Added team: "
-                    + str(t["team_no"])
-                    + " "
-                    + t["team_nm"]
-                    + " to event: "
-                    + e["event_cd"]
-                    + "\n"
-                )
-            except IntegrityError:
-                messages += (
-                    "(NO LINK) Team: "
-                    + str(t["team_no"])
-                    + " "
-                    + t["team_nm"]
-                    + " already at event: "
-                    + e["event_cd"]
-                    + "\n"
-                )
     return messages
 
 
