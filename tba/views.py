@@ -145,8 +145,7 @@ class Webhook(APIView):
 
     def post(self, request, format=None):
         try:
-            ret_message('Webhook TEST', True, app_url + self.endpoint, exception=request,
-                        error_message=request.data)
+            ret_message('Webhook TEST', True, app_url + self.endpoint, error_message=request)
             match request["data"]:
                 case "verification":
                     serializer = VerificationMessageSerializer(data=request.data)
