@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
 
+class MatchVideoSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    key = serializers.CharField()
+
+
 class AllianceSerializer(serializers.Serializer):
     score = serializers.CharField()
     teams = serializers.ListField(child=serializers.CharField())
@@ -11,22 +16,21 @@ class AlliancesSerializer(serializers.Serializer):
     red = AllianceSerializer()
 
 
-
 class MatchSerializer(serializers.Serializer):
-    comp_level = serializers.CharField()
-    match_number = serializers.CharField()
-    videos = serializers.ListSerializer(child=serializers.CharField())
-    time_string = serializers.CharField()
-    set_number = serializers.CharField()
     key = serializers.CharField()
-    time = serializers.DateTimeField()
-    score_breakdown = serializers.CharField()
-    alliances = AlliancesSerializer()
     event_key = serializers.CharField()
-
+    comp_level = serializers.CharField()
+    set_number = serializers.CharField()
+    match_number = serializers.CharField()
+    videos = MatchVideoSerializer(many=True)
+    time = serializers.DateTimeField()
+    #score_breakdown = serializers.CharField()
+    alliances = AlliancesSerializer()
 
 
 class EventUpdatedMessageSerializer(serializers.Serializer):
+    event_key = serializers.CharField()
+    match_key = serializers.CharField()
     event_name = serializers.CharField()
     match = MatchSerializer()
 
