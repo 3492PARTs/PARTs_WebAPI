@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "public.apps.PublicConfig",
     "scouting.apps.ScoutingConfig",
     "sponsoring.apps.SponsoringConfig",
+    "tba.apps.TbaConfig",
     "user.apps.UserConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
