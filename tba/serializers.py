@@ -23,7 +23,7 @@ class MatchSerializer(serializers.Serializer):
     set_number = serializers.CharField()
     match_number = serializers.CharField()
     videos = MatchVideoSerializer(many=True)
-    time = serializers.DateTimeField()
+    time = serializers.CharField()
     #score_breakdown = serializers.CharField()
     alliances = AlliancesSerializer()
 
