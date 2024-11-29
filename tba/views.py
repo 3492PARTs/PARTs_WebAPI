@@ -1,6 +1,9 @@
+from hashlib import sha256
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
+
 from tba.serializers import EventUpdatedSerializer, VerificationMessageSerializer
 
 from rest_framework.views import APIView
@@ -146,6 +149,7 @@ class Webhook(APIView):
     def post(self, request, format=None):
         try:
             print(request.META)
+            print(sha256(settings.TBA_WEBHOOK_SECRET).hexdigest())
             match request.data["message_type"]:
                 case "verification":
                     serializer = VerificationMessageSerializer(data=request.data)
