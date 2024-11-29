@@ -164,6 +164,7 @@ class Webhook(APIView):
             ).hexdigest()
             print(h)
             print("-------------------------")
+            print(h == request.META.get("HTTP_X_TBA_HMAC", None))
             match request.data["message_type"]:
                 case "verification":
                     serializer = VerificationMessageSerializer(data=request.data)
