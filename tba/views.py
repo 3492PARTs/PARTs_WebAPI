@@ -146,6 +146,7 @@ class Webhook(APIView):
     def post(self, request, format=None):
         try:
             if tba.util.verify_tba_webhook_call(request):
+                print(request.data)
                 match request.data["message_type"]:
                     case "verification":
                         serializer = VerificationMessageSerializer(data=request.data)
