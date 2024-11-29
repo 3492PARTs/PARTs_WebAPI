@@ -4,17 +4,17 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from general.security import ret_message, has_access
-import scouting.matchplanning
-from scouting.matchplanning.serializers import (
+import scouting.strategizing
+from scouting.strategizing.serializers import (
     SaveTeamNoteSerializer,
     TeamNoteSerializer,
 )
-import scouting.matchplanning.util
+import scouting.strategizing.util
 import scouting.util
 
 auth_obj = "matchplanning"
 auth_view_obj_scout_field = "scoutFieldResults"
-app_url = "scouting/match-planning/"
+app_url = "scouting/strategizing/"
 
 
 class TeamNotesView(APIView):
@@ -29,7 +29,7 @@ class TeamNotesView(APIView):
             if has_access(request.user.id, auth_obj) or has_access(
                 request.user.id, auth_view_obj_scout_field
             ):
-                req = scouting.matchplanning.util.get_parsed_team_noes(
+                req = scouting.strategizing.util.get_parsed_team_noes(
                     request.query_params.get("team_no", None)
                 )
                 serializer = TeamNoteSerializer(req, many=True)
@@ -63,7 +63,7 @@ class TeamNotesView(APIView):
 
         if has_access(request.user.id, auth_obj):
             try:
-                req = scouting.matchplanning.util.save_note(
+                req = scouting.strategizing.util.save_note(
                     serializer.data, request.user
                 )
                 return req
