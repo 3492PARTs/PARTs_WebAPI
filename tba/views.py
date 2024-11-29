@@ -1,4 +1,5 @@
 from hashlib import sha256
+import hmac
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -151,6 +152,10 @@ class Webhook(APIView):
             print(request.META)
             print(settings.TBA_WEBHOOK_SECRET)
             print(sha256(settings.TBA_WEBHOOK_SECRET.encode("utf-8")).hexdigest())
+            h = hmac.new(
+                settings.TBA_WEBHOOK_SECRET.encode("utf-8"), request.data.encode("utf-8"), sha256
+            ).hexdigest()
+            print(h)
             match request.data["message_type"]:
                 case "verification":
                     serializer = VerificationMessageSerializer(data=request.data)
