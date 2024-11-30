@@ -7,6 +7,7 @@ class Message(models.Model):
     message_type = models.CharField(max_length=4000, blank=True, null=True)
     message_data = models.CharField(max_length=4000, blank=True, null=True)
     time = models.DateTimeField(default=django.utils.timezone.now)
+    processed = models.CharField(max_length=1, default="n")
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

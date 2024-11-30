@@ -331,7 +331,9 @@ def save_tba_match(tba_match):
 
 
 def save_message(message):
-    Message(message_type=message["message_type"], message_data=message["message_data"]).save()
+    msg = Message(message_type=message["message_type"], message_data=message["message_data"])
+    msg.save()
+    return msg
 
 def verify_tba_webhook_call(request):
     json_str = json.dumps(request.data, ensure_ascii=True)
