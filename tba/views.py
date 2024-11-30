@@ -146,7 +146,6 @@ class Webhook(APIView):
     def post(self, request, format=None):
         try:
             if tba.util.verify_tba_webhook_call(request):
-                print(request.data)
                 tba.util.save_message(request.data)
                 match request.data["message_type"]:
                     case "verification":
@@ -159,7 +158,8 @@ class Webhook(APIView):
                     case "match_score":
                         serializer = EventUpdatedSerializer(data=request.data)
                         if serializer.is_valid():
-                            tba.util.save_tba_match(serializer.validated_data)
+                            print(serializer.validated_data["message_data"]["match"])
+                            tba.util.save_tba_match(serializer.validated_data["message_data"]["match"])
                             return Response(200)
                         else:
                             ret_message('Webhook Error - Match Score', True, app_url + self.endpoint, error_message=serializer.errors)
