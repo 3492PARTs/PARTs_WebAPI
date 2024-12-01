@@ -1,12 +1,13 @@
+from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Lower
-from django.db import transaction
-from django.conf import settings
 
-import user.util
 import alerts.util
 import form.models
 import scouting.models
+import scouting.util
+import user.util
 from form.models import (
     FormType,
     Question,
@@ -20,7 +21,7 @@ from form.models import (
     QuestionCondition,
 )
 from scouting.models import Match, Season, ScoutField, ScoutPit, Event
-import scouting.util
+
 
 def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
     questions = []
@@ -62,19 +63,27 @@ def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
 
 
 def format_question_values(q: Question):
+    # Scout question type
     try:
-        sq = q.scout_question.prefetch_related("question_value_map").get(Q(void_ind="n"))
+        sqt = q.question_typ.scout_question_type.get(void_ind="n")
+        scout_question_type = {
+            "id": sqt.id,
+            "scorable": sqt.scorable
+        }
+    except scouting.models.QuestionType.DoesNotExist:
+        scout_question_type = None
 
-        question_value_map = []
-        for qvm in sq.question_value_map.filter(void_ind="n"):
-            question_value_map.append({
-                "id": qvm.id,
-                "scout_question_id": sq.id,
-                "answer": qvm.answer,
-                "value": qvm.value,
-                "default": qvm.default,
-                "active": qvm.active
-            })
+    # Question Type
+    question_type = {
+        "question_typ": q.question_typ.question_typ,
+        "question_typ_nm": q.question_typ.question_typ_nm,
+        "is_list": q.question_typ.is_list,
+        "scout_question_type": scout_question_type
+    }
+
+    # Scout Question
+    try:
+        sq = q.scout_question.get(Q(void_ind="n"))
 
         scout_question = {
             "id": sq.id,
@@ -82,24 +91,36 @@ def format_question_values(q: Question):
             "season_id": sq.season.season_id,
             "scorable": sq.scorable,
             "value_multiplier": sq.value_multiplier,
-            "question_value_map": question_value_map
         }
         season = sq.season.season_id
     except scouting.models.Question.DoesNotExist as e:
         scout_question = None
         season = None
 
+    # List of options if applicable
     questionoption_set = []
     for qo in q.questionoption_set.filter(void_ind="n"):
+        try:
+            sqo = qo.scout_question_option.get(void_ind="n")
+            scout_question_option = {
+                "id": sqo.id,
+                "value": sqo.value,
+                "active": sqo.active
+            }
+        except scouting.models.QuestionOption.DoesNotExist:
+            scout_question_option = None
+
         questionoption_set.append(
             {
                 "question_opt_id": qo.question_opt_id,
                 "question_id": qo.question_id,
                 "option": qo.option,
                 "active": qo.active,
+                "scout_question_option": scout_question_option
             }
         )
 
+    # Flag if question is condition of another
     try:
         q.condition_question_to.get(Q(void_ind="n") & Q(active="y"))
         is_condition = "y"
@@ -114,21 +135,11 @@ def format_question_values(q: Question):
         "order": q.order,
         "required": q.required,
         "active": q.active,
-        "question_typ": q.question_typ,
-        "form_sub_typ": (
-            q.form_sub_typ.form_sub_typ if q.form_sub_typ is not None else None
-        ),
-        "form_sub_nm": (
-            q.form_sub_typ.form_sub_nm if q.form_sub_typ is not None else None
-        ),
-        "form_typ": q.form_typ.form_typ,
+        "question_typ": question_type,
+        "form_typ": q.form_typ,
+        "form_sub_typ": q.form_sub_typ,
         "questionoption_set": questionoption_set,
-        "display_value": ("" if q.active == "y" else "Deactivated: ")
-        + "Order "
-        + str(q.order)
-        + ": "
-        + (q.form_sub_typ.form_sub_nm + ": " if q.form_sub_typ is not None else "")
-        + q.question,
+        "display_value": f"{'' if q.active == 'y' else 'Deactivated: '} Order: {q.order}: {q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else ''}{q.question}",
         "scout_question": scout_question,
         "is_condition": is_condition,
     }
@@ -198,7 +209,7 @@ def save_question(question):
         sq.value_multiplier = scout_question.get("value_multiplier", False)
 
         for qvm in scout_question.get("question_value_map", []):
-            if qvm.get("id", None ) is None:
+            if qvm.get("id", None) is None:
                 question_value_map = scouting.models.QuestionValueMap(question=sq)
                 question_value_map.save()
             else:
@@ -252,8 +263,8 @@ def save_question(question):
             ).save()
 
     if (
-        question["question_typ"]["is_list"] == "y"
-        and len(question.get("questionoption_set", [])) <= 0
+            question["question_typ"]["is_list"] == "y"
+            and len(question.get("questionoption_set", [])) <= 0
     ):
         raise Exception("Select questions must have options.")
 
@@ -518,9 +529,9 @@ def format_question_condition_values(qc: QuestionCondition):
 
 
 def get_questions_with_conditions(
-    form_typ: str,
-    form_sub_typ: str = "",
-    active: str = "y",
+        form_typ: str,
+        form_sub_typ: str = "",
+        active: str = "y",
 ):
     questions_with_conditions = []
     questions = get_questions(form_typ, active, form_sub_typ)
@@ -539,7 +550,7 @@ def get_questions_with_conditions(
 
             """
             for qc in question.condition_question_from.filter(
-                Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")
+                    Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")
             ):
                 q["conditions"].append(format_question_condition_values(qc))
 

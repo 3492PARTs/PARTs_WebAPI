@@ -1,10 +1,22 @@
 from rest_framework import serializers
 
 
+class ScoutQuestionTypeSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    scorable = serializers.CharField(required=False, allow_null=True)
+
+
+class ScoutQuestionOptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    value = serializers.CharField()
+    active = serializers.CharField()
+
+
 class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField()
     is_list = serializers.CharField()
+    scout_question_type = ScoutQuestionTypeSerializer(required=False, allow_null=True)
 
 
 class FormTypeSerializer(serializers.Serializer):
@@ -23,15 +35,7 @@ class QuestionOptionsSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(read_only=True)
     option = serializers.CharField()
     active = serializers.CharField()
-
-
-class ScoutQuestionValueMapSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False, allow_null=True)
-    scout_question_id = serializers.IntegerField(required=False, allow_null=True)
-    answer = serializers.CharField()
-    value = serializers.CharField()
-    default = serializers.BooleanField()
-    active = serializers.CharField()
+    scout_question_option = ScoutQuestionOptionSerializer(required=False, allow_null=True)
 
 
 class ScoutQuestionSerializer(serializers.Serializer):
@@ -40,7 +44,6 @@ class ScoutQuestionSerializer(serializers.Serializer):
     season_id = serializers.IntegerField(read_only=True)
     scorable = serializers.BooleanField()
     value_multiplier = serializers.IntegerField(required=False, allow_null=True)
-    question_value_map = ScoutQuestionValueMapSerializer(many=True)
 
 
 class QuestionSerializer(serializers.Serializer):
@@ -53,13 +56,8 @@ class QuestionSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_sub_nm = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_typ = serializers.CharField()
+    form_typ = FormTypeSerializer()
+    form_sub_typ = FormSubTypeSerializer()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(
@@ -125,13 +123,8 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_sub_nm = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_typ = serializers.CharField()
+    form_typ = FormTypeSerializer()
+    form_sub_typ = FormSubTypeSerializer()
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(

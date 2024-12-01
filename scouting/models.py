@@ -240,6 +240,18 @@ class TeamNotes(models.Model):
         return "{} {}".format(self.team_note_id, self.team_no)
 
 
+class QuestionType(models.Model):
+    id = models.AutoField(primary_key=True)
+    question_typ = models.ForeignKey(
+        form.models.QuestionType, models.PROTECT, related_name="scout_question_type"
+    )
+    scorable = models.CharField(max_length=1, default="n")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"Scout question type {self.id} {self.question_typ}"
+
+
 class Question(models.Model):
     id = models.AutoField(primary_key=True)
     question = models.ForeignKey(
@@ -253,19 +265,17 @@ class Question(models.Model):
     def __str__(self):
         return f"Scout Question {self.id} {self.question}"
 
-class QuestionValueMap(models.Model):
+class QuestionOption(models.Model):
     id = models.AutoField(primary_key=True)
-    question = models.ForeignKey(
-        Question, models.PROTECT, related_name="question_value_map"
+    question_opt = models.ForeignKey(
+        form.models.QuestionOption, models.PROTECT, related_name="scout_question_option"
     )
-    answer = models.CharField(max_length=1000)
     value = models.CharField(max_length=1000)
-    default = models.CharField(max_length=1, default="n")
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} {self.answer} {self.value} {self.question}"
+        return f"{self.id} {self.value} {self.question_opt}"
 
 class UserInfo(models.Model):
     id = models.AutoField(primary_key=True)

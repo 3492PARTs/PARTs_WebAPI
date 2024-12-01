@@ -48,7 +48,7 @@ def build_table_columns():
                     "ColLabel": (
                         ""
                         if sq.get("form_sub_typ", None) is None
-                        else sq["form_sub_typ"][0:1].upper() + ": "
+                        else sq.get("form_sub_typ").form_sub_typ[0:1].upper() + ": "
                     )
                     + sq["question"],
                     "Width": sq["table_col_width"],
