@@ -20,7 +20,7 @@ from form.models import (
     QuestionCondition,
 )
 from scouting.models import Match, Season, ScoutField, ScoutPit, Event
-
+import scouting.util
 
 def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
     questions = []
@@ -29,7 +29,7 @@ def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
     form_sub_typ_q = Q()
 
     if form_typ == "field" or form_typ == "pit":
-        current_season = Season.objects.get(current="y")
+        current_season = scouting.util.get_current_season()
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
@@ -63,14 +63,34 @@ def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
 
 def format_question_values(q: Question):
     try:
-        scout_question = q.scout_question.get(Q(void_ind="n"))
-        season = scout_question.season.season_id
+        sq = q.scout_question.prefetch_related("question_value_map").get(Q(void_ind="n"))
+
+        question_value_map = []
+        for qvm in sq.question_value_map.filter(void_ind="n"):
+            question_value_map.append({
+                "id": qvm.id,
+                "scout_question_id": sq.id,
+                "answer": qvm.answer,
+                "value": qvm.value,
+                "default": qvm.default,
+                "active": qvm.active
+            })
+
+        scout_question = {
+            "id": sq.id,
+            "question_id": sq.question_id,
+            "season_id": sq.season.season_id,
+            "scorable": sq.scorable,
+            "value_multiplier": sq.value_multiplier,
+            "question_value_map": question_value_map
+        }
+        season = sq.season.season_id
     except scouting.models.Question.DoesNotExist as e:
         scout_question = None
         season = None
 
     questionoption_set = []
-    for qo in q.questionoption_set.all():
+    for qo in q.questionoption_set.filter(void_ind="n"):
         questionoption_set.append(
             {
                 "question_opt_id": qo.question_opt_id,
@@ -129,11 +149,9 @@ def get_form_sub_types(form_typ: str):
 
 
 def save_question(question):
+    current_season = None
     if question["form_typ"] in ["pit", "field"]:
-        try:
-            current_season = Season.objects.get(current="y")
-        except Exception as e:
-            raise Exception("No season set, see an admin.")
+        current_season = scouting.util.get_current_season()
 
     required = question.get("required", "n")
     required = required if required != "" else "n"
@@ -175,8 +193,23 @@ def save_question(question):
         if sq.season is None:
             sq.season = current_season
 
-        sq.scorable = question.get("scout_question", None).get("scorable", False)
+        scout_question = question.get("scout_question", None)
+        sq.scorable = scout_question.get("scorable", False)
+        sq.value_multiplier = scout_question.get("value_multiplier", False)
 
+        for qvm in scout_question.get("question_value_map", []):
+            if qvm.get("id", None ) is None:
+                question_value_map = scouting.models.QuestionValueMap(question=sq)
+                question_value_map.save()
+            else:
+                question_value_map = scouting.models.QuestionValueMap.objects.get(id=qvm["id"])
+
+            question_value_map.answer = qvm.get("answer", None)
+            question_value_map.value = qvm.get("value", None)
+            question_value_map.default = qvm.get("default", None)
+            question_value_map.active = qvm.get("active", None)
+            question_value_map.save()
+            sq.question_value_map.add(question_value_map)
         sq.save()
 
     if question.get("question_id", None) is None:

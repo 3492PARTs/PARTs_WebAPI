@@ -25,11 +25,22 @@ class QuestionOptionsSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
+class ScoutQuestionValueMapSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    scout_question_id = serializers.IntegerField(required=False, allow_null=True)
+    answer = serializers.CharField()
+    value = serializers.CharField()
+    default = serializers.BooleanField()
+    active = serializers.CharField()
+
+
 class ScoutQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
     scorable = serializers.BooleanField()
+    value_multiplier = serializers.IntegerField(required=False, allow_null=True)
+    question_value_map = ScoutQuestionValueMapSerializer(many=True)
 
 
 class QuestionSerializer(serializers.Serializer):

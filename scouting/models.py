@@ -247,11 +247,25 @@ class Question(models.Model):
     )
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     scorable = models.BooleanField(default=False)
+    value_multiplier = models.IntegerField(null=True, default=None)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.id, self.question)
+        return f"Scout Question {self.id} {self.question}"
 
+class QuestionValueMap(models.Model):
+    id = models.AutoField(primary_key=True)
+    question = models.ForeignKey(
+        Question, models.PROTECT, related_name="question_value_map"
+    )
+    answer = models.CharField(max_length=1000)
+    value = models.CharField(max_length=1000)
+    default = models.CharField(max_length=1, default="n")
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} {self.answer} {self.value} {self.question}"
 
 class UserInfo(models.Model):
     id = models.AutoField(primary_key=True)
