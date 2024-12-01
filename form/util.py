@@ -167,15 +167,11 @@ def save_question(question):
     required = question.get("required", "n")
     required = required if required != "" else "n"
 
-    form_sub_type = question.get("form_sub_typ", None)
-    form_sub_type = form_sub_type if form_sub_type != "" else None
-
     if question.get("question_id", None) is not None:
         q = Question.objects.get(question_id=question["question_id"])
         q.question = question["question"]
         q.table_col_width = question["table_col_width"]
         q.question_typ_id = question["question_typ"]["question_typ"]
-        q.form_sub_typ_id = form_sub_type
         q.order = question["order"]
         q.required = required
         q.active = question["active"]
@@ -183,7 +179,6 @@ def save_question(question):
         q = Question(
             question_typ_id=question["question_typ"]["question_typ"],
             form_typ_id=question["form_typ"],
-            form_sub_typ_id=form_sub_type,
             question=question["question"],
             table_col_width=["table_col_width"],
             order=question["order"],
@@ -191,9 +186,11 @@ def save_question(question):
             required=required,
             void_ind="n",
         )
+
+    q.form_sub_typ_id = None if question.get("form_sub_typ", None) is None else question["form_sub_typ"].get("form_sub_typ", None)
     q.save()
 
-    if question["form_typ"] in ["pit", "field"]:
+    if question["form_typ"]["form_typ"] in ["pit", "field"]:
         if question.get("scout_question", None).get("id", None) is not None:
             sq = scouting.models.Question.objects.get(
                 Q(void_ind="n") & Q(question_id=q.question_id)
@@ -207,20 +204,6 @@ def save_question(question):
         scout_question = question.get("scout_question", None)
         sq.scorable = scout_question.get("scorable", False)
         sq.value_multiplier = scout_question.get("value_multiplier", False)
-
-        for qvm in scout_question.get("question_value_map", []):
-            if qvm.get("id", None) is None:
-                question_value_map = scouting.models.QuestionValueMap(question=sq)
-                question_value_map.save()
-            else:
-                question_value_map = scouting.models.QuestionValueMap.objects.get(id=qvm["id"])
-
-            question_value_map.answer = qvm.get("answer", None)
-            question_value_map.value = qvm.get("value", None)
-            question_value_map.default = qvm.get("default", None)
-            question_value_map.active = qvm.get("active", None)
-            question_value_map.save()
-            sq.question_value_map.add(question_value_map)
         sq.save()
 
     if question.get("question_id", None) is None:
