@@ -6,11 +6,6 @@ class ScoutQuestionTypeSerializer(serializers.Serializer):
     scorable = serializers.CharField(required=False, allow_null=True)
 
 
-class ScoutQuestionOptionSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False, allow_null=True)
-    value = serializers.CharField()
-
-
 class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField()
@@ -34,7 +29,6 @@ class QuestionOptionsSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(read_only=True)
     option = serializers.CharField()
     active = serializers.CharField()
-    scout_question_option = ScoutQuestionOptionSerializer(required=False, allow_null=True)
 
 
 class ScoutQuestionSerializer(serializers.Serializer):

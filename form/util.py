@@ -100,22 +100,12 @@ def format_question_values(q: Question):
     # List of options if applicable
     questionoption_set = []
     for qo in q.questionoption_set.filter(void_ind="n"):
-        try:
-            sqo = qo.scout_question_option.get(void_ind="n")
-            scout_question_option = {
-                "id": sqo.id,
-                "value": sqo.value,
-            }
-        except scouting.models.QuestionOption.DoesNotExist:
-            scout_question_option = None
-
         questionoption_set.append(
             {
                 "question_opt_id": qo.question_opt_id,
                 "question_id": qo.question_id,
                 "option": qo.option,
                 "active": qo.active,
-                "scout_question_option": scout_question_option
             }
         )
 
@@ -280,20 +270,6 @@ def save_question(question):
             )
 
         qop.save()
-
-        if question["form_typ"]["form_typ"] in ["pit", "field"]:
-            scout_question_option = op.get("scout_question_option", None)
-            if scout_question_option is not None and scout_question_option.get("id", None) is not None:
-                sqo = scouting.models.QuestionOption.objects.get(
-                    Q(void_ind="n") & Q(id=op["scout_question_option"]["id"])
-                    & Q(question_opt=qop)
-                )
-            else:
-                sqo = scouting.models.QuestionOption(question_opt=qop)
-
-
-            sqo.value = None if scout_question_option is None else scout_question_option.get("value", None)
-            sqo.save()
 
 
 def save_question_answer(answer: str, question: Question, response: Response):
