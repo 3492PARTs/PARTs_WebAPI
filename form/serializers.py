@@ -9,7 +9,6 @@ class ScoutQuestionTypeSerializer(serializers.Serializer):
 class ScoutQuestionOptionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     value = serializers.CharField()
-    active = serializers.CharField()
 
 
 class QuestionTypeSerializer(serializers.Serializer):

@@ -270,8 +270,7 @@ class QuestionOption(models.Model):
     question_opt = models.ForeignKey(
         form.models.QuestionOption, models.PROTECT, related_name="scout_question_option"
     )
-    value = models.CharField(max_length=1000)
-    active = models.CharField(max_length=1, default="y")
+    value = models.CharField(max_length=1000, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

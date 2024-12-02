@@ -2,10 +2,6 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import scouting
-from scouting.models import (
-    ScoutPit,
-    ScoutPitImage,
-)
 import scouting.pit
 import scouting.pit.util
 import scouting.util
@@ -15,12 +11,7 @@ from .serializers import (
 )
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-from django.db.models import Q
 from rest_framework.response import Response
-import form.util
 
 auth_obj = "scoutpit"
 auth_view_obj = "scoutPitResults"

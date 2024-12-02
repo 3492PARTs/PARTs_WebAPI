@@ -105,7 +105,6 @@ def format_question_values(q: Question):
             scout_question_option = {
                 "id": sqo.id,
                 "value": sqo.value,
-                "active": sqo.active
             }
         except scouting.models.QuestionOption.DoesNotExist:
             scout_question_option = None
@@ -146,9 +145,28 @@ def format_question_values(q: Question):
 
 
 def get_question_types():
-    question_types = QuestionType.objects.filter(void_ind="n").order_by(
+    qts = QuestionType.objects.filter(void_ind="n").order_by(
         Lower("question_typ_nm")
     )
+    question_types = []
+
+    for qt in qts:
+        sqt = qt.scout_question_type.get(void_ind="n")
+        if sqt is not  None:
+            scout_question_type = {
+                "id": sqt.id,
+                "scorable": sqt.scorable
+            }
+        else:
+            scout_question_type = None
+
+        question_types.append({
+            "question_typ": qt.question_typ,
+            "question_typ_nm": qt.question_typ_nm,
+            "is_list": qt.is_list,
+            "scout_question_type": scout_question_type
+        })
+
     return question_types
 
 
@@ -256,11 +274,26 @@ def save_question(question):
             qop = QuestionOption.objects.get(question_opt_id=op["question_opt_id"])
             qop.option = op["option"]
             qop.active = op["active"]
-            qop.save()
         else:
-            QuestionOption(
+            qop = QuestionOption(
                 option=op["option"], question=q, active=op["active"], void_ind="n"
-            ).save()
+            )
+
+        qop.save()
+
+        if question["form_typ"]["form_typ"] in ["pit", "field"]:
+            scout_question_option = op.get("scout_question_option", None)
+            if scout_question_option is not None and scout_question_option.get("id", None) is not None:
+                sqo = scouting.models.QuestionOption.objects.get(
+                    Q(void_ind="n") & Q(id=op["scout_question_option"]["id"])
+                    & Q(question_opt=qop)
+                )
+            else:
+                sqo = scouting.models.QuestionOption(question_opt=qop)
+
+
+            sqo.value = None if scout_question_option is None else scout_question_option.get("value", None)
+            sqo.save()
 
 
 def save_question_answer(answer: str, question: Question, response: Response):
