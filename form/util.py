@@ -78,6 +78,7 @@ def format_question_values(q: Question):
         "question_typ": q.question_typ.question_typ,
         "question_typ_nm": q.question_typ.question_typ_nm,
         "is_list": q.question_typ.is_list,
+        "requires_img": q.question_typ.requires_img,
         "scout_question_type": scout_question_type
     }
 
@@ -154,6 +155,7 @@ def get_question_types():
             "question_typ": qt.question_typ,
             "question_typ_nm": qt.question_typ_nm,
             "is_list": qt.is_list,
+            "requires_img": qt.requires_img,
             "scout_question_type": scout_question_type
         })
 

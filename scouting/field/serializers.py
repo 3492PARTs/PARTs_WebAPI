@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from form.serializers import QuestionSerializer
+
 
 class SeasonSerializer(serializers.Serializer):
     season_id = serializers.IntegerField(read_only=True)
@@ -76,96 +78,6 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     blue_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
 
     scouts = serializers.CharField(read_only=True)
-
-
-class QuestionOptionsSerializer(serializers.Serializer):
-    question_opt_id = serializers.IntegerField(required=False, allow_null=True)
-    question_id = serializers.IntegerField(read_only=True)
-    option = serializers.CharField()
-    active = serializers.CharField()
-
-
-class QuestionTypeSerializer(serializers.Serializer):
-    question_typ = serializers.CharField()
-    question_typ_nm = serializers.CharField()
-    is_list = serializers.CharField()
-
-
-class ScoutQuestionSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False, allow_null=True)
-    question_id = serializers.IntegerField()
-    season_id = serializers.IntegerField(read_only=True)
-    scorable = serializers.BooleanField()
-
-
-class QuestionConditionQuestionSerializer(serializers.Serializer):
-    question_id = serializers.IntegerField(required=False, allow_null=True)
-    season_id = serializers.IntegerField(read_only=True)
-
-    question = serializers.CharField()
-    table_col_width = serializers.CharField()
-    order = serializers.IntegerField()
-    required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    active = serializers.CharField()
-    question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_sub_nm = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_typ = serializers.CharField()
-    display_value = serializers.CharField(read_only=True)
-
-    questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True
-    )
-
-    answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
-    scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
-
-    is_condition = serializers.CharField()
-
-
-class QuestionConditionSerializer(serializers.Serializer):
-    question_condition_id = serializers.IntegerField(required=False)
-    condition = serializers.CharField()
-    question_from = QuestionConditionQuestionSerializer()
-    question_to = QuestionConditionQuestionSerializer()
-    active = serializers.CharField()
-
-
-class QuestionSerializer(serializers.Serializer):
-    question_id = serializers.IntegerField(required=False, allow_null=True)
-    season_id = serializers.IntegerField(read_only=True)
-
-    question = serializers.CharField()
-    table_col_width = serializers.CharField()
-    order = serializers.IntegerField()
-    required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    active = serializers.CharField()
-    question_typ = QuestionTypeSerializer()
-    form_sub_typ = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_sub_nm = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True
-    )
-    form_typ = serializers.CharField()
-    display_value = serializers.CharField(read_only=True)
-
-    questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True
-    )
-
-    answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
-    scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
-
-    conditions = QuestionConditionSerializer(required=False, many=True)
-
-    is_condition = serializers.CharField()
 
 
 class SaveScoutFieldSerializer(serializers.Serializer):

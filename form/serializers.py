@@ -10,6 +10,7 @@ class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField()
     is_list = serializers.CharField()
+    requires_img = serializers.CharField()
     scout_question_type = ScoutQuestionTypeSerializer(required=False, allow_null=True)
 
 
@@ -44,6 +45,8 @@ class QuestionSerializer(serializers.Serializer):
     season_id = serializers.IntegerField(read_only=True)
 
     question = serializers.CharField()
+    img_url = serializers.CharField(read_only=True)
+    img = serializers.FileField(required=False, allow_null=True)
     table_col_width = serializers.CharField()
     order = serializers.IntegerField()
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
