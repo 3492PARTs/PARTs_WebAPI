@@ -142,13 +142,13 @@ def get_question_types():
     question_types = []
 
     for qt in qts:
-        sqt = qt.scout_question_type.get(void_ind="n")
-        if sqt is not  None:
+        try:
+            sqt = qt.scout_question_type.get(void_ind="n")
             scout_question_type = {
                 "id": sqt.id,
                 "scorable": sqt.scorable
             }
-        else:
+        except scouting.models.QuestionType.DoesNotExist:
             scout_question_type = None
 
         question_types.append({
