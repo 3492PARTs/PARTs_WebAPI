@@ -45,6 +45,8 @@ class Question(models.Model):
     form_sub_typ = models.ForeignKey(FormSubType, models.PROTECT, null=True)
     question_typ = models.ForeignKey(QuestionType, models.PROTECT)
     question = models.CharField(max_length=1000)
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
     table_col_width = models.CharField(max_length=255)
     order = models.IntegerField()
     required = models.CharField(max_length=1)
