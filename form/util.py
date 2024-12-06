@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Lower
+import cloudinary
 
 import alerts.util
 import form.models
@@ -196,6 +197,11 @@ def save_question(question):
             required=required,
             void_ind="n",
         )
+
+    if question.get("img", None) is not None:
+        response = cloudinary.uploader.upload(question["img"])
+        q.img_id = response["public_id"]
+        q.img_ver = str(response["version"])
 
     q.form_sub_typ_id = None if question.get("form_sub_typ", None) is None else question["form_sub_typ"].get("form_sub_typ", None)
     q.save()

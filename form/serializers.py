@@ -16,7 +16,7 @@ class QuestionTypeSerializer(serializers.Serializer):
 
 class FormTypeSerializer(serializers.Serializer):
     form_typ = serializers.CharField()
-    form_nm = serializers.CharField()
+    form_nm = serializers.CharField(required=False)
 
 
 class FormSubTypeSerializer(serializers.Serializer):
