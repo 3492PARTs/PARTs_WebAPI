@@ -120,6 +120,16 @@ class Match(models.Model):
         return f"match: {self.event} {self.comp_level} match no:{self.match_number}"
 
 
+class FieldForm(models.Model):
+    id = models.AutoField(primary_key=True)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
+    inv_img_id = models.CharField(max_length=500, blank=True, null=True)
+    inv_img_ver = models.CharField(max_length=500, blank=True, null=True)
+    void_ind = models.CharField(max_length=1, default="n")
+
+
 class ScoutField(models.Model):
     scout_field_id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
@@ -258,7 +268,11 @@ class Question(models.Model):
         form.models.Question, models.PROTECT, related_name="scout_question"
     )
     season = models.ForeignKey(Season, models.PROTECT, null=True)
-    scorable = models.BooleanField(default=False)
+    x = models.IntegerField(null=True)
+    y = models.IntegerField(null=True)
+    width = models.IntegerField(null=True)
+    height = models.IntegerField(null=True)
+    icon = models.CharField(max_length=255, null=True)
     value_multiplier = models.IntegerField(null=True, default=None)
     void_ind = models.CharField(max_length=1, default="n")
 

@@ -36,7 +36,11 @@ class ScoutQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
-    scorable = serializers.BooleanField()
+    x = serializers.IntegerField(required=False, allow_null=True)
+    y = serializers.IntegerField(required=False, allow_null=True)
+    width = serializers.IntegerField(required=False, allow_null=True)
+    height = serializers.IntegerField(required=False, allow_null=True)
+    icon = serializers.CharField(required=False, allow_null=True)
     value_multiplier = serializers.IntegerField(required=False, allow_null=True)
 
 
