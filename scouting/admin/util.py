@@ -18,7 +18,7 @@ from scouting.models import (
     Team,
     TeamNotes,
     Match,
-    UserInfo,
+    UserInfo, FieldForm,
 )
 import scouting.util
 import scouting.models
@@ -376,3 +376,12 @@ def void_scout_pit_response(id):
     sp.void_ind = "y"
     sp.save()
     return sp
+
+
+def get_field_form():
+    season = scouting.util.get_current_season()
+    field_form = FieldForm.objects.get(Q(season=season) & Q(void_ind="n"))
+
+    parsed_ff = {
+
+    }

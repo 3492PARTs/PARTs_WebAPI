@@ -1,6 +1,6 @@
 from django.db.models import Q
-import cloudinary
 
+import general.cloudinary
 from form.models import QuestionAnswer
 from general.security import ret_message
 import scouting
@@ -42,9 +42,7 @@ def get_responses(team=None):
             pics.append(
                 {
                     "scout_pit_img_id": spi.scout_pit_img_id,
-                    "pic": cloudinary.CloudinaryImage(
-                        spi.img_id, version=spi.img_ver
-                    ).build_url(secure=True),
+                    "pic": general.cloudinary.build_image_url(spi.img_id, spi.img_ver),
                     "default": spi.default,
                 }
             )
@@ -108,9 +106,6 @@ def get_responses(team=None):
 def save_robot_picture(file, team_no):
     current_event = scouting.util.get_current_event()
 
-    if not allowed_file(file.content_type):
-        raise Exception("Invalid file type.")
-
     sp = ScoutPit.objects.get(
         Q(event=current_event)
         & Q(team_no_id=team_no)
@@ -118,7 +113,7 @@ def save_robot_picture(file, team_no):
         & Q(response__void_ind="n")
     )
 
-    response = cloudinary.uploader.upload(file)
+    response = general.cloudinary.upload_image(file)
 
     ScoutPitImage(
         scout_pit=sp,
@@ -127,14 +122,6 @@ def save_robot_picture(file, team_no):
     ).save()
 
     return ret_message("Saved pit image successfully.")
-
-
-def allowed_file(filename):
-    """Returns whether a filename's extension indicates that it is an image.
-    :param str filename: A filename.
-    :return: Whether the filename has an recognized image file extension
-    :rtype: bool"""
-    return filename.rsplit("/", 1)[1].lower() in {"png", "jpg", "jpeg", "gif"}
 
 
 def set_default_team_image(id):
@@ -170,9 +157,7 @@ def get_team_data(team_no=None):
         pics.append(
             {
                 "scout_pit_img_id": pic.scout_pit_img_id,
-                "pic": cloudinary.CloudinaryImage(
-                    pic.img_id, version=pic.img_ver
-                ).build_url(secure=True),
+                "pic": general.cloudinary.build_image_url(pic.img_id, pic.img_ver),
                 "default": pic.default,
             }
         )

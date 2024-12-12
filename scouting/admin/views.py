@@ -675,3 +675,66 @@ class PitResponseView(APIView):
                 app_url + self.endpoint,
                 request.user.id,
             )
+
+
+class FieldFormView(APIView):
+    """
+    API endpoint to manage the field scouting form
+    """
+
+    endpoint = "field-form/"
+
+    def get(self, request, format=None):
+        try:
+            questions = scouting.admin.util.get_questions_with_conditions(
+                request.query_params["form_typ"],
+                active=request.query_params.get("active", ""),
+            )
+            serializer = QuestionWithConditionsSerializer(questions, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting questions.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+            if request.user.id is None:
+                return HttpResponse("Unauthorized", status=401)
+
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = QuestionSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        serializer.errors,
+                    )
+
+                with transaction.atomic():
+                    form.util.save_question(serializer.validated_data)
+
+                return ret_message("Saved question successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the question.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )

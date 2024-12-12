@@ -91,7 +91,11 @@ def format_question_values(q: Question):
             "id": sq.id,
             "question_id": sq.question_id,
             "season_id": sq.season.season_id,
-            "scorable": sq.scorable,
+            "x": sq.x,
+            "y": sq.y,
+            "width": sq.width,
+            "height": sq.height,
+            "icon": sq.icon,
             "value_multiplier": sq.value_multiplier,
         }
         season = sq.season.season_id
@@ -218,7 +222,11 @@ def save_question(question):
             sq.season = current_season
 
         scout_question = question.get("scout_question", None)
-        sq.scorable = scout_question.get("scorable", False)
+        sq.x = scout_question.get("x", None)
+        sq.y = scout_question.get("y", None)
+        sq.width = scout_question.get("width", None)
+        sq.height = scout_question.get("height", None)
+        sq.icon = scout_question.get("icon", None)
         sq.value_multiplier = scout_question.get("value_multiplier", False)
         sq.save()
 
