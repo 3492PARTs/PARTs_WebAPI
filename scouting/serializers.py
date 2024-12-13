@@ -140,3 +140,12 @@ class AllScoutInfoSerializer(serializers.Serializer):
     schedules = ScheduleSerializer(many=True)
     scout_field_schedules = ScoutFieldScheduleSerializer(many=True)
     schedule_types = ScheduleTypeSerializer(many=True)
+
+
+class FieldFormSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    season_id = serializers.IntegerField(required=False, allow_null=True)
+    img = serializers.FileField(required=False, allow_null=True)
+    img_url = serializers.CharField(required=False, allow_null=True)
+    inv_img = serializers.FileField(required=False, allow_null=True)
+    inv_img_url = serializers.CharField(required=False, allow_null=True)

@@ -1,6 +1,10 @@
 import cloudinary
 
 def upload_image(file):
+    """Returns whether a file id and version id for an uploaded file.
+    :param file file: A file.
+    :return: the uploaded file public id and version id
+    :rtype: object"""
     if not allowed_file(file.content_type):
         raise Exception("Invalid file type.")
 

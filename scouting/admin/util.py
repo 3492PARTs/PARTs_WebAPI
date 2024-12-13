@@ -2,6 +2,7 @@
 from django.db import IntegrityError
 from django.db.models import Q
 
+import general.cloudinary
 from form.models import QuestionAnswer
 from general.security import ret_message
 import scouting
@@ -383,5 +384,35 @@ def get_field_form():
     field_form = FieldForm.objects.get(Q(season=season) & Q(void_ind="n"))
 
     parsed_ff = {
-
+        "id": field_form.id,
+        "season_id": field_form.season.id,
+        "img_url": general.cloudinary.build_image_url(field_form.img_id, field_form.img_ver),
+        "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver)
     }
+
+    return parsed_ff
+
+def save_field_form(field_form):
+    if field_form.get("id", None) is not None:
+        ff = FieldForm.objects.get(id=field_form["id"])
+    else:
+        ff = FieldForm()
+        ff.season = scouting.util.get_current_season()
+
+    img = None
+    if field_form.get("img", None) is not None:
+        img = general.cloudinary.upload_image(field_form["img"])
+
+    inv_img = None
+    if field_form.get("inv_img", None) is not None:
+        inv_img = general.cloudinary.upload_image(field_form["img"])
+
+    if img is not None:
+        ff.img_id = img["public_id"]
+        ff.img_ver = img["version"]
+
+    if inv_img is not None:
+        ff.inv_img_id = inv_img["public_id"]
+        ff.inv_img_ver = inv_img["version"]
+
+    ff.save()
