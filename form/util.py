@@ -123,6 +123,7 @@ def format_question_values(q: Question):
 
     return {
         "question_id": q.question_id,
+        "question_flow_id": q.question_flow.id if q.question_flow is not None else "",
         "season_id": season,
         "question": q.question,
         "table_col_width": q.table_col_width,
@@ -738,3 +739,13 @@ def get_question_flows(form_typ, form_sub_typ):
     qfs = QuestionFlow.objects.all()
     for q in qfs:
         print(q)
+
+def save_question_flow(data):
+    if data.get("id", None) is not None:
+        qf = QuestionFlow.objects.get(id=data["id"])
+    else:
+        qf = QuestionFlow()
+
+    qf.name = data["name"]
+    qf.save()
+    return qf

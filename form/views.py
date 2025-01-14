@@ -526,7 +526,7 @@ class QuestionFlowView(APIView):
             if has_access(request.user.id, "admin") or has_access(
                 request.user.id, "scoutadmin"
             ):
-                serializer = QuestionSerializer(data=request.data)
+                serializer = QuestionFlowSerializer(data=request.data)
                 if not serializer.is_valid():
                     return ret_message(
                         "Invalid data",
@@ -537,7 +537,7 @@ class QuestionFlowView(APIView):
                     )
 
                 with transaction.atomic():
-                    form.util.save_question(serializer.validated_data)
+                    form.util.save_question_flow(serializer.validated_data)
 
                 return ret_message("Saved question flow successfully.")
             else:
