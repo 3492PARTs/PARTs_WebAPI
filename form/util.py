@@ -202,6 +202,9 @@ def save_question(question):
         )
 
     q.form_sub_typ_id = None if question.get("form_sub_typ", None) is None else question["form_sub_typ"].get("form_sub_typ", None)
+
+    q.question_flow_id = question.get("question_flow_id", None)
+
     q.save()
 
     if question["form_typ"]["form_typ"] in ["pit", "field"]:
@@ -736,9 +739,19 @@ def save_answers(data):
             alerts.util.stage_alert_channel_send(a, acct)
 
 def get_question_flows(form_typ, form_sub_typ):
-    qfs = QuestionFlow.objects.all()
+    q_form_typ = None
+    if form_typ is not None:
+        q_form_typ = Q(form_typ_id=form_typ)
+
+    q_form_sub_typ = None
+    if form_typ is not None:
+        q_form_sub_typ = Q(form_sub_typ_id=form_sub_typ)
+
+    qfs = QuestionFlow.objects.filter(q_form_typ & q_form_sub_typ & Q(void_ind ="n"))
     for q in qfs:
         print(q)
+
+    return qfs
 
 def save_question_flow(data):
     if data.get("id", None) is not None:
@@ -747,5 +760,8 @@ def save_question_flow(data):
         qf = QuestionFlow()
 
     qf.name = data["name"]
+    qf.form_typ_id = data["form_typ"]["form_typ"]
+    if data.get("form_sub_typ", None) is not None:
+        qf.form_sub_typ_id = data["form_sub_typ"]["form_sub_typ"]
     qf.save()
     return qf

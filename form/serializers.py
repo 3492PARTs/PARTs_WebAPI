@@ -154,4 +154,6 @@ class SaveResponseSerializer(serializers.Serializer):
 class QuestionFlowSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField()
-    questions = QuestionSerializer(many=True)
+    form_typ = FormTypeSerializer()
+    form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
+    questions = QuestionSerializer(many=True, required=False)
