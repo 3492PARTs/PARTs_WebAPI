@@ -148,3 +148,8 @@ class SaveScoutSerializer(serializers.Serializer):
 class SaveResponseSerializer(serializers.Serializer):
     question_answers = QuestionWithConditionsSerializer(many=True)
     form_typ = serializers.CharField()
+
+class QuestionFlowSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    name = serializers.CharField()
+    questions = QuestionSerializer(many=True)

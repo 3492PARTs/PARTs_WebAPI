@@ -10,6 +10,15 @@ import django
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+class QuestionFlow(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, default="n")
+    """question = models.ForeignKey(Question, models.PROTECT)
+    order = models.IntegerField()
+    req_prev_flow = models.ForeignKey("self", models.PROTECT)
+    req_prev_flow_value = models.CharField(2000)"""
+
 
 class QuestionType(models.Model):
     question_typ = models.CharField(primary_key=True, max_length=50)
@@ -49,6 +58,7 @@ class Question(models.Model):
     order = models.IntegerField()
     required = models.CharField(max_length=1)
     active = models.CharField(max_length=1, default="y")
+    question_flow = models.ForeignKey(QuestionFlow, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

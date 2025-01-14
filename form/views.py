@@ -16,7 +16,7 @@ from form.serializers import (
     ResponseSerializer,
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
-    QuestionConditionSerializer,
+    QuestionConditionSerializer, QuestionFlowSerializer,
 )
 from general.security import has_access, ret_message
 
@@ -486,6 +486,70 @@ class QuestionConditionView(APIView):
         except Exception as e:
             return ret_message(
                 "An error occurred while saving the question condition.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class QuestionFlowView(APIView):
+    """
+    API endpoint to get question flows
+    """
+
+    endpoint = "question-flow/"
+
+# take in form type and sub type to get list of avalil fows. make these optional.
+    def get(self, request, format=None):
+        try:
+            questions = form.util.get_question_flows(
+                request.query_params.get("form_typ", None),
+                request.query_params.get("form_sub_typ", None)
+            )
+            serializer = QuestionFlowSerializer(questions, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question flows.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+            if request.user.id is None:
+                return HttpResponse("Unauthorized", status=401)
+
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = QuestionSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        serializer.errors,
+                    )
+
+                with transaction.atomic():
+                    form.util.save_question(serializer.validated_data)
+
+                return ret_message("Saved question flow successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the question.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,

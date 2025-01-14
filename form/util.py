@@ -19,7 +19,7 @@ from form.models import (
     QuestionType,
     QuestionAggregate,
     QuestionAggregateType,
-    QuestionCondition,
+    QuestionCondition, QuestionFlow,
 )
 from scouting.models import Match, Season, ScoutField, ScoutPit, Event
 
@@ -733,3 +733,8 @@ def save_answers(data):
     for a in alert:
         for acct in ["email", "notification"]:
             alerts.util.stage_alert_channel_send(a, acct)
+
+def get_question_flows(form_typ, form_sub_typ):
+    qfs = QuestionFlow.objects.all()
+    for q in qfs:
+        print(q)
