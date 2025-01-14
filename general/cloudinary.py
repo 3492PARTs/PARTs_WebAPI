@@ -8,8 +8,6 @@ def upload_image(file):
     if not allowed_file(file.content_type):
         raise Exception("Invalid file type.")
 
-    cloudinary.uploader.upload(file)
-
     response = cloudinary.uploader.upload(file)
     """
     img_id=response["public_id"],

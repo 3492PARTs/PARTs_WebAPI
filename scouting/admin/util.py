@@ -385,7 +385,7 @@ def get_field_form():
 
     parsed_ff = {
         "id": field_form.id,
-        "season_id": field_form.season.id,
+        "season_id": field_form.season.season_id,
         "img_url": general.cloudinary.build_image_url(field_form.img_id, field_form.img_ver),
         "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver)
     }
