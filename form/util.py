@@ -79,7 +79,6 @@ def format_question_values(q: Question):
         "question_typ": q.question_typ.question_typ,
         "question_typ_nm": q.question_typ.question_typ_nm,
         "is_list": q.question_typ.is_list,
-        "requires_img": q.question_typ.requires_img,
         "scout_question_type": scout_question_type
     }
 
@@ -160,7 +159,6 @@ def get_question_types():
             "question_typ": qt.question_typ,
             "question_typ_nm": qt.question_typ_nm,
             "is_list": qt.is_list,
-            "requires_img": qt.requires_img,
             "scout_question_type": scout_question_type
         })
 
@@ -176,7 +174,7 @@ def get_form_sub_types(form_typ: str):
 
 def save_question(question):
     current_season = None
-    if question["form_typ"] in ["pit", "field"]:
+    if question["form_typ"]["form_typ"] in ["pit", "field"]:
         current_season = scouting.util.get_current_season()
 
     required = question.get("required", "n")
@@ -193,19 +191,14 @@ def save_question(question):
     else:
         q = Question(
             question_typ_id=question["question_typ"]["question_typ"],
-            form_typ_id=question["form_typ"],
+            form_typ_id=question["form_typ"]["form_typ"],
             question=question["question"],
-            table_col_width=["table_col_width"],
+            table_col_width=question["table_col_width"],
             order=question["order"],
             active=question["active"],
             required=required,
             void_ind="n",
         )
-
-    if question.get("img", None) is not None:
-        response = cloudinary.uploader.upload(question["img"])
-        q.img_id = response["public_id"]
-        q.img_ver = str(response["version"])
 
     q.form_sub_typ_id = None if question.get("form_sub_typ", None) is None else question["form_sub_typ"].get("form_sub_typ", None)
     q.save()
@@ -232,7 +225,7 @@ def save_question(question):
 
     if question.get("question_id", None) is None:
         # If adding a new question we need to make a null answer for it for all questions already answered
-        match question["form_typ"]:
+        match question["form_typ"]["form_typ"]:
             case "pit":
                 pit_responses = ScoutPit.objects.filter(
                     Q(void_ind="n")
