@@ -52,7 +52,6 @@ def build_table_columns():
                     )
                     + sq["question"],
                     "Width": sq["table_col_width"],
-                    "scorable": scout_question.scorable,
                     "order": sq["order"],
                 }
             )
@@ -74,7 +73,6 @@ def build_table_columns():
                         + " "
                         + c["question_to"]["question"],
                         "Width": c["question_to"]["table_col_width"],
-                        "scorable": scout_question.scorable,
                         "order": c["question_to"]["order"],
                     }
                 )
