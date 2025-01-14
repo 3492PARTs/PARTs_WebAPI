@@ -116,7 +116,7 @@ def sync_event(event_cd: str):
         )
 
         event.save(force_insert=True)
-        messages += "(ADD) Added event: " + e["event_cd"] + "\n"
+        messages += "(ADD) Added event: " + event_["event_cd"] + "\n"
 
     event.event_nm = event_["event_nm"]
     event.event_url = event_["event_url"]

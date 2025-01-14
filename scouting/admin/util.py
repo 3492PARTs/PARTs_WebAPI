@@ -381,14 +381,17 @@ def void_scout_pit_response(id):
 
 def get_field_form():
     season = scouting.util.get_current_season()
-    field_form = FieldForm.objects.get(Q(season=season) & Q(void_ind="n"))
+    try:
+        field_form = FieldForm.objects.get(Q(season=season) & Q(void_ind="n"))
 
-    parsed_ff = {
-        "id": field_form.id,
-        "season_id": field_form.season.season_id,
-        "img_url": general.cloudinary.build_image_url(field_form.img_id, field_form.img_ver),
-        "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver)
-    }
+        parsed_ff = {
+            "id": field_form.id,
+            "season_id": field_form.season.season_id,
+            "img_url": general.cloudinary.build_image_url(field_form.img_id, field_form.img_ver),
+            "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver)
+        }
+    except FieldForm.DoesNotExist as dne:
+        parsed_ff = {}
 
     return parsed_ff
 
