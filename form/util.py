@@ -749,7 +749,17 @@ def get_question_flows(form_typ=None, form_sub_typ=None):
 
     qfs = QuestionFlow.objects.filter(q_form_typ & q_form_sub_typ & Q(void_ind ="n"))
 
-    return qfs
+    parsed_qfs = []
+    for qf in qfs:
+        parsed_qfs.append({
+            "id": qf.id,
+            "name": qf.name,
+            "form_typ": qf.form_typ,
+            "form_sub_typ": qf.form_sub_typ if qf.form_sub_typ is not None else None,
+            "questions": [format_question_values(q) for q in qf.question_set.filter(Q(active="y") & Q(void_ind="n"))]
+        })
+
+    return parsed_qfs
 
 def save_question_flow(data):
     if data.get("id", None) is not None:
