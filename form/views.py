@@ -11,7 +11,7 @@ from form.serializers import (
     QuestionSerializer,
     QuestionWithConditionsSerializer,
     SaveResponseSerializer,
-    SaveScoutSerializer,
+    ScoutFieldFormResponseSerializer,
     FormInitializationSerializer,
     ResponseSerializer,
     QuestionAggregateSerializer,
@@ -159,7 +159,7 @@ class SaveAnswersView(APIView):
                     form_typ == "field" and has_access(request.user.id, "scoutfield")
                 ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
                     # Try to deserialize as a field or pit answer
-                    serializer = SaveScoutSerializer(data=request.data)
+                    serializer = ScoutFieldFormResponseSerializer(data=request.data)
                     if serializer.is_valid():
                         if serializer.validated_data["form_typ"] == "field":
                             form.util.save_field_response(
@@ -209,6 +209,84 @@ class SaveAnswersView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class NewSaveAnswersView(APIView):
+    """
+    API endpoint to save answers
+    """
+
+    # authentication_classes = (JWTAuthentication,)
+    # permission_classes = (IsAuthenticated,)
+    endpoint = "new-save-answers/"
+
+    def post(self, request, format=None):
+        try:
+            success_msg = "Response saved successfully."
+            error_msg = "An error occurred while saving answers."
+            form_typ = request.data.get("form_typ", "")
+            # with transaction.atomic():
+            if form_typ in ["field", "pit"]:
+                # field and pit responses must be authenticated
+                # Without a user id report unauthenticated
+                if request.user.id is None:
+                    return HttpResponse("Unauthorized", status=401)
+
+                if (
+                    form_typ == "field" and has_access(request.user.id, "scoutfield")
+                ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
+                    # Try to deserialize as a field or pit answer
+                    serializer = ScoutFieldFormResponseSerializer(data=request.data)
+                    if serializer.is_valid():
+                        if serializer.validated_data["form_typ"] == "field":
+                            form.util.save_field_response(
+                                serializer.validated_data, request.user.id
+                            )
+                            success_msg = "Field response saved successfully."
+                        else:
+                            form.util.save_pit_response(
+                                serializer.validated_data, request.user.id
+                            )
+                            success_msg = "Pit response saved successfully."
+                    else:
+                        # Serializer is not valid
+                        return ret_message(
+                            error_msg,
+                            True,
+                            app_url + self.endpoint,
+                            request.user.id,
+                            error_message=serializer.errors,
+                        )
+                else:
+                    return ret_message(
+                        "You do not have access.",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                    )
+            else:
+                # regular response
+                serializer = SaveResponseSerializer(data=request.data)
+                if serializer.is_valid():
+                    form.util.save_answers(serializer.validated_data)
+                else:
+                    return ret_message(
+                        error_msg,
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+            return ret_message(success_msg)
+        except Exception as e:
+            return ret_message(
+                error_msg,
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
 
 
 class ResponseView(APIView):

@@ -1,3 +1,5 @@
+from multiprocessing.context import set_spawning_popen
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
@@ -19,7 +21,7 @@ from form.models import (
     QuestionType,
     QuestionAggregate,
     QuestionAggregateType,
-    QuestionCondition, QuestionFlow,
+    QuestionCondition, QuestionFlow, QuestionFlowAnswer
 )
 from scouting.models import Match, Season, ScoutField, ScoutPit, Event
 
@@ -290,40 +292,69 @@ def save_question(question):
         qop.save()
 
 
-def save_question_answer(answer: str, question: Question, response: Response):
+def save_question_answer(answer: str, response: Response, question: Question = None, question_flow: QuestionFlow = None):
     qa = QuestionAnswer(
-        question=question, answer=answer, response=response, void_ind="n"
+        question=question, question_flow=question_flow, answer=answer, response=response, void_ind="n"
     )
     qa.save()
     return qa
 
 
-def save_or_update_question_answer(question, response: Response):
+def save_or_update_question_answer(answer, response: Response):
+    q_question = Q()
+    if answer.get("question", None) is not None:
+        q_question = Q(question_id=answer["question"]["question_id"])
+
+    q_question_flow = Q()
+    if answer.get("question_flow", None) is not None:
+        q_question_flow = Q(question_flow_id=answer["question_flow"]["id"])
+
     # Get answer to update or save new
     try:
         spa = QuestionAnswer.objects.get(
             Q(response=response)
-            & Q(question_id=question.get("question_id", None))
+            & q_question
+            & q_question_flow
             & Q(void_ind="n")
         )
-        spa.answer = question.get("answer", "")
+        spa.answer = answer.get("answer", "")
         spa.save()
     except QuestionAnswer.DoesNotExist:
-        save_question_answer(
-            question.get("answer", ""),
-            Question.objects.get(question_id=question["question_id"]),
-            response,
-        )
+        question = None
+        question_flow = None
+
+        if answer.get("question", None) is not None:
+            question = Question.objects.get(question_id=answer["question"]["question_id"])
+
+        if answer.get("question_flow", None) is not None:
+            question_flow = QuestionFlow.objects.get(id=answer["question_flow"]["id"])
+        spa = save_question_answer(
+                answer.get("answer", ""),
+                response,
+                question,
+                question_flow
+            )
+    return spa
 
 
-def save_or_update_question_with_conditions_answer(question, response: Response):
+def save_question_flow_answer(qf_answer, answer: QuestionAnswer):
+    qfa = QuestionFlowAnswer(question_answer=answer,
+        question_id=qf_answer['question']['question_id'], answer=answer, answer_time=qf_answer['answer_time'], void_ind="n"
+    )
+    qfa.save()
+    return qfa
+
+def save_or_update_question_with_conditions_answer(answer, response: Response):
     # Get answer to update or save new
-    save_or_update_question_answer(question, response)
+    question_answer = save_or_update_question_answer(answer, response)
+
+    for qfa in answer.get("question_flow_answers", []):
+        save_question_flow_answer(qfa, question_answer)
 
     # Save answers to any condition questions
-    for c in question.get("conditions", []):
+    #for c in question.get("conditions", []):
         # Get answer to update or save new
-        save_or_update_question_answer(c["question_to"], response)
+    #    save_or_update_question_answer(c["question_to"], response)
 
 
 def get_response(response_id: int):
@@ -624,8 +655,8 @@ def save_field_response(data, user_id):
     sf.save()
 
     # Save the answers against the response object
-    for d in data.get("question_answers", []):
-        save_or_update_question_with_conditions_answer(d, response)
+    for answer in data.get("answers", []):
+        save_or_update_question_with_conditions_answer(answer, response)
 
     # Check if previous match is missing any results
     """

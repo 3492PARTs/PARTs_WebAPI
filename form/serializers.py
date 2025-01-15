@@ -133,8 +133,29 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
     is_condition = serializers.CharField(required=False)
 
 
-class SaveScoutSerializer(serializers.Serializer):
-    question_answers = QuestionWithConditionsSerializer(many=True)
+class QuestionFlowSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    name = serializers.CharField()
+    form_typ = FormTypeSerializer()
+    form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
+    questions = QuestionSerializer(many=True, required=False)
+
+
+class QuestionFlowAnswerSerializer(serializers.Serializer):
+    question = QuestionSerializer()
+    answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    answer_time = serializers.TimeField()
+
+
+class QuestionAnswerSerializer(serializers.Serializer):
+    question = QuestionSerializer(required=False, allow_null=True)
+    question_flow = QuestionFlowSerializer(required=False, allow_null=True)
+    answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    question_flow_answers = QuestionFlowAnswerSerializer(many=True, required=False, allow_null=True)
+
+
+class ScoutFieldFormResponseSerializer(serializers.Serializer):
+    answers = QuestionAnswerSerializer(many=True)
     team = serializers.CharField()
     match_id = serializers.CharField(required=False, allow_null=True)
     form_typ = serializers.CharField()
@@ -144,13 +165,6 @@ class SaveScoutSerializer(serializers.Serializer):
 class SaveResponseSerializer(serializers.Serializer):
     question_answers = QuestionWithConditionsSerializer(many=True)
     form_typ = serializers.CharField()
-
-class QuestionFlowSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False, allow_null=True)
-    name = serializers.CharField()
-    form_typ = FormTypeSerializer()
-    form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
-    questions = QuestionSerializer(many=True, required=False)
 
 
 class FormInitializationSerializer(serializers.Serializer):
