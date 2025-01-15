@@ -339,7 +339,7 @@ def save_or_update_question_answer(answer, response: Response):
 
 def save_question_flow_answer(qf_answer, answer: QuestionAnswer):
     qfa = QuestionFlowAnswer(question_answer=answer,
-        question_id=qf_answer['question']['question_id'], answer=answer, answer_time=qf_answer['answer_time'], void_ind="n"
+        question_id=qf_answer['question']['question_id'], answer=qf_answer.get("answer", ""), answer_time=qf_answer['answer_time'], void_ind="n"
     )
     qfa.save()
     return qfa
