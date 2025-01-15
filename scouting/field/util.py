@@ -2,8 +2,8 @@ from django.db.models import Q
 from django.conf import settings
 from django.utils import timezone
 
-from form.models import QuestionAggregate, QuestionAnswer
-import scouting
+from form.models import QuestionAggregate, QuestionAnswer, FormSubType
+import scouting.util
 import form
 from scouting.models import EventTeamInfo, ScoutField, ScoutFieldSchedule
 
@@ -258,3 +258,25 @@ def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
         sfs.save()
         return "Successfully checked in scout for their shift."
     return ""
+
+def get_field_form():
+    field_form = scouting.util.get_field_form()
+
+    form_parsed = {
+        "field_form": field_form,
+        "form_sub_types": []
+    }
+
+    types = FormSubType.objects.filter(form_typ__form_typ="field")
+    for t in types:
+        qs = form.util.get_questions("field", "y", t.form_sub_typ, not_in_flow=True)
+        qfs = form.util.get_question_flows(form_typ="field",form_sub_typ=t.form_sub_typ)
+        form_parsed["form_sub_types"].append({
+            "form_sub_typ": t,
+            "questions": qs,
+            "question_flows": qfs
+        })
+
+    return form_parsed
+
+

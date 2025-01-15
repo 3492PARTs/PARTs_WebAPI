@@ -7,12 +7,46 @@ import scouting.util
 import scouting.models
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
-from .serializers import ScoutFieldResultsSerializer
+from .serializers import ScoutFieldResultsSerializer, FormFieldFormSerializer
 from rest_framework.response import Response
 
 auth_obj = "scoutfield"
 auth_view_obj = "scoutFieldResults"
 app_url = "scouting/field/"
+
+
+class FormView(APIView):
+    """
+    API endpoint to get the scouting form
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "form/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj) or has_access(
+                request.user.id, auth_view_obj
+            ):
+                serializer = FormFieldFormSerializer(scouting.field.util.get_field_form())
+                return Response(serializer.data)
+
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting field form.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
 
 
 class ResponsesView(APIView):

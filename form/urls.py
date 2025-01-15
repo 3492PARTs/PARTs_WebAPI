@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import (
     SaveAnswersView,
-    FormInitView,
+    FormEditorView,
     ResponseView,
     ResponsesView,
     QuestionAggregateView,
@@ -14,7 +14,7 @@ from .views import (
 urlpatterns = [
     path("question/", QuestionView.as_view()),
     path("save-answers/", SaveAnswersView.as_view()),
-    path("form-init/", FormInitView.as_view()),
+    path("form-editor/", FormEditorView.as_view()),
     path("response/", ResponseView.as_view()),
     path("responses/", ResponsesView.as_view()),
     path("question-aggregate/", QuestionAggregateView.as_view()),

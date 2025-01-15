@@ -24,34 +24,39 @@ from form.models import (
 from scouting.models import Match, Season, ScoutField, ScoutPit, Event
 
 
-def get_questions(form_typ: str, active: str = "", form_sub_typ: str = ""):
+def get_questions(form_typ: str, active: str = "", form_sub_typ: str = "", not_in_flow = False):
     questions = []
-    season = Q()
-    active_ind = Q()
-    form_sub_typ_q = Q()
+    q_season = Q()
+    q_active_ind = Q()
+    q_form_sub_typ_q = Q()
+    q_not_in_flow = Q()
 
     if form_typ == "field" or form_typ == "pit":
         current_season = scouting.util.get_current_season()
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
-        season = Q(question_id__in=set(sq.question_id for sq in scout_questions))
+        q_season = Q(question_id__in=set(sq.question_id for sq in scout_questions))
 
     if active != "":
-        active_ind = Q(active=active)
+        q_active_ind = Q(active=active)
 
     if form_sub_typ is None:
-        form_sub_typ_q = Q(form_sub_typ_id__isnull=True)
+        q_form_sub_typ_q = Q(form_sub_typ_id__isnull=True)
     elif form_sub_typ != "":
-        form_sub_typ_q = Q(form_sub_typ_id=form_sub_typ)
+        q_form_sub_typ_q = Q(form_sub_typ_id=form_sub_typ)
+
+    if not_in_flow:
+        q_not_in_flow = Q(question_flow__isnull=True)
 
     qs = (
         Question.objects.prefetch_related("questionoption_set")
         .filter(
-            season
+            q_season
             & Q(form_typ_id=form_typ)
-            & form_sub_typ_q
-            & active_ind
+            & q_form_sub_typ_q
+            & q_active_ind
+            & q_not_in_flow
             & Q(void_ind="n")
         )
         .order_by("form_sub_typ__order", "order")

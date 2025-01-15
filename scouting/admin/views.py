@@ -689,7 +689,7 @@ class FieldFormView(APIView):
 
     def get(self, request, format=None):
         try:
-            ff = scouting.admin.util.get_field_form()
+            ff = scouting.util.get_field_form()
             serializer = FieldFormSerializer(ff)
             return Response(serializer.data)
         except Exception as e:

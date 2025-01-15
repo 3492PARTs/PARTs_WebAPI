@@ -86,14 +86,14 @@ class QuestionView(APIView):
             )
 
 
-class FormInitView(APIView):
+class FormEditorView(APIView):
     """
     API endpoint to init form editor
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "form-init/"
+    endpoint = "form-editor/"
 
     def get(self, request, format=None):
         try:
@@ -126,7 +126,7 @@ class FormInitView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while initializing form.",
+                "An error occurred while initializing form editor.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
