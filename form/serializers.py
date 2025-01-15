@@ -153,7 +153,7 @@ class QuestionFlowSerializer(serializers.Serializer):
     questions = QuestionSerializer(many=True, required=False)
 
 
-class QuestionInitializationSerializer(serializers.Serializer):
+class FormInitializationSerializer(serializers.Serializer):
     questions = QuestionSerializer(many=True)
     question_types = QuestionTypeSerializer(many=True)
     form_sub_types = FormSubTypeSerializer(many=True, required=False)

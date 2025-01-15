@@ -12,7 +12,7 @@ from form.serializers import (
     QuestionWithConditionsSerializer,
     SaveResponseSerializer,
     SaveScoutSerializer,
-    QuestionInitializationSerializer,
+    FormInitializationSerializer,
     ResponseSerializer,
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
@@ -107,7 +107,7 @@ class FormInitView(APIView):
                     request.query_params["form_typ"]
                 )
                 question_flows = form.util.get_question_flows(request.query_params["form_typ"])
-                serializer = QuestionInitializationSerializer(
+                serializer = FormInitializationSerializer(
                     {
                         "questions": questions,
                         "question_types": question_types,

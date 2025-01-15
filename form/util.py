@@ -748,8 +748,6 @@ def get_question_flows(form_typ=None, form_sub_typ=None):
         q_form_sub_typ = Q(form_sub_typ_id=form_sub_typ)
 
     qfs = QuestionFlow.objects.filter(q_form_typ & q_form_sub_typ & Q(void_ind ="n"))
-    for q in qfs:
-        print(q)
 
     return qfs
 
