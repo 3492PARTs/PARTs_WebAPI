@@ -123,7 +123,7 @@ def format_question_values(q: Question):
 
     return {
         "question_id": q.question_id,
-        "question_flow_id": q.question_flow.id if q.question_flow is not None else "",
+        "question_flow_id": q.question_flow.id if q.question_flow is not None else None,
         "season_id": season,
         "question": q.question,
         "table_col_width": q.table_col_width,

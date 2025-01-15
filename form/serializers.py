@@ -46,7 +46,7 @@ class ScoutQuestionSerializer(serializers.Serializer):
 class QuestionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
-    question_flow_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    question_flow_id = serializers.IntegerField(required=False, allow_null=True)
 
     question = serializers.CharField()
     table_col_width = serializers.CharField()
@@ -114,7 +114,7 @@ class QuestionConditionSerializer(serializers.Serializer):
 class QuestionWithConditionsSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
-    question_flow_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    question_flow_id = serializers.IntegerField(required=False, allow_null=True)
 
     question = serializers.CharField()
     table_col_width = serializers.CharField()
