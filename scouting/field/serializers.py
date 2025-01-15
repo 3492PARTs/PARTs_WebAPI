@@ -119,11 +119,11 @@ class ScoutFieldResultsSerializer(serializers.Serializer):
     removed_responses = ScoutFieldSerializer(many=True)
 
 
-class FormSubTypesFormSerializer(serializers.Serializer):
+class FormSubTypeFormSerializer(serializers.Serializer):
     form_sub_typ = FormSubTypeSerializer()
     questions = QuestionWithConditionsSerializer(many=True)
     question_flows = QuestionFlowSerializer(many=True)
 
 class FormFieldFormSerializer(serializers.Serializer):
     field_form = FieldFormSerializer()
-    form_sub_types = FormSubTypesFormSerializer(many=True)
+    form_sub_types = FormSubTypeFormSerializer(many=True)

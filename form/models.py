@@ -137,10 +137,22 @@ class QuestionAnswer(models.Model):
     response = models.ForeignKey(
         Response, models.PROTECT, null=True, related_name="form_response"
     )
-    question = models.ForeignKey(Question, models.PROTECT)
+    question = models.ForeignKey(Question, models.PROTECT, null=True)
+    question_flow = models.ForeignKey(QuestionFlow, models.PROTECT, null=True)
     answer = models.TextField(blank=True, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
         return str(self.question_answer_id) + " " + str(self.answer)
 
+
+class QuestionFlowAnswer(models.Model):
+    id = models.AutoField(primary_key=True)
+    question_answer = models.ForeignKey(QuestionAnswer, models.PROTECT, null=True)
+    question = models.ForeignKey(Question, models.PROTECT)
+    answer = models.TextField(blank=True, null=True)
+    answer_time = models.TimeField(blank=True, null=True)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.question_opt_id} {self.option}"
