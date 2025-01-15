@@ -106,7 +106,7 @@ class FormInitView(APIView):
                 form_sub_types = form.util.get_form_sub_types(
                     request.query_params["form_typ"]
                 )
-                question_flows = form.util.get_question_flows(request.query_params["form_typ"])
+                question_flows = form.util.get_question_flows(None, request.query_params["form_typ"])
                 serializer = FormInitializationSerializer(
                     {
                         "questions": questions,
@@ -504,11 +504,16 @@ class QuestionFlowView(APIView):
 
     def get(self, request, format=None):
         try:
+            fid = request.query_params.get("id", None)
             questions = form.util.get_question_flows(
+                fid,
                 request.query_params.get("form_typ", None),
                 request.query_params.get("form_sub_typ", None)
             )
-            serializer = QuestionFlowSerializer(questions, many=True)
+            if fid is None:
+                serializer = QuestionFlowSerializer(questions, many=True)
+            else:
+                serializer = QuestionFlowSerializer(questions[0])
             return Response(serializer.data)
         except Exception as e:
             return ret_message(

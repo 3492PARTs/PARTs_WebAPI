@@ -738,7 +738,11 @@ def save_answers(data):
         for acct in ["email", "notification"]:
             alerts.util.stage_alert_channel_send(a, acct)
 
-def get_question_flows(form_typ=None, form_sub_typ=None):
+def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
+    q_id = Q()
+    if fid is not None:
+        q_id = Q(id=fid)
+
     q_form_typ = Q()
     if form_typ is not None:
         q_form_typ = Q(form_typ_id=form_typ)
@@ -747,7 +751,7 @@ def get_question_flows(form_typ=None, form_sub_typ=None):
     if form_sub_typ is not None:
         q_form_sub_typ = Q(form_sub_typ_id=form_sub_typ)
 
-    qfs = QuestionFlow.objects.filter(q_form_typ & q_form_sub_typ & Q(void_ind ="n"))
+    qfs = QuestionFlow.objects.filter(q_id & q_form_typ & q_form_sub_typ & Q(void_ind ="n"))
 
     parsed_qfs = []
     for qf in qfs:
