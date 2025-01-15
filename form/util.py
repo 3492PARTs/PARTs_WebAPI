@@ -123,7 +123,7 @@ def format_question_values(q: Question):
 
     return {
         "question_id": q.question_id,
-        "question_flow_id": q.question_flow.id if q.question_flow is not None else "",
+        "question_flow_id": q.question_flow.id if q.question_flow is not None else None,
         "season_id": season,
         "question": q.question,
         "table_col_width": q.table_col_width,
@@ -738,20 +738,28 @@ def save_answers(data):
         for acct in ["email", "notification"]:
             alerts.util.stage_alert_channel_send(a, acct)
 
-def get_question_flows(form_typ, form_sub_typ):
-    q_form_typ = None
+def get_question_flows(form_typ=None, form_sub_typ=None):
+    q_form_typ = Q()
     if form_typ is not None:
         q_form_typ = Q(form_typ_id=form_typ)
 
-    q_form_sub_typ = None
-    if form_typ is not None:
+    q_form_sub_typ = Q()
+    if form_sub_typ is not None:
         q_form_sub_typ = Q(form_sub_typ_id=form_sub_typ)
 
     qfs = QuestionFlow.objects.filter(q_form_typ & q_form_sub_typ & Q(void_ind ="n"))
-    for q in qfs:
-        print(q)
 
-    return qfs
+    parsed_qfs = []
+    for qf in qfs:
+        parsed_qfs.append({
+            "id": qf.id,
+            "name": qf.name,
+            "form_typ": qf.form_typ,
+            "form_sub_typ": qf.form_sub_typ if qf.form_sub_typ is not None else None,
+            "questions": [format_question_values(q) for q in qf.question_set.filter(Q(active="y") & Q(void_ind="n"))]
+        })
+
+    return parsed_qfs
 
 def save_question_flow(data):
     if data.get("id", None) is not None:

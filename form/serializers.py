@@ -46,7 +46,7 @@ class ScoutQuestionSerializer(serializers.Serializer):
 class QuestionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
-    question_flow_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    question_flow_id = serializers.IntegerField(required=False, allow_null=True)
 
     question = serializers.CharField()
     table_col_width = serializers.CharField()
@@ -74,12 +74,6 @@ class TeamSerializer(serializers.Serializer):
     team_nm = serializers.CharField()
 
     checked = serializers.BooleanField(required=False)
-
-
-class QuestionInitializationSerializer(serializers.Serializer):
-    questions = QuestionSerializer(many=True)
-    question_types = QuestionTypeSerializer(many=True)
-    form_sub_types = FormSubTypeSerializer(many=True, required=False)
 
 
 class ResponseSerializer(serializers.Serializer):
@@ -114,7 +108,7 @@ class QuestionConditionSerializer(serializers.Serializer):
 class QuestionWithConditionsSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
-    question_flow_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    question_flow_id = serializers.IntegerField(required=False, allow_null=True)
 
     question = serializers.CharField()
     table_col_width = serializers.CharField()
@@ -157,3 +151,10 @@ class QuestionFlowSerializer(serializers.Serializer):
     form_typ = FormTypeSerializer()
     form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
     questions = QuestionSerializer(many=True, required=False)
+
+
+class FormInitializationSerializer(serializers.Serializer):
+    questions = QuestionSerializer(many=True)
+    question_types = QuestionTypeSerializer(many=True)
+    form_sub_types = FormSubTypeSerializer(many=True, required=False)
+    question_flows = QuestionFlowSerializer(many=True, required=False)
