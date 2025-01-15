@@ -502,7 +502,6 @@ class QuestionFlowView(APIView):
 
     endpoint = "question-flow/"
 
-# take in form type and sub type to get list of avalil fows. make these optional.
     def get(self, request, format=None):
         try:
             questions = form.util.get_question_flows(

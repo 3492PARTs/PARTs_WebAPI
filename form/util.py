@@ -772,4 +772,8 @@ def save_question_flow(data):
     if data.get("form_sub_typ", None) is not None:
         qf.form_sub_typ_id = data["form_sub_typ"]["form_sub_typ"]
     qf.save()
+
+    for question in data.get("questions", []):
+        save_question(question)
+
     return qf
