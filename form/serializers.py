@@ -76,12 +76,6 @@ class TeamSerializer(serializers.Serializer):
     checked = serializers.BooleanField(required=False)
 
 
-class QuestionInitializationSerializer(serializers.Serializer):
-    questions = QuestionSerializer(many=True)
-    question_types = QuestionTypeSerializer(many=True)
-    form_sub_types = FormSubTypeSerializer(many=True, required=False)
-
-
 class ResponseSerializer(serializers.Serializer):
     response_id = serializers.IntegerField()
     form_typ = serializers.CharField()
@@ -157,3 +151,10 @@ class QuestionFlowSerializer(serializers.Serializer):
     form_typ = FormTypeSerializer()
     form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
     questions = QuestionSerializer(many=True, required=False)
+
+
+class QuestionInitializationSerializer(serializers.Serializer):
+    questions = QuestionSerializer(many=True)
+    question_types = QuestionTypeSerializer(many=True)
+    form_sub_types = FormSubTypeSerializer(many=True, required=False)
+    question_flows = QuestionFlowSerializer(many=True, required=False)
