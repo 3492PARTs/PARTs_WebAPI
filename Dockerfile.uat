@@ -43,6 +43,7 @@ RUN set -ex \
     && poetry install --with uat \
     && apt purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $BUILD_DEPS \
     && rm -rf /var/lib/apt/lists/*
+    && python manage.py migrate
 
 
 

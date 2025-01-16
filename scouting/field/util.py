@@ -266,6 +266,7 @@ def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
         return "Successfully checked in scout for their shift."
     return ""
 
+
 def get_field_form():
     field_form = scouting.util.get_field_form()
 
@@ -286,4 +287,11 @@ def get_field_form():
 
     return form_parsed
 
+
+def get_graph_options(graph_type):
+    match graph_type:
+        case "bar":
+            v = 9
+
+# need % and avg
 
