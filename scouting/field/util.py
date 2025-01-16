@@ -11,7 +11,7 @@ from scouting.models import EventTeamInfo, ScoutField, ScoutFieldSchedule
 def build_table_columns():
     sqsa = form.util.get_questions_with_conditions("field", "auto")
     sqst = form.util.get_questions_with_conditions("field", "teleop")
-    sqso = form.util.get_questions_with_conditions("field", None)
+    sqso = form.util.get_questions_with_conditions("field", "post")
 
     table_cols = [
         {
@@ -141,48 +141,55 @@ def get_responses(request, team=None, user=None, after_date_time=None):
     # Pull responses by what input
     if team is not None:
         # get response for individual team
-        sfs = ScoutField.objects.filter(
+        scout_fields = ScoutField.objects.filter(
             Q(event=current_event) & Q(team_no_id=team) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     elif user is not None:
         # get response for individual scout
-        sfs = ScoutField.objects.filter(
+        scout_fields = ScoutField.objects.filter(
             Q(event=current_event) & Q(user=user) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     elif after_date_time is not None:
         # get response for individual scout
-        sfs = ScoutField.objects.filter(
+        scout_fields = ScoutField.objects.filter(
             Q(event=current_event) & Q(time__gt=after_date_time) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     else:
         # get responses for all teams
         if settings.DEBUG:
             # don't fetch all responses on local as it's too much
-            sfs = ScoutField.objects.filter(
+            scout_fields = ScoutField.objects.filter(
                 Q(event=current_event) & Q(void_ind="n")
             ).order_by(
                 "-time", "-scout_field_id"
             )  # [:30]
         else:
             # get everything
-            sfs = ScoutField.objects.filter(
+            scout_fields = ScoutField.objects.filter(
                 Q(event=current_event) & Q(void_ind="n")
             ).order_by("-time", "-scout_field_id")
 
     # Loop over all the responses selected and put in table
-    for sf in sfs:
-        qas = QuestionAnswer.objects.filter(Q(response=sf.response) & Q(void_ind="n"))
+    for sf in scout_fields:
+        question_answers = QuestionAnswer.objects.filter(Q(response=sf.response) & Q(void_ind="n"))
 
         response = {}
-        for qa in qas:
-            response["ans" + str(qa.question_id)] = qa.answer
+        for qa in question_answers:
+            if qa.question is not None:
+                response[f"ans{qa.question_id}"] = qa.answer
+            if qa.question_flow is not None:
+                for qf_question in qa.question_flow.question_set.filter(Q(active="y") & Q(void_ind="n")):
+
+                    count = qa.questionflowanswer_set.filter(Q(question=qf_question) & Q(void_ind="n")).count()
+
+                    response[f"ans{qf_question.question_id}"] = count + response.get(f"ans{qf_question.question_id}", 0)
 
         # get aggregates
-        qas = QuestionAggregate.objects.filter(
+        question_answers = QuestionAggregate.objects.filter(
             Q(void_ind="n") & Q(active="y") & Q(questions__form_typ="field")
         ).distinct()
 
-        for qa in qas:
+        for qa in question_answers:
             sum = 0
             for q in qa.questions.filter(Q(void_ind="n") & Q(active="y")):
                 for a in q.questionanswer_set.filter(
