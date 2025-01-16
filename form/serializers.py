@@ -22,6 +22,7 @@ class FormSubTypeSerializer(serializers.Serializer):
     form_sub_typ = serializers.CharField()
     form_sub_nm = serializers.CharField()
     form_typ_id = serializers.CharField()
+    order = serializers.IntegerField()
 
 
 class QuestionOptionsSerializer(serializers.Serializer):
