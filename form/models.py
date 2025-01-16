@@ -43,6 +43,7 @@ class FormSubType(models.Model):
 class QuestionFlow(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
+    single_run = models.BooleanField(default=False)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     form_sub_typ = models.ForeignKey(FormSubType, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")
