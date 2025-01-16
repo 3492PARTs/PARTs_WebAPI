@@ -69,7 +69,7 @@ class TokenObtainPairView(APIView):
             serializer = TokenObtainPairSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
-                    "Invalid data", True, app_url + self.endpoint, -1, serializer.errors
+                    "Invalid data", True, app_url + self.endpoint, -1, error_message=serializer.errors
                 )
 
             """
@@ -104,7 +104,7 @@ class TokenRefreshView(APIView):
             serializer = TokenRefreshSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
-                    "Invalid data", True, app_url + self.endpoint, -1, serializer.errors
+                    "Invalid data", True, app_url + self.endpoint, -1, error_message=serializer.errors
                 )
 
             return Response(serializer.validated_data)
@@ -368,7 +368,7 @@ class UserProfile(APIView):
                         True,
                         app_url + self.endpoint,
                         user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
             else:
                 return ret_message("Not authenticated.", True, app_url + self.endpoint)
@@ -791,7 +791,7 @@ class Groups(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):
@@ -875,7 +875,7 @@ class Permissions(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):
@@ -1024,7 +1024,7 @@ class SaveUser(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, auth_obj_save_user):
@@ -1110,7 +1110,7 @@ class Links(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):

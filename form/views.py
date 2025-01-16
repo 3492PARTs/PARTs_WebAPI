@@ -62,7 +62,7 @@ class QuestionView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
 
                 with transaction.atomic():
@@ -329,7 +329,7 @@ class ResponseView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):
@@ -455,7 +455,7 @@ class QuestionAggregateView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, "admin") or has_access(
@@ -547,7 +547,7 @@ class QuestionConditionView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, "admin") or has_access(
@@ -577,7 +577,8 @@ class QuestionFlowView(APIView):
     """
     API endpoint to get question flows
     """
-
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
     endpoint = "question-flow/"
 
     def get(self, request, format=None):
@@ -604,9 +605,6 @@ class QuestionFlowView(APIView):
 
     def post(self, request, format=None):
         try:
-            if request.user.id is None:
-                return HttpResponse("Unauthorized", status=401)
-
             if has_access(request.user.id, "admin") or has_access(
                 request.user.id, "scoutadmin"
             ):
@@ -617,7 +615,7 @@ class QuestionFlowView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
 
                 with transaction.atomic():
@@ -633,7 +631,7 @@ class QuestionFlowView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while saving the question.",
+                "An error occurred while saving the question flow.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,

@@ -132,7 +132,7 @@ class SeasonView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
                 req = scouting.admin.util.add_season(
                     serializer.validated_data["season"]
@@ -164,7 +164,7 @@ class SeasonView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
                 req = scouting.admin.util.save_season(serializer.validated_data)
                 ret_message("Successfully saved season")
@@ -227,7 +227,7 @@ class EventView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -291,7 +291,7 @@ class TeamView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -332,7 +332,7 @@ class TeamToEventView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -373,7 +373,7 @@ class RemoveTeamToEventView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -414,7 +414,7 @@ class ScoutFieldScheduleView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -453,7 +453,7 @@ class ScheduleView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -712,7 +712,7 @@ class FieldFormView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
 
                 scouting.admin.util.save_field_form(serializer.validated_data)
