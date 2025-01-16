@@ -170,45 +170,45 @@ def get_responses(request, team=None, user=None, after_date_time=None):
             ).order_by("-time", "-scout_field_id")
 
     # Loop over all the responses selected and put in table
-    for sf in scout_fields:
-        question_answers = QuestionAnswer.objects.filter(Q(response=sf.response) & Q(void_ind="n"))
+    for scout_field in scout_fields:
+        question_answers = QuestionAnswer.objects.filter(Q(response=scout_field.response) & Q(void_ind="n"))
 
         response = {}
-        for qa in question_answers:
-            if qa.question is not None:
-                response[f"ans{qa.question_id}"] = qa.answer
-            if qa.question_flow is not None:
-                for qf_question in qa.question_flow.question_set.filter(Q(active="y") & Q(void_ind="n")):
+        for question_answer in question_answers:
+            if question_answer.question is not None:
+                response[f"ans{question_answer.question_id}"] = question_answer.answer
+            if question_answer.question_flow is not None:
+                for qf_question in question_answer.question_flow.question_set.filter(Q(active="y") & Q(void_ind="n")):
 
-                    count = qa.questionflowanswer_set.filter(Q(question=qf_question) & Q(void_ind="n")).count()
+                    count = question_answer.questionflowanswer_set.filter(Q(question=qf_question) & Q(void_ind="n")).count()
 
                     response[f"ans{qf_question.question_id}"] = count + response.get(f"ans{qf_question.question_id}", 0)
 
         # get aggregates
-        question_answers = QuestionAggregate.objects.filter(
+        question_aggregates = QuestionAggregate.objects.filter(
             Q(void_ind="n") & Q(active="y") & Q(questions__form_typ="field")
         ).distinct()
 
-        for qa in question_answers:
-            sum = 0
-            for q in qa.questions.filter(Q(void_ind="n") & Q(active="y")):
-                for a in q.questionanswer_set.filter(
-                    Q(void_ind="n") & Q(response=sf.response)
+        for question_aggregate in question_aggregates:
+            summation = 0
+            for question in question_aggregate.questions.filter(Q(void_ind="n") & Q(active="y")):
+                for question_answer in question.questionanswer_set.filter(
+                    Q(void_ind="n") & Q(response=scout_field.response)
                 ):
-                    if a.answer is not None and a.answer != "!EXIST":
-                        sum += int(a.answer)
-            response["ans_sqa" + str(qa.question_aggregate_id)] = sum
+                    if question_answer.answer is not None and question_answer.answer != "!EXIST":
+                        summation += int(question_answer.answer)
+            response[f"ans_sqa{question_aggregate.question_aggregate_id}"] = summation
 
-        response["match"] = sf.match.match_number if sf.match else None
-        response["user"] = sf.user.first_name + " " + sf.user.last_name
-        response["time"] = sf.time
-        response["user_id"] = sf.user.id
-        response["team_no"] = sf.team_no_id
-        response["scout_field_id"] = sf.scout_field_id
+        response["match"] = scout_field.match.match_number if scout_field.match else None
+        response["user"] = scout_field.user.first_name + " " + scout_field.user.last_name
+        response["time"] = scout_field.time
+        response["user_id"] = scout_field.user.id
+        response["team_no"] = scout_field.team_no_id
+        response["scout_field_id"] = scout_field.scout_field_id
 
         try:
             eti = EventTeamInfo.objects.get(
-                Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind="n")
+                Q(event=current_event) & Q(team_no=scout_field.team_no) & Q(void_ind="n")
             )
             response["rank"] = eti.rank
         except EventTeamInfo.DoesNotExist:
