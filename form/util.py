@@ -1,10 +1,7 @@
-from multiprocessing.context import set_spawning_popen
-
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef
 from django.db.models.functions import Lower
-import cloudinary
 
 import alerts.util
 import form.models
@@ -806,9 +803,10 @@ def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
-        q_season = Q(question__in=set(sq.question for sq in scout_questions))
+        q_season = Exists(Question.objects.filter(Q(question_flow_id=OuterRef('pk')) & Q(question_id__in=set(sq.question_id for sq in scout_questions))))
 
     qfs = QuestionFlow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n"))
+    print(qfs.query)
 
     parsed_qfs = []
     for qf in qfs:
