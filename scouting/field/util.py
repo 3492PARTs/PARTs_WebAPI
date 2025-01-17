@@ -66,7 +66,7 @@ def build_table_columns():
                         "ColLabel": (
                             ""
                             if c["question_to"].get("form_sub_typ", None) is None
-                            else c["question_to"]["form_sub_typ"][0:1].upper() + ": "
+                            else c["question_to"]["form_sub_typ"].form_sub_typ[0:1].upper() + ": "
                         )
                         + "C: "
                         + c["condition"]
@@ -277,7 +277,7 @@ def get_field_form():
 
     types = FormSubType.objects.filter(form_typ__form_typ="field")
     for t in types:
-        qs = form.util.get_questions("field", "y", t.form_sub_typ, not_in_flow=True)
+        qs = form.util.get_questions_with_conditions("field", t.form_sub_typ, "y", not_in_flow=True)
         qfs = form.util.get_question_flows(form_typ="field",form_sub_typ=t.form_sub_typ)
         form_parsed["form_sub_types"].append({
             "form_sub_typ": t,

@@ -344,6 +344,7 @@ def save_question_flow_answer(qf_answer, answer: QuestionAnswer):
     qfa.save()
     return qfa
 
+
 def save_or_update_question_with_conditions_answer(answer, response: Response):
     # Get answer to update or save new
     question_answer = save_or_update_question_answer(answer, response)
@@ -573,9 +574,10 @@ def get_questions_with_conditions(
         form_typ: str,
         form_sub_typ: str = "",
         active: str = "y",
+        not_in_flow=False
 ):
     questions_with_conditions = []
-    questions = get_questions(form_typ, active, form_sub_typ)
+    questions = get_questions(form_typ, active, form_sub_typ, not_in_flow)
 
     for q in questions:
         # Only process the ones that are not conditions, because the conditions will be in their Question FROM - see below loop
@@ -774,6 +776,7 @@ def save_answers(data):
         for acct in ["email", "notification"]:
             alerts.util.stage_alert_channel_send(a, acct)
 
+
 def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
     q_id = Q()
     if fid is not None:
@@ -809,6 +812,7 @@ def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
         })
 
     return parsed_qfs
+
 
 def save_question_flow(data):
     if data.get("id", None) is not None:
