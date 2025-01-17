@@ -68,6 +68,7 @@ class QuestionSerializer(serializers.Serializer):
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
     is_condition = serializers.CharField()
+    has_conditions = serializers.CharField(required=False)
 
 
 class TeamSerializer(serializers.Serializer):
@@ -132,6 +133,7 @@ class QuestionWithConditionsSerializer(serializers.Serializer):
     conditions = QuestionConditionSerializer(required=False, many=True)
 
     is_condition = serializers.CharField(required=False)
+    has_conditions = serializers.CharField(required=False)
 
 
 class QuestionFlowSerializer(serializers.Serializer):

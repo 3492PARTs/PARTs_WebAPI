@@ -121,6 +121,15 @@ def format_question_values(q: Question):
             }
         )
 
+
+    # Flag if question has conditions
+    try:
+        count = q.condition_question_from.filter(
+            Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")).count()
+        has_conditions = "y" if count > 0 else "n"
+    except QuestionCondition.DoesNotExist:
+        has_conditions = "n"
+
     # Flag if question is condition of another
     try:
         q.condition_question_to.get(Q(void_ind="n") & Q(active="y"))
@@ -144,6 +153,7 @@ def format_question_values(q: Question):
         "display_value": f"{'' if q.active == 'y' else 'Deactivated: '} Order: {q.order}: {q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else ''}{q.question}",
         "scout_question": scout_question,
         "is_condition": is_condition,
+        "has_conditions": has_conditions,
     }
 
 
