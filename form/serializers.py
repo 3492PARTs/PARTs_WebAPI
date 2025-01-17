@@ -41,6 +41,7 @@ class ScoutQuestionSerializer(serializers.Serializer):
     width = serializers.FloatField(required=False, allow_null=True)
     height = serializers.FloatField(required=False, allow_null=True)
     icon = serializers.CharField(required=False, allow_null=True)
+    icon_only = serializers.BooleanField(required=False, allow_null=True)
     value_multiplier = serializers.IntegerField(required=False, allow_null=True)
 
 

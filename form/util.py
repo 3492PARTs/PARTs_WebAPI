@@ -99,6 +99,7 @@ def format_question_values(q: Question):
             "width": sq.width,
             "height": sq.height,
             "icon": sq.icon,
+            "icon_only": sq.icon_only,
             "value_multiplier": sq.value_multiplier,
         }
         season = sq.season.season_id
@@ -238,6 +239,7 @@ def save_question(question):
         sq.width = scout_question.get("width", None)
         sq.height = scout_question.get("height", None)
         sq.icon = scout_question.get("icon", None)
+        sq.icon_only = scout_question.get("icon_only", False)
         sq.value_multiplier = scout_question.get("value_multiplier", False)
         sq.save()
 
@@ -806,7 +808,6 @@ def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
         q_season = Exists(Question.objects.filter(Q(question_flow_id=OuterRef('pk')) & Q(question_id__in=set(sq.question_id for sq in scout_questions))))
 
     qfs = QuestionFlow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n"))
-    print(qfs.query)
 
     parsed_qfs = []
     for qf in qfs:

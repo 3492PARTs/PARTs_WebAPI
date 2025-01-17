@@ -273,6 +273,7 @@ class Question(models.Model):
     width = models.FloatField(null=True)
     height = models.FloatField(null=True)
     icon = models.CharField(max_length=255, null=True)
+    icon_only = models.BooleanField(default=False)
     value_multiplier = models.IntegerField(null=True, default=None)
     void_ind = models.CharField(max_length=1, default="n")
 
