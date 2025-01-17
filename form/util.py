@@ -787,7 +787,15 @@ def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
     if form_sub_typ is not None:
         q_form_sub_typ = Q(form_sub_typ_id=form_sub_typ)
 
-    qfs = QuestionFlow.objects.filter(q_id & q_form_typ & q_form_sub_typ & Q(void_ind ="n"))
+    q_season = Q()
+    if form_typ == "field" or form_typ == "pit":
+        current_season = scouting.util.get_current_season()
+        scout_questions = scouting.models.Question.objects.filter(
+            Q(void_ind="n") & Q(season=current_season)
+        )
+        q_season = Q(question__in=set(sq.question for sq in scout_questions))
+
+    qfs = QuestionFlow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n"))
 
     parsed_qfs = []
     for qf in qfs:
