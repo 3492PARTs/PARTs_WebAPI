@@ -111,7 +111,7 @@ class QuestionConditionTypeSerializer(serializers.Serializer):
 class QuestionConditionSerializer(serializers.Serializer):
     question_condition_id = serializers.IntegerField(required=False)
     question_condition_typ = QuestionConditionTypeSerializer()
-    value = serializers.CharField()
+    value = serializers.CharField(allow_blank=True)
     question_from = QuestionSerializer()
     question_to = QuestionSerializer()
     active = serializers.CharField()
