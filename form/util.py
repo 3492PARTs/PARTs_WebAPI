@@ -577,7 +577,8 @@ def save_question_condition(data):
     else:
         qc = QuestionCondition()
 
-    qc.condition = data["condition"]
+    qc.value = data["value"]
+    qc.question_condition_typ_id = data["question_condition_typ"]["question_condition_typ"]
     qc.active = data["active"]
 
     qc.question_from = Question.objects.get(
