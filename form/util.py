@@ -659,10 +659,10 @@ def get_response_answers(response: Response):
 
     for question_answer in question_answers:
         answers.append({
-            "question": get_questions(qid=question_answer.question.question_id) if question_answer.question is not None else None,
-            "question_flow": get_question_flows(question_answers.question_flow.id) if question_answers.question_flow is not None else None,
+            "question": get_questions(qid=question_answer.question.question_id)[0] if question_answer.question is not None else None,
+            "question_flow": get_question_flows(question_answer.question_flow.id)[0] if question_answer.question_flow is not None else None,
             "answer": question_answer.answer,
-            "question_flow_answers": set(qfa for qfa in question_answer.questionflowanswer_set.filter(void_ind="n").order("answer_time"))
+            "question_flow_answers": set(qfa for qfa in question_answer.questionflowanswer_set.filter(void_ind="n").order_by("answer_time"))
         })
 
     return answers

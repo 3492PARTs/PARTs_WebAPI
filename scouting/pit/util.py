@@ -151,9 +151,14 @@ def get_team_data(team_no=None):
         & Q(event=current_event)
     )
 
-    scout_questions = form.util.get_response_answers(
+    response_answers = form.util.get_response_answers(
         sp.response
     )
+
+    questions = []
+    for response_answer in response_answers:
+        response_answer["question"]["answer"] = response_answer["answer"]
+        questions.append(response_answer["question"])
 
     pics = []
 
@@ -168,6 +173,6 @@ def get_team_data(team_no=None):
 
     return {
         "response_id": sp.response_id,
-        "questions": scout_questions,
+        "questions": questions,
         "pics": pics,
     }
