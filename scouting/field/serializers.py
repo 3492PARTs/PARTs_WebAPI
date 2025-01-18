@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from form.serializers import QuestionSerializer, QuestionWithConditionsSerializer, QuestionFlowSerializer, \
+from form.serializers import QuestionSerializer, QuestionFlowSerializer, \
     FormSubTypeSerializer
 from scouting.serializers import FieldFormSerializer
 
@@ -121,8 +121,10 @@ class ScoutFieldResultsSerializer(serializers.Serializer):
 
 class FormSubTypeFormSerializer(serializers.Serializer):
     form_sub_typ = FormSubTypeSerializer()
-    questions = QuestionWithConditionsSerializer(many=True)
+    questions = QuestionSerializer(many=True)
+    #conditional_questions = QuestionSerializer(many=True)
     question_flows = QuestionFlowSerializer(many=True)
+
 
 class FormFieldFormSerializer(serializers.Serializer):
     field_form = FieldFormSerializer()

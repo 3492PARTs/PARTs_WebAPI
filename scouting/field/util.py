@@ -9,9 +9,12 @@ from scouting.models import EventTeamInfo, ScoutField, ScoutFieldSchedule
 
 
 def build_table_columns():
-    sqsa = form.util.get_questions_with_conditions("field", "auto")
-    sqst = form.util.get_questions_with_conditions("field", "teleop")
-    sqso = form.util.get_questions_with_conditions("field", "post")
+    #sqsa = form.util.get_form_questions("field", "auto")
+    #sqst = form.util.get_form_questions("field", "teleop")
+    #sqso = form.util.get_form_questions("field", "post")
+
+    form_questions = form.util.get_form_questions("field")
+    all_questions = []
 
     table_cols = [
         {
@@ -37,70 +40,67 @@ def build_table_columns():
         },
     ]
 
-    for sqs in [sqsa, sqst, sqso]:
-        for sq in sqs:
-            scout_question = scouting.models.Question.objects.get(
-                Q(void_ind="n") & Q(question_id=sq["question_id"])
-            )
+    for form_sub_type in form_questions["form_sub_types"]:
+        for question in form_sub_type["questions"]:
+            all_questions.append(question)
             table_cols.append(
                 {
-                    "PropertyName": "ans" + str(sq["question_id"]),
+                    "PropertyName": "ans" + str(question["question_id"]),
                     "ColLabel": (
                         ""
-                        if sq.get("form_sub_typ", None) is None
-                        else sq.get("form_sub_typ").form_sub_typ[0:1].upper() + ": "
+                        if question.get("form_sub_typ", None) is None
+                        else question.get("form_sub_typ").form_sub_typ[0:1].upper() + ": "
                     )
-                    + sq["question"],
-                    "Width": sq["table_col_width"],
-                    "order": sq["order"],
+                    + (" C: " if question["conditional_on_question"] is not None else "")
+                    + question["question"],
+                    "Width": question["table_col_width"],
+                    "order": question["order"],
                 }
             )
 
-            for c in sq.get("conditions", []):
-                scout_question = scouting.models.Question.objects.get(
-                    Q(void_ind="n") & Q(question_id=c["question_to"]["question_id"])
-                )
+        for question_flow in form_sub_type["question_flows"]:
+            for question in question_flow["questions"]:
+                all_questions.append(question)
                 table_cols.append(
                     {
-                        "PropertyName": "ans" + str(c["question_to"]["question_id"]),
+                        "PropertyName": "ans" + str(question["question_id"]),
                         "ColLabel": (
                             ""
-                            if c["question_to"].get("form_sub_typ", None) is None
-                            else c["question_to"]["form_sub_typ"].form_sub_typ[0:1].upper() + ": "
+                            if question.get("form_sub_typ", None) is None
+                            else question.get("form_sub_typ").form_sub_typ[0:1].upper() + ": "
                         )
-                        + "C: "
-                        + c["condition"]
-                        + " "
-                        + c["question_to"]["question"],
-                        "Width": c["question_to"]["table_col_width"],
-                        "order": c["question_to"]["order"],
+                        + " QF: "
+                        + question["question"],
+                        "Width": question["table_col_width"],
+                        "order": question["order"],
                     }
                 )
 
-        qas = QuestionAggregate.objects.filter(
+        question_aggregates = QuestionAggregate.objects.filter(
             Q(void_ind="n")
             & Q(active="y")
-            & Q(questions__question_id__in=set(sq["question_id"] for sq in sqs))
+            & Q(questions__question_id__in=set(q["question_id"] for q in all_questions))
         ).distinct()
-        sqas_cnt = 1
-        for qa in qas:
+
+        question_aggregate_count = 1
+        for question_aggregate in question_aggregates:
             table_cols.append(
                 {
-                    "PropertyName": "ans_sqa" + str(qa.question_aggregate_id),
+                    "PropertyName": "ans_sqa" + str(question_aggregate.question_aggregate_id),
                     "ColLabel": (
                         ""
                         if sqs[0].get("form_sub_typ", None) is None
                         else sqs[0]["form_sub_typ"][0:1].upper() + ": "
                     )
                     + "AGG: "
-                    + qa.field_name,
+                    + question_aggregate.field_name,
                     "Width": "100px",
                     "scorable": True,
-                    "order": sqs[len(sqs) - 1]["order"] + sqas_cnt,
+                    "order": sqs[len(sqs) - 1]["order"] + question_aggregate_count,
                 }
             )
 
-            sqas_cnt += 1
+            question_aggregate_count += 1
 
     table_cols.append(
         {
@@ -272,18 +272,8 @@ def get_field_form():
 
     form_parsed = {
         "field_form": field_form,
-        "form_sub_types": []
+        "form_sub_types": form.util.get_form_questions("field")["form_sub_types"]
     }
-
-    types = FormSubType.objects.filter(form_typ__form_typ="field")
-    for t in types:
-        qs = form.util.get_questions_with_conditions("field", t.form_sub_typ, "y", not_in_flow=True)
-        qfs = form.util.get_question_flows(form_typ="field",form_sub_typ=t.form_sub_typ)
-        form_parsed["form_sub_types"].append({
-            "form_sub_typ": t,
-            "questions": qs,
-            "question_flows": qfs
-        })
 
     return form_parsed
 

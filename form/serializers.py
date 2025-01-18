@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from general.cloudinary import allowed_file
+
 
 class ScoutQuestionTypeSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
@@ -68,7 +70,8 @@ class QuestionSerializer(serializers.Serializer):
 
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
-    is_condition = serializers.CharField()
+    conditional_on_question = serializers.IntegerField(allow_null=True)
+    condition = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     has_conditions = serializers.CharField(required=False)
 
 
@@ -108,35 +111,6 @@ class QuestionConditionSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
-class QuestionWithConditionsSerializer(serializers.Serializer):
-    question_id = serializers.IntegerField(required=False, allow_null=True)
-    season_id = serializers.IntegerField(read_only=True)
-    question_flow_id = serializers.IntegerField(required=False, allow_null=True)
-
-    question = serializers.CharField()
-    table_col_width = serializers.CharField()
-    order = serializers.IntegerField()
-    required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    active = serializers.CharField()
-    question_typ = QuestionTypeSerializer()
-    form_typ = FormTypeSerializer()
-    form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
-    display_value = serializers.CharField(read_only=True)
-
-    questionoption_set = QuestionOptionsSerializer(
-        required=False, allow_null=True, many=True
-    )
-
-    answer = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-
-    scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
-
-    conditions = QuestionConditionSerializer(required=False, many=True)
-
-    is_condition = serializers.CharField(required=False)
-    has_conditions = serializers.CharField(required=False)
-
-
 class QuestionFlowSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField()
@@ -168,7 +142,7 @@ class ScoutFieldFormResponseSerializer(serializers.Serializer):
 
 
 class SaveResponseSerializer(serializers.Serializer):
-    question_answers = QuestionWithConditionsSerializer(many=True)
+    question_answers = QuestionSerializer(many=True)
     form_typ = serializers.CharField()
 
 

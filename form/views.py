@@ -9,7 +9,6 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 import form.util
 from form.serializers import (
     QuestionSerializer,
-    QuestionWithConditionsSerializer,
     SaveResponseSerializer,
     ScoutFieldFormResponseSerializer,
     FormInitializationSerializer,
@@ -32,11 +31,11 @@ class QuestionView(APIView):
 
     def get(self, request, format=None):
         try:
-            questions = form.util.get_questions_with_conditions(
+            questions = form.util.get_questions(
                 request.query_params["form_typ"],
                 active=request.query_params.get("active", ""),
             )
-            serializer = QuestionWithConditionsSerializer(questions, many=True)
+            serializer = QuestionSerializer(questions, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -286,7 +285,6 @@ class NewSaveAnswersView(APIView):
                 request.user.id,
                 e,
             )
-
 
 
 class ResponseView(APIView):

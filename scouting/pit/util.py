@@ -64,7 +64,7 @@ def get_responses(team=None):
         except EventTeamInfo.DoesNotExist:
             x = 1
 
-        questions = form.util.get_questions_with_conditions("pit")
+        questions = form.util.get_form_questions("pit")
 
         if sp is not None:
             for q in questions:
@@ -147,7 +147,7 @@ def get_team_data(team_no=None):
         & Q(event=current_event)
     )
 
-    scout_questions = form.util.get_question_with_conditions_response_answers(
+    scout_questions = form.util.get_response_answers(
         sp.response
     )
 

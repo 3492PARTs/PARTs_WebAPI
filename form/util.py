@@ -23,12 +23,19 @@ from form.models import (
 from scouting.models import Match, Season, ScoutField, ScoutPit, Event
 
 
-def get_questions(form_typ: str, active: str = "", form_sub_typ: str = "", not_in_flow = False):
+def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = "", not_in_flow = False, is_conditional=False, is_not_conditional=False, qid = None):
     questions = []
     q_season = Q()
     q_active_ind = Q()
     q_form_sub_typ_q = Q()
     q_not_in_flow = Q()
+    q_is_conditional = Q()
+    q_is_not_conditional = Q()
+    q_id = Q()
+    q_form_typ = Q()
+
+    if form_typ is not None:
+        q_form_typ = Q(form_typ_id=form_typ)
 
     if form_typ == "field" or form_typ == "pit":
         current_season = scouting.util.get_current_season()
@@ -48,17 +55,28 @@ def get_questions(form_typ: str, active: str = "", form_sub_typ: str = "", not_i
     if not_in_flow:
         q_not_in_flow = Q(question_flow__isnull=True)
 
+    if is_conditional:
+        q_is_conditional = Q(Q(condition_question_to__void_ind="n") & Q(condition_question_to__active="y"))
+
+    if is_not_conditional:
+        q_is_not_conditional = Q(condition_question_to__isnull=True)
+
+    if qid is not None:
+        q_id = Q(question_id=qid)
     qs = (
         Question.objects.prefetch_related("questionoption_set")
         .filter(
-            q_season
-            & Q(form_typ_id=form_typ)
+            q_id
+            & q_season
+            & q_form_typ
             & q_form_sub_typ_q
             & q_active_ind
             & q_not_in_flow
+            & q_is_conditional
+            & q_is_not_conditional
             & Q(void_ind="n")
         )
-        .order_by("form_sub_typ__order", "order")
+        .order_by("form_sub_typ__order", "question_flow__name", "order")
     )
 
     for q in qs:
@@ -119,7 +137,6 @@ def format_question_values(q: Question):
             }
         )
 
-
     # Flag if question has conditions
     try:
         count = q.condition_question_from.filter(
@@ -130,10 +147,9 @@ def format_question_values(q: Question):
 
     # Flag if question is condition of another
     try:
-        q.condition_question_to.get(Q(void_ind="n") & Q(active="y"))
-        is_condition = "y"
+        conditional_on_question = q.condition_question_to.get(Q(void_ind="n") & Q(active="y"))
     except QuestionCondition.DoesNotExist:
-        is_condition = "n"
+        conditional_on_question = None
 
     return {
         "question_id": q.question_id,
@@ -150,7 +166,8 @@ def format_question_values(q: Question):
         "questionoption_set": questionoption_set,
         "display_value": f"{'' if q.active == 'y' else 'Deactivated: '} Order: {q.order}: {q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else ''}{q.question}",
         "scout_question": scout_question,
-        "is_condition": is_condition,
+        "conditional_on_question": conditional_on_question.question_from.question_id if conditional_on_question is not None else None,
+        "condition": conditional_on_question.condition if conditional_on_question is not None else None,
         "has_conditions": has_conditions,
     }
 
@@ -579,12 +596,36 @@ def format_question_condition_values(qc: QuestionCondition):
     }
 
 
-def get_questions_with_conditions(
-        form_typ: str,
-        form_sub_typ: str = "",
-        active: str = "y",
-        not_in_flow=False
+def get_form_questions(
+        form_typ: str#,
+        #form_sub_typ: str = "",
+        #active: str = "y",
+        #not_in_flow=False
 ):
+    form_type = FormType.objects.get(form_typ=form_typ)
+    form_parsed = {
+        "form_type": form_type,
+        "form_sub_types": []
+    }
+
+    sub_types = FormSubType.objects.filter(form_typ=form_type)
+    for st in sub_types:
+        #cqs = get_questions("field", "y", st.form_sub_typ, not_in_flow=True, is_conditional=True)
+        qs = get_questions("field", "y", st.form_sub_typ, not_in_flow=True)
+        qfs = get_question_flows(form_typ="field", form_sub_typ=st.form_sub_typ)
+
+        form_parsed["form_sub_types"].append({
+            "form_sub_typ": st,
+            "questions": qs,
+            #"conditional_questions": cqs,
+            "question_flows": qfs
+        })
+
+    #print(form_parsed)
+
+    return form_parsed
+
+
     questions_with_conditions = []
     questions = get_questions(form_typ, active, form_sub_typ, not_in_flow)
 
@@ -611,10 +652,22 @@ def get_questions_with_conditions(
     return questions_with_conditions
 
 
-def get_question_with_conditions_response_answers(response: Response):
+def get_response_answers(response: Response):
     answers = []
 
-    questions = get_questions_with_conditions(response.form_typ.form_typ)
+    question_answers = QuestionAnswer.objects.filter(Q(response=response) & Q(void_ind="n"))
+
+    for question_answer in question_answers:
+        answers.append({
+            "question": get_questions(qid=question_answer.question.question_id) if question_answer.question is not None else None,
+            "question_flow": get_question_flows(question_answers.question_flow.id) if question_answers.question_flow is not None else None,
+            "answer": question_answer.answer,
+            "question_flow_answers": set(qfa for qfa in question_answer.questionflowanswer_set.filter(void_ind="n").order("answer_time"))
+        })
+
+    return answers
+
+    questions = get_form_questions(response.form_typ.form_typ)
 
     for question in questions:
         try:
