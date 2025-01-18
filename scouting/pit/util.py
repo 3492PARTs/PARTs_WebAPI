@@ -64,17 +64,21 @@ def get_responses(team=None):
         except EventTeamInfo.DoesNotExist:
             x = 1
 
-        questions = form.util.get_form_questions("pit")
+        questions = form.util.get_questions("pit")
 
         if sp is not None:
             for q in questions:
-                answer = QuestionAnswer.objects.get(
-                    Q(response=sp.response)
-                    & Q(void_ind="n")
-                    & Q(question_id=q["question_id"])
-                )
+                try:
+                    answer = QuestionAnswer.objects.get(
+                        Q(response=sp.response)
+                        & Q(void_ind="n")
+                        & Q(question_id=q["question_id"])
+                    ).answer
+                except QuestionAnswer.DoesNotExist:
+                    answer = "!FOUND"
+
                 tmp_responses.append(
-                    {"question": q["question"], "answer": answer.answer}
+                    {"question": q["question"], "answer": answer}
                 )
 
                 for c in q.get("conditions", []):

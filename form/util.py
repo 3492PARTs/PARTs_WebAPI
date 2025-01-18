@@ -807,7 +807,7 @@ def save_pit_response(data, user_id):
         sp.save()
 
     # Save the answers against the response object
-    for d in data.get("question_answers", []):
+    for d in data.get("answers", []):
         save_or_update_question_with_conditions_answer(d, response)
 
     return sp
