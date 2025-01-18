@@ -18,7 +18,8 @@ from form.models import (
     QuestionType,
     QuestionAggregate,
     QuestionAggregateType,
-    QuestionCondition, QuestionFlow, QuestionFlowAnswer
+    QuestionCondition, QuestionFlow, QuestionFlowAnswer,
+    QuestionConditionType
 )
 from scouting.models import Match, Season, ScoutField, ScoutPit, Event
 
@@ -167,7 +168,7 @@ def format_question_values(q: Question):
         "display_value": f"{'' if q.active == 'y' else 'Deactivated: '} Order: {q.order}: {q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else ''}{q.question}",
         "scout_question": scout_question,
         "conditional_on_question": conditional_on_question.question_from.question_id if conditional_on_question is not None else None,
-        "condition": conditional_on_question.condition if conditional_on_question is not None else None,
+        "condition": conditional_on_question.value if conditional_on_question is not None else None,
         "has_conditions": has_conditions,
     }
 
@@ -371,7 +372,7 @@ def save_question_flow_answer(qf_answer, answer: QuestionAnswer):
     return qfa
 
 
-def save_or_update_question_with_conditions_answer(answer, response: Response):
+def save_or_update_question_and_flow_answer(answer, response: Response):
     # Get answer to update or save new
     question_answer = save_or_update_question_answer(answer, response)
 
@@ -533,7 +534,7 @@ def save_question_aggregate(data):
 
 
 def get_question_condition(form_typ: str):
-    question_aggregates = []
+    parsed_question_conditions = []
     season = Q()
 
     if form_typ == "field" or form_typ == "pit":
@@ -550,17 +551,22 @@ def get_question_condition(form_typ: str):
     )
 
     for qc in question_conditions:
-        question_aggregates.append(
+        parsed_question_conditions.append(
             {
                 "question_condition_id": qc.question_condition_id,
-                "condition": qc.condition,
+                "question_condition_typ": qc.question_condition_typ,
+                "value": qc.value,
                 "question_from": format_question_values(qc.question_from),
                 "question_to": format_question_values(qc.question_to),
                 "active": qc.active,
             }
         )
 
-    return question_aggregates
+    return parsed_question_conditions
+
+
+def get_question_condition_types():
+    return QuestionConditionType.objects.filter(void_ind="n")
 
 
 def save_question_condition(data):
@@ -720,7 +726,7 @@ def save_field_response(data, user_id):
 
     # Save the answers against the response object
     for answer in data.get("answers", []):
-        save_or_update_question_with_conditions_answer(answer, response)
+        save_or_update_question_and_flow_answer(answer, response)
 
     # Check if previous match is missing any results
     """
@@ -808,7 +814,7 @@ def save_pit_response(data, user_id):
 
     # Save the answers against the response object
     for d in data.get("answers", []):
-        save_or_update_question_with_conditions_answer(d, response)
+        save_or_update_question_and_flow_answer(d, response)
 
     return sp
 
@@ -822,7 +828,7 @@ def save_answers(data):
 
         # Save the answers against the response object
         for d in data.get("question_answers", []):
-            save_or_update_question_with_conditions_answer(d, response)
+            save_or_update_question_and_flow_answer(d, response)
 
     alert = []
     users = user.util.get_users_with_permission("site_forms_notif")

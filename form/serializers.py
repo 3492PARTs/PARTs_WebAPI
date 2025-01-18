@@ -103,9 +103,15 @@ class QuestionAggregateSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
+class QuestionConditionTypeSerializer(serializers.Serializer):
+    question_condition_typ = serializers.CharField()
+    question_condition_nm = serializers.CharField()
+
+
 class QuestionConditionSerializer(serializers.Serializer):
     question_condition_id = serializers.IntegerField(required=False)
-    condition = serializers.CharField()
+    question_condition_typ = QuestionConditionTypeSerializer()
+    value = serializers.CharField()
     question_from = QuestionSerializer()
     question_to = QuestionSerializer()
     active = serializers.CharField()

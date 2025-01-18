@@ -84,9 +84,19 @@ class QuestionOption(models.Model):
         return f"{self.question_opt_id} {self.option}"
 
 
+class QuestionConditionType(models.Model):
+    question_condition_typ = models.CharField(primary_key=True, max_length=10)
+    question_condition_nm = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.question_condition_typ} {self.question_condition_nm}"
+
+
 class QuestionCondition(models.Model):
     question_condition_id = models.AutoField(primary_key=True)
-    condition = models.CharField(max_length=1000)
+    question_condition_typ = models.ForeignKey(QuestionConditionType, models.PROTECT)
+    value = models.CharField(max_length=1000)
     question_from = models.ForeignKey(
         Question, models.PROTECT, related_name="condition_question_from"
     )

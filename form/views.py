@@ -15,7 +15,7 @@ from form.serializers import (
     ResponseSerializer,
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
-    QuestionConditionSerializer, QuestionFlowSerializer,
+    QuestionConditionSerializer, QuestionFlowSerializer, QuestionConditionTypeSerializer,
 )
 from general.security import has_access, ret_message
 
@@ -564,6 +564,40 @@ class QuestionConditionView(APIView):
         except Exception as e:
             return ret_message(
                 "An error occurred while saving the question condition.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class QuestionConditionTypesView(APIView):
+    """
+    API endpoint to manage the question condition typess
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "question-condition-types/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                qas = form.util.get_question_condition_types()
+                serializer = QuestionConditionTypeSerializer(qas, many=True)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question condition types.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
