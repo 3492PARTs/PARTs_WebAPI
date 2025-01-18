@@ -51,7 +51,7 @@ def build_table_columns():
                         if question.get("form_sub_typ", None) is None
                         else question.get("form_sub_typ").form_sub_typ[0:1].upper() + ": "
                     )
-                    + (" C: " if question["conditional_on_question"] is not None else "")
+                    + (" C: " if question["question_conditional_on"] is not None else "")
                     + question["question"],
                     "Width": question["table_col_width"],
                     "order": question["order"],

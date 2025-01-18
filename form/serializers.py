@@ -47,6 +47,11 @@ class ScoutQuestionSerializer(serializers.Serializer):
     value_multiplier = serializers.IntegerField(required=False, allow_null=True)
 
 
+class QuestionConditionTypeSerializer(serializers.Serializer):
+    question_condition_typ = serializers.CharField()
+    question_condition_nm = serializers.CharField()
+
+
 class QuestionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
@@ -70,8 +75,9 @@ class QuestionSerializer(serializers.Serializer):
 
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
-    conditional_on_question = serializers.IntegerField(allow_null=True)
-    condition = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    question_conditional_on = serializers.IntegerField(allow_null=True)
+    question_condition_value = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    question_condition_typ = QuestionConditionTypeSerializer(required=False)
     has_conditions = serializers.CharField(required=False)
 
 
@@ -101,11 +107,6 @@ class QuestionAggregateSerializer(serializers.Serializer):
     question_aggregate_typ = QuestionAggregateTypeSerializer(required=False)
     questions = QuestionSerializer(many=True)
     active = serializers.CharField()
-
-
-class QuestionConditionTypeSerializer(serializers.Serializer):
-    question_condition_typ = serializers.CharField()
-    question_condition_nm = serializers.CharField()
 
 
 class QuestionConditionSerializer(serializers.Serializer):

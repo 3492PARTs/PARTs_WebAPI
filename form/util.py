@@ -167,8 +167,9 @@ def format_question_values(q: Question):
         "questionoption_set": questionoption_set,
         "display_value": f"{'' if q.active == 'y' else 'Deactivated: '} Order: {q.order}: {q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else ''}{q.question}",
         "scout_question": scout_question,
-        "conditional_on_question": conditional_on_question.question_from.question_id if conditional_on_question is not None else None,
-        "condition": conditional_on_question.value if conditional_on_question is not None else None,
+        "question_conditional_on": conditional_on_question.question_from.question_id if conditional_on_question is not None else None,
+        "question_condition_value": conditional_on_question.value if conditional_on_question is not None else None,
+        "question_condition_typ": conditional_on_question.question_condition_typ if conditional_on_question is not None else None,
         "has_conditions": has_conditions,
     }
 
