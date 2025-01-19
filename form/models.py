@@ -166,4 +166,43 @@ class QuestionFlowAnswer(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.question_opt_id} {self.option}"
+        return f"{self.id} {self.question}"
+
+
+class GraphType(models.Model):
+    graph_typ = models.CharField(primary_key=True, max_length=10)
+    graph_nm = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.graph_typ} {self.graph_nm}"
+
+
+class Graph(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph_typ = models.ForeignKey(GraphType, models.PROTECT)
+    name = models.CharField(max_length=255)
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} {self.name}"
+
+class GraphQuestionType(models.Model):
+    graph_question_typ = models.CharField(primary_key=True, max_length=10)
+    graph_question_nm = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.graph_question_typ} {self.graph_question_nm}"
+
+class GraphQuestion(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph = models.ForeignKey(Graph, models.PROTECT)
+    question = models.ForeignKey(Question, models.PROTECT)
+    graph_question_typ = models.ForeignKey(GraphQuestionType, models.PROTECT)
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.graph} : {self.question}"
