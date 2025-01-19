@@ -884,7 +884,7 @@ def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
             "single_run": qf.single_run,
             "form_typ": qf.form_typ,
             "form_sub_typ": qf.form_sub_typ if qf.form_sub_typ is not None else None,
-            "questions": [format_question_values(q) for q in qf.question_set.filter(Q(active="y") & Q(void_ind="n"))]
+            "questions": [format_question_values(q) for q in qf.question_set.filter(Q(active="y") & Q(void_ind="n")).order_by("order")]
         })
 
     return parsed_qfs
