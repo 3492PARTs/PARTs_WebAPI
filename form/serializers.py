@@ -158,3 +158,28 @@ class FormInitializationSerializer(serializers.Serializer):
     question_types = QuestionTypeSerializer(many=True)
     form_sub_types = FormSubTypeSerializer(many=True, required=False)
     question_flows = QuestionFlowSerializer(many=True, required=False)
+
+
+class GraphTypeSerializer(serializers.Serializer):
+    graph_typ = serializers.CharField()
+    graph_nm = serializers.CharField()
+
+
+class GraphSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    graph_typ = GraphTypeSerializer()
+    name = serializers.CharField()
+    active = serializers.CharField()
+
+
+class GraphQuestionType(serializers.Serializer):
+    graph_question_typ = serializers.CharField()
+    graph_question_nm = serializers.CharField()
+
+
+class GraphQuestion(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    graph = GraphSerializer()
+    question = QuestionSerializer()
+    graph_question_typ = GraphQuestionType()
+    active = serializers.CharField()
