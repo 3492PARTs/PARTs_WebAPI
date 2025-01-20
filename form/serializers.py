@@ -175,6 +175,7 @@ class GraphSerializer(serializers.Serializer):
 class GraphQuestionType(serializers.Serializer):
     graph_question_typ = serializers.CharField()
     graph_question_nm = serializers.CharField()
+    question_types = QuestionTypeSerializer(many=True)
 
 
 class GraphQuestion(serializers.Serializer):

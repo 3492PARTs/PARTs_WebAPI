@@ -16,7 +16,7 @@ class AlliancesSerializer(serializers.Serializer):
     red = AllianceSerializer()
 
 
-class MatchSerializer(serializers.Serializer):
+class TBAMatchSerializer(serializers.Serializer):
     key = serializers.CharField()
     event_key = serializers.CharField()
     comp_level = serializers.CharField()
@@ -32,7 +32,7 @@ class EventUpdatedMessageSerializer(serializers.Serializer):
     event_key = serializers.CharField()
     match_key = serializers.CharField()
     event_name = serializers.CharField()
-    match = MatchSerializer()
+    match = TBAMatchSerializer()
 
 
 class EventUpdatedSerializer(serializers.Serializer):

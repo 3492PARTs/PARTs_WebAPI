@@ -289,3 +289,15 @@ class UserInfo(models.Model):
 
     def __str__(self):
         return "{} {}".format(self.id, self.user)
+
+
+class MatchStrategy(models.Model):
+    id = models.AutoField(primary_key=True)
+    match = models.ForeignKey(Match, models.PROTECT, null=True)
+    user = models.ForeignKey(User, models.PROTECT)
+    strategy = models.TextField()
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.match} : {self.user}"
+

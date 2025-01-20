@@ -1,7 +1,12 @@
 from django.db.models import Q
 from rest_framework import serializers
 
-from form.serializers import FormSubTypeSerializer, QuestionTypeSerializer, QuestionSerializer, FormTypeSerializer
+from form.serializers import (
+    FormSubTypeSerializer,
+    QuestionTypeSerializer,
+    QuestionSerializer,
+    FormTypeSerializer,
+)
 from scouting.models import Team, Event, ScoutFieldSchedule, Schedule
 
 
@@ -55,32 +60,6 @@ class EventSerializer(serializers.Serializer):
     current = serializers.CharField()
     competition_page_active = serializers.CharField()
     void_ind = serializers.CharField(default="n")
-
-
-"""
-class EventCreateSerializer(serializers.ModelSerializer):
-    team_no = serializers.ListField(required=False)
-
-    class Meta:
-        model = Event
-        fields = '__all__'
-"""
-
-
-"""
-class CompetitionLevelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CompetitionLevel
-        fields = '__all__'
-
-
-class MatchSerializer(serializers.ModelSerializer):
-    comp_level = CompetitionLevelSerializer(read_only=True)
-
-    class Meta:
-        model = Match
-        fields = '__all__'
-"""
 
 
 class PermissionSerializer(serializers.Serializer):

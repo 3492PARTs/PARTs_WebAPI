@@ -2,11 +2,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
-from django.db.models import Q, Case, When
 
 from general.security import has_access, ret_message
 import scouting
-from scouting.models import EventTeamInfo, Match, ScoutPit, Team
 import scouting.models
 from scouting.serializers import (
     AllScoutInfoSerializer,
@@ -19,6 +17,7 @@ from scouting.serializers import (
     TeamSerializer,
 )
 import scouting.util
+import scouting.strategizing.util
 
 auth_obj = "scouting"
 app_url = "scouting/"
@@ -268,15 +267,19 @@ class AllScoutingInfo(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
+                current_event = scouting.util.get_current_event()
+
                 seasons = scouting.util.get_all_seasons()
                 events = scouting.util.get_all_events()
                 teams = scouting.util.get_teams(True)
-                matches = scouting.util.get_matches(scouting.util.get_current_event())
+                matches = scouting.util.get_matches(current_event)
                 schedules = scouting.util.get_current_schedule_parsed()
                 scout_field_schedules = (
                     scouting.util.get_current_scout_field_schedule_parsed()
                 )
                 schedule_types = scouting.util.get_schedule_types()
+                team_notes = scouting.strategizing.util.get_team_notes(event=current_event)
+                match_strategies = scouting.strategizing.util.get_match_strategies(event=current_event)
 
                 serializer = AllScoutInfoSerializer(
                     {
@@ -287,6 +290,8 @@ class AllScoutingInfo(APIView):
                         "schedules": schedules,
                         "scout_field_schedules": scout_field_schedules,
                         "schedule_types": schedule_types,
+                        "team_notes": team_notes,
+                        "match_strategies": match_strategies
                     }
                 )
 

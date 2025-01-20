@@ -53,27 +53,27 @@ class MatchSerializer(serializers.Serializer):
     blue_score = serializers.IntegerField()
     time = serializers.DateTimeField(allow_null=True)
 
-    blue_one = serializers.IntegerField()
+    blue_one_id = serializers.IntegerField()
     blue_one_rank = serializers.IntegerField(allow_null=True)
     blue_one_field_response = serializers.BooleanField()
 
-    blue_two = serializers.IntegerField()
+    blue_two_id = serializers.IntegerField()
     blue_two_rank = serializers.IntegerField(allow_null=True)
     blue_two_field_response = serializers.BooleanField()
 
-    blue_three = serializers.IntegerField()
+    blue_three_id = serializers.IntegerField()
     blue_three_rank = serializers.IntegerField(allow_null=True)
     blue_three_field_response = serializers.BooleanField()
 
-    red_one = serializers.IntegerField()
+    red_one_id = serializers.IntegerField()
     red_one_rank = serializers.IntegerField(allow_null=True)
     red_one_field_response = serializers.BooleanField()
 
-    red_two = serializers.IntegerField()
+    red_two_id = serializers.IntegerField()
     red_two_rank = serializers.IntegerField(allow_null=True)
     red_two_field_response = serializers.BooleanField()
 
-    red_three = serializers.IntegerField()
+    red_three_id = serializers.IntegerField()
     red_three_rank = serializers.IntegerField(allow_null=True)
     red_three_field_response = serializers.BooleanField()
 
@@ -132,6 +132,21 @@ class ScheduleTypeSerializer(serializers.Serializer):
     sch_nm = serializers.CharField()
 
 
+class MatchStrategySerializer(serializers.Serializer):
+    id = serializers.IntegerField(allow_null=True, required=False)
+    match = MatchSerializer()
+    user = UserSerializer()
+    strategy = serializers.CharField()
+
+
+class TeamNoteSerializer(serializers.Serializer):
+    team_note_id = serializers.IntegerField(read_only=True)
+    team_id = serializers.IntegerField()
+    match = MatchSerializer()
+    note = serializers.CharField()
+    time = serializers.DateTimeField()
+
+
 class AllScoutInfoSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     events = EventSerializer(many=True)
@@ -140,6 +155,8 @@ class AllScoutInfoSerializer(serializers.Serializer):
     schedules = ScheduleSerializer(many=True)
     scout_field_schedules = ScoutFieldScheduleSerializer(many=True)
     schedule_types = ScheduleTypeSerializer(many=True)
+    team_notes = TeamNoteSerializer(many=True)
+    match_strategies = MatchStrategySerializer(many=True)
 
 
 class FieldFormSerializer(serializers.Serializer):
@@ -149,3 +166,4 @@ class FieldFormSerializer(serializers.Serializer):
     img_url = serializers.CharField(required=False, allow_null=True)
     inv_img = serializers.FileField(required=False, allow_null=True)
     inv_img_url = serializers.CharField(required=False, allow_null=True)
+

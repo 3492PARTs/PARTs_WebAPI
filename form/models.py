@@ -191,6 +191,7 @@ class Graph(models.Model):
 class GraphQuestionType(models.Model):
     graph_question_typ = models.CharField(primary_key=True, max_length=10)
     graph_question_nm = models.CharField(max_length=255)
+    question_typ = models.ManyToManyField(QuestionType)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
