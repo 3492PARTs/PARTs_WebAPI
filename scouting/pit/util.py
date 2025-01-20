@@ -162,7 +162,7 @@ def get_team_data(team_no=None):
 
     pics = []
 
-    for pic in sp.scoutpitimage_set.filter(Q(void_ind="n")):
+    for pic in sp.pitimage_set.filter(Q(void_ind="n")):
         pics.append(
             {
                 "scout_pit_img_id": pic.scout_pit_img_id,
