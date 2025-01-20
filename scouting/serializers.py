@@ -137,6 +137,7 @@ class MatchStrategySerializer(serializers.Serializer):
     match = MatchSerializer()
     user = UserSerializer()
     strategy = serializers.CharField()
+    time = serializers.DateTimeField(read_only=True)
 
 
 class TeamNoteSerializer(serializers.Serializer):
