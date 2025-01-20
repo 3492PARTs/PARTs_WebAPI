@@ -7,8 +7,10 @@ import scouting.util
 import scouting.models
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
-from .serializers import ScoutFieldResultsSerializer, FormFieldFormSerializer
+from .serializers import ScoutFieldResultsSerializer
 from rest_framework.response import Response
+
+from ..serializers import FieldFormFormSerializer
 
 auth_obj = "scoutfield"
 auth_view_obj = "scoutFieldResults"
@@ -29,7 +31,7 @@ class FormView(APIView):
             if has_access(request.user.id, auth_obj) or has_access(
                 request.user.id, auth_view_obj
             ):
-                serializer = FormFieldFormSerializer(scouting.field.util.get_field_form())
+                serializer = FieldFormFormSerializer(scouting.field.util.get_field_form())
                 return Response(serializer.data)
 
             else:

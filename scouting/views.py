@@ -14,10 +14,11 @@ from scouting.serializers import (
     ScheduleTypeSerializer,
     ScoutFieldScheduleSerializer,
     SeasonSerializer,
-    TeamSerializer,
+    TeamSerializer, FieldFormFormSerializer,
 )
 import scouting.util
 import scouting.strategizing.util
+import scouting.field.util
 
 auth_obj = "scouting"
 app_url = "scouting/"
@@ -280,6 +281,7 @@ class AllScoutingInfo(APIView):
                 schedule_types = scouting.util.get_schedule_types()
                 team_notes = scouting.strategizing.util.get_team_notes(event=current_event)
                 match_strategies = scouting.strategizing.util.get_match_strategies(event=current_event)
+                field_form_form = scouting.field.util.get_field_form()
 
                 serializer = AllScoutInfoSerializer(
                     {
@@ -291,7 +293,8 @@ class AllScoutingInfo(APIView):
                         "scout_field_schedules": scout_field_schedules,
                         "schedule_types": schedule_types,
                         "team_notes": team_notes,
-                        "match_strategies": match_strategies
+                        "match_strategies": match_strategies,
+                        "field_form_form": field_form_form
                     }
                 )
 

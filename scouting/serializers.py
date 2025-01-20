@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from form.serializers import QuestionSerializer, FormSubTypeSerializer, QuestionFlowSerializer
 from user.serializers import UserSerializer
 
 
@@ -140,6 +141,27 @@ class TeamNoteSerializer(serializers.Serializer):
     time = serializers.DateTimeField(read_only=True)
 
 
+class FieldFormSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    season_id = serializers.IntegerField(required=False, allow_null=True)
+    img = serializers.FileField(required=False, allow_null=True)
+    img_url = serializers.CharField(required=False, allow_null=True)
+    inv_img = serializers.FileField(required=False, allow_null=True)
+    inv_img_url = serializers.CharField(required=False, allow_null=True)
+
+
+class FormSubTypeFormSerializer(serializers.Serializer):
+    form_sub_typ = FormSubTypeSerializer()
+    questions = QuestionSerializer(many=True)
+    # conditional_questions = QuestionSerializer(many=True)
+    question_flows = QuestionFlowSerializer(many=True)
+
+
+class FieldFormFormSerializer(serializers.Serializer):
+    field_form = FieldFormSerializer()
+    form_sub_types = FormSubTypeFormSerializer(many=True, required=False)
+
+
 class AllScoutInfoSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     events = EventSerializer(many=True)
@@ -150,12 +172,4 @@ class AllScoutInfoSerializer(serializers.Serializer):
     schedule_types = ScheduleTypeSerializer(many=True)
     team_notes = TeamNoteSerializer(many=True)
     match_strategies = MatchStrategySerializer(many=True)
-
-
-class FieldFormSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False, allow_null=True)
-    season_id = serializers.IntegerField(required=False, allow_null=True)
-    img = serializers.FileField(required=False, allow_null=True)
-    img_url = serializers.CharField(required=False, allow_null=True)
-    inv_img = serializers.FileField(required=False, allow_null=True)
-    inv_img_url = serializers.CharField(required=False, allow_null=True)
+    field_form_form = FieldFormFormSerializer()
