@@ -76,16 +76,13 @@ class QuestionSerializer(serializers.Serializer):
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
     question_conditional_on = serializers.IntegerField(allow_null=True)
-    question_condition_value = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    question_condition_typ = QuestionConditionTypeSerializer(required=False, allow_null=True)
+    question_condition_value = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
+    question_condition_typ = QuestionConditionTypeSerializer(
+        required=False, allow_null=True
+    )
     has_conditions = serializers.CharField(required=False)
-
-
-class TeamSerializer(serializers.Serializer):
-    team_no = serializers.IntegerField()
-    team_nm = serializers.CharField()
-
-    checked = serializers.BooleanField(required=False)
 
 
 class ResponseSerializer(serializers.Serializer):
@@ -137,7 +134,9 @@ class QuestionAnswerSerializer(serializers.Serializer):
     question = QuestionSerializer(required=False, allow_null=True)
     question_flow = QuestionFlowSerializer(required=False, allow_null=True)
     answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    question_flow_answers = QuestionFlowAnswerSerializer(many=True, required=False, allow_null=True)
+    question_flow_answers = QuestionFlowAnswerSerializer(
+        many=True, required=False, allow_null=True
+    )
 
 
 class ScoutFieldFormResponseSerializer(serializers.Serializer):

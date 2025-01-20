@@ -1,85 +1,12 @@
 from rest_framework import serializers
 
-from form.serializers import QuestionSerializer, QuestionFlowSerializer, \
-    FormSubTypeSerializer
-from scouting.serializers import FieldFormSerializer
-
-
-class SeasonSerializer(serializers.Serializer):
-    season_id = serializers.IntegerField(read_only=True)
-    season = serializers.CharField()
-    current = serializers.CharField()
-
-
-class EventSerializer(serializers.Serializer):
-    event_id = serializers.IntegerField(required=False)
-    season_id = serializers.IntegerField()
-    event_nm = serializers.CharField()
-    date_st = serializers.DateTimeField()
-    date_end = serializers.DateTimeField()
-    event_cd = serializers.CharField()
-    event_url = serializers.CharField(required=False)
-    address = serializers.CharField()
-    city = serializers.CharField()
-    state_prov = serializers.CharField()
-    postal_code = serializers.CharField()
-    location_name = serializers.CharField()
-    gmaps_url = serializers.CharField(required=False)
-    webcast_url = serializers.CharField(required=False)
-    timezone = serializers.CharField()
-    current = serializers.CharField()
-    competition_page_active = serializers.CharField()
-    void_ind = serializers.CharField(default="n")
-
-
-class MatchSerializer(serializers.Serializer):
-    match_id = serializers.CharField(read_only=True)
-    event_id = serializers.IntegerField(read_only=True)
-    match_number = serializers.IntegerField()
-    time = serializers.DateTimeField()
-    blue_one = serializers.IntegerField()
-    blue_two = serializers.IntegerField()
-    blue_three = serializers.IntegerField()
-    red_one = serializers.IntegerField()
-    red_two = serializers.IntegerField()
-    red_three = serializers.IntegerField()
-
-
-class UserSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    username = serializers.CharField()
-    email = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    is_active = serializers.BooleanField()
-    phone = serializers.CharField()
-    phone_type_id = serializers.IntegerField(required=False, allow_null=True)
-
-
-class ScoutFieldScheduleSerializer(serializers.Serializer):
-    scout_field_sch_id = serializers.IntegerField()
-    event_id = serializers.IntegerField(read_only=True)
-    st_time = serializers.DateTimeField()
-    end_time = serializers.DateTimeField()
-    notification1 = serializers.BooleanField(read_only=True)
-    notification2 = serializers.BooleanField(read_only=True)
-    notification3 = serializers.BooleanField(read_only=True)
-
-    red_one_id = UserSerializer(required=False, allow_null=True, read_only=True)
-    red_two_id = UserSerializer(required=False, allow_null=True, read_only=True)
-    red_three_id = UserSerializer(required=False, allow_null=True, read_only=True)
-    blue_one_id = UserSerializer(required=False, allow_null=True, read_only=True)
-    blue_two_id = UserSerializer(required=False, allow_null=True, read_only=True)
-    blue_three_id = UserSerializer(required=False, allow_null=True, read_only=True)
-
-    red_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    red_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    red_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    blue_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    blue_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    blue_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
-
-    scouts = serializers.CharField(read_only=True)
+from form.serializers import (
+    QuestionSerializer,
+    QuestionFlowSerializer,
+    FormSubTypeSerializer,
+)
+from scouting.serializers import EventSerializer, FieldFormSerializer, SeasonSerializer
+from user.serializers import UserSerializer
 
 
 class SaveScoutFieldSerializer(serializers.Serializer):
@@ -122,7 +49,7 @@ class ScoutFieldResultsSerializer(serializers.Serializer):
 class FormSubTypeFormSerializer(serializers.Serializer):
     form_sub_typ = FormSubTypeSerializer()
     questions = QuestionSerializer(many=True)
-    #conditional_questions = QuestionSerializer(many=True)
+    # conditional_questions = QuestionSerializer(many=True)
     question_flows = QuestionFlowSerializer(many=True)
 
 

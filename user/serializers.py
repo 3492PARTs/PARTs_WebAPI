@@ -30,7 +30,7 @@ class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     username = serializers.CharField()
     email = serializers.CharField()
-    name = serializers.CharField()
+    name = serializers.CharField(required=False)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     is_active = serializers.BooleanField()

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from user.serializers import UserSerializer
+
 
 class SeasonSerializer(serializers.Serializer):
     season_id = serializers.IntegerField()
@@ -80,17 +82,6 @@ class MatchSerializer(serializers.Serializer):
     comp_level = CompetitionLevelSerializer()
 
 
-class UserSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    username = serializers.CharField()
-    email = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    is_active = serializers.BooleanField()
-    phone = serializers.CharField(allow_blank=True)
-    phone_type_id = serializers.IntegerField(required=False, allow_null=True)
-
-
 class ScheduleSerializer(serializers.Serializer):
     sch_id = serializers.IntegerField()
     sch_typ = serializers.CharField()
@@ -168,4 +159,3 @@ class FieldFormSerializer(serializers.Serializer):
     img_url = serializers.CharField(required=False, allow_null=True)
     inv_img = serializers.FileField(required=False, allow_null=True)
     inv_img_url = serializers.CharField(required=False, allow_null=True)
-

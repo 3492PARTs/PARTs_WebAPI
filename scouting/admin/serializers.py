@@ -8,19 +8,8 @@ from form.serializers import (
     FormTypeSerializer,
 )
 from scouting.models import Team, Event, FieldSchedule, Schedule
-
-
-class SeasonSerializer(serializers.Serializer):
-    season_id = serializers.IntegerField(required=False, allow_null=True)
-    season = serializers.CharField()
-    current = serializers.CharField()
-
-
-class TeamSerializer(serializers.Serializer):
-    team_no = serializers.IntegerField()
-    team_nm = serializers.CharField()
-
-    checked = serializers.BooleanField(required=False)
+from scouting.serializers import EventSerializer, SeasonSerializer, TeamSerializer
+from user.serializers import UserSerializer, PhoneTypeSerializer, GroupSerializer
 
 
 class TeamCreateSerializer(serializers.Serializer):
@@ -36,64 +25,6 @@ class TeamCreateSerializer(serializers.Serializer):
         )
         t.save()
         return t
-
-
-class EventSerializer(serializers.Serializer):
-    event_id = serializers.IntegerField(required=False, allow_null=True)
-    season_id = serializers.IntegerField()
-    teams = TeamSerializer(many=True, required=False)
-    event_nm = serializers.CharField()
-    date_st = serializers.DateTimeField()
-    date_end = serializers.DateTimeField()
-    event_cd = serializers.CharField()
-    event_url = serializers.CharField(required=False, allow_null=True)
-    address = serializers.CharField(required=False, allow_null=True)
-    city = serializers.CharField()
-    state_prov = serializers.CharField()
-    postal_code = serializers.CharField()
-    location_name = serializers.CharField(required=False, allow_null=True)
-    gmaps_url = serializers.CharField(required=False, allow_null=True)
-    webcast_url = serializers.CharField(
-        required=False, allow_null=True, allow_blank=True
-    )
-    timezone = serializers.CharField(required=False, allow_null=True)
-    current = serializers.CharField()
-    competition_page_active = serializers.CharField()
-    void_ind = serializers.CharField(default="n")
-
-
-class PermissionSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField()
-    content_type_id = serializers.IntegerField(read_only=True)
-    codename = serializers.CharField()
-
-
-class GroupSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField()
-    permissions = PermissionSerializer(many=True, required=False)
-
-
-class PhoneTypeSerializer(serializers.Serializer):
-    phone_type_id = serializers.IntegerField(required=False, allow_null=True)
-    carrier = serializers.CharField()
-    phone_type = serializers.CharField()
-
-
-class UserSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    username = serializers.CharField()
-    email = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    is_active = serializers.BooleanField()
-    phone = serializers.CharField(required=False, allow_null=True)
-    discord_user_id = serializers.CharField(required=False, allow_null=True)
-
-    groups = GroupSerializer(many=True, required=False)
-    phone_type = PhoneTypeSerializer(required=False, allow_null=True)
-    phone_type_id = serializers.IntegerField(required=False, allow_null=True)
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):
