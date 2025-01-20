@@ -296,6 +296,7 @@ class MatchStrategy(models.Model):
     match = models.ForeignKey(Match, models.PROTECT, null=True)
     user = models.ForeignKey(User, models.PROTECT)
     strategy = models.TextField()
+    time = models.DateTimeField(default=django.utils.timezone.now)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

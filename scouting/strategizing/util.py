@@ -68,7 +68,7 @@ def get_match_strategies(match_id: int = None, event: Event = None):
     if event is not None:
         q_event = Q(match__event=event)
 
-    match_strategies = MatchStrategy.objects.filter(q_match_id & q_event & Q(void_ind="n"))
+    match_strategies = MatchStrategy.objects.filter(q_match_id & q_event & Q(void_ind="n")).order_by("time")
 
     parsed_match_strategies = []
     for ms in match_strategies:
