@@ -81,7 +81,7 @@ def build_table_columns():
             & Q(active="y")
             & Q(questions__question_id__in=set(q["question_id"] for q in all_questions))
         ).distinct()
-
+        """
         question_aggregate_count = 1
         for question_aggregate in question_aggregates:
             table_cols.append(
@@ -101,7 +101,7 @@ def build_table_columns():
             )
 
             question_aggregate_count += 1
-
+    """
     table_cols.append(
         {
             "PropertyName": "user",

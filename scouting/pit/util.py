@@ -78,7 +78,7 @@ def get_responses(team=None):
                     answer = "!FOUND"
 
                 tmp_responses.append(
-                    {"question": q["question"], "answer": answer}
+                    {"question": (" C: " if q["question_conditional_on"] is not None else "") + q["question"], "answer": answer}
                 )
 
                 for c in q.get("conditions", []):
