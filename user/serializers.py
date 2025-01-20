@@ -27,7 +27,7 @@ class PhoneTypeSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     username = serializers.CharField()
     email = serializers.CharField()
     name = serializers.CharField(required=False)
