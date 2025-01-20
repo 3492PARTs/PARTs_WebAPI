@@ -143,9 +143,10 @@ class MatchStrategySerializer(serializers.Serializer):
 class TeamNoteSerializer(serializers.Serializer):
     team_note_id = serializers.IntegerField(read_only=True)
     team_id = serializers.IntegerField()
-    match = MatchSerializer()
+    match_id = serializers.IntegerField(required=False)
+    user = UserSerializer()
     note = serializers.CharField()
-    time = serializers.DateTimeField()
+    time = serializers.DateTimeField(read_only=True)
 
 
 class AllScoutInfoSerializer(serializers.Serializer):

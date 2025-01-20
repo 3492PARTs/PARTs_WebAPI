@@ -26,7 +26,7 @@ class TeamNoteView(APIView):
             if has_access(request.user.id, auth_obj) or has_access(
                 request.user.id, auth_view_obj_scout_field
             ):
-                req = scouting.strategizing.util.get_parsed_team_noes(
+                req = scouting.strategizing.util.get_team_notes(
                     request.query_params.get("team_no", None)
                 )
                 serializer = TeamNoteSerializer(req, many=True)

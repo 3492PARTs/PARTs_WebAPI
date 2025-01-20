@@ -17,7 +17,7 @@ from scouting.models import (
     ScoutPit,
     Season,
     Team,
-    TeamNotes,
+    TeamNote,
     Match,
     UserInfo, FieldForm,
 )
@@ -70,7 +70,7 @@ def delete_event(event_id):
     for s in schedules:
         s.delete()
 
-    notes = TeamNotes.objects.filter(event=e)
+    notes = TeamNote.objects.filter(event=e)
     for n in notes:
         n.delete()
 

@@ -236,7 +236,7 @@ class Schedule(models.Model):
         return f"{self.user.get_full_name()} {self.st_time} {self.end_time}"
 
 
-class TeamNotes(models.Model):
+class TeamNote(models.Model):
     team_note_id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
     team_no = models.ForeignKey(Team, models.PROTECT)
