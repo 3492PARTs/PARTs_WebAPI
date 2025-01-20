@@ -21,7 +21,7 @@ from form.models import (
     QuestionCondition, QuestionFlow, QuestionFlowAnswer,
     QuestionConditionType
 )
-from scouting.models import Match, Season, ScoutField, ScoutPit, Event
+from scouting.models import Match, Season, FieldResponse, PitResponse, Event
 
 
 def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = "", not_in_flow = False, is_conditional=False, is_not_conditional=False, qid = None):
@@ -266,7 +266,7 @@ def save_question(question):
         # If adding a new question we need to make a null answer for it for all questions already answered
         match question["form_typ"]["form_typ"]:
             case "pit":
-                pit_responses = ScoutPit.objects.filter(
+                pit_responses = PitResponse.objects.filter(
                     Q(void_ind="n")
                     & Q(
                         event__in=Event.objects.filter(
@@ -279,7 +279,7 @@ def save_question(question):
                     & Q(response_id__in=set(pr.response_id for pr in pit_responses))
                 )
             case "field":
-                field_responses = ScoutField.objects.filter(
+                field_responses = FieldResponse.objects.filter(
                     Q(void_ind="n")
                     & Q(
                         event__in=Event.objects.filter(
@@ -716,7 +716,7 @@ def save_field_response(data, user_id):
     response = form.models.Response(form_typ=form_type)
     response.save()
 
-    sf = ScoutField(
+    sf = FieldResponse(
         event=current_event,
         team_no_id=data["team"],
         match=m,
@@ -791,7 +791,7 @@ def save_pit_response(data, user_id):
     form_type = FormType.objects.get(form_typ=data["form_typ"])
     # Build or get pit scout object
     try:
-        sp = ScoutPit.objects.get(
+        sp = PitResponse.objects.get(
             Q(team_no_id=data["team"]) & Q(void_ind="n") & Q(event=current_event)
         )
         response = sp.response
@@ -801,11 +801,11 @@ def save_pit_response(data, user_id):
             response.save()
             sp.response = response
             sp.save()
-    except ScoutPit.DoesNotExist:
+    except PitResponse.DoesNotExist:
         response = form.models.Response(form_typ=form_type)
         response.save()
 
-        sp = ScoutPit(
+        sp = PitResponse(
             event=current_event,
             team_no_id=data["team"],
             user_id=user_id,

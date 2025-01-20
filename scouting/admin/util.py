@@ -11,10 +11,10 @@ from scouting.models import (
     Event,
     EventTeamInfo,
     Schedule,
-    ScoutAuthGroups,
-    ScoutField,
-    ScoutFieldSchedule,
-    ScoutPit,
+    ScoutAuthGroup,
+    FieldResponse,
+    FieldSchedule,
+    PitResponse,
     Season,
     Team,
     TeamNote,
@@ -38,7 +38,7 @@ def delete_event(event_id):
     for t in teams_at_event:
         t.event_set.remove(e)
 
-    scout_fields = ScoutField.objects.filter(event=e)
+    scout_fields = FieldResponse.objects.filter(event=e)
     for sf in scout_fields:
         scout_field_answers = QuestionAnswer.objects.filter(response=sf.response)
         for sfa in scout_field_answers:
@@ -46,7 +46,7 @@ def delete_event(event_id):
         sf.delete()
         sf.response.delete()
 
-    scout_pits = ScoutPit.objects.filter(event=e)
+    scout_pits = PitResponse.objects.filter(event=e)
     for sp in scout_pits:
         scout_pit_answers = QuestionAnswer.objects.filter(response=sp.response)
         for spa in scout_pit_answers:
@@ -62,7 +62,7 @@ def delete_event(event_id):
     for m in matches:
         m.delete()
 
-    scout_field_schedules = ScoutFieldSchedule.objects.filter(event=e)
+    scout_field_schedules = FieldSchedule.objects.filter(event=e)
     for sfs in scout_field_schedules:
         sfs.delete()
 
@@ -84,7 +84,7 @@ def delete_event(event_id):
 
 
 def get_scout_auth_groups():
-    sags = ScoutAuthGroups.objects.all().order_by("auth_group_id__name")
+    sags = ScoutAuthGroup.objects.all().order_by("auth_group_id__name")
 
     groups = list(sag.auth_group_id for sag in sags)
 
@@ -255,7 +255,7 @@ def save_scout_schedule(data):
         raise Exception("End time can't come before start.")
 
     if data.get("scout_field_sch_id", None) is None:
-        sfs = ScoutFieldSchedule(
+        sfs = FieldSchedule(
             event_id=data["event_id"],
             st_time=data["st_time"],
             end_time=data["end_time"],
@@ -268,7 +268,7 @@ def save_scout_schedule(data):
             void_ind=data["void_ind"],
         )
     else:
-        sfs = ScoutFieldSchedule.objects.get(
+        sfs = FieldSchedule.objects.get(
             scout_field_sch_id=data["scout_field_sch_id"]
         )
         sfs.red_one_id = data.get("red_one_id", None)
@@ -324,7 +324,7 @@ def notify_user(id):
 
 def notify_users(id):
     event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
-    sfs = ScoutFieldSchedule.objects.get(scout_field_sch_id=id)
+    sfs = FieldSchedule.objects.get(scout_field_sch_id=id)
     message = alerts.util.stage_field_schedule_alerts(-1, [sfs], event)
     alerts.util.send_alerts()
     return message
@@ -364,14 +364,14 @@ def toggle_user_under_review(user_id):
 
 
 def void_field_response(id):
-    sf = ScoutField.objects.get(scout_field_id=id)
+    sf = FieldResponse.objects.get(scout_field_id=id)
     sf.void_ind = "y"
     sf.save()
     return sf
 
 
 def void_scout_pit_response(id):
-    sp = ScoutPit.objects.get(scout_pit_id=id)
+    sp = PitResponse.objects.get(scout_pit_id=id)
 
     sp.response.void_ind = "y"
     sp.void_ind = "y"

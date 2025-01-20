@@ -7,7 +7,7 @@ from form.serializers import (
     QuestionSerializer,
     FormTypeSerializer,
 )
-from scouting.models import Team, Event, ScoutFieldSchedule, Schedule
+from scouting.models import Team, Event, FieldSchedule, Schedule
 
 
 class SeasonSerializer(serializers.Serializer):

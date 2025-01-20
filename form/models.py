@@ -39,7 +39,6 @@ class FormSubType(models.Model):
         return self.form_sub_typ + " " + self.form_sub_nm
 
 
-
 class QuestionFlow(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -188,6 +187,7 @@ class Graph(models.Model):
     def __str__(self):
         return f"{self.id} {self.name}"
 
+
 class GraphQuestionType(models.Model):
     graph_question_typ = models.CharField(primary_key=True, max_length=10)
     graph_question_nm = models.CharField(max_length=255)
@@ -196,6 +196,7 @@ class GraphQuestionType(models.Model):
 
     def __str__(self):
         return f"{self.graph_question_typ} {self.graph_question_nm}"
+
 
 class GraphQuestion(models.Model):
     id = models.AutoField(primary_key=True)

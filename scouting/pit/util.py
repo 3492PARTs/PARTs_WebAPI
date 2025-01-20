@@ -5,7 +5,7 @@ from form.models import QuestionAnswer
 from general.security import ret_message
 import scouting
 import form
-from scouting.models import EventTeamInfo, ScoutPit, ScoutPitImage, Team
+from scouting.models import EventTeamInfo, PitResponse, PitImage, Team
 
 
 def get_responses(team=None):
@@ -24,16 +24,16 @@ def get_responses(team=None):
     results = []
     for t in teams:
         try:
-            sp = ScoutPit.objects.get(
+            sp = PitResponse.objects.get(
                 Q(team_no=t)
                 & Q(event=current_event)
                 & Q(void_ind="n")
                 & Q(response__void_ind="n")
             )
-        except ScoutPit.DoesNotExist as e:
+        except PitResponse.DoesNotExist as e:
             sp = None
 
-        spis = ScoutPitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=sp)).order_by(
+        spis = PitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=sp)).order_by(
             "scout_pit_img_id"
         )
 
@@ -110,7 +110,7 @@ def get_responses(team=None):
 def save_robot_picture(file, team_no):
     current_event = scouting.util.get_current_event()
 
-    sp = ScoutPit.objects.get(
+    sp = PitResponse.objects.get(
         Q(event=current_event)
         & Q(team_no_id=team_no)
         & Q(void_ind="n")
@@ -119,7 +119,7 @@ def save_robot_picture(file, team_no):
 
     response = general.cloudinary.upload_image(file)
 
-    ScoutPitImage(
+    PitImage(
         scout_pit=sp,
         img_id=response["public_id"],
         img_ver=str(response["version"]),
@@ -129,7 +129,7 @@ def save_robot_picture(file, team_no):
 
 
 def set_default_team_image(id):
-    spi = ScoutPitImage.objects.get(Q(void_ind="n") & Q(scout_pit_img_id=id))
+    spi = PitImage.objects.get(Q(void_ind="n") & Q(scout_pit_img_id=id))
 
     for pi in spi.scout_pit.scoutpitimage_set.filter(Q(void_ind="n")):
         pi.default = False
@@ -144,7 +144,7 @@ def set_default_team_image(id):
 def get_team_data(team_no=None):
     current_event = scouting.util.get_current_event()
 
-    sp = ScoutPit.objects.get(
+    sp = PitResponse.objects.get(
         Q(team_no=team_no)
         & Q(void_ind="n")
         & Q(response__void_ind="n")

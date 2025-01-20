@@ -7,8 +7,8 @@ from scouting.models import (
     Match,
     Schedule,
     ScheduleType,
-    ScoutFieldSchedule,
-    ScoutPit,
+    FieldSchedule,
+    PitResponse,
     Season,
     Team, FieldForm,
 )
@@ -52,7 +52,7 @@ def get_teams(current: bool):
             Team.objects.annotate(
                 pit_result=Case(
                     When(
-                        team_no__in=ScoutPit.objects.filter(
+                        team_no__in=PitResponse.objects.filter(
                             Q(event=current_event) & Q(void_ind="n")
                         ).values_list("team_no", flat=True),
                         then=1,
@@ -69,7 +69,7 @@ def get_teams(current: bool):
     return teams
 
 
-def format_scout_field_schedule_entry(fs: ScoutFieldSchedule):
+def format_scout_field_schedule_entry(fs: FieldSchedule):
     return {
         "scout_field_sch_id": fs.scout_field_sch_id,
         "event_id": fs.event_id,
@@ -132,7 +132,7 @@ def format_scout_field_schedule_entry(fs: ScoutFieldSchedule):
 def get_current_scout_field_schedule():
     current_event = get_current_event()
 
-    sfs = ScoutFieldSchedule.objects.filter(
+    sfs = FieldSchedule.objects.filter(
         Q(event=current_event) & Q(void_ind="n")
     ).order_by("notification3", "st_time")
 
@@ -163,7 +163,7 @@ def get_schedule_types():
     return ScheduleType.objects.all().order_by("sch_nm")
 
 
-def parse_scout_field_schedule(s: ScoutFieldSchedule):
+def parse_scout_field_schedule(s: FieldSchedule):
     return {
         "scout_field_sch_id": s.scout_field_sch_id,
         "event_id": s.event_id,
@@ -285,7 +285,7 @@ def parse_match(m: Match):
         "red_three_rank": (None if eti_red_three is None else eti_red_three.rank),
         "red_three_field_response": match_team_has_result(m, m.red_three),
         "comp_level": m.comp_level,
-        "scout_field_result": len(m.scoutfield_set.all()) > 0,
+        "scout_field_result": len(m.fieldresponse_set.all()) > 0,
     }
 
 
@@ -299,11 +299,11 @@ def get_event_team_info(team: Team, event: Event):
 
 
 def match_team_has_result(match: Match, team: Team) -> bool:
-    return len(match.scoutfield_set.filter(Q(void_ind="n") & Q(team_no=team))) > 0
+    return len(match.fieldresponse_set.filter(Q(void_ind="n") & Q(team_no=team))) > 0
 
 
 def get_scout_field_schedule(id):
-    return ScoutFieldSchedule.objects.get(scout_field_sch_id=id)
+    return FieldSchedule.objects.get(scout_field_sch_id=id)
 
 
 def get_field_form():

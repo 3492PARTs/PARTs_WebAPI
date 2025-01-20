@@ -5,7 +5,7 @@ from django.utils import timezone
 from form.models import QuestionAggregate, QuestionAnswer, FormSubType
 import scouting.util
 import form
-from scouting.models import EventTeamInfo, ScoutField, ScoutFieldSchedule
+from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule
 
 
 def build_table_columns():
@@ -141,31 +141,31 @@ def get_responses(request, team=None, user=None, after_date_time=None):
     # Pull responses by what input
     if team is not None:
         # get response for individual team
-        scout_fields = ScoutField.objects.filter(
+        scout_fields = FieldResponse.objects.filter(
             Q(event=current_event) & Q(team_no_id=team) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     elif user is not None:
         # get response for individual scout
-        scout_fields = ScoutField.objects.filter(
+        scout_fields = FieldResponse.objects.filter(
             Q(event=current_event) & Q(user=user) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     elif after_date_time is not None:
         # get response for individual scout
-        scout_fields = ScoutField.objects.filter(
+        scout_fields = FieldResponse.objects.filter(
             Q(event=current_event) & Q(time__gt=after_date_time) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     else:
         # get responses for all teams
         if settings.DEBUG:
             # don't fetch all responses on local as it's too much
-            scout_fields = ScoutField.objects.filter(
+            scout_fields = FieldResponse.objects.filter(
                 Q(event=current_event) & Q(void_ind="n")
             ).order_by(
                 "-time", "-scout_field_id"
             )  # [:30]
         else:
             # get everything
-            scout_fields = ScoutField.objects.filter(
+            scout_fields = FieldResponse.objects.filter(
                 Q(event=current_event) & Q(void_ind="n")
             ).order_by("-time", "-scout_field_id")
 
@@ -231,14 +231,14 @@ def get_removed_responses(before_date_time):
     if before_date_time is not None:
         timeCondition = Q(time__lte=before_date_time)
 
-    removed = ScoutField.objects.filter(
+    removed = FieldResponse.objects.filter(
         timeCondition & (Q(void_ind="y") | Q(response__void_ind="y"))
     )
 
     return removed
 
 
-def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
+def check_in_scout(sfs: FieldSchedule, user_id: int):
     check_in = False
     if sfs.red_one and not sfs.red_one_check_in and sfs.red_one.id == user_id:
         sfs.red_one_check_in = timezone.now()

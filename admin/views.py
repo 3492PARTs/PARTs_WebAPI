@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 import user.util
-from scouting.models import ScoutAuthGroups
+from scouting.models import ScoutAuthGroup
 from user.models import PhoneType
 from .serializers import (
     ErrorLogSerializer,
@@ -93,7 +93,7 @@ class ScoutAuthGroupsView(APIView):
         try:
             groups = user.util.get_groups().filter(
                 id__in=list(
-                    ScoutAuthGroups.objects.all().values_list(
+                    ScoutAuthGroup.objects.all().values_list(
                         "auth_group_id", flat=True
                     )
                 )
@@ -127,12 +127,12 @@ class ScoutAuthGroupsView(APIView):
                     for s in serializer.validated_data:
                         keep.append(s["id"])
                         try:
-                            ScoutAuthGroups.objects.get(auth_group_id_id=s["id"])
-                        except ScoutAuthGroups.DoesNotExist:
-                            sag = ScoutAuthGroups(auth_group_id_id=s["id"])
+                            ScoutAuthGroup.objects.get(auth_group_id_id=s["id"])
+                        except ScoutAuthGroup.DoesNotExist:
+                            sag = ScoutAuthGroup(auth_group_id_id=s["id"])
                             sag.save()
 
-                    sags = ScoutAuthGroups.objects.filter(~Q(auth_group_id_id__in=keep))
+                    sags = ScoutAuthGroup.objects.filter(~Q(auth_group_id_id__in=keep))
                     for s in sags:
                         s.delete()
 

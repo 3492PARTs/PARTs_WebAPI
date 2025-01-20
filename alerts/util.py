@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
 from general import send_message
-from scouting.models import Event, ScoutFieldSchedule, Schedule
+from scouting.models import Event, FieldSchedule, Schedule
 from user.models import User
 import user.util
 
@@ -17,7 +17,7 @@ def stage_all_field_schedule_alerts():
     curr_time = timezone.now()
 
     sfss_15 = (
-        ScoutFieldSchedule.objects.annotate(
+        FieldSchedule.objects.annotate(
             diff=ExpressionWrapper(
                 F("st_time") - curr_time, output_field=DurationField()
             )
@@ -27,7 +27,7 @@ def stage_all_field_schedule_alerts():
     )
 
     sfss_5 = (
-        ScoutFieldSchedule.objects.annotate(
+        FieldSchedule.objects.annotate(
             diff=ExpressionWrapper(
                 F("st_time") - curr_time, output_field=DurationField()
             )
@@ -37,7 +37,7 @@ def stage_all_field_schedule_alerts():
     )
 
     sfss_now = (
-        ScoutFieldSchedule.objects.annotate(
+        FieldSchedule.objects.annotate(
             diff=ExpressionWrapper(
                 F("st_time") - curr_time, output_field=DurationField()
             )

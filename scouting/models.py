@@ -130,7 +130,7 @@ class FieldForm(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
 
-class ScoutField(models.Model):
+class FieldResponse(models.Model):
     scout_field_id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
@@ -144,7 +144,7 @@ class ScoutField(models.Model):
         return f"sf id: {self.scout_field_id} {self.match} {self.user}"
 
 
-class ScoutPit(models.Model):
+class PitResponse(models.Model):
     scout_pit_id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
@@ -156,9 +156,9 @@ class ScoutPit(models.Model):
         return self.scout_pit_id
 
 
-class ScoutPitImage(models.Model):
+class PitImage(models.Model):
     scout_pit_img_id = models.AutoField(primary_key=True)
-    scout_pit = models.ForeignKey(ScoutPit, models.PROTECT)
+    scout_pit = models.ForeignKey(PitResponse, models.PROTECT)
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
     default = models.BooleanField(default=False)
@@ -168,7 +168,7 @@ class ScoutPitImage(models.Model):
         return self.scout_pit_img_id
 
 
-class ScoutAuthGroups(models.Model):
+class ScoutAuthGroup(models.Model):
     scout_group = models.AutoField(unique=True, primary_key=True)
     auth_group_id = models.ForeignKey(Group, models.PROTECT)
 
@@ -176,7 +176,7 @@ class ScoutAuthGroups(models.Model):
         return str(self.scout_group) + " auth group: " + str(self.auth_group_id)
 
 
-class ScoutFieldSchedule(models.Model):
+class FieldSchedule(models.Model):
     scout_field_sch_id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(
