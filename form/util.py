@@ -54,16 +54,17 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
         q_form_sub_typ_q = Q(form_sub_typ_id=form_sub_typ)
 
     if not_in_flow:
-        q_not_in_flow = Q(question_flow__isnull=True)
+        q_not_in_flow = Q(Q(question_flow__isnull=True) | (Q(question_flow__isnull=False) & Q(question_flow__void_ind="y")))
 
     if is_conditional:
         q_is_conditional = Q(Q(condition_question_to__void_ind="n") & Q(condition_question_to__active="y"))
 
     if is_not_conditional:
-        q_is_not_conditional = Q(condition_question_to__isnull=True)
+        q_is_not_conditional = Q(Q(condition_question_to__isnull=True) | (Q(condition_question_to__isnull=False) & (Q(condition_question_to__active="n") | Q(condition_question_to__void_ind="y"))))
 
     if qid is not None:
         q_id = Q(question_id=qid)
+
     qs = (
         Question.objects.prefetch_related("questionoption_set")
         .filter(
@@ -605,10 +606,7 @@ def format_question_condition_values(qc: QuestionCondition):
 
 
 def get_form_questions(
-        form_typ: str#,
-        #form_sub_typ: str = "",
-        #active: str = "y",
-        #not_in_flow=False
+        form_typ: str
 ):
     form_type = FormType.objects.get(form_typ=form_typ)
     form_parsed = {
@@ -618,7 +616,6 @@ def get_form_questions(
 
     sub_types = FormSubType.objects.filter(form_typ=form_type)
     for st in sub_types:
-        #cqs = get_questions("field", "y", st.form_sub_typ, not_in_flow=True, is_conditional=True)
         qs = get_questions("field", "y", st.form_sub_typ, not_in_flow=True)
         qfs = get_question_flows(form_typ="field", form_sub_typ=st.form_sub_typ)
 
