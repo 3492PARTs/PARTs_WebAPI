@@ -122,6 +122,7 @@ class QuestionFlowSerializer(serializers.Serializer):
     form_typ = FormTypeSerializer()
     form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
     questions = QuestionSerializer(many=True, required=False)
+    void_ind = serializers.CharField()
 
 
 class QuestionFlowAnswerSerializer(serializers.Serializer):
