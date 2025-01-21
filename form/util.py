@@ -715,7 +715,7 @@ def save_field_response(data, user_id):
 
     sf = FieldResponse(
         event=current_event,
-        team_no_id=data["team"],
+        team_no_id=data["team_id"],
         match=m,
         user_id=user_id,
         response_id=response.response_id,
@@ -789,7 +789,7 @@ def save_pit_response(data, user_id):
     # Build or get pit scout object
     try:
         sp = PitResponse.objects.get(
-            Q(team_no_id=data["team"]) & Q(void_ind="n") & Q(event=current_event)
+            Q(team_no_id=data["team_id"]) & Q(void_ind="n") & Q(event=current_event)
         )
         response = sp.response
 
@@ -804,7 +804,7 @@ def save_pit_response(data, user_id):
 
         sp = PitResponse(
             event=current_event,
-            team_no_id=data["team"],
+            team_no_id=data["team_id"],
             user_id=user_id,
             response=response,
             void_ind="n",

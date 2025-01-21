@@ -142,7 +142,7 @@ class QuestionAnswerSerializer(serializers.Serializer):
 
 class ScoutFieldFormResponseSerializer(serializers.Serializer):
     answers = QuestionAnswerSerializer(many=True)
-    team = serializers.CharField()
+    team_id = serializers.CharField()
     match_id = serializers.CharField(required=False, allow_null=True)
     form_typ = serializers.CharField()
     response_id = serializers.IntegerField(required=False, allow_null=True)
