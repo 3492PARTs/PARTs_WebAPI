@@ -48,7 +48,7 @@ def get_teams(current: bool):
     if current:
         current_event = get_current_event()
 
-        teams = (
+        teamObjects = (
             Team.objects.annotate(
                 pit_result=Case(
                     When(
@@ -63,6 +63,17 @@ def get_teams(current: bool):
             .filter(event=current_event)
             .order_by("team_no")
         )
+        teams = []
+
+        for team in teamObjects:
+            eti = get_event_team_info(team, current_event)
+            teams.append({
+                "team_no": team.team_no,
+                "team_nm": team.team_nm,
+                "checked": False,
+                "pit_result": team.pit_result,
+                "rank": eti.rank if eti is not None else None
+            })
     else:
         teams = Team.objects.all().order_by("team_no")
 
@@ -315,7 +326,8 @@ def get_field_form():
             "id": field_form.id,
             "season_id": field_form.season.season_id,
             "img_url": general.cloudinary.build_image_url(field_form.img_id, field_form.img_ver),
-            "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver)
+            "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver),
+            "full_img_url": general.cloudinary.build_image_url(field_form.full_img_id, field_form.full_img_ver)
         }
     except FieldForm.DoesNotExist as dne:
         parsed_ff = {}

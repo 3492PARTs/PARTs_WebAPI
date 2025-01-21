@@ -127,6 +127,8 @@ class FieldForm(models.Model):
     img_ver = models.CharField(max_length=500, blank=True, null=True)
     inv_img_id = models.CharField(max_length=500, blank=True, null=True)
     inv_img_ver = models.CharField(max_length=500, blank=True, null=True)
+    full_img_id = models.CharField(max_length=500, blank=True, null=True)
+    full_img_ver = models.CharField(max_length=500, blank=True, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
 

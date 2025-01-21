@@ -16,6 +16,7 @@ class TeamSerializer(serializers.Serializer):
 
     checked = serializers.BooleanField(required=False)
     pit_result = serializers.IntegerField(required=False)
+    rank = serializers.IntegerField(required=False)
 
 
 class EventSerializer(serializers.Serializer):
@@ -148,6 +149,8 @@ class FieldFormSerializer(serializers.Serializer):
     img_url = serializers.CharField(required=False, allow_null=True)
     inv_img = serializers.FileField(required=False, allow_null=True)
     inv_img_url = serializers.CharField(required=False, allow_null=True)
+    full_img = serializers.FileField(required=False, allow_null=True)
+    full_img_url = serializers.CharField(required=False, allow_null=True)
 
 
 class FormSubTypeFormSerializer(serializers.Serializer):
