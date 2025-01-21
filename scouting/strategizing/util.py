@@ -72,7 +72,9 @@ def get_match_strategies(match_id: int = None, event: Event = None):
             "user": ms.user,
             "strategy": ms.strategy,
             "img_url": general.cloudinary.build_image_url(ms.img_id, ms.img_ver),
-            "time": ms.time
+            "time": ms.time,
+            "display_value": f"{ms.user.get_full_name()} {ms.time.strftime('%m/%d/%Y, %I:%M%p')}"
+
         })
 
     return parsed_match_strategies
@@ -83,8 +85,8 @@ def save_match_strategy(data) :
     else:
         match_strategy = MatchStrategy()
 
-    match_strategy.match_id = data["match"]["match_id"]
-    match_strategy.user_id = data["user"]["id"]
+    match_strategy.match_id = data["match_id"]
+    match_strategy.user_id = data["user_id"]
     match_strategy.strategy = data["strategy"]
 
     img = None

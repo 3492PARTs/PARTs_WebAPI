@@ -5,7 +5,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from general.security import ret_message, has_access
 import scouting.strategizing
-from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer, AllianceSelectionSerializer
+from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer, AllianceSelectionSerializer, \
+    SaveMatchStrategySerializer
 import scouting.strategizing.util
 import scouting.util
 
@@ -116,7 +117,7 @@ class MatchStrategyView(APIView):
             )
 
     def post(self, request, format=None):
-        serializer = MatchStrategySerializer(data=request.data)
+        serializer = SaveMatchStrategySerializerx(data=request.data)
         if not serializer.is_valid():
             return ret_message(
                 "Invalid data",

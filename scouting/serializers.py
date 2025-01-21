@@ -130,9 +130,16 @@ class MatchStrategySerializer(serializers.Serializer):
     match = MatchSerializer()
     user = UserSerializer()
     strategy = serializers.CharField()
-    img = serializers.FileField(required=False, allow_null=True)
     img_url = serializers.CharField(required=False, allow_null=True)
     time = serializers.DateTimeField(read_only=True)
+    display_value = serializers.CharField()
+
+
+class SaveMatchStrategySerializer(serializers.Serializer):
+    match_id = serializers.CharField()
+    user_id = serializers.IntegerField()
+    strategy = serializers.CharField()
+    img = serializers.FileField(required=False, allow_null=True)
 
 
 class TeamNoteSerializer(serializers.Serializer):
