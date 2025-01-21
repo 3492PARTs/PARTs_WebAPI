@@ -298,6 +298,8 @@ class MatchStrategy(models.Model):
     match = models.ForeignKey(Match, models.PROTECT, null=True)
     user = models.ForeignKey(User, models.PROTECT)
     strategy = models.TextField()
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
     time = models.DateTimeField(default=django.utils.timezone.now)
     void_ind = models.CharField(max_length=1, default="n")
 

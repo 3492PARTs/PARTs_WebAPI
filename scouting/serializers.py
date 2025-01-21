@@ -130,6 +130,8 @@ class MatchStrategySerializer(serializers.Serializer):
     match = MatchSerializer()
     user = UserSerializer()
     strategy = serializers.CharField()
+    img = serializers.FileField(required=False, allow_null=True)
+    img_url = serializers.CharField(required=False, allow_null=True)
     time = serializers.DateTimeField(read_only=True)
 
 

@@ -1,6 +1,7 @@
 from django.db.models import Q
 
 from general.security import ret_message
+import general.cloudinary
 import scouting
 from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection
 import scouting.util
@@ -70,6 +71,7 @@ def get_match_strategies(match_id: int = None, event: Event = None):
             "match": scouting.util.parse_match(ms.match),
             "user": ms.user,
             "strategy": ms.strategy,
+            "img_url": general.cloudinary.build_image_url(ms.img_id, ms.img_ver),
             "time": ms.time
         })
 
@@ -84,6 +86,15 @@ def save_match_strategy(data) :
     match_strategy.match_id = data["match"]["match_id"]
     match_strategy.user_id = data["user"]["id"]
     match_strategy.strategy = data["strategy"]
+
+    img = None
+    if data.get("img", None) is not None:
+        img = general.cloudinary.upload_image(data["img"])
+
+    if img is not None:
+        match_strategy.img_id = img["public_id"]
+        match_strategy.img_ver = img["version"]
+
 
     match_strategy.save()
 
