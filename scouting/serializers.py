@@ -173,3 +173,11 @@ class AllScoutInfoSerializer(serializers.Serializer):
     team_notes = TeamNoteSerializer(many=True)
     match_strategies = MatchStrategySerializer(many=True)
     field_form_form = FieldFormFormSerializer()
+
+
+class AllianceSelectionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    event = EventSerializer()
+    team = TeamSerializer()
+    note = serializers.CharField()
+    order = serializers.IntegerField()

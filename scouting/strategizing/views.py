@@ -5,7 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from general.security import ret_message, has_access
 import scouting.strategizing
-from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer
+from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer, AllianceSelectionSerializer
 import scouting.strategizing.util
 import scouting.util
 
@@ -133,6 +133,67 @@ class MatchStrategyView(APIView):
             except Exception as e:
                 return ret_message(
                     "An error occurred while saving match strategy.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class AllianceSelectionView(APIView):
+    """API endpoint to manage alliance selections"""
+
+    endpoint = "alliance-selection/"
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.strategizing.util.get_alliance_selections()
+                serializer = AllianceSelectionSerializer(req, many=True)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting alliance selections.",
+                True,
+                app_url + self.endpoint,
+                exception=e,
+            )
+
+    def post(self, request, format=None):
+        serializer = AllianceSelectionSerializer(data=request.data, many=True)
+        if not serializer.is_valid():
+            return ret_message(
+                "Invalid data",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                error_message=serializer.errors,
+            )
+
+        if has_access(request.user.id, auth_obj):
+            try:
+                req = scouting.strategizing.util.save_alliance_selections(serializer.data)
+                return req
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while saving alliance selections.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,

@@ -2,7 +2,7 @@ from django.db.models import Q
 
 from general.security import ret_message
 import scouting
-from scouting.models import Event, Team, TeamNote, MatchStrategy
+from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection
 import scouting.util
 from user.models import User
 
@@ -86,3 +86,31 @@ def save_match_strategy(data) :
     match_strategy.strategy = data["strategy"]
 
     match_strategy.save()
+
+
+def get_alliance_selections():
+    selections = AllianceSelection.objects.filter(Q(event=scouting.util.get_current_event()) & Q(void_ind="n")).order_by("order")
+    """
+    parsed = []
+    for selection in selections:
+        parsed.append({
+            "id": selection.id,
+            "event": selection.event,
+            "team": selection.team,
+            "note": selection.note,
+            "order": selection.order
+        })
+    """
+    return selections
+
+def save_alliance_selections(data):
+    for d in data:
+        if d.get("id") is not None:
+            selection = AllianceSelection.objects.get(id=d["id"])
+        else:
+            selection = AllianceSelection()
+
+        selection.event_id = data["event"]["event_id"]
+        selection.team_no = data["team"]["team_no"]
+        selection.note = data["note"]
+        selection.order = data["order"]
