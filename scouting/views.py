@@ -282,6 +282,7 @@ class AllScoutingInfo(APIView):
                 team_notes = scouting.strategizing.util.get_team_notes(event=current_event)
                 match_strategies = scouting.strategizing.util.get_match_strategies(event=current_event)
                 field_form_form = scouting.field.util.get_field_form()
+                alliance_selections = scouting.strategizing.util.get_alliance_selections()
 
                 serializer = AllScoutInfoSerializer(
                     {
@@ -294,7 +295,8 @@ class AllScoutingInfo(APIView):
                         "schedule_types": schedule_types,
                         "team_notes": team_notes,
                         "match_strategies": match_strategies,
-                        "field_form_form": field_form_form
+                        "field_form_form": field_form_form,
+                        "alliance_selections": alliance_selections,
                     }
                 )
 

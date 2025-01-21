@@ -30,7 +30,7 @@ class EventSerializer(serializers.Serializer):
     address = serializers.CharField(required=False, allow_null=True)
     city = serializers.CharField()
     state_prov = serializers.CharField()
-    postal_code = serializers.CharField()
+    postal_code = serializers.CharField(required=False, allow_null=True)
     location_name = serializers.CharField(required=False, allow_null=True)
     gmaps_url = serializers.CharField(required=False, allow_null=True)
     webcast_url = serializers.CharField(
@@ -162,6 +162,14 @@ class FieldFormFormSerializer(serializers.Serializer):
     form_sub_types = FormSubTypeFormSerializer(many=True, required=False)
 
 
+class AllianceSelectionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    event = EventSerializer()
+    team = TeamSerializer()
+    note = serializers.CharField(allow_blank=True)
+    order = serializers.IntegerField()
+
+
 class AllScoutInfoSerializer(serializers.Serializer):
     seasons = SeasonSerializer(many=True)
     events = EventSerializer(many=True)
@@ -173,11 +181,4 @@ class AllScoutInfoSerializer(serializers.Serializer):
     team_notes = TeamNoteSerializer(many=True)
     match_strategies = MatchStrategySerializer(many=True)
     field_form_form = FieldFormFormSerializer()
-
-
-class AllianceSelectionSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
-    event = EventSerializer()
-    team = TeamSerializer()
-    note = serializers.CharField()
-    order = serializers.IntegerField()
+    alliance_selections = AllianceSelectionSerializer(many=True)

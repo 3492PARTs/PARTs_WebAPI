@@ -90,7 +90,7 @@ def save_match_strategy(data) :
 
 def get_alliance_selections():
     selections = AllianceSelection.objects.filter(Q(event=scouting.util.get_current_event()) & Q(void_ind="n")).order_by("order")
-    """
+
     parsed = []
     for selection in selections:
         parsed.append({
@@ -100,7 +100,7 @@ def get_alliance_selections():
             "note": selection.note,
             "order": selection.order
         })
-    """
+
     return selections
 
 def save_alliance_selections(data):
@@ -110,7 +110,9 @@ def save_alliance_selections(data):
         else:
             selection = AllianceSelection()
 
-        selection.event_id = data["event"]["event_id"]
-        selection.team_no = data["team"]["team_no"]
-        selection.note = data["note"]
-        selection.order = data["order"]
+        selection.event_id = d["event"]["event_id"]
+        selection.team_id = d["team"]["team_no"]
+        selection.note = d["note"]
+        selection.order = d["order"]
+
+        selection.save()
