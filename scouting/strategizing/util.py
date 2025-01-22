@@ -1,10 +1,11 @@
+import pytz
 from django.db.models import Q
 
-from general.security import ret_message
 import general.cloudinary
 import scouting
-from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection
 import scouting.util
+from general.security import ret_message
+from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection
 from user.models import User
 
 
@@ -27,13 +28,13 @@ def get_team_notes(team_no: int = None, event: Event = None):
 
 def parse_team_note(n: TeamNote):
     return {
-            "team_note_id": n.team_note_id,
-            "team_id": n.team_no.team_no,
-            "match_id": n.match.match_id if n.match else None,
-            "note": n.note,
-            "time": n.time,
-            "user": n.user
-        }
+        "team_note_id": n.team_note_id,
+        "team_id": n.team_no.team_no,
+        "match_id": n.match.match_id if n.match else None,
+        "note": n.note,
+        "time": n.time,
+        "user": n.user
+    }
 
 
 def save_note(data, user: User):
@@ -73,13 +74,14 @@ def get_match_strategies(match_id: int = None, event: Event = None):
             "strategy": ms.strategy,
             "img_url": general.cloudinary.build_image_url(ms.img_id, ms.img_ver),
             "time": ms.time,
-            "display_value": f"{ms.user.get_full_name()} {ms.time.strftime('%m/%d/%Y, %I:%M%p')}"
+            "display_value": f"{ms.user.get_full_name()} {ms.time.astimezone(pytz.timezone('America/New_York' if event is None else event.timezone)).strftime('%m/%d/%Y, %I:%M%p')}"
 
         })
 
     return parsed_match_strategies
 
-def save_match_strategy(data) :
+
+def save_match_strategy(data, img = None):
     if data.get("id", None) is not None:
         match_strategy = MatchStrategy.objects.get(id=data["id"])
     else:
@@ -89,20 +91,19 @@ def save_match_strategy(data) :
     match_strategy.user_id = data["user_id"]
     match_strategy.strategy = data["strategy"]
 
-    img = None
-    if data.get("img", None) is not None:
-        img = general.cloudinary.upload_image(data["img"])
+    if img is not None:
+        img = general.cloudinary.upload_image(img)
 
     if img is not None:
         match_strategy.img_id = img["public_id"]
         match_strategy.img_ver = img["version"]
 
-
     match_strategy.save()
 
 
 def get_alliance_selections():
-    selections = AllianceSelection.objects.filter(Q(event=scouting.util.get_current_event()) & Q(void_ind="n")).order_by("order")
+    selections = AllianceSelection.objects.filter(
+        Q(event=scouting.util.get_current_event()) & Q(void_ind="n")).order_by("order")
 
     parsed = []
     for selection in selections:
@@ -115,6 +116,7 @@ def get_alliance_selections():
         })
 
     return selections
+
 
 def save_alliance_selections(data):
     for d in data:

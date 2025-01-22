@@ -136,10 +136,11 @@ class MatchStrategySerializer(serializers.Serializer):
 
 
 class SaveMatchStrategySerializer(serializers.Serializer):
+    id = serializers.IntegerField(allow_null=True, required=False)
     match_id = serializers.CharField()
     user_id = serializers.IntegerField()
     strategy = serializers.CharField()
-    img = serializers.FileField(required=False, allow_null=True)
+    img = serializers.FileField()
 
 
 class TeamNoteSerializer(serializers.Serializer):

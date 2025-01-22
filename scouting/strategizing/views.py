@@ -117,7 +117,7 @@ class MatchStrategyView(APIView):
             )
 
     def post(self, request, format=None):
-        serializer = SaveMatchStrategySerializerx(data=request.data)
+        serializer = SaveMatchStrategySerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message(
                 "Invalid data",
@@ -129,7 +129,7 @@ class MatchStrategyView(APIView):
 
         if has_access(request.user.id, auth_obj):
             try:
-                scouting.strategizing.util.save_match_strategy(serializer.data)
+                scouting.strategizing.util.save_match_strategy(serializer.data, request.data.get("img", None))
                 return ret_message("Strategy saved successfully")
             except Exception as e:
                 return ret_message(
