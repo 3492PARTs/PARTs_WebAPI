@@ -149,7 +149,7 @@ class ScoutFieldFormResponseSerializer(serializers.Serializer):
 
 
 class SaveResponseSerializer(serializers.Serializer):
-    question_answers = QuestionSerializer(many=True)
+    question_answers = QuestionAnswerSerializer(many=True)
     form_typ = serializers.CharField()
 
 
