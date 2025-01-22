@@ -92,7 +92,7 @@ def save_match_strategy(data, img = None):
     match_strategy.strategy = data["strategy"]
 
     if img is not None:
-        img = general.cloudinary.upload_image(img)
+        img = general.cloudinary.upload_image(img, match_strategy.img_id)
 
     if img is not None:
         match_strategy.img_id = img["public_id"]

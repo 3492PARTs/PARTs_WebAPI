@@ -388,15 +388,15 @@ def save_field_form(field_form):
 
     img = None
     if field_form.get("img", None) is not None:
-        img = general.cloudinary.upload_image(field_form["img"])
+        img = general.cloudinary.upload_image(field_form["img"], ff.img_id)
 
     inv_img = None
     if field_form.get("inv_img", None) is not None:
-        inv_img = general.cloudinary.upload_image(field_form["inv_img"])
+        inv_img = general.cloudinary.upload_image(field_form["inv_img"], ff.inv_img_id)
 
     full_img = None
     if field_form.get("full_img", None) is not None:
-        full_img = general.cloudinary.upload_image(field_form["full_img"])
+        full_img = general.cloudinary.upload_image(field_form["full_img"], ff.full_img_id)
 
     if img is not None:
         ff.img_id = img["public_id"]

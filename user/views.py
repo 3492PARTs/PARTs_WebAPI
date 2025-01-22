@@ -39,6 +39,7 @@ from general.security import (
     ret_message,
     has_access,
 )
+import general.cloudinary
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -341,14 +342,7 @@ class UserProfile(APIView):
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
                         if user.img_id:
-                            response = cloudinary.uploader.upload(
-                                serializer.validated_data["image"],
-                                public_id=user.img_id,
-                            )
-                        else:
-                            response = cloudinary.uploader.upload(
-                                serializer.validated_data["image"]
-                            )
+                            response = general.cloudinary.upload_image(serializer.validated_data["image"], user.img_id)
                         user.img_id = response["public_id"]
                         user.img_ver = str(response["version"])
                     if request.user.is_superuser:  # only allow role editing if admin
@@ -1078,6 +1072,7 @@ class SecurityAudit(APIView):
                 app_url + self.endpoint,
                 request.user.id,
             )
+
 
 class Links(APIView):
     """
