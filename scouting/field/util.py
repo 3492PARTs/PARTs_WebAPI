@@ -155,19 +155,10 @@ def get_responses(request, team=None, user=None, after_date_time=None):
             Q(event=current_event) & Q(time__gt=after_date_time) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     else:
-        # get responses for all teams
-        if settings.DEBUG:
-            # don't fetch all responses on local as it's too much
-            scout_fields = FieldResponse.objects.filter(
-                Q(event=current_event) & Q(void_ind="n")
-            ).order_by(
-                "-time", "-scout_field_id"
-            )  # [:30]
-        else:
-            # get everything
-            scout_fields = FieldResponse.objects.filter(
-                Q(event=current_event) & Q(void_ind="n")
-            ).order_by("-time", "-scout_field_id")
+        # get everything
+        scout_fields = FieldResponse.objects.filter(
+            Q(event=current_event) & Q(void_ind="n")
+        ).order_by("-time", "-scout_field_id")
 
     # Loop over all the responses selected and put in table
     for scout_field in scout_fields:
