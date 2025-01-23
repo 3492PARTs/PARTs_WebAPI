@@ -1,4 +1,5 @@
 import datetime
+import django
 
 import pytz
 from django.db.models import Q, ExpressionWrapper, DurationField, F
@@ -190,7 +191,7 @@ def stage_field_schedule_alerts(notification, sfss):
 
         for sa in staged_alerts:
             for acct in ["txt", "notification", "discord"]:
-                stage_alert_channel_send(sa, acct)
+                stage_channel_send_for_all_channels(sa, acct)
 
         sfs.save()
 
@@ -199,7 +200,7 @@ def stage_field_schedule_alerts(notification, sfss):
 
 def stage_schedule_alerts():
     message = ""
-    event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
+    event = scouting.util.get_current_event()
     curr_time = timezone.now()  # .astimezone(pytz.timezone(event.timezone))
     schs = (
         Schedule.objects.annotate(
@@ -235,7 +236,7 @@ def stage_schedule_alert(sch: Schedule):
 
     alert = stage_alert(sch.user, "Pit time!", body)
     for acct in ["txt", "notification", "discord"]:
-        stage_alert_channel_send(alert, acct)
+        stage_channel_send_for_all_channels(alert, acct)
 
     return (
         "Pit Notified: " + sch.user.get_full_name() + " : " + sch.sch_typ.sch_nm + "\n"
@@ -252,15 +253,15 @@ def stage_scout_admin_alerts(subject: str, body: str):
 
 
 def stage_alert(u: User, alert_subject: str, alert_body: str):
-    alert = Alert(user=u, alert_subject=alert_subject, alert_body=alert_body)
+    alert = Alert(user=u, subject=alert_subject, body=alert_body)
     alert.save()
     return alert
 
 
-def stage_alert_channel_send(alert: Alert, alert_comm_typ: str):
+def stage_channel_send_for_all_channels(alert: Alert, alert_comm_typ: str):
     acs = ChannelSend(
-        alert_comm_typ=CommunicationChannelType.objects.get(
-            Q(alert_comm_typ=alert_comm_typ) & Q(void_ind="n")
+        comm_typ=CommunicationChannelType.objects.get(
+            Q(comm_typ=alert_comm_typ) & Q(void_ind="n")
         ),
         alert=alert,
     )
@@ -271,12 +272,13 @@ def stage_alert_channel_send(alert: Alert, alert_comm_typ: str):
 def send_alerts():
     message = "send alerts\n"
 
+    # Alert not send, dismissed, and been tried to send 3 or less times
     acss = ChannelSend.objects.filter(
         Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(tries__lte=3) & Q(void_ind="n")
     )
     for acs in acss:
+        success = True
         try:
-            success = True
             match acs.comm_typ.comm_typ:
                 case "email":
                     send_message.send_email(
@@ -335,26 +337,23 @@ def send_alerts():
                 + "\n"
             )
         except Exception as e:
-            acs.tries = acs.tries + 1
-            acs.save()
-            alert = (
-                "An error occurred while sending alert: "
-                + acs.alert.user.get_full_name()
-                + " acs id: "
-                + str(acs.id)
-            )
+            success = False
+            alert =  f"An error occurred while sending alert: {acs.alert.user.get_full_name()}  acs id: {acs.id}"
             message += alert + "\n"
             return ret_message(alert, True, "alerts.util.send_alerts", 0, e)
+        if not success:
+            acs.tries = acs.tries + 1
+            acs.save()
     if message == "":
         message = "No notifications"
 
     return message
 
 
-def get_user_alerts(user_id: str, alert_comm_typ_id: str):
+def get_user_alerts(user_id: str, comm_typ_cd: str):
     acs = ChannelSend.objects.filter(
         Q(dismissed_time__isnull=True)
-        & Q(alert_comm_typ_id=alert_comm_typ_id)
+        & Q(comm_typ_id=comm_typ_cd)
         & Q(void_ind="n")
         & Q(alert__user_id=user_id)
         & Q(alert__void_ind="n")
@@ -364,25 +363,25 @@ def get_user_alerts(user_id: str, alert_comm_typ_id: str):
     for a in acs:
         notifs.append(
             {
-                "alert_id": a.alert.id,
-                "alert_channel_send_id": a.id,
-                "alert_subject": a.alert.subject,
-                "alert_body": a.alert.body,
+                "id": a.alert.id,
+                "channel_send_id": a.id,
+                "subject": a.alert.subject,
+                "body": a.alert.body,
                 "staged_time": a.alert.staged_time,
             }
         )
     return notifs
 
 
-def dismiss_alert(alert_channel_send_id: str, user_id: str):
+def dismiss_alert(channel_send_id: str, user_id: str):
     acs = ChannelSend.objects.get(
         Q(dismissed_time__isnull=True)
         & Q(void_ind="n")
-        & Q(alert_channel_send_id=alert_channel_send_id)
+        & Q(channel_send_id=channel_send_id)
         & Q(alert__user_id=user_id)
         & Q(alert__void_ind="n")
     )
-    acs.dismissed_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    acs.dismissed_time = django.utils.timezone.now
     acs.save()
 
 
@@ -405,6 +404,6 @@ def send_alerts_to_role(subject: str, body: str, alert_role: str, channels=None)
 
     for a in alerts:
         for acct in channels:
-            stage_alert_channel_send(
+            stage_channel_send_for_all_channels(
                 a, acct
             )

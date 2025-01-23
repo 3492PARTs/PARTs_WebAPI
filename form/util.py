@@ -841,7 +841,7 @@ def save_answers(data):
         )
     for a in alert:
         for acct in ["email", "notification"]:
-            alerts.util.stage_alert_channel_send(a, acct)
+            alerts.util.stage_channel_send_for_all_channels(a, acct)
 
 
 def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):

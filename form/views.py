@@ -190,7 +190,8 @@ class SaveAnswersView(APIView):
                 # regular response
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
-                    form.util.save_answers(serializer.validated_data)
+                    with transaction.atomic():
+                        form.util.save_answers(serializer.validated_data)
                 else:
                     return ret_message(
                         error_msg,

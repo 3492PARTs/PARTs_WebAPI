@@ -102,8 +102,8 @@ class RetMessageSerializer(serializers.Serializer):
 
 
 class GetAlertsSerializer(serializers.Serializer):
-    alert_id = serializers.IntegerField()
-    alert_channel_send_id = serializers.IntegerField()
-    alert_subject = serializers.CharField()
-    alert_body = serializers.CharField()
+    id = serializers.IntegerField()
+    channel_send_id = serializers.IntegerField()
+    subject = serializers.CharField()
+    body = serializers.CharField()
     staged_time = serializers.DateTimeField()
