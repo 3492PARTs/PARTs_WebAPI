@@ -272,7 +272,7 @@ def stage_channel_send_for_all_channels(alert: Alert, alert_comm_typ: str):
 def send_alerts():
     message = "send alerts\n"
 
-    # Alert not send, dismissed, and been tried to send 3 or less times
+    # Alert not send, dismissed, and been tried to send 3 or fewer times
     acss = ChannelSend.objects.filter(
         Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(tries__lte=3) & Q(void_ind="n")
     )
@@ -327,7 +327,7 @@ def send_alerts():
                     message += "Discord"
 
             if success:
-                acs.sent_time = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+                acs.sent_time = django.utils.timezone.now()
                 acs.save()
             message += (
                 " Notified: "
@@ -373,15 +373,15 @@ def get_user_alerts(user_id: str, comm_typ_cd: str):
     return notifs
 
 
-def dismiss_alert(channel_send_id: str, user_id: str):
+def dismiss_alert(channel_send_id: str):
     acs = ChannelSend.objects.get(
         Q(dismissed_time__isnull=True)
         & Q(void_ind="n")
-        & Q(channel_send_id=channel_send_id)
-        & Q(alert__user_id=user_id)
+        & Q(id=channel_send_id)
         & Q(alert__void_ind="n")
     )
-    acs.dismissed_time = django.utils.timezone.now
+
+    acs.dismissed_time = django.utils.timezone.now()
     acs.save()
 
 
