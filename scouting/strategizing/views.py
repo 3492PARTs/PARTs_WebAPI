@@ -191,7 +191,7 @@ class AllianceSelectionView(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 scouting.strategizing.util.save_alliance_selections(serializer.data)
-                return ret_message("Strategy alliance selection successfully")
+                return ret_message("Alliance selection successfully")
             except Exception as e:
                 return ret_message(
                     "An error occurred while saving alliance selections.",
