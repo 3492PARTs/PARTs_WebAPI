@@ -4,7 +4,8 @@ import pytz
 from django.db.models import Q, ExpressionWrapper, DurationField, F
 from django.utils import timezone
 
-from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
+import scouting.util
+from alerts.models import Alert, ChannelSend, CommunicationChannelType
 from general import send_message
 from general.security import ret_message
 from scouting.models import Event, FieldSchedule, Schedule
@@ -14,7 +15,7 @@ import user.util
 
 def stage_all_field_schedule_alerts():
     message = ""
-    event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
+    event = scouting.util.get_current_event()
     curr_time = timezone.now()
 
     sfss_15 = (
@@ -257,8 +258,8 @@ def stage_alert(u: User, alert_subject: str, alert_body: str):
 
 
 def stage_alert_channel_send(alert: Alert, alert_comm_typ: str):
-    acs = AlertChannelSend(
-        alert_comm_typ=AlertCommunicationChannelType.objects.get(
+    acs = ChannelSend(
+        alert_comm_typ=CommunicationChannelType.objects.get(
             Q(alert_comm_typ=alert_comm_typ) & Q(void_ind="n")
         ),
         alert=alert,
@@ -270,19 +271,19 @@ def stage_alert_channel_send(alert: Alert, alert_comm_typ: str):
 def send_alerts():
     message = "send alerts\n"
 
-    acss = AlertChannelSend.objects.filter(
+    acss = ChannelSend.objects.filter(
         Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(tries__lte=3) & Q(void_ind="n")
     )
     for acs in acss:
         try:
             success = True
-            match acs.alert_comm_typ.alert_comm_typ:
+            match acs.comm_typ.comm_typ:
                 case "email":
                     send_message.send_email(
                         acs.alert.user.email,
-                        acs.alert.alert_subject,
+                        acs.alert.subject,
                         "generic_email",
-                        {"message": acs.alert.alert_body, "user": acs.alert.user},
+                        {"message": acs.alert.body, "user": acs.alert.user},
                     )
                     message += "Email"
                 case "message":
@@ -291,9 +292,9 @@ def send_alerts():
                 case "notification":
                     send_message.send_webpush(
                         acs.alert.user,
-                        acs.alert.alert_subject,
-                        acs.alert.alert_body,
-                        acs.alert.alert_id,
+                        acs.alert.subject,
+                        acs.alert.body,
+                        acs.alert.id,
                     )
                     message += "Webpush"
                 case "txt":
@@ -303,9 +304,9 @@ def send_alerts():
                     ):
                         send_message.send_email(
                             acs.alert.user.phone + acs.alert.user.phone_type.phone_type,
-                            acs.alert.alert_subject,
+                            acs.alert.subject,
                             "generic_text",
-                            {"message": acs.alert.alert_body},
+                            {"message": acs.alert.body},
                         )
                         message += "Phone"
                     else:
@@ -318,7 +319,7 @@ def send_alerts():
                         else acs.alert.user.get_full_name()
                     )
                     discord_message = (
-                        f"{acs.alert.alert_subject}:\n {u}\n {acs.alert.alert_body}"
+                        f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
                     )
                     send_message.send_discord_notification(discord_message)
                     message += "Discord"
@@ -330,7 +331,7 @@ def send_alerts():
                 " Notified: "
                 + acs.alert.user.get_full_name()
                 + " acs id: "
-                + str(acs.alert_channel_send_id)
+                + str(acs.id)
                 + "\n"
             )
         except Exception as e:
@@ -340,7 +341,7 @@ def send_alerts():
                 "An error occurred while sending alert: "
                 + acs.alert.user.get_full_name()
                 + " acs id: "
-                + str(acs.alert_channel_send_id)
+                + str(acs.id)
             )
             message += alert + "\n"
             return ret_message(alert, True, "alerts.util.send_alerts", 0, e)
@@ -351,7 +352,7 @@ def send_alerts():
 
 
 def get_user_alerts(user_id: str, alert_comm_typ_id: str):
-    acs = AlertChannelSend.objects.filter(
+    acs = ChannelSend.objects.filter(
         Q(dismissed_time__isnull=True)
         & Q(alert_comm_typ_id=alert_comm_typ_id)
         & Q(void_ind="n")
@@ -363,10 +364,10 @@ def get_user_alerts(user_id: str, alert_comm_typ_id: str):
     for a in acs:
         notifs.append(
             {
-                "alert_id": a.alert.alert_id,
-                "alert_channel_send_id": a.alert_channel_send_id,
-                "alert_subject": a.alert.alert_subject,
-                "alert_body": a.alert.alert_body,
+                "alert_id": a.alert.id,
+                "alert_channel_send_id": a.id,
+                "alert_subject": a.alert.subject,
+                "alert_body": a.alert.body,
                 "staged_time": a.alert.staged_time,
             }
         )
@@ -374,7 +375,7 @@ def get_user_alerts(user_id: str, alert_comm_typ_id: str):
 
 
 def dismiss_alert(alert_channel_send_id: str, user_id: str):
-    acs = AlertChannelSend.objects.get(
+    acs = ChannelSend.objects.get(
         Q(dismissed_time__isnull=True)
         & Q(void_ind="n")
         & Q(alert_channel_send_id=alert_channel_send_id)
