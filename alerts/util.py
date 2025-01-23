@@ -393,14 +393,17 @@ def stage_alerts():
     return ret
 
 
-def send_alerts_to_role(subject: str, body: str, alert_role: str, channels = []):
+def send_alerts_to_role(subject: str, body: str, alert_role: str, channels=None):
+    if channels is None:
+        channels = []
+
     alerts = []
     users = user.util.get_users_with_permission(alert_role)
     for u in users:
         alerts.append(stage_alert(u, subject, body))
 
-    for a in alert:
+    for a in alerts:
         for acct in channels:
-            alerts.util.stage_alert_channel_send(
+            stage_alert_channel_send(
                 a, acct
             )
