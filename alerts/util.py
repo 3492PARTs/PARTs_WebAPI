@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from alerts.models import Alert, AlertChannelSend, AlertCommunicationChannelType
 from general import send_message
+from general.security import ret_message
 from scouting.models import Event, FieldSchedule, Schedule
 from user.models import User
 import user.util
@@ -270,7 +271,7 @@ def send_alerts():
     message = "send alerts\n"
 
     acss = AlertChannelSend.objects.filter(
-        Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(void_ind="n")
+        Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(tries__lte=3) & Q(void_ind="n")
     )
     for acs in acss:
         try:
@@ -333,6 +334,8 @@ def send_alerts():
                 + "\n"
             )
         except Exception as e:
+            acs.tries = acs.tries + 1
+            acs.save()
             alert = (
                 "An error occurred while sending alert: "
                 + acs.alert.user.get_full_name()
@@ -388,3 +391,16 @@ def stage_alerts():
     ret += "schedule alerts\n"
     ret += stage_schedule_alerts()
     return ret
+
+
+def send_alerts_to_role(subject: str, body: str, alert_role: str, channels = []):
+    alerts = []
+    users = user.util.get_users_with_permission(alert_role)
+    for u in users:
+        alerts.append(stage_alert(u, subject, body))
+
+    for a in alert:
+        for acct in channels:
+            alerts.util.stage_alert_channel_send(
+                a, acct
+            )
