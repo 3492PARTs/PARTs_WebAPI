@@ -393,14 +393,14 @@ def stage_alerts():
     return ret
 
 
-def send_alerts_to_role(subject: str, body: str, alert_role: str, channels=None):
-    if channels is None:
-        channels = []
-
+def send_alerts_to_role(subject: str, body: str, alert_role: str, channels: [], user_id: int=None):
     alerts = []
     users = user.util.get_users_with_permission(alert_role)
     for u in users:
-        alerts.append(stage_alert(u, subject, body))
+        if user_id is not None and u.id == user_id:
+            continue
+        else:
+            alerts.append(stage_alert(u, subject, body))
 
     for a in alerts:
         for acct in channels:

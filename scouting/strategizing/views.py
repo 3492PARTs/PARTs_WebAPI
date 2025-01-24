@@ -2,6 +2,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.db import transaction
 
 from general.security import ret_message, has_access
 import scouting.strategizing
@@ -129,7 +130,8 @@ class MatchStrategyView(APIView):
 
         if has_access(request.user.id, auth_obj):
             try:
-                scouting.strategizing.util.save_match_strategy(serializer.data, request.data.get("img", None))
+                with transaction.atomic():
+                    scouting.strategizing.util.save_match_strategy(serializer.data, request.data.get("img", None))
                 return ret_message("Strategy saved successfully")
             except Exception as e:
                 return ret_message(

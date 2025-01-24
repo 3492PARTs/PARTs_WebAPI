@@ -1,6 +1,7 @@
 import pytz
 from django.db.models import Q
 
+import alerts.util
 import general.cloudinary
 import scouting
 import scouting.util
@@ -82,8 +83,10 @@ def get_match_strategies(match_id: int = None, event: Event = None):
 
 
 def save_match_strategy(data, img = None):
+    send_alert = False
     if data.get("id", None) is not None:
         match_strategy = MatchStrategy.objects.get(id=data["id"])
+        send_alert = True
     else:
         match_strategy = MatchStrategy()
 
@@ -100,6 +103,12 @@ def save_match_strategy(data, img = None):
 
     match_strategy.save()
 
+    alerts.util.send_alerts_to_role(
+        "Match Strategy Added",
+        f"New match strategy from {match_strategy.user.get_full_name()} on match {match_strategy.match.match_number}",
+        "match_strat_added",
+        ["notification", "txt"],
+        match_strategy.user.id)
 
 def get_alliance_selections():
     selections = AllianceSelection.objects.filter(
