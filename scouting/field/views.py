@@ -12,6 +12,8 @@ from rest_framework.response import Response
 
 from ..serializers import FieldFormFormSerializer
 
+from .serializers import  FieldResponseSerializer
+
 auth_obj = "scoutfield"
 auth_view_obj = "scoutFieldResults"
 app_url = "scouting/field/"
@@ -106,7 +108,7 @@ class CheckInView(APIView):
         try:
             if has_access(request.user.id, auth_obj):
                 sfs = scouting.util.get_scout_field_schedule(
-                    scout_field_sch_id=request.query_params.get(
+                    id=request.query_params.get(
                         "scout_field_sch_id", None
                     )
                 )
@@ -124,6 +126,44 @@ class CheckInView(APIView):
         except Exception as e:
             return ret_message(
                 "An error occurred while checking in the scout for their shift.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class ScoutingResponsesView(APIView):
+    """
+    API endpoint to get the results of field scouting
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "scouting-responses/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj) or has_access(
+                request.user.id, auth_view_obj
+            ):
+                req = scouting.field.util.get_scouting_responses()
+
+                if type(req) == Response:
+                    return req
+
+                serializer = FieldResponseSerializer(req, many=True)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting responses.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,

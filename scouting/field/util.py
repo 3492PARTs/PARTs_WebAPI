@@ -2,7 +2,7 @@ from django.db.models import Q
 from django.conf import settings
 from django.utils import timezone
 
-from form.models import QuestionAggregate, QuestionAnswer, FormSubType
+from form.models import QuestionAggregate, QuestionAnswer, FormSubType, QuestionFlowAnswer
 import scouting.util
 import form
 from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule
@@ -276,3 +276,31 @@ def get_graph_options(graph_type):
 
 # need % and avg
 
+def get_scouting_responses():
+    parsed_responses = []
+    event = scouting.util.get_current_event()
+
+    responses = FieldResponse.objects.filter(Q(event=event) & Q(void_ind="n")).order_by("-time")
+
+    for response in responses:
+        parsed_answers = []
+        answers = QuestionAnswer.objects.filter(Q(response=response.response) & Q(void_ind="n"))
+
+        for answer in answers:
+
+            parsed_answers.append({
+                "question": answer.question,
+                "question_flow": answer.question_flow,
+                "answer": answer.answer,
+                "question_flow_answers": answer.questionflowanswer_set.filter(Q(void_ind="n"))
+            })
+
+        parsed_responses.append({
+            "id": response.scout_field_id,
+            "match": scouting.util.parse_match(response.match) if response.match is not None else None,
+            "user": response.user,
+            "time": response.time,
+            "answers": parsed_answers
+        })
+
+    return parsed_responses

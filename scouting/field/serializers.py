@@ -1,9 +1,10 @@
 from rest_framework import serializers
 
 from form.serializers import (
-    QuestionSerializer,
+    QuestionSerializer, QuestionAnswerSerializer,
 )
-from scouting.serializers import EventSerializer, SeasonSerializer
+from scouting.serializers import EventSerializer, SeasonSerializer, MatchSerializer
+from user.serializers import UserSerializer
 
 
 class SaveScoutFieldSerializer(serializers.Serializer):
@@ -42,3 +43,9 @@ class ScoutFieldResultsSerializer(serializers.Serializer):
     current_event = EventSerializer()
     removed_responses = ScoutFieldSerializer(many=True)
 
+class FieldResponseSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    match = MatchSerializer(required=False)
+    user = UserSerializer()
+    time = serializers.DateTimeField()
+    answers = QuestionAnswerSerializer(many=True)
