@@ -1,8 +1,13 @@
+import threading
+
+import discord
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
+import asyncio
 
+from general.discord import MyDiscordBot
 from general.security import has_access, ret_message
 import scouting
 import scouting.models
@@ -14,7 +19,7 @@ from scouting.serializers import (
     ScheduleTypeSerializer,
     ScoutFieldScheduleSerializer,
     SeasonSerializer,
-    TeamSerializer, FieldFormFormSerializer,
+    TeamSerializer,
 )
 import scouting.util
 import scouting.strategizing.util
@@ -256,6 +261,28 @@ class ScheduleTypeView(APIView):
             )
 
 
+async def run_discord_bot_and_send_message(message):
+    """Runs the Discord bot in the background and sends a message."""
+    bot = MyDiscordBot(command_prefix='$')  # Create bot instance here
+    try:
+        await bot.start(bot.token)
+        await bot.send_message(message)
+    except Exception as e:
+        print(f"Error sending message: {e}")  # Handle errors (optional)
+    finally:
+        await bot.close()  # Close the bot connection
+
+
+# Create an instance of your bot
+bot = MyDiscordBot(command_prefix='$')
+
+def run_bot():
+    asyncio.run(bot.start(bot.token))
+
+# Start the bot in a separate thread
+bot_thread = threading.Thread(target=run_bot)
+bot_thread.start()
+
 class AllScoutingInfo(APIView):
     """
     API endpoint to get the list info needed to populate the scouting app under one call
@@ -268,6 +295,16 @@ class AllScoutingInfo(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
+
+                #asyncio.create_task(run_discord_bot_and_send_message("Hello World!"))  # Run in separate thread
+                #asyncio.run(run_discord_bot_and_send_message("Hello World!"))  # Run the async send_message within asyncio.run()
+
+                bot.event.wait(timeout=5)  # Adjust timeout as needed
+
+                # Send the message (this will block until the message is sent)
+                #bot.loop.run_until_complete(bot.send_message("hhhhhhhh"))
+                asyncio.run(bot.send_message("hhhhhhhh"))
+
                 current_event = scouting.util.get_current_event()
 
                 seasons = scouting.util.get_all_seasons()

@@ -49,6 +49,7 @@ typing-extensions = "4.12.2"
 urllib3 = "2.2.3"
 yarl = "1.11.1"
 python-dotenv = "^1.0.1"
+discord = "^2.3.2"
 
 
 [tool.poetry.group.dev]
