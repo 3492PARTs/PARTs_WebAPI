@@ -285,7 +285,7 @@ def get_scouting_responses():
 
     responses = FieldResponse.objects.filter(Q(event=event) & Q(void_ind="n")).order_by("-time")
 
-    for response in responses:
+    for response in responses[:30]:
         parsed_answers = form.util.get_response_answers(response.response)
 
         parsed_responses.append({
