@@ -49,3 +49,4 @@ class FieldResponseSerializer(serializers.Serializer):
     user = UserSerializer()
     time = serializers.DateTimeField()
     answers = QuestionAnswerSerializer(many=True)
+    display_value = serializers.CharField()

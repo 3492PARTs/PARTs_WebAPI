@@ -667,35 +667,12 @@ def get_response_answers(response: Response):
             "question": get_questions(qid=question_answer.question.question_id)[0] if question_answer.question is not None else None,
             "question_flow": get_question_flows(question_answer.question_flow.id)[0] if question_answer.question_flow is not None else None,
             "answer": question_answer.answer,
-            "question_flow_answers": set(qfa for qfa in question_answer.questionflowanswer_set.filter(void_ind="n").order_by("answer_time"))
+            "question_flow_answers": list({
+                "question": format_question_values(qfa.question),
+                "answer": qfa.answer,
+                "answer_time": qfa.answer_time
+                                         } for qfa in question_answer.questionflowanswer_set.filter(void_ind="n").order_by("answer_time"))
         })
-
-    return answers
-
-    questions = get_form_questions(response.form_typ.form_typ)
-
-    for question in questions:
-        try:
-            spa = QuestionAnswer.objects.get(
-                Q(response=response) & Q(question_id=question["question_id"])
-            )
-        except QuestionAnswer.DoesNotExist as e:
-            spa = QuestionAnswer(answer="")
-
-        question["answer"] = spa.answer
-
-        for c in question.get("conditions", []):
-            try:
-                spa = QuestionAnswer.objects.get(
-                    Q(response=response)
-                    & Q(question_id=c["question_to"]["question_id"])
-                )
-            except QuestionAnswer.DoesNotExist as e:
-                spa = QuestionAnswer(answer="")
-
-            c["question_to"]["answer"] = spa.answer
-
-        answers.append(question)
 
     return answers
 

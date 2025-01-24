@@ -1,11 +1,14 @@
 from django.db.models import Q
 from django.conf import settings
 from django.utils import timezone
+import datetime
 
 from form.models import QuestionAggregate, QuestionAnswer, FormSubType, QuestionFlowAnswer
 import scouting.util
 import form
 from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule
+import general.util
+import form.util
 
 
 def build_table_columns():
@@ -282,25 +285,16 @@ def get_scouting_responses():
 
     responses = FieldResponse.objects.filter(Q(event=event) & Q(void_ind="n")).order_by("-time")
 
-    for response in responses:
-        parsed_answers = []
-        answers = QuestionAnswer.objects.filter(Q(response=response.response) & Q(void_ind="n"))
-
-        for answer in answers:
-
-            parsed_answers.append({
-                "question": answer.question,
-                "question_flow": answer.question_flow,
-                "answer": answer.answer,
-                "question_flow_answers": answer.questionflowanswer_set.filter(Q(void_ind="n"))
-            })
+    for response in responses[:10]:
+        parsed_answers = form.util.get_response_answers(response.response)
 
         parsed_responses.append({
             "id": response.scout_field_id,
             "match": scouting.util.parse_match(response.match) if response.match is not None else None,
             "user": response.user,
             "time": response.time,
-            "answers": parsed_answers
+            "answers": parsed_answers,
+            "display_value": f"{'Match: ' + str(response.match.match_number) + ' ' if response.match is not None else ''}Team: {response.team_no.team_no} {response.user.get_full_name()} {general.util.date_time_to_mdyhm(response.time, event.timezone)}"
         })
 
     return parsed_responses
