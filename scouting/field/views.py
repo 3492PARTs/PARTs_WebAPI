@@ -70,7 +70,7 @@ class ResponsesView(APIView):
                 req = scouting.field.util.get_responses(
                     self.request,
                     team=request.query_params.get("team", None),
-                    after_date_time=request.query_params.get("after_date_time", None),
+                    after_scout_field_id=request.query_params.get("after_scout_field_id", None),
                 )
 
                 if type(req) == Response:

@@ -127,7 +127,9 @@ def build_table_columns():
     return table_cols
 
 
-def get_responses(request, team=None, user=None, after_date_time=None):
+def get_responses(request, team=None, user=None, after_scout_field_id=None):
+    loading_all = False
+
     table_cols = build_table_columns()
 
     field_scouting_responses = []
@@ -152,12 +154,13 @@ def get_responses(request, team=None, user=None, after_date_time=None):
         scout_fields = FieldResponse.objects.filter(
             Q(event=current_event) & Q(user=user) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
-    elif after_date_time is not None:
+    elif after_scout_field_id is not None:
         # get response for individual scout
         scout_fields = FieldResponse.objects.filter(
-            Q(event=current_event) & Q(time__gt=after_date_time) & Q(void_ind="n")
+            Q(event=current_event) & Q(scout_field_id__gt=after_scout_field_id) & Q(void_ind="n")
         ).order_by("-time", "-scout_field_id")
     else:
+        loading_all = True
         # get everything
         scout_fields = FieldResponse.objects.filter(
             Q(event=current_event) & Q(void_ind="n")
@@ -215,18 +218,18 @@ def get_responses(request, team=None, user=None, after_date_time=None):
         "scoutAnswers": field_scouting_responses,
         "current_season": current_season,
         "current_event": current_event,
-        "removed_responses": get_removed_responses(after_date_time),
+        "removed_responses": get_removed_responses(after_scout_field_id) if not loading_all else [],
     }
 
 
-def get_removed_responses(before_date_time):
-    timeCondition = Q()
+def get_removed_responses(before_scout_field_id=None):
+    condition = Q()
 
-    if before_date_time is not None:
-        timeCondition = Q(time__lte=before_date_time)
+    if before_scout_field_id is not None:
+        condition = Q(scout_field_id__lte=before_scout_field_id)
 
     removed = FieldResponse.objects.filter(
-        timeCondition & (Q(void_ind="y") | Q(response__void_ind="y"))
+        condition & (Q(void_ind="y") | Q(response__void_ind="y"))
     )
 
     return removed
