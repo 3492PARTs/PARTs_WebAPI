@@ -20,7 +20,7 @@ class TeamSerializer(serializers.Serializer):
 
 
 class EventSerializer(serializers.Serializer):
-    event_id = serializers.IntegerField()
+    event_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField()
     teams = TeamSerializer(many=True, required=False)
     event_nm = serializers.CharField()
