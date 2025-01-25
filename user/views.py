@@ -228,7 +228,7 @@ class UserProfile(APIView):
                     True,
                     app_url + self.endpoint,
                     -1,
-                    serialized._errors,
+                    error_message=error_list,
                 )
         except Exception as e:
             error_string = str(e)
