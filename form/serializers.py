@@ -125,6 +125,13 @@ class QuestionFlowSerializer(serializers.Serializer):
     void_ind = serializers.CharField()
 
 
+class QuestionFlowConditionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    question_flow_from = QuestionFlowSerializer()
+    question_flow_to = QuestionFlowSerializer()
+    active = serializers.CharField()
+
+
 class QuestionFlowAnswerSerializer(serializers.Serializer):
     question = QuestionSerializer()
     answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)

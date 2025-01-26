@@ -19,7 +19,7 @@ from form.models import (
     QuestionAggregate,
     QuestionAggregateType,
     QuestionCondition, QuestionFlow, QuestionFlowAnswer,
-    QuestionConditionType
+    QuestionConditionType, QuestionFlowCondition
 )
 from scouting.models import Match, Season, FieldResponse, PitResponse, Event
 
@@ -540,7 +540,7 @@ def get_question_condition(form_typ: str):
     season = Q()
 
     if form_typ == "field" or form_typ == "pit":
-        current_season = Season.objects.get(current="y")
+        current_season = scouting.util.get_current_season()
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
@@ -603,6 +603,78 @@ def format_question_condition_values(qc: QuestionCondition):
         "question_to": format_question_values(qc.question_to),
         "active": qc.active,
     }
+
+
+def get_question_flow_condition(form_typ: str):
+    parsed = []
+
+    flow_conditions = QuestionFlowCondition.objects.filter(
+        Q(void_ind="n") & Q(question_flow_from__form_typ=form_typ)
+    )
+
+    final_fc = []
+    if form_typ == "field" or form_typ == "pit":
+        current_season = scouting.util.get_current_season()
+        scout_questions = scouting.models.Question.objects.filter(
+            Q(void_ind="n") & Q(season=current_season)
+        )
+        for fc in flow_conditions:
+            if fc.question_flow_from.question_set.filter(question_id__in=set(q.question_id for q in scout_questions)).count() > 0:
+                final_fc.append(fc)
+    else:
+        final_fc = flow_conditions
+
+    for qc in final_fc:
+        parsed.append(
+            {
+                "id": qc.id,
+                "question_flow_from": format_question_flow_values(qc.question_flow_from),
+                "question_flow_to": format_question_flow_values(qc.question_flow_to),
+                "active": qc.active,
+            }
+        )
+
+    return parsed
+
+
+def save_question_flow_condition(data):
+    if data.get("id", None) is not None:
+        qfc = QuestionFlowCondition.objects.get(
+            id=data["id"]
+        )
+    else:
+        qfc = QuestionFlowCondition()
+
+    qfc.active = data["active"]
+
+    qfc.question_flow_from_id = data["question_flow_from"]["id"]
+    qfc.question_flow_to_id = data["question_flow_to"]["id"]
+
+    qfc.save()
+
+    return qfc
+
+
+def format_question_flow_values(qf: QuestionFlow):
+    return {
+            "id": qf.id,
+            "name": qf.name,
+            "single_run": qf.single_run,
+            "form_typ": qf.form_typ,
+            "form_sub_typ": qf.form_sub_typ if qf.form_sub_typ is not None else None,
+            "questions": [format_question_values(q) for q in qf.question_set.filter(Q(active="y") & Q(void_ind="n")).order_by("order")],
+            "void_ind": qf.void_ind
+        }
+
+
+
+
+
+
+
+
+
+
 
 
 def get_form_questions(
@@ -852,15 +924,7 @@ def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
 
     parsed_qfs = []
     for qf in qfs:
-        parsed_qfs.append({
-            "id": qf.id,
-            "name": qf.name,
-            "single_run": qf.single_run,
-            "form_typ": qf.form_typ,
-            "form_sub_typ": qf.form_sub_typ if qf.form_sub_typ is not None else None,
-            "questions": [format_question_values(q) for q in qf.question_set.filter(Q(active="y") & Q(void_ind="n")).order_by("order")],
-            "void_ind": qf.void_ind
-        })
+        parsed_qfs.append(format_question_flow_values(qf))
 
     return parsed_qfs
 

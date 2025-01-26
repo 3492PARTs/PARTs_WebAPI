@@ -106,7 +106,22 @@ class QuestionCondition(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.question_condition_id) + " " + self.condition
+        return f"{self.question_condition_id} : {self.condition}"
+
+
+class QuestionFlowCondition(models.Model):
+    id = models.AutoField(primary_key=True)
+    question_flow_from = models.ForeignKey(
+        QuestionFlow, models.PROTECT, related_name="condition_question_flow_from"
+    )
+    question_flow_to = models.ForeignKey(
+        QuestionFlow, models.PROTECT, related_name="condition_question_flow_to"
+    )
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id}"
 
 
 class QuestionAggregateType(models.Model):
