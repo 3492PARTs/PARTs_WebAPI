@@ -82,7 +82,7 @@ class QuestionSerializer(serializers.Serializer):
     question_condition_typ = QuestionConditionTypeSerializer(
         required=False, allow_null=True
     )
-    has_conditions = serializers.CharField(required=False)
+    conditional_question_id_set = serializers.ListField()
 
 
 class ResponseSerializer(serializers.Serializer):

@@ -144,11 +144,10 @@ def format_question_values(q: Question):
 
     # Flag if question has conditions
     try:
-        count = q.condition_question_from.filter(
-            Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")).count()
-        has_conditions = "y" if count > 0 else "n"
+        conditional_questions = q.condition_question_from.filter(
+            Q(void_ind="n") & Q(active="y") & Q(question_to__active="y"))
     except QuestionCondition.DoesNotExist:
-        has_conditions = "n"
+        conditional_questions = None
 
     # Flag if question is condition of another
     try:
@@ -176,7 +175,7 @@ def format_question_values(q: Question):
         "question_conditional_on": conditional_on_question.question_from.question_id if conditional_on_question is not None else None,
         "question_condition_value": conditional_on_question.value if conditional_on_question is not None else None,
         "question_condition_typ": conditional_on_question.question_condition_typ if conditional_on_question is not None else None,
-        "has_conditions": has_conditions,
+        "conditional_question_id_set": set(cq.question_to.question_id for cq in conditional_questions),
     }
 
 
