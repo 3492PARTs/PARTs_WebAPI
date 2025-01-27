@@ -124,6 +124,9 @@ class QuestionFlowSerializer(serializers.Serializer):
     questions = QuestionSerializer(many=True, required=False)
     void_ind = serializers.CharField()
 
+    question_flow_conditional_on = serializers.IntegerField(allow_null=True)
+    has_conditions = serializers.CharField(required=False)
+
 
 class QuestionFlowConditionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)

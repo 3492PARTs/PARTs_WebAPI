@@ -656,6 +656,20 @@ def save_question_flow_condition(data):
 
 
 def format_question_flow_values(qf: QuestionFlow):
+    # Flag if question flow has conditions
+    try:
+        count = qf.condition_question_flow_from.filter(
+            Q(void_ind="n") & Q(question_flow_to__void_ind="n")).count()
+        has_conditions = "y" if count > 0 else "n"
+    except QuestionFlowCondition.DoesNotExist:
+        has_conditions = "n"
+
+    # Flag if question is condition of another
+    try:
+        question_flow_conditional_on = qf.condition_question_flow_to.get(Q(void_ind="n"))
+    except QuestionFlowCondition.DoesNotExist:
+        question_flow_conditional_on = None
+
     return {
             "id": qf.id,
             "name": qf.name,
@@ -663,7 +677,9 @@ def format_question_flow_values(qf: QuestionFlow):
             "form_typ": qf.form_typ,
             "form_sub_typ": qf.form_sub_typ if qf.form_sub_typ is not None else None,
             "questions": [format_question_values(q) for q in qf.question_set.filter(Q(active="y") & Q(void_ind="n")).order_by("order")],
-            "void_ind": qf.void_ind
+            "void_ind": qf.void_ind,
+            "has_conditions": has_conditions,
+            "question_flow_conditional_on": question_flow_conditional_on.question_flow_from.id if question_flow_conditional_on is not None else None
         }
 
 
