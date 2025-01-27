@@ -16,7 +16,7 @@ from form.serializers import (
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
     QuestionConditionSerializer, FlowSerializer, QuestionConditionTypeSerializer,
-    QuestionFlowConditionSerializer,
+    FlowConditionSerializer,
 )
 from general.security import has_access, ret_message
 
@@ -662,22 +662,22 @@ class QuestionFlowView(APIView):
             )
 
 
-class QuestionFlowConditionView(APIView):
+class FlowConditionView(APIView):
     """
     API endpoint to manage the question conditions
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "question-flow-condition/"
+    endpoint = "flow-condition/"
 
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, "admin") or has_access(
                 request.user.id, "scoutadmin"
             ):
-                qas = form.util.get_question_flow_condition(request.query_params["form_typ"])
-                serializer = QuestionFlowConditionSerializer(qas, many=True)
+                qas = form.util.get_flow_condition(request.query_params["form_typ"])
+                serializer = FlowConditionSerializer(qas, many=True)
                 return Response(serializer.data)
             else:
                 return ret_message(
@@ -688,7 +688,7 @@ class QuestionFlowConditionView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while getting question flow conditions.",
+                "An error occurred while getting flow conditions.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
@@ -697,7 +697,7 @@ class QuestionFlowConditionView(APIView):
 
     def post(self, request, format=None):
         try:
-            serializer = QuestionFlowConditionSerializer(data=request.data)
+            serializer = FlowConditionSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
                     "Invalid data",
@@ -712,7 +712,7 @@ class QuestionFlowConditionView(APIView):
             ):
                 with transaction.atomic():
                     form.util.save_question_flow_condition(serializer.validated_data)
-                return ret_message("Saved question condition successfully")
+                return ret_message("Saved flow condition successfully")
             else:
                 return ret_message(
                     "You do not have access.",
@@ -722,7 +722,7 @@ class QuestionFlowConditionView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while saving the question flow condition.",
+                "An error occurred while saving the flow condition.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,

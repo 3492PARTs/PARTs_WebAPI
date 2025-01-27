@@ -135,7 +135,7 @@ class FlowSerializer(serializers.Serializer):
     has_conditions = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
-class QuestionFlowConditionSerializer(serializers.Serializer):
+class FlowConditionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     flow_from = FlowSerializer()
     flow_to = FlowSerializer()

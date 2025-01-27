@@ -611,26 +611,20 @@ def format_question_condition_values(qc: QuestionCondition):
     }
 
 
-def get_question_flow_condition(form_typ: str):
+def get_flow_condition(form_typ: str):
     parsed = []
 
-    flow_conditions = FlowCondition.objects.filter(
-        Q(void_ind="n") & Q(flow_from__form_typ=form_typ)
-    )
+    q_season = Q()
 
-    final_fc = []
     if form_typ == "field" or form_typ == "pit":
         current_season = scouting.util.get_current_season()
-        scout_questions = scouting.models.Question.objects.filter(
-            Q(void_ind="n") & Q(season=current_season)
-        )
-        for fc in flow_conditions:
-            if fc.flow_from.question_set.filter(question_id__in=set(q.question_id for q in scout_questions)).count() > 0:
-                final_fc.append(fc)
-    else:
-        final_fc = flow_conditions
+        q_season = Q(flow_from__scout_question_flow__season=current_season)
 
-    for qc in final_fc:
+    flow_conditions = FlowCondition.objects.filter(
+        Q(void_ind="n") & Q(flow_from__form_typ=form_typ) & q_season
+    )
+
+    for qc in flow_conditions:
         parsed.append(
             {
                 "id": qc.id,
