@@ -114,24 +114,31 @@ class QuestionConditionSerializer(serializers.Serializer):
     question_to = QuestionSerializer()
     active = serializers.CharField()
 
-
 class QuestionFlowSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    flow_id = serializers.IntegerField()
+    question = QuestionSerializer()
+    order = serializers.IntegerField()
+    active = serializers.CharField()
+
+
+class FlowSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField()
     single_run = serializers.BooleanField()
     form_typ = FormTypeSerializer()
     form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
-    questions = QuestionSerializer(many=True, required=False)
+    questions = QuestionFlowSerializer(many=True, required=False)
     void_ind = serializers.CharField()
 
-    question_flow_conditional_on = serializers.IntegerField(allow_null=True)
+    flow_conditional_on = serializers.IntegerField(allow_null=True)
     has_conditions = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
 class QuestionFlowConditionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
-    question_flow_from = QuestionFlowSerializer()
-    question_flow_to = QuestionFlowSerializer()
+    flow_from = FlowSerializer()
+    flow_to = FlowSerializer()
     active = serializers.CharField()
 
 
@@ -143,7 +150,7 @@ class QuestionFlowAnswerSerializer(serializers.Serializer):
 
 class QuestionAnswerSerializer(serializers.Serializer):
     question = QuestionSerializer(required=False, allow_null=True)
-    question_flow = QuestionFlowSerializer(required=False, allow_null=True)
+    question_flow = FlowSerializer(required=False, allow_null=True)
     answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     question_flow_answers = QuestionFlowAnswerSerializer(
         many=True, required=False, allow_null=True
@@ -167,7 +174,7 @@ class FormInitializationSerializer(serializers.Serializer):
     questions = QuestionSerializer(many=True)
     question_types = QuestionTypeSerializer(many=True)
     form_sub_types = FormSubTypeSerializer(many=True, required=False)
-    question_flows = QuestionFlowSerializer(many=True, required=False)
+    question_flows = FlowSerializer(many=True, required=False)
 
 
 class GraphTypeSerializer(serializers.Serializer):

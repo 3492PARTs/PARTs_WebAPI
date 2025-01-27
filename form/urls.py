@@ -8,7 +8,7 @@ from .views import (
     QuestionAggregateView,
     QuestionAggregateTypeView,
     QuestionConditionView,
-    QuestionView, QuestionFlowView, QuestionConditionTypesView, QuestionFlowConditionView,
+    QuestionView, FlowView, QuestionConditionTypesView, QuestionFlowConditionView, QuestionFlowView,
 )
 
 urlpatterns = [
@@ -21,6 +21,7 @@ urlpatterns = [
     path("question-aggregate-types/", QuestionAggregateTypeView.as_view()),
     path("question-condition/", QuestionConditionView.as_view()),
     path("question-condition-types/", QuestionConditionTypesView.as_view()),
+    path("flow/", FlowView.as_view()),
     path("question-flow/", QuestionFlowView.as_view()),
     path("question-flow-condition/", QuestionFlowConditionView.as_view()),
 ]

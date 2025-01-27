@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from form.serializers import QuestionSerializer, FormSubTypeSerializer, QuestionFlowSerializer
+from form.serializers import QuestionSerializer, FormSubTypeSerializer, FlowSerializer
 from user.serializers import UserSerializer
 
 
@@ -167,7 +167,7 @@ class FormSubTypeFormSerializer(serializers.Serializer):
     form_sub_typ = FormSubTypeSerializer()
     questions = QuestionSerializer(many=True)
     # conditional_questions = QuestionSerializer(many=True)
-    question_flows = QuestionFlowSerializer(many=True)
+    question_flows = FlowSerializer(many=True)
 
 
 class FieldFormFormSerializer(serializers.Serializer):

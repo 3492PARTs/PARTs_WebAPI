@@ -286,7 +286,7 @@ class Question(models.Model):
 class QuestionFlow(models.Model):
     id = models.AutoField(primary_key=True)
     question_flow = models.ForeignKey(
-        form.models.QuestionFlow, models.PROTECT, related_name="scout_question_flow"
+        form.models.Flow, models.PROTECT, related_name="scout_question_flow"
     )
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")

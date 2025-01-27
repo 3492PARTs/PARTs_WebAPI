@@ -15,7 +15,7 @@ from form.serializers import (
     ResponseSerializer,
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
-    QuestionConditionSerializer, QuestionFlowSerializer, QuestionConditionTypeSerializer,
+    QuestionConditionSerializer, FlowSerializer, QuestionConditionTypeSerializer,
     QuestionFlowConditionSerializer,
 )
 from general.security import has_access, ret_message
@@ -530,13 +530,13 @@ class QuestionConditionTypesView(APIView):
             )
 
 
-class QuestionFlowView(APIView):
+class FlowView(APIView):
     """
     API endpoint to get question flows
     """
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "question-flow/"
+    endpoint = "flow/"
 
     def get(self, request, format=None):
         try:
@@ -547,9 +547,9 @@ class QuestionFlowView(APIView):
                 request.query_params.get("form_sub_typ", None)
             )
             if fid is None:
-                serializer = QuestionFlowSerializer(questions, many=True)
+                serializer = FlowSerializer(questions, many=True)
             else:
-                serializer = QuestionFlowSerializer(questions[0])
+                serializer = FlowSerializer(questions[0])
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -565,7 +565,7 @@ class QuestionFlowView(APIView):
             if has_access(request.user.id, "admin") or has_access(
                 request.user.id, "scoutadmin"
             ):
-                serializer = QuestionFlowSerializer(data=request.data)
+                serializer = FlowSerializer(data=request.data)
                 if not serializer.is_valid():
                     return ret_message(
                         "Invalid data",
@@ -576,7 +576,7 @@ class QuestionFlowView(APIView):
                     )
 
                 with transaction.atomic():
-                    form.util.save_question_flow(serializer.validated_data)
+                    form.util.save_flow(serializer.validated_data)
 
                 return ret_message("Saved question flow successfully.")
             else:
@@ -594,6 +594,73 @@ class QuestionFlowView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class QuestionFlowView(APIView):
+    """
+    API endpoint to get question flows
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "question-flow/"
+
+    def get(self, request, format=None):
+        try:
+            fid = request.query_params.get("id", None)
+            questions = form.util.get_question_flows(
+                fid,
+                request.query_params.get("form_typ", None),
+                request.query_params.get("form_sub_typ", None)
+            )
+            if fid is None:
+                serializer = FlowSerializer(questions, many=True)
+            else:
+                serializer = FlowSerializer(questions[0])
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question flows.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = FlowSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                with transaction.atomic():
+                    form.util.save_flow(serializer.validated_data)
+
+                return ret_message("Saved question flow successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the question flow.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
 
 class QuestionFlowConditionView(APIView):
     """

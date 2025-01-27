@@ -39,17 +39,13 @@ class FormSubType(models.Model):
         return self.form_sub_typ + " " + self.form_sub_nm
 
 
-class QuestionFlow(models.Model):
+class Flow(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     single_run = models.BooleanField(default=False)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     form_sub_typ = models.ForeignKey(FormSubType, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")
-    """question = models.ForeignKey(Question, models.PROTECT)
-    order = models.IntegerField()
-    req_prev_flow = models.ForeignKey("self", models.PROTECT)
-    req_prev_flow_value = models.CharField(2000)"""
 
     def __str__(self):
         return str(self.id) + " " + str(self.name)
@@ -65,7 +61,6 @@ class Question(models.Model):
     order = models.IntegerField()
     required = models.CharField(max_length=1)
     active = models.CharField(max_length=1, default="y")
-    question_flow = models.ManyToManyField(QuestionFlow)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
@@ -109,19 +104,35 @@ class QuestionCondition(models.Model):
         return f"{self.question_condition_id} : {self.condition}"
 
 
-class QuestionFlowCondition(models.Model):
+class FlowCondition(models.Model):
     id = models.AutoField(primary_key=True)
-    question_flow_from = models.ForeignKey(
-        QuestionFlow, models.PROTECT, related_name="condition_question_flow_from"
+    flow_from = models.ForeignKey(
+        Flow, models.PROTECT, related_name="condition_flow_from"
     )
-    question_flow_to = models.ForeignKey(
-        QuestionFlow, models.PROTECT, related_name="condition_question_flow_to"
+    flow_to = models.ForeignKey(
+        Flow, models.PROTECT, related_name="condition_flow_to"
     )
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
         return f"{self.id}"
+
+
+class QuestionFlow(models.Model):
+    id = models.AutoField(primary_key=True)
+    flow = models.ForeignKey(
+        Flow, models.PROTECT
+    )
+    question = models.ForeignKey(
+        Question, models.PROTECT
+    )
+    order = models.IntegerField()
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.flow} : {self.question}"
 
 
 class QuestionAggregateType(models.Model):
@@ -163,7 +174,7 @@ class QuestionAnswer(models.Model):
         Response, models.PROTECT, null=True, related_name="form_response"
     )
     question = models.ForeignKey(Question, models.PROTECT, null=True)
-    question_flow = models.ForeignKey(QuestionFlow, models.PROTECT, null=True)
+    question_flow = models.ForeignKey(Flow, models.PROTECT, null=True)
     answer = models.TextField(blank=True, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
