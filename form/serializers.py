@@ -116,7 +116,7 @@ class QuestionConditionSerializer(serializers.Serializer):
 
 class QuestionFlowSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
-    flow_id = serializers.IntegerField()
+    flow_id = serializers.IntegerField(required=False, allow_null=True)
     question = QuestionSerializer()
     order = serializers.IntegerField()
     active = serializers.CharField()
