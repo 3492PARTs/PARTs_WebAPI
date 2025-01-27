@@ -238,7 +238,8 @@ def save_question(question):
 
     q.form_sub_typ_id = None if question.get("form_sub_typ", None) is None else question["form_sub_typ"].get("form_sub_typ", None)
 
-    q.question_flow_id = question.get("question_flow_id", None)
+    for qfid in question.get("question_flow_id_set", []):
+        q.question_flow.add(QuestionFlow.objects.get(id=qfid))
 
     q.save()
 
@@ -701,39 +702,12 @@ def get_form_questions(
         form_parsed["form_sub_types"].append({
             "form_sub_typ": st,
             "questions": qs,
-            #"conditional_questions": cqs,
             "question_flows": qfs
         })
 
     #print(form_parsed)
 
     return form_parsed
-
-
-    questions_with_conditions = []
-    questions = get_questions(form_typ, active, form_sub_typ, not_in_flow)
-
-    for q in questions:
-        # Only process the ones that are not conditions, because the conditions will be in their Question FROM - see below loop
-        if q["is_condition"] == "n":
-            q["conditions"] = []
-            question = Question.objects.get(question_id=q["question_id"])
-
-            """ 
-                Question conditions FROM will have multiple entries in the condition table
-                indicating that they have multiple conditions TO. A condition TO is a 
-                question that shows when the condition has been met on the question FROM
-                So this loop gets all the conditions that could show for a question.
-
-            """
-            for qc in question.condition_question_from.filter(
-                    Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")
-            ):
-                q["conditions"].append(format_question_condition_values(qc))
-
-            questions_with_conditions.append(q)
-
-    return questions_with_conditions
 
 
 def get_response_answers(response: Response):
