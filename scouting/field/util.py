@@ -61,21 +61,21 @@ def build_table_columns():
                 }
             )
 
-        for question_flow in form_sub_type["question_flows"]:
-            for question in question_flow["questions"]:
+        for flow in form_sub_type["question_flows"]:
+            for question_flow in flow["questions"]:
                 all_questions.append(question)
                 table_cols.append(
                     {
-                        "PropertyName": "ans" + str(question["question_id"]),
+                        "PropertyName": "ans" + str(question_flow["question"]["question_id"]),
                         "ColLabel": (
                             ""
-                            if question.get("form_sub_typ", None) is None
-                            else question.get("form_sub_typ").form_sub_typ[0:1].upper() + ": "
+                            if question_flow["question"].get("form_sub_typ", None) is None
+                            else question_flow["question"].get("form_sub_typ").form_sub_typ[0:1].upper() + ": "
                         )
                         + " QF: "
-                        + question["question"],
-                        "Width": question["table_col_width"],
-                        "order": question["order"],
+                        + question_flow["question"]["question"],
+                        "Width": question_flow["question"]["table_col_width"],
+                        "order": question_flow["question"]["order"],
                     }
                 )
 
