@@ -160,7 +160,7 @@ def format_question_values(q: Question):
 
     return {
         "question_id": q.question_id,
-        "question_flow_id_set": set(qf.id for qf in question_flows),
+        "flow_id_set": set(qf.flow.id for qf in question_flows),
         "season_id": season,
         "question": q.question,
         "table_col_width": q.table_col_width,
@@ -702,7 +702,7 @@ def get_form_questions(
     sub_types = FormSubType.objects.filter(form_typ=form_type)
     for st in sub_types:
         qs = get_questions("field", "y", st.form_sub_typ, not_in_flow=True)
-        qfs = get_question_flows(form_typ="field", form_sub_typ=st.form_sub_typ)
+        qfs = get_flows(form_typ="field", form_sub_typ=st.form_sub_typ)
 
         form_parsed["form_sub_types"].append({
             "form_sub_typ": st,
@@ -723,7 +723,7 @@ def get_response_answers(response: Response):
     for question_answer in question_answers:
         answers.append({
             "question": get_questions(qid=question_answer.question.question_id)[0] if question_answer.question is not None else None,
-            "question_flow": get_question_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
+            "question_flow": get_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
             "answer": question_answer.value,
             "question_flow_answers": list({
                 "question": format_question_values(qfa.question),
@@ -879,7 +879,7 @@ def save_answers(data):
             alerts.util.stage_channel_send_for_all_channels(a, acct)
 
 
-def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
+def get_flows(fid = None, form_typ=None, form_sub_typ=None):
     q_id = Q()
     if fid is not None:
         q_id = Q(id=fid)
