@@ -65,7 +65,7 @@ class Question(models.Model):
     order = models.IntegerField()
     required = models.CharField(max_length=1)
     active = models.CharField(max_length=1, default="y")
-    question_flow = models.ForeignKey(QuestionFlow, models.PROTECT, null=True)
+    question_flow = models.ManyToManyField(QuestionFlow)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

@@ -55,7 +55,7 @@ class QuestionConditionTypeSerializer(serializers.Serializer):
 class QuestionSerializer(serializers.Serializer):
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
-    question_flow_id = serializers.IntegerField(required=False, allow_null=True)
+    question_flow_id_set = serializers.ListField()
 
     question = serializers.CharField()
     table_col_width = serializers.CharField()
@@ -125,7 +125,7 @@ class QuestionFlowSerializer(serializers.Serializer):
     void_ind = serializers.CharField()
 
     question_flow_conditional_on = serializers.IntegerField(allow_null=True)
-    has_conditions = serializers.CharField(required=False)
+    has_conditions = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
 class QuestionFlowConditionSerializer(serializers.Serializer):

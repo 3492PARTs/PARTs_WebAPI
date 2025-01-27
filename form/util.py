@@ -155,7 +155,7 @@ def format_question_values(q: Question):
 
     return {
         "question_id": q.question_id,
-        "question_flow_id": q.question_flow.id if q.question_flow is not None else None,
+        "question_flow_id_set": set(qf.id for qf in q.question_flow.filter(void_ind="n")),
         "season_id": season,
         "question": q.question,
         "table_col_width": q.table_col_width,
@@ -684,15 +684,6 @@ def format_question_flow_values(qf: QuestionFlow):
 
 
 
-
-
-
-
-
-
-
-
-
 def get_form_questions(
         form_typ: str
 ):
@@ -925,16 +916,7 @@ def get_question_flows(fid = None, form_typ=None, form_sub_typ=None):
     q_season = Q()
     if form_typ == "field" or form_typ == "pit":
         current_season = scouting.util.get_current_season()
-        scout_questions = scouting.models.Question.objects.filter(
-            Q(void_ind="n") & Q(season=current_season)
-        )
-        q_season = Q(
-            Exists(
-                Question.objects.filter(Q(question_flow_id=OuterRef('pk')) &
-                                        Q(question_id__in=set(sq.question_id for sq in scout_questions)))
-            ) |
-            ~Exists(Question.objects.filter(Q(question_flow_id=OuterRef('pk'))))
-        )
+        q_season = Q(scout_question_flow__season=current_season)
 
     qfs = QuestionFlow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n"))
 
@@ -962,5 +944,11 @@ def save_question_flow(data):
 
     for question in data.get("questions", []):
         save_question(question)
+
+    if data["form_typ"]["form_typ"] in ["pit", "field"]:
+        try:
+            qf.scout_question_flow.get(void_ind="n")
+        except scouting.models.QuestionFlow.DoesNotExist:
+            scouting.models.QuestionFlow(question_flow=qf, season=scouting.util.get_current_season()).save()
 
     return qf

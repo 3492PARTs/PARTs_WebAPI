@@ -283,6 +283,18 @@ class Question(models.Model):
         return f"Scout Question {self.id} {self.question}"
 
 
+class QuestionFlow(models.Model):
+    id = models.AutoField(primary_key=True)
+    question_flow = models.ForeignKey(
+        form.models.QuestionFlow, models.PROTECT, related_name="scout_question_flow"
+    )
+    season = models.ForeignKey(Season, models.PROTECT, null=True)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"Scout Question Flow {self.id} {self.question_flow}"
+
+
 class UserInfo(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, models.PROTECT, related_name="scouting_user_info")
