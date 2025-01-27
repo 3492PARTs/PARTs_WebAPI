@@ -3,7 +3,7 @@ from django.db import IntegrityError
 from django.db.models import Q
 
 import general.cloudinary
-from form.models import QuestionAnswer
+from form.models import Answer
 from general.security import ret_message
 import scouting
 from scouting.models import (
@@ -40,7 +40,7 @@ def delete_event(event_id):
 
     scout_fields = FieldResponse.objects.filter(event=e)
     for sf in scout_fields:
-        scout_field_answers = QuestionAnswer.objects.filter(response=sf.response)
+        scout_field_answers = Answer.objects.filter(response=sf.response)
         for sfa in scout_field_answers:
             sfa.delete()
         sf.delete()
@@ -48,7 +48,7 @@ def delete_event(event_id):
 
     scout_pits = PitResponse.objects.filter(event=e)
     for sp in scout_pits:
-        scout_pit_answers = QuestionAnswer.objects.filter(response=sp.response)
+        scout_pit_answers = Answer.objects.filter(response=sp.response)
         for spa in scout_pit_answers:
             spa.delete()
 

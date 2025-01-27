@@ -3,7 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 import datetime
 
-from form.models import QuestionAggregate, QuestionAnswer, FormSubType, QuestionFlowAnswer
+from form.models import QuestionAggregate, Answer, FormSubType, FlowAnswer
 import scouting.util
 import form
 from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule
@@ -168,18 +168,15 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
 
     # Loop over all the responses selected and put in table
     for scout_field in scout_fields:
-        question_answers = QuestionAnswer.objects.filter(Q(response=scout_field.response) & Q(void_ind="n"))
+        answers = Answer.objects.filter(Q(response=scout_field.response) & Q(void_ind="n"))
 
         response = {}
-        for question_answer in question_answers:
-            if question_answer.question is not None:
-                response[f"ans{question_answer.question_id}"] = question_answer.answer
-            if question_answer.question_flow is not None:
-                for qf_question in question_answer.question_flow.question_set.filter(Q(active="y") & Q(void_ind="n")):
-
-                    count = question_answer.questionflowanswer_set.filter(Q(question=qf_question) & Q(void_ind="n")).count()
-
-                    response[f"ans{qf_question.question_id}"] = count + response.get(f"ans{qf_question.question_id}", 0)
+        for answer in answers:
+            if answer.question is not None:
+                response[f"ans{answer.question_id}"] = answer.value
+            if answer.flow is not None:
+                for flow_answer in answer.flowanswer_set.filter(void_ind="n"):
+                    response[f"ans{flow_answer.question.question_id}"] = 1 + response.get(f"ans{flow_answer.question.question_id}", 0)
 
         # get aggregates
         question_aggregates = QuestionAggregate.objects.filter(
@@ -189,11 +186,11 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
         for question_aggregate in question_aggregates:
             summation = 0
             for question in question_aggregate.questions.filter(Q(void_ind="n") & Q(active="y")):
-                for question_answer in question.questionanswer_set.filter(
+                for answer in question.questionanswer_set.filter(
                     Q(void_ind="n") & Q(response=scout_field.response)
                 ):
-                    if question_answer.answer is not None and question_answer.answer != "!EXIST":
-                        summation += int(question_answer.answer)
+                    if answer.value is not None and answer.value != "!EXIST":
+                        summation += int(answer.value)
             response[f"ans_sqa{question_aggregate.question_aggregate_id}"] = summation
 
         response["match"] = scout_field.match.match_number if scout_field.match else None

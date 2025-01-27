@@ -1,7 +1,7 @@
 from django.db.models import Q
 
 import general.cloudinary
-from form.models import QuestionAnswer
+from form.models import Answer
 from general.security import ret_message
 import scouting
 import form
@@ -69,12 +69,12 @@ def get_responses(team=None):
         if sp is not None:
             for q in questions:
                 try:
-                    answer = QuestionAnswer.objects.get(
+                    answer = Answer.objects.get(
                         Q(response=sp.response)
                         & Q(void_ind="n")
                         & Q(question_id=q["question_id"])
-                    ).answer
-                except QuestionAnswer.DoesNotExist:
+                    ).value
+                except Answer.DoesNotExist:
                     answer = "!FOUND"
 
                 tmp_responses.append(
@@ -82,7 +82,7 @@ def get_responses(team=None):
                 )
 
                 for c in q.get("conditions", []):
-                    answer = QuestionAnswer.objects.get(
+                    answer = Answer.objects.get(
                         Q(response=sp.response)
                         & Q(void_ind="n")
                         & Q(question_id=c["question_to"]["question_id"])
@@ -93,7 +93,7 @@ def get_responses(team=None):
                             + c["condition"]
                             + " "
                             + c["question_to"]["question"],
-                            "answer": answer.answer,
+                            "answer": answer.value,
                         }
                     )
 

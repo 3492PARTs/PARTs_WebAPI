@@ -168,30 +168,30 @@ class Response(models.Model):
         return str(self.response_id) + " " + str(self.form_typ)
 
 
-class QuestionAnswer(models.Model):
-    question_answer_id = models.AutoField(primary_key=True)
+class Answer(models.Model):
+    id = models.AutoField(primary_key=True)
     response = models.ForeignKey(
         Response, models.PROTECT, null=True, related_name="form_response"
     )
     question = models.ForeignKey(Question, models.PROTECT, null=True)
-    question_flow = models.ForeignKey(Flow, models.PROTECT, null=True)
-    answer = models.TextField(blank=True, null=True)
+    flow = models.ForeignKey(Flow, models.PROTECT, null=True)
+    value = models.TextField(blank=True, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.question_answer_id) + " " + str(self.answer)
+        return str(self.id) + " " + str(self.value)
 
 
-class QuestionFlowAnswer(models.Model):
+class FlowAnswer(models.Model):
     id = models.AutoField(primary_key=True)
-    question_answer = models.ForeignKey(QuestionAnswer, models.PROTECT, null=True)
+    answer = models.ForeignKey(Answer, models.PROTECT, null=True)
     question = models.ForeignKey(Question, models.PROTECT)
-    answer = models.TextField(blank=True, null=True)
-    answer_time = models.TimeField(blank=True, null=True)
+    value = models.TextField(blank=True, null=True)
+    value_time = models.TimeField(blank=True, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} {self.question}"
+        return str(self.id) + " " + str(self.value)
 
 
 class GraphType(models.Model):

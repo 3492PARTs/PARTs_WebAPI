@@ -12,13 +12,13 @@ from form.models import (
     FormType,
     Question,
     Response,
-    QuestionAnswer,
+    Answer,
     QuestionOption,
     FormSubType,
     QuestionType,
     QuestionAggregate,
     QuestionAggregateType,
-    QuestionCondition, Flow, QuestionFlowAnswer,
+    QuestionCondition, Flow, FlowAnswer,
     QuestionConditionType, FlowCondition, QuestionFlow
 )
 from scouting.models import Match, Season, FieldResponse, PitResponse, Event
@@ -304,7 +304,7 @@ def save_question(question):
                 )
 
         for qa in questions_answered:
-            QuestionAnswer(
+            Answer(
                 response=qa, question=q, answer="!EXIST", void_ind="n"
             ).save()
 
@@ -328,7 +328,7 @@ def save_question(question):
 
 
 def save_question_answer(answer: str, response: Response, question: Question = None, question_flow: Flow = None):
-    qa = QuestionAnswer(
+    qa = Answer(
         question=question, question_flow=question_flow, answer=answer, response=response, void_ind="n"
     )
     qa.save()
@@ -346,15 +346,15 @@ def save_or_update_question_answer(answer, response: Response):
 
     # Get answer to update or save new
     try:
-        spa = QuestionAnswer.objects.get(
+        spa = Answer.objects.get(
             Q(response=response)
             & q_question
             & q_question_flow
             & Q(void_ind="n")
         )
-        spa.answer = answer.get("answer", "")
+        spa.value = answer.get("answer", "")
         spa.save()
-    except QuestionAnswer.DoesNotExist:
+    except Answer.DoesNotExist:
         question = None
         question_flow = None
 
@@ -372,10 +372,10 @@ def save_or_update_question_answer(answer, response: Response):
     return spa
 
 
-def save_question_flow_answer(qf_answer, answer: QuestionAnswer):
-    qfa = QuestionFlowAnswer(question_answer=answer,
-        question_id=qf_answer['question']['question_id'], answer=qf_answer.get("answer", ""), answer_time=qf_answer['answer_time'], void_ind="n"
-    )
+def save_question_flow_answer(qf_answer, answer: Answer):
+    qfa = FlowAnswer(question_answer=answer,
+                     question_id=qf_answer['question']['question_id'], answer=qf_answer.get("answer", ""), answer_time=qf_answer['answer_time'], void_ind="n"
+                     )
     qfa.save()
     return qfa
 
@@ -455,10 +455,10 @@ def get_responses(form_typ: int, archive_ind: str):
 
 def get_response_question_answer(response: form.models.Response, question_id: int):
     try:
-        answer = QuestionAnswer.objects.get(
+        answer = Answer.objects.get(
             Q(question_id=question_id) & Q(response=response) & Q(void_ind="n")
-        ).answer
-    except QuestionAnswer.DoesNotExist:
+        ).value
+    except Answer.DoesNotExist:
         answer = "!FOUND"
 
     return answer
@@ -724,17 +724,17 @@ def get_form_questions(
 def get_response_answers(response: Response):
     answers = []
 
-    question_answers = QuestionAnswer.objects.filter(Q(response=response) & Q(void_ind="n"))
+    question_answers = Answer.objects.filter(Q(response=response) & Q(void_ind="n"))
 
     for question_answer in question_answers:
         answers.append({
             "question": get_questions(qid=question_answer.question.question_id)[0] if question_answer.question is not None else None,
-            "question_flow": get_question_flows(question_answer.question_flow.id)[0] if question_answer.question_flow is not None else None,
-            "answer": question_answer.answer,
+            "question_flow": get_question_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
+            "answer": question_answer.value,
             "question_flow_answers": list({
                 "question": format_question_values(qfa.question),
-                "answer": qfa.answer,
-                "answer_time": qfa.answer_time
+                "answer": qfa.value,
+                "answer_time": qfa.value_time
                                          } for qfa in question_answer.questionflowanswer_set.filter(void_ind="n").order_by("answer_time"))
         })
 
