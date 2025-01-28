@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from general.security import has_access, ret_message
 from rest_framework.response import Response
 
-from ..serializers import FieldFormSerializer
+from ..serializers import FieldFormSerializer, MatchSerializer
 
 auth_obj = "scoutadmin"
 app_url = "scouting/admin/"
@@ -216,7 +216,7 @@ class EventView(APIView):
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "add-event/"
+    endpoint = "event/"
 
     def post(self, request, format=None):
         try:
@@ -336,7 +336,7 @@ class TeamToEventView(APIView):
                 )
 
             if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.link_team_to_Event(serializer.validated_data)
+                req = scouting.admin.util.link_team_to_event(serializer.validated_data)
                 return ret_message(req)
             else:
                 return ret_message(
@@ -377,7 +377,7 @@ class RemoveTeamToEventView(APIView):
                 )
 
             if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.remove_link_team_to_Event(
+                req = scouting.admin.util.remove_link_team_to_event(
                     serializer.validated_data
                 )
                 return ret_message(req)
@@ -397,6 +397,72 @@ class RemoveTeamToEventView(APIView):
                 e,
             )
 
+
+
+class MatchView(APIView):
+    """
+    API endpoint to manage an event
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "match/"
+
+    def post(self, request, format=None):
+        try:
+            serializer = MatchSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            if has_access(request.user.id, auth_obj):
+                scouting.admin.util.save_match(serializer.validated_data)
+                return ret_message("Successfully added the match.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the match.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+    """
+    def delete(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.admin.util.delete_event(
+                    request.query_params.get("event_id", None)
+                )
+                return req
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while deleting the event.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+    """
 
 class ScoutFieldScheduleView(APIView):
     """API endpoint to save scout schedule entry"""

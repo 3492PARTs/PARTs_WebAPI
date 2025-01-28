@@ -335,6 +335,7 @@ def save_message(message):
     msg.save()
     return msg
 
+
 def verify_tba_webhook_call(request):
     json_str = json.dumps(request.data, ensure_ascii=True)
     hmac_hex = hmac.new(

@@ -272,7 +272,7 @@ def parse_match(m: Match):
 
     return {
         "match_id": m.match_id,
-        "event_id": m.event.event_id,
+        "event": m.event,
         "match_number": m.match_number,
         "red_score": m.red_score,
         "blue_score": m.blue_score,

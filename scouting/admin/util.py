@@ -186,7 +186,29 @@ def save_event(data):
     return event
 
 
-def link_team_to_Event(data):
+def save_match(data):
+    if (data.get("match_id", None)) is not None and len(data["match_id"]) > 0:
+        match = Match.objects.get(match_id=data["match_id"])
+    else:
+        season = Season.objects.get(season_id=data["event"]["season_id"])
+        match = Match(match_id=f"{season.season}{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}")
+        match.event_id = data["event"]["event_id"]
+
+    match.match_number = data["match_number"]
+    match.red_one_id = data["red_one_id"]
+    match.red_two_id = data["red_two_id"]
+    match.red_three_id = data["red_three_id"]
+    match.blue_one_id = data["blue_one_id"]
+    match.blue_two_id = data["blue_two_id"]
+    match.blue_three_id = data["blue_three_id"]
+    match.time = data["time"]
+    match.comp_level_id = data["comp_level"]["comp_lvl_typ"]
+
+    match.save()
+    return match
+
+
+def link_team_to_event(data):
     messages = ""
 
     for t in data.get("teams", []):
@@ -218,7 +240,7 @@ def link_team_to_Event(data):
     return messages
 
 
-def remove_link_team_to_Event(data):
+def remove_link_team_to_event(data):
     messages = ""
 
     for t in data.get("teams", []):

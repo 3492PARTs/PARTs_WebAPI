@@ -8,6 +8,7 @@ urlpatterns = [
     path("season/", SeasonView.as_view()),
     path("event/", EventView.as_view()),
     path("team/", TeamView.as_view()),
+    path("match/", MatchView.as_view()),
     path("set-season-event/", SetSeasonEventView.as_view()),
     path("team-to-event/", TeamToEventView.as_view()),
     path("remove-team-to-event/", RemoveTeamToEventView.as_view()),

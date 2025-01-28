@@ -50,36 +50,36 @@ class CompetitionLevelSerializer(serializers.Serializer):
 
 
 class MatchSerializer(serializers.Serializer):
-    match_id = serializers.CharField()
-    event_id = serializers.IntegerField()
+    match_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    event = EventSerializer()
     match_number = serializers.IntegerField()
-    red_score = serializers.IntegerField()
-    blue_score = serializers.IntegerField()
+    red_score = serializers.IntegerField(required=False, allow_null=True)
+    blue_score = serializers.IntegerField(required=False, allow_null=True)
     time = serializers.DateTimeField(allow_null=True)
 
     blue_one_id = serializers.IntegerField()
-    blue_one_rank = serializers.IntegerField(allow_null=True)
-    blue_one_field_response = serializers.BooleanField()
+    blue_one_rank = serializers.IntegerField(required=False, allow_null=True)
+    blue_one_field_response = serializers.BooleanField(required=False, allow_null=True)
 
     blue_two_id = serializers.IntegerField()
-    blue_two_rank = serializers.IntegerField(allow_null=True)
-    blue_two_field_response = serializers.BooleanField()
+    blue_two_rank = serializers.IntegerField(required=False, allow_null=True)
+    blue_two_field_response = serializers.BooleanField(required=False, allow_null=True)
 
     blue_three_id = serializers.IntegerField()
-    blue_three_rank = serializers.IntegerField(allow_null=True)
-    blue_three_field_response = serializers.BooleanField()
+    blue_three_rank = serializers.IntegerField(required=False, allow_null=True)
+    blue_three_field_response = serializers.BooleanField(required=False, allow_null=True)
 
     red_one_id = serializers.IntegerField()
-    red_one_rank = serializers.IntegerField(allow_null=True)
-    red_one_field_response = serializers.BooleanField()
+    red_one_rank = serializers.IntegerField(required=False, allow_null=True)
+    red_one_field_response = serializers.BooleanField(required=False, allow_null=True)
 
     red_two_id = serializers.IntegerField()
-    red_two_rank = serializers.IntegerField(allow_null=True)
-    red_two_field_response = serializers.BooleanField()
+    red_two_rank = serializers.IntegerField(required=False, allow_null=True)
+    red_two_field_response = serializers.BooleanField(required=False, allow_null=True)
 
     red_three_id = serializers.IntegerField()
-    red_three_rank = serializers.IntegerField(allow_null=True)
-    red_three_field_response = serializers.BooleanField()
+    red_three_rank = serializers.IntegerField(required=False, allow_null=True)
+    red_three_field_response = serializers.BooleanField(required=False, allow_null=True)
 
     comp_level = CompetitionLevelSerializer()
 
