@@ -42,7 +42,7 @@ class ScoutQuestionSerializer(serializers.Serializer):
     y = serializers.FloatField(required=False, allow_null=True)
     width = serializers.FloatField(required=False, allow_null=True)
     height = serializers.FloatField(required=False, allow_null=True)
-    icon = serializers.CharField(required=False, allow_null=True)
+    icon = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     icon_only = serializers.BooleanField(required=False, allow_null=True)
     value_multiplier = serializers.IntegerField(required=False, allow_null=True)
 
@@ -53,7 +53,7 @@ class QuestionConditionTypeSerializer(serializers.Serializer):
 
 
 class QuestionSerializer(serializers.Serializer):
-    question_id = serializers.IntegerField(required=False, allow_null=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
     flow_id_set = serializers.ListField()
 

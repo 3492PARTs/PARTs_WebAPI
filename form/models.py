@@ -52,7 +52,7 @@ class Flow(models.Model):
 
 
 class Question(models.Model):
-    question_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     form_sub_typ = models.ForeignKey(FormSubType, models.PROTECT, null=True)
     question_typ = models.ForeignKey(QuestionType, models.PROTECT)
@@ -64,7 +64,7 @@ class Question(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.question_id} {self.question}"
+        return f"{self.id} {self.question}"
 
 
 class QuestionOption(models.Model):

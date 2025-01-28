@@ -43,7 +43,7 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
-        q_season = Q(question_id__in=set(sq.question_id for sq in scout_questions))
+        q_season = Q(id__in=set(sq.id for sq in scout_questions))
 
     if active != "":
         q_active_ind = Q(active=active)
@@ -63,7 +63,7 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
         q_is_not_conditional = Q(Q(condition_question_to__isnull=True) | (Q(condition_question_to__isnull=False) & (Q(condition_question_to__active="n") | Q(condition_question_to__void_ind="y"))))
 
     if qid is not None:
-        q_id = Q(question_id=qid)
+        q_id = Q(id=qid)
 
     qs = (
         Question.objects.prefetch_related("questionoption_set").annotate(
@@ -115,7 +115,7 @@ def format_question_values(q: Question):
 
         scout_question = {
             "id": sq.id,
-            "question_id": sq.question_id,
+            "question_id": sq.id,
             "season_id": sq.season.season_id,
             "x": sq.x,
             "y": sq.y,
@@ -132,7 +132,7 @@ def format_question_values(q: Question):
 
     # List of options if applicable
     questionoption_set = []
-    for qo in q.questionoption_set.filter(void_ind="n"):
+    for qo in q.questionoption_set.filter(Q(void_ind="n") & Q(active="y")):
         questionoption_set.append(
             {
                 "question_opt_id": qo.question_opt_id,
@@ -158,7 +158,7 @@ def format_question_values(q: Question):
     question_flows = QuestionFlow.objects.filter(Q(question=q) & Q(active="y") & Q(void_ind="n"))
 
     return {
-        "question_id": q.question_id,
+        "id": q.id,
         "flow_id_set": set(qf.flow.id for qf in question_flows),
         "season_id": season,
         "question": q.question,
@@ -172,10 +172,10 @@ def format_question_values(q: Question):
         "questionoption_set": questionoption_set,
         "display_value": f"{'' if q.active == 'y' else 'Deactivated: '} Order: {q.order}: {q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else ''}{q.question}",
         "scout_question": scout_question,
-        "question_conditional_on": conditional_on_question.question_from.question_id if conditional_on_question is not None else None,
+        "question_conditional_on": conditional_on_question.question_from.id if conditional_on_question is not None else None,
         "question_condition_value": conditional_on_question.value if conditional_on_question is not None else None,
         "question_condition_typ": conditional_on_question.question_condition_typ if conditional_on_question is not None else None,
-        "conditional_question_id_set": set(cq.question_to.question_id for cq in conditional_questions),
+        "conditional_question_id_set": set(cq.question_to.id for cq in conditional_questions),
     }
 
 
@@ -249,11 +249,9 @@ def save_question(question):
 
     if question["form_typ"]["form_typ"] in ["pit", "field"]:
         if question.get("scout_question", None).get("id", None) is not None:
-            sq = scouting.models.Question.objects.get(
-                Q(void_ind="n") & Q(question_id=q.question_id)
-            )
+            sq = scouting.models.Question.objects.get(id=question["scout_question"]["id"])
         else:
-            sq = scouting.models.Question(question_id=q.question_id)
+            sq = scouting.models.Question(question=q)
 
         if sq.season is None:
             sq.season = current_season
@@ -268,7 +266,7 @@ def save_question(question):
         sq.value_multiplier = scout_question.get("value_multiplier", False)
         sq.save()
 
-    if question.get("question_id", None) is None:
+    if question.get("id", None) is None:
         # If adding a new question we need to make a null answer for it for all questions already answered
         match question["form_typ"]["form_typ"]:
             case "pit":
@@ -304,7 +302,7 @@ def save_question(question):
 
         for qa in questions_answered:
             Answer(
-                response=qa, question=q, answer="!EXIST", void_ind="n"
+                response=qa, question=q, value="!EXIST", void_ind="n"
             ).save()
 
     if (
@@ -473,7 +471,7 @@ def get_question_aggregates(form_typ: str):
             Q(void_ind="n") & Q(season=current_season)
         )
         season = Q(
-            questions__question_id__in=set(sq.question_id for sq in scout_questions)
+            questions__question_id__in=set(sq.id for sq in scout_questions)
         )
 
     qas = QuestionAggregate.objects.filter(
@@ -530,7 +528,7 @@ def save_question_aggregate(data):
     qa.save()
 
     remove = qa.questions.all().filter(
-        ~Q(question_id__in=set(q.question_id for q in questions))
+        ~Q(question_id__in=set(q.id for q in questions))
     )
     for r in remove:
         qa.questions.remove(r)
@@ -550,7 +548,7 @@ def get_question_condition(form_typ: str):
             Q(void_ind="n") & Q(season=current_season)
         )
         season = Q(
-            question_from__question_id__in=set(q.question_id for q in scout_questions)
+            question_from__question_id__in=set(q.id for q in scout_questions)
         )
 
     question_conditions = QuestionCondition.objects.filter(
@@ -721,7 +719,7 @@ def get_response_answers(response: Response):
 
     for question_answer in question_answers:
         answers.append({
-            "question": get_questions(qid=question_answer.question.question_id)[0] if question_answer.question is not None else None,
+            "question": get_questions(qid=question_answer.question.id)[0] if question_answer.question is not None else None,
             "question_flow": get_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
             "answer": question_answer.value,
             "question_flow_answers": list({
@@ -931,8 +929,11 @@ def save_flow(data):
 
         question_flow.save()
 
+        save_question(question["question"])
+
         ids.append(question_flow.id)
 
+    # void questions no longer in flow
     QuestionFlow.objects.filter(Q(flow=flow) & Q(void_ind="n") & ~Q(id__in=ids)).update(void_ind="y")
 
     #Create link to season if does not exist

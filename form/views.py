@@ -578,7 +578,7 @@ class FlowView(APIView):
                 with transaction.atomic():
                     form.util.save_flow(serializer.validated_data)
 
-                return ret_message("Saved question flow successfully.")
+                return ret_message("Saved flow successfully.")
             else:
                 return ret_message(
                     "You do not have access.",
@@ -588,7 +588,7 @@ class FlowView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while saving the question flow.",
+                "An error occurred while saving the flow.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,

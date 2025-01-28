@@ -48,7 +48,7 @@ def build_table_columns():
             all_questions.append(question)
             table_cols.append(
                 {
-                    "PropertyName": "ans" + str(question["question_id"]),
+                    "PropertyName": "ans" + str(question["id"]),
                     "ColLabel": (
                         ""
                         if question.get("form_sub_typ", None) is None
@@ -63,10 +63,10 @@ def build_table_columns():
 
         for flow in form_sub_type["question_flows"]:
             for question_flow in flow["questions"]:
-                all_questions.append(question)
+                all_questions.append(question_flow["question"])
                 table_cols.append(
                     {
-                        "PropertyName": "ans" + str(question_flow["question"]["question_id"]),
+                        "PropertyName": "ans" + str(question_flow["question"]["id"]),
                         "ColLabel": (
                             ""
                             if question_flow["question"].get("form_sub_typ", None) is None
@@ -82,7 +82,7 @@ def build_table_columns():
         question_aggregates = QuestionAggregate.objects.filter(
             Q(void_ind="n")
             & Q(active="y")
-            & Q(questions__question_id__in=set(q["question_id"] for q in all_questions))
+            & Q(questions__id__in=set(q["id"] for q in all_questions))
         ).distinct()
         """
         question_aggregate_count = 1
@@ -173,10 +173,10 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
         response = {}
         for answer in answers:
             if answer.question is not None:
-                response[f"ans{answer.question_id}"] = answer.value
+                response[f"ans{answer.id}"] = answer.value
             if answer.flow is not None:
                 for flow_answer in answer.flowanswer_set.filter(void_ind="n"):
-                    response[f"ans{flow_answer.question.question_id}"] = 1 + response.get(f"ans{flow_answer.question.question_id}", 0)
+                    response[f"ans{flow_answer.question.id}"] = 1 + response.get(f"ans{flow_answer.question.id}", 0)
 
         # get aggregates
         question_aggregates = QuestionAggregate.objects.filter(

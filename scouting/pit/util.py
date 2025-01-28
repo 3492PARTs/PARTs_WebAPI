@@ -24,26 +24,26 @@ def get_responses(team=None):
     results = []
     for t in teams:
         try:
-            sp = PitResponse.objects.get(
+            pit_response = PitResponse.objects.get(
                 Q(team_no=t)
                 & Q(event=current_event)
                 & Q(void_ind="n")
                 & Q(response__void_ind="n")
             )
         except PitResponse.DoesNotExist as e:
-            sp = None
+            pit_response = None
 
-        spis = PitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=sp)).order_by(
+        pit_images = PitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=pit_response)).order_by(
             "scout_pit_img_id"
         )
 
         pics = []
-        for spi in spis:
+        for pit_image in pit_images:
             pics.append(
                 {
-                    "scout_pit_img_id": spi.scout_pit_img_id,
-                    "pic": general.cloudinary.build_image_url(spi.img_id, spi.img_ver),
-                    "default": spi.default,
+                    "scout_pit_img_id": pit_image.scout_pit_img_id,
+                    "pic": general.cloudinary.build_image_url(pit_image.img_id, pit_image.img_ver),
+                    "default": pit_image.default,
                 }
             )
 
@@ -51,7 +51,7 @@ def get_responses(team=None):
             "team_no": t.team_no,
             "team_nm": t.team_nm,
             "pics": pics,
-            "scout_pit_id": sp.scout_pit_id if sp is not None else None,
+            "scout_pit_id": pit_response.scout_pit_id if pit_response is not None else None,
         }
 
         tmp_responses = []
@@ -62,28 +62,29 @@ def get_responses(team=None):
             )
             tmp_responses.append({"question": "Rank", "answer": eti.rank})
         except EventTeamInfo.DoesNotExist:
-            x = 1
+            pass
 
         questions = form.util.get_questions("pit")
 
-        if sp is not None:
-            for q in questions:
+        if pit_response is not None:
+            for question in questions:
                 try:
                     answer = Answer.objects.get(
-                        Q(response=sp.response)
+                        Q(response=pit_response.response)
                         & Q(void_ind="n")
-                        & Q(question_id=q["question_id"])
+                        & Q(question_id=question["id"])
                     ).value
                 except Answer.DoesNotExist:
                     answer = "!FOUND"
 
                 tmp_responses.append(
-                    {"question": (" C: " if q["question_conditional_on"] is not None else "") + q["question"], "answer": answer}
+                    {"question": (" C: " if question["question_conditional_on"] is not None else "") + question["question"], "answer": answer}
                 )
 
-                for c in q.get("conditions", []):
+                """
+                for c in question.get("conditions", []):
                     answer = Answer.objects.get(
-                        Q(response=sp.response)
+                        Q(response=pit_response.response)
                         & Q(void_ind="n")
                         & Q(question_id=c["question_to"]["question_id"])
                     )
@@ -96,7 +97,7 @@ def get_responses(team=None):
                             "answer": answer.value,
                         }
                     )
-
+                """
         team_response["responses"] = tmp_responses
         results.append(team_response)
 
