@@ -21,7 +21,7 @@ def build_table_columns():
 
     table_cols = [
         {
-            "PropertyName": "team_no",
+            "PropertyName": "team_id",
             "ColLabel": "Team No",
             "Width": "75px",
             "scorable": False,
@@ -197,12 +197,12 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
         response["user"] = scout_field.user.first_name + " " + scout_field.user.last_name
         response["time"] = scout_field.time
         response["user_id"] = scout_field.user.id
-        response["team_no"] = scout_field.team_no_id
+        response["team_id"] = scout_field.team_id
         response["scout_field_id"] = scout_field.scout_field_id
 
         try:
             eti = EventTeamInfo.objects.get(
-                Q(event=current_event) & Q(team_no=scout_field.team_no) & Q(void_ind="n")
+                Q(event=current_event) & Q(team=scout_field.team) & Q(void_ind="n")
             )
             response["rank"] = eti.rank
         except EventTeamInfo.DoesNotExist:
@@ -294,7 +294,7 @@ def get_scouting_responses():
             "user": response.user,
             "time": response.time,
             "answers": parsed_answers,
-            "display_value": f"{'Match: ' + str(response.match.match_number) + ' ' if response.match is not None else ''}Team: {response.team_no.team_no} {response.user.get_full_name()} {general.util.date_time_to_mdyhm(response.time, event.timezone)}"
+            "display_value": f"{'Match: ' + str(response.match.match_number) + ' ' if response.match is not None else ''}Team: {response.team.team} {response.user.get_full_name()} {general.util.date_time_to_mdyhm(response.time, event.timezone)}"
         })
 
     return parsed_responses

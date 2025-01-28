@@ -30,7 +30,7 @@ def get_team_notes(team_no: int = None, event: Event = None):
 def parse_team_note(n: TeamNote):
     return {
         "team_note_id": n.team_note_id,
-        "team_id": n.team_no.team_no,
+        "team_id": n.team.team_no,
         "match_id": n.match.match_id if n.match else None,
         "note": n.note,
         "time": n.time,

@@ -22,10 +22,10 @@ def get_responses(team=None):
     )
 
     results = []
-    for t in teams:
+    for team in teams:
         try:
             pit_response = PitResponse.objects.get(
-                Q(team_no=t)
+                Q(team=team)
                 & Q(event=current_event)
                 & Q(void_ind="n")
                 & Q(response__void_ind="n")
@@ -48,8 +48,8 @@ def get_responses(team=None):
             )
 
         team_response = {
-            "team_no": t.team_no,
-            "team_nm": t.team_nm,
+            "team_no": team.team_no,
+            "team_nm": team.team_nm,
             "pics": pics,
             "scout_pit_id": pit_response.scout_pit_id if pit_response is not None else None,
         }
@@ -58,7 +58,7 @@ def get_responses(team=None):
 
         try:
             eti = EventTeamInfo.objects.get(
-                Q(event=current_event) & Q(team_no=t.team_no) & Q(void_ind="n")
+                Q(event=current_event) & Q(team=team) & Q(void_ind="n")
             )
             tmp_responses.append({"question": "Rank", "answer": eti.rank})
         except EventTeamInfo.DoesNotExist:

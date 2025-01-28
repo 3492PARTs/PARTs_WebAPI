@@ -228,7 +228,7 @@ def sync_event_team_info(force: int):
                 eti.dq = dq
 
                 eti.save()
-                messages += f"(UPDATE) {event.event_nm} {team.team_no}\n"
+                messages += f"(UPDATE) {event.event_nm} {team.team}\n"
             except EventTeamInfo.DoesNotExist as odne:
                 eti = EventTeamInfo(
                     event=event,
@@ -242,7 +242,7 @@ def sync_event_team_info(force: int):
                     dq=dq,
                 )
                 eti.save()
-                messages += f"(ADD) {event.event_nm} {team.team_no}\n"
+                messages += f"(ADD) {event.event_nm} {team.team}\n"
     else:
         messages = "No active event"
     return messages

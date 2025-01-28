@@ -59,7 +59,7 @@ class Event(models.Model):
 
 class EventTeamInfo(models.Model):
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     matches_played = models.IntegerField(null=True)
     qual_average = models.IntegerField(null=True)
     losses = models.IntegerField(null=True)
@@ -70,12 +70,10 @@ class EventTeamInfo(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     class Meta:
-        unique_together = (("event", "team_no"),)
+        unique_together = (("event", "team"),)
 
     def __str__(self):
-        return "Event {event}. Team {team}. ".format(
-            event=self.event.event_id, team=self.team_no.team_no
-        )
+        return f"Event: {self.event} Team: {self.team}"
 
 
 class CompetitionLevel(models.Model):
@@ -136,7 +134,7 @@ class FieldResponse(models.Model):
     scout_field_id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
@@ -150,7 +148,7 @@ class PitResponse(models.Model):
     scout_pit_id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -241,7 +239,7 @@ class Schedule(models.Model):
 class TeamNote(models.Model):
     team_note_id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
     user = models.ForeignKey(User, models.PROTECT)
     note = models.TextField()
@@ -249,7 +247,7 @@ class TeamNote(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.team_note_id, self.team_no)
+        return "{} {}".format(self.team_note_id, self.team)
 
 
 class QuestionType(models.Model):
