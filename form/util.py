@@ -522,7 +522,7 @@ def get_question_condition(form_typ: str):
             Q(void_ind="n") & Q(season=current_season)
         )
         season = Q(
-            question_from__question_id__in=set(q.id for q in scout_questions)
+            question_from__in=[q.question for q in scout_questions]
         )
 
     question_conditions = QuestionCondition.objects.filter(
