@@ -237,7 +237,7 @@ class Schedule(models.Model):
 
 
 class TeamNote(models.Model):
-    team_note_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
     team = models.ForeignKey(Team, models.PROTECT)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
@@ -247,7 +247,7 @@ class TeamNote(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.team_note_id, self.team)
+        return "{} {}".format(self.id, self.team)
 
 
 class QuestionType(models.Model):

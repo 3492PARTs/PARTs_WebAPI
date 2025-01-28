@@ -144,7 +144,7 @@ class SaveMatchStrategySerializer(serializers.Serializer):
 
 
 class TeamNoteSerializer(serializers.Serializer):
-    team_note_id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(read_only=True)
     team_id = serializers.IntegerField()
     match_id = serializers.IntegerField(required=False)
     user = UserSerializer()
