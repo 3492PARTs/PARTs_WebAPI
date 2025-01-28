@@ -868,7 +868,7 @@ def get_flows(fid = None, form_typ=None, form_sub_typ=None):
         current_season = scouting.util.get_current_season()
         q_season = Q(scout_question_flow__season=current_season)
 
-    qfs = Flow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n"))
+    qfs = Flow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n")).order_by("form_sub_typ_id", "name")
 
     parsed_qfs = []
     for qf in qfs:
