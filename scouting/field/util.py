@@ -173,7 +173,7 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
         response = {}
         for answer in answers:
             if answer.question is not None:
-                response[f"ans{answer.id}"] = answer.value
+                response[f"ans{answer.question.id}"] = answer.value
             if answer.flow is not None:
                 for flow_answer in answer.flowanswer_set.filter(void_ind="n"):
                     response[f"ans{flow_answer.question.id}"] = 1 + response.get(f"ans{flow_answer.question.id}", 0)

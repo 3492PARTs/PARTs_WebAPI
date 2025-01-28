@@ -43,7 +43,7 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
-        q_season = Q(id__in=set(sq.id for sq in scout_questions))
+        q_season = Q(id__in=set(sq.question.id for sq in scout_questions))
 
     if active != "":
         q_active_ind = Q(active=active)
@@ -179,39 +179,6 @@ def format_question_values(q: Question):
     }
 
 
-def get_question_types():
-    qts = QuestionType.objects.filter(void_ind="n").order_by(
-        Lower("question_typ_nm")
-    )
-    question_types = []
-
-    for qt in qts:
-        try:
-            sqt = qt.scout_question_type.get(void_ind="n")
-            scout_question_type = {
-                "id": sqt.id,
-                "scorable": sqt.scorable
-            }
-        except scouting.models.QuestionType.DoesNotExist:
-            scout_question_type = None
-
-        question_types.append({
-            "question_typ": qt.question_typ,
-            "question_typ_nm": qt.question_typ_nm,
-            "is_list": qt.is_list,
-            "scout_question_type": scout_question_type
-        })
-
-    return question_types
-
-
-def get_form_sub_types(form_typ: str):
-    sub_types = FormSubType.objects.filter(form_typ=form_typ).order_by(
-        "order", Lower("form_sub_nm")
-    )
-    return sub_types
-
-
 def save_question(question):
     current_season = None
     if question["form_typ"]["form_typ"] in ["pit", "field"]:
@@ -324,70 +291,77 @@ def save_question(question):
         qop.save()
 
 
-def save_question_answer(answer: str, response: Response, question: Question = None, question_flow: Flow = None):
-    qa = Answer(
-        question=question, question_flow=question_flow, answer=answer, response=response, void_ind="n"
+def get_question_types():
+    qts = QuestionType.objects.filter(void_ind="n").order_by(
+        Lower("question_typ_nm")
     )
-    qa.save()
-    return qa
+    question_types = []
+
+    for qt in qts:
+        try:
+            sqt = qt.scout_question_type.get(void_ind="n")
+            scout_question_type = {
+                "id": sqt.id,
+                "scorable": sqt.scorable
+            }
+        except scouting.models.QuestionType.DoesNotExist:
+            scout_question_type = None
+
+        question_types.append({
+            "question_typ": qt.question_typ,
+            "question_typ_nm": qt.question_typ_nm,
+            "is_list": qt.is_list,
+            "scout_question_type": scout_question_type
+        })
+
+    return question_types
 
 
-def save_or_update_question_answer(answer, response: Response):
+def get_form_sub_types(form_typ: str):
+    sub_types = FormSubType.objects.filter(form_typ=form_typ).order_by(
+        "order", Lower("form_sub_nm")
+    )
+    return sub_types
+
+
+def save_or_update_question_answer(data, response: Response):
     q_question = Q()
-    if answer.get("question", None) is not None:
-        q_question = Q(question_id=answer["question"]["question_id"])
+    if data.get("question", None) is not None:
+        q_question = Q(question_id=data["question"]["id"])
 
     q_question_flow = Q()
-    if answer.get("question_flow", None) is not None:
-        q_question_flow = Q(question_flow_id=answer["question_flow"]["id"])
+    if data.get("flow", None) is not None:
+        q_question_flow = Q(flow_id=data["flow"]["id"])
 
     # Get answer to update or save new
     try:
-        spa = Answer.objects.get(
+        answer = Answer.objects.get(
             Q(response=response)
             & q_question
             & q_question_flow
             & Q(void_ind="n")
         )
-        spa.value = answer.get("answer", "")
-        spa.save()
+        answer.value = data.get("value", "")
+        answer.save()
     except Answer.DoesNotExist:
-        question = None
-        question_flow = None
-
-        if answer.get("question", None) is not None:
-            question = Question.objects.get(question_id=answer["question"]["question_id"])
-
-        if answer.get("question_flow", None) is not None:
-            question_flow = Flow.objects.get(id=answer["question_flow"]["id"])
-        spa = save_question_answer(
-                answer.get("answer", ""),
-                response,
-                question,
-                question_flow
-            )
-    return spa
+        answer = Answer(
+            question_id=data.get("question", {}).get("id", None), flow_id=data.get("flow", {}).get("id", None), value=data.get("value", ""), response=response, void_ind="n"
+        )
+        answer.save()
 
 
-def save_question_flow_answer(qf_answer, answer: Answer):
-    qfa = FlowAnswer(question_answer=answer,
-                     question_id=qf_answer['question']['question_id'], answer=qf_answer.get("answer", ""), answer_time=qf_answer['answer_time'], void_ind="n"
+    for flow_answer in data.get("flow_answers", []):
+        save_question_flow_answer(flow_answer, answer)
+
+    return answer
+
+
+def save_question_flow_answer(data, answer: Answer):
+    flow_answer = FlowAnswer(answer=answer,
+                     question_id=data['question']['id'], value=data.get("value", ""), value_time=data['value_time'], void_ind="n"
                      )
-    qfa.save()
-    return qfa
-
-
-def save_or_update_question_and_flow_answer(answer, response: Response):
-    # Get answer to update or save new
-    question_answer = save_or_update_question_answer(answer, response)
-
-    for qfa in answer.get("question_flow_answers", []):
-        save_question_flow_answer(qfa, question_answer)
-
-    # Save answers to any condition questions
-    #for c in question.get("conditions", []):
-        # Get answer to update or save new
-    #    save_or_update_question_answer(c["question_to"], response)
+    flow_answer.save()
+    return flow_answer
 
 
 def get_response(response_id: int):
@@ -745,19 +719,19 @@ def save_field_response(data, user_id):
     response = form.models.Response(form_typ=form_type)
     response.save()
 
-    sf = FieldResponse(
+    field_response = FieldResponse(
         event=current_event,
         team_no_id=data["team_id"],
         match=m,
         user_id=user_id,
-        response_id=response.response_id,
+        response=response,
         void_ind="n",
     )
-    sf.save()
+    field_response.save()
 
     # Save the answers against the response object
     for answer in data.get("answers", []):
-        save_or_update_question_and_flow_answer(answer, response)
+        save_or_update_question_answer(answer, response)
 
     # Check if previous match is missing any results
     """
@@ -811,7 +785,7 @@ def save_field_response(data, user_id):
                     a, acct
                 )
     """
-    return sf
+    return field_response
 
 
 def save_pit_response(data, user_id):
@@ -845,7 +819,7 @@ def save_pit_response(data, user_id):
 
     # Save the answers against the response object
     for d in data.get("answers", []):
-        save_or_update_question_and_flow_answer(d, response)
+        save_or_update_answer_and_flow_answer(d, response)
 
     return sp
 
@@ -859,7 +833,7 @@ def save_answers(data):
 
         # Save the answers against the response object
         for d in data.get("question_answers", []):
-            save_or_update_question_and_flow_answer(d, response)
+            save_or_update_answer_and_flow_answer(d, response)
 
     alert = []
     users = user.util.get_users_with_permission("site_forms_notif")

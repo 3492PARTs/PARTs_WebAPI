@@ -142,23 +142,23 @@ class FlowConditionSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
-class QuestionFlowAnswerSerializer(serializers.Serializer):
+class FlowAnswerSerializer(serializers.Serializer):
     question = QuestionSerializer()
-    answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    answer_time = serializers.TimeField()
+    value = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    value_time = serializers.TimeField()
 
 
-class QuestionAnswerSerializer(serializers.Serializer):
+class AnswerSerializer(serializers.Serializer):
     question = QuestionSerializer(required=False, allow_null=True)
-    question_flow = FlowSerializer(required=False, allow_null=True)
-    answer = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    question_flow_answers = QuestionFlowAnswerSerializer(
+    flow = FlowSerializer(required=False, allow_null=True)
+    value = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    flow_answers = FlowAnswerSerializer(
         many=True, required=False, allow_null=True
     )
 
 
 class ScoutFieldFormResponseSerializer(serializers.Serializer):
-    answers = QuestionAnswerSerializer(many=True)
+    answers = AnswerSerializer(many=True)
     team_id = serializers.CharField()
     match_id = serializers.CharField(required=False, allow_null=True)
     form_typ = serializers.CharField()
@@ -166,7 +166,7 @@ class ScoutFieldFormResponseSerializer(serializers.Serializer):
 
 
 class SaveResponseSerializer(serializers.Serializer):
-    question_answers = QuestionAnswerSerializer(many=True)
+    question_answers = AnswerSerializer(many=True)
     form_typ = serializers.CharField()
 
 

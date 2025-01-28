@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from form.serializers import (
-    QuestionSerializer, QuestionAnswerSerializer,
+    QuestionSerializer, AnswerSerializer,
 )
 from scouting.serializers import EventSerializer, SeasonSerializer, MatchSerializer
 from user.serializers import UserSerializer
@@ -48,5 +48,5 @@ class FieldResponseSerializer(serializers.Serializer):
     match = MatchSerializer(required=False)
     user = UserSerializer()
     time = serializers.DateTimeField()
-    answers = QuestionAnswerSerializer(many=True)
+    answers = AnswerSerializer(many=True)
     display_value = serializers.CharField()
