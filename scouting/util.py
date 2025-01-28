@@ -239,7 +239,7 @@ def parse_schedule(s: Schedule):
         "sch_id": s.sch_id,
         "sch_typ": s.sch_typ.sch_typ,
         "sch_nm": s.sch_typ.sch_nm,
-        "event_id": s.event.event_id,
+        "event_id": s.event.id,
         "st_time": s.st_time,
         "end_time": s.end_time,
         "notified": s.notified,
@@ -324,7 +324,7 @@ def get_field_form():
 
         parsed_ff = {
             "id": field_form.id,
-            "season_id": field_form.season.season_id,
+            "season_id": field_form.season.id,
             "img_url": general.cloudinary.build_image_url(field_form.img_id, field_form.img_ver),
             "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver),
             "full_img_url": general.cloudinary.build_image_url(field_form.full_img_id, field_form.full_img_ver)

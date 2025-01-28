@@ -28,6 +28,30 @@ from user.models import User
 import user.util
 
 
+def set_current_season_event(season_id, event_id, competition_page_active):
+    msg = ""
+
+    Season.objects.filter(current="y").update(current="n")
+    season = Season.objects.get(id=season_id)
+    season.current = "y"
+    season.save()
+    msg = "Successfully set the season to: " + season.season
+
+    if event_id is not None:
+        Event.objects.filter(current="y").update(
+            current="n", competition_page_active="n"
+        )
+        event = Event.objects.get(id=event_id)
+        event.current = "y"
+        event.competition_page_active = competition_page_active
+        event.save()
+        msg += "\nSuccessfully set the event to: " + event.event_nm
+
+        msg += f"\nCompetition page {'active' if competition_page_active == 'y' else 'inactive'}"
+
+    return msg
+
+
 def delete_event(event_id):
     e = Event.objects.get(event_id=event_id)
 
@@ -119,7 +143,7 @@ def delete_season(season_id):
 
     events = Event.objects.filter(season=season)
     for e in events:
-        delete_event(e.event_id)
+        delete_event(e.id)
 
     scout_questions = scouting.models.Question.objects.filter(season=season)
     for sq in scout_questions:
@@ -144,7 +168,7 @@ def delete_season(season_id):
 def save_event(data):
     if (data.get("event_id", None)) is not None:
         event = Event.objects.get(event_id=data["event_id"])
-        event.season.season_id = data["season_id"]
+        event.season.id = data["season_id"]
         event.event_nm = data["event_nm"]
         event.date_st = data["date_st"]
         event.event_cd = data["event_cd"]

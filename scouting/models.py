@@ -15,12 +15,12 @@ from user.models import User
 
 
 class Season(models.Model):
-    season_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     season = models.CharField(max_length=45)
     current = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.season_id) + " " + self.season
+        return str(self.id) + " " + self.season
 
 
 class Team(models.Model):
@@ -33,7 +33,7 @@ class Team(models.Model):
 
 
 class Event(models.Model):
-    event_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
     teams = models.ManyToManyField(Team)
     event_nm = models.CharField(max_length=255)
@@ -54,7 +54,7 @@ class Event(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.event_id} {self.event_nm}"
+        return f"{self.id} {self.event_nm}"
 
 
 class EventTeamInfo(models.Model):

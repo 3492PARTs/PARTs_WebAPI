@@ -116,7 +116,7 @@ def format_question_values(q: Question):
         scout_question = {
             "id": sq.id,
             "question_id": sq.id,
-            "season_id": sq.season.season_id,
+            "season_id": sq.season.id,
             "x": sq.x,
             "y": sq.y,
             "width": sq.width,
@@ -125,7 +125,7 @@ def format_question_values(q: Question):
             "icon_only": sq.icon_only,
             "value_multiplier": sq.value_multiplier,
         }
-        season = sq.season.season_id
+        season = sq.season.id
     except scouting.models.Question.DoesNotExist as e:
         scout_question = None
         season = None

@@ -64,38 +64,15 @@ class SetSeasonEventView(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "set-season-event/"
 
-    def set(self, season_id, event_id, competition_page_active):
-        msg = ""
-
-        Season.objects.filter(current="y").update(current="n")
-        season = Season.objects.get(season_id=season_id)
-        season.current = "y"
-        season.save()
-        msg = "Successfully set the season to: " + season.season
-
-        if event_id is not None:
-            Event.objects.filter(current="y").update(
-                current="n", competition_page_active="n"
-            )
-            event = Event.objects.get(event_id=event_id)
-            event.current = "y"
-            event.competition_page_active = competition_page_active
-            event.save()
-            msg += "\nSuccessfully set the event to: " + event.event_nm
-
-            msg += f"\nCompetition page {'active' if competition_page_active == 'y' else 'inactive'}"
-
-        return ret_message(msg)
-
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.set(
+                req = scouting.admin.util.set_current_season_event(
                     request.query_params.get("season_id", None),
                     request.query_params.get("event_id", None),
                     request.query_params.get("competition_page_active", "n"),
                 )
-                return req
+                return ret_message(req)
             except Exception as e:
                 return ret_message(
                     "An error occurred while setting the season.",
