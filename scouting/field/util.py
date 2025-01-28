@@ -294,7 +294,7 @@ def get_scouting_responses():
             "user": response.user,
             "time": response.time,
             "answers": parsed_answers,
-            "display_value": f"{'Match: ' + str(response.match.match_number) + ' ' if response.match is not None else ''}Team: {response.team.team} {response.user.get_full_name()} {general.util.date_time_to_mdyhm(response.time, event.timezone)}"
+            "display_value": f"{'Match: ' + str(response.match.match_number) + ' ' if response.match is not None else ''}Team: {response.team.team_no} {response.user.get_full_name()} {general.util.date_time_to_mdyhm(response.time, event.timezone)}"
         })
 
     return parsed_responses

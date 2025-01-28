@@ -146,7 +146,7 @@ def get_team_data(team_no=None):
     current_event = scouting.util.get_current_event()
 
     sp = PitResponse.objects.get(
-        Q(team_no=team_no)
+        Q(team_id=team_no)
         & Q(void_ind="n")
         & Q(response__void_ind="n")
         & Q(event=current_event)

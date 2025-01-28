@@ -43,7 +43,7 @@ def save_note(data, user: User):
 
     note = TeamNote(
         event=current_event,
-        team_no_id=data["team_id"],
+        team_id=data["team_id"],
         match_id=data.get("match_id", None),
         user=user,
         note=data["note"],

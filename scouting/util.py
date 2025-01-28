@@ -277,22 +277,22 @@ def parse_match(m: Match):
         "red_score": m.red_score,
         "blue_score": m.blue_score,
         "time": m.time,
-        "blue_one_id": m.blue_one.team,
+        "blue_one_id": m.blue_one.team_no,
         "blue_one_rank": (None if eti_blue_one is None else eti_blue_one.rank),
         "blue_one_field_response": match_team_has_result(m, m.blue_one),
-        "blue_two_id": m.blue_two.team,
+        "blue_two_id": m.blue_two.team_no,
         "blue_two_rank": (None if eti_blue_two is None else eti_blue_two.rank),
         "blue_two_field_response": match_team_has_result(m, m.blue_two),
-        "blue_three_id": m.blue_three.team,
+        "blue_three_id": m.blue_three.team_no,
         "blue_three_rank": (None if eti_blue_three is None else eti_blue_three.rank),
         "blue_three_field_response": match_team_has_result(m, m.blue_three),
-        "red_one_id": m.red_one.team,
+        "red_one_id": m.red_one.team_no,
         "red_one_rank": (None if eti_red_one is None else eti_red_one.rank),
         "red_one_field_response": match_team_has_result(m, m.red_one),
-        "red_two_id": m.red_two.team,
+        "red_two_id": m.red_two.team_no,
         "red_two_rank": (None if eti_red_two is None else eti_red_two.rank),
         "red_two_field_response": match_team_has_result(m, m.red_two),
-        "red_three_id": m.red_three.team,
+        "red_three_id": m.red_three.team_no,
         "red_three_rank": (None if eti_red_three is None else eti_red_three.rank),
         "red_three_field_response": match_team_has_result(m, m.red_three),
         "comp_level": m.comp_level,
@@ -310,7 +310,7 @@ def get_event_team_info(team: Team, event: Event):
 
 
 def match_team_has_result(match: Match, team: Team) -> bool:
-    return len(match.fieldresponse_set.filter(Q(void_ind="n") & Q(team_no=team))) > 0
+    return len(match.fieldresponse_set.filter(Q(void_ind="n") & Q(team=team))) > 0
 
 
 def get_scout_field_schedule(id):

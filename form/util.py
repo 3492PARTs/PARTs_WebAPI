@@ -324,7 +324,7 @@ def get_form_sub_types(form_typ: str):
     return sub_types
 
 
-def save_or_update_question_answer(data, response: Response):
+def save_or_update_answer(data, response: Response):
     q_question = Q()
     if data.get("question", None) is not None:
         q_question = Q(question_id=data["question"]["id"])
@@ -694,13 +694,13 @@ def get_response_answers(response: Response):
     for question_answer in question_answers:
         answers.append({
             "question": get_questions(qid=question_answer.question.id)[0] if question_answer.question is not None else None,
-            "question_flow": get_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
+            "flow": get_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
             "answer": question_answer.value,
-            "question_flow_answers": list({
+            "flow_answers": list({
                 "question": format_question_values(qfa.question),
-                "answer": qfa.value,
-                "answer_time": qfa.value_time
-                                         } for qfa in question_answer.questionflowanswer_set.filter(void_ind="n").order_by("answer_time"))
+                "value": qfa.value,
+                "value_time": qfa.value_time
+                                         } for qfa in question_answer.flowanswer_set.filter(void_ind="n").order_by("value_time"))
         })
 
     return answers
@@ -731,7 +731,7 @@ def save_field_response(data, user_id):
 
     # Save the answers against the response object
     for answer in data.get("answers", []):
-        save_or_update_question_answer(answer, response)
+        save_or_update_answer(answer, response)
 
     # Check if previous match is missing any results
     """
@@ -795,7 +795,7 @@ def save_pit_response(data, user_id):
     # Build or get pit scout object
     try:
         sp = PitResponse.objects.get(
-            Q(team_no_id=data["team_id"]) & Q(void_ind="n") & Q(event=current_event)
+            Q(team_id=data["team_id"]) & Q(void_ind="n") & Q(event=current_event)
         )
         response = sp.response
 
@@ -810,7 +810,7 @@ def save_pit_response(data, user_id):
 
         sp = PitResponse(
             event=current_event,
-            team_no_id=data["team_id"],
+            team_id=data["team_id"],
             user_id=user_id,
             response=response,
             void_ind="n",
@@ -819,7 +819,7 @@ def save_pit_response(data, user_id):
 
     # Save the answers against the response object
     for d in data.get("answers", []):
-        save_or_update_answer_and_flow_answer(d, response)
+        save_or_update_answer(d, response)
 
     return sp
 
@@ -833,7 +833,7 @@ def save_answers(data):
 
         # Save the answers against the response object
         for d in data.get("question_answers", []):
-            save_or_update_answer_and_flow_answer(d, response)
+            save_or_update_answer(d, response)
 
     alert = []
     users = user.util.get_users_with_permission("site_forms_notif")
