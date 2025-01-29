@@ -171,10 +171,10 @@ def get_links():
 
 
 def save_link(data):
-    if data.get("link_id", None) is None:
+    if data.get("id", None) is None:
         link = Link()
     else:
-        link = Link.objects.get(link_id=data["link_id"])
+        link = Link.objects.get(id=data["id"])
 
     link.menu_name = data["menu_name"]
     link.permission_id = (
@@ -189,4 +189,4 @@ def save_link(data):
 
 
 def delete_link(link_id: int):
-    Link.objects.get(link_id=link_id).delete()
+    Link.objects.get(id=link_id).delete()

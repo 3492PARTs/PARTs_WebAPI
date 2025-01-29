@@ -9,14 +9,14 @@ from django.contrib.auth.models import (
 
 
 class Link(models.Model):
-    link_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     permission = models.ForeignKey(Permission, models.PROTECT, null=True)
     menu_name = models.CharField(max_length=255)
     routerlink = models.CharField(max_length=255)
     order = models.IntegerField()
 
     def __str__(self):
-        return str(self.link_id) + " " + self.menu_name
+        return str(self.id) + " " + self.menu_name
 
 
 class PhoneType(models.Model):
