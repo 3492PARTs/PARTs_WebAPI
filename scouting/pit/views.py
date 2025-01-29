@@ -7,7 +7,7 @@ import scouting.pit.util
 import scouting.util
 from .serializers import (
     PitTeamDataSerializer,
-    ScoutPitResponsesSerializer,
+    PitResponsesSerializer,
 )
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
@@ -75,7 +75,7 @@ class ResponsesView(APIView):
                 if type(ret) == Response:
                     return ret
 
-                serializer = ScoutPitResponsesSerializer(ret)
+                serializer = PitResponsesSerializer(ret)
                 return Response(serializer.data)
             else:
                 return ret_message(

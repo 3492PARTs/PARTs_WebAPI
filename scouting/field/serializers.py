@@ -8,41 +8,24 @@ from scouting.serializers import EventSerializer, SeasonSerializer, MatchSeriali
 from user.serializers import UserSerializer
 
 
-class SaveScoutFieldSerializer(serializers.Serializer):
-    scoutQuestions = QuestionSerializer(many=True)
-    team = serializers.CharField()
-    match = serializers.CharField(required=False)
-
-
-class ScoutColSerializer(serializers.Serializer):
+class ColSerializer(serializers.Serializer):
     PropertyName = serializers.CharField()
     ColLabel = serializers.CharField()
     Width = serializers.CharField(required=False)
     order = serializers.CharField()
 
 
-class ScoutResultAnswerSerializer(serializers.BaseSerializer):
+class FieldResponseAnswerSerializer(serializers.BaseSerializer):
     def to_representation(self, instance):
         return instance
 
 
-class ScoutFieldSerializer(serializers.Serializer):
-  id = serializers.IntegerField()
-# response = serializers.IntegerField()
-# event = serializers.IntegerField()
-# team_no = serializers.IntegerField()
-# user = serializers.IntegerField()
-# time = serializers.DateTimeField()
-# match = serializers.IntegerField()
-# void_ind = serializers.CharField()
-
-
-class ScoutFieldResultsSerializer(serializers.Serializer):
-    scoutCols = ScoutColSerializer(many=True)
-    scoutAnswers = ScoutResultAnswerSerializer(many=True)
+class FieldResponsesSerializer(serializers.Serializer):
+    scoutCols = ColSerializer(many=True)
+    scoutAnswers = FieldResponseAnswerSerializer(many=True)
     current_season = SeasonSerializer()
     current_event = EventSerializer()
-    removed_responses = ScoutFieldSerializer(many=True)
+    removed_responses = serializers.ListField()
 
 
 class FieldResponseSerializer(serializers.Serializer):

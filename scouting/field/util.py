@@ -235,9 +235,9 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
         "scoutAnswers": field_scouting_responses,
         "current_season": current_season,
         "current_event": current_event,
-        "removed_responses": (
-            get_removed_responses(after_scout_field_id) if not loading_all else []
-        ),
+        "removed_responses": [field_response.id for field_response in
+                              (get_removed_responses(after_scout_field_id) if not loading_all else [])]
+        ,
     }
 
 
