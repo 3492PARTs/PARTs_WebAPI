@@ -219,11 +219,11 @@ class ScheduleType(models.Model):
     sch_nm = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.sch_typ + " " + self.sch_nm
+        return f"{self.sch_typ} : {self.sch_nm}"
 
 
 class Schedule(models.Model):
-    sch_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     sch_typ = models.ForeignKey(ScheduleType, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)

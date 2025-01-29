@@ -69,7 +69,7 @@ class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
 
 
 class ScheduleSaveSerializer(serializers.Serializer):
-    sch_id = serializers.IntegerField(required=False, allow_null=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     sch_typ = serializers.CharField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()

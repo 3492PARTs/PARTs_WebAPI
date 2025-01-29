@@ -239,7 +239,7 @@ def parse_scout_field_schedule(s: FieldSchedule):
 
 def parse_schedule(s: Schedule):
     return {
-        "sch_id": s.sch_id,
+        "id": s.id,
         "sch_typ": s.sch_typ.sch_typ,
         "sch_nm": s.sch_typ.sch_nm,
         "event_id": s.event.id,
@@ -317,7 +317,7 @@ def match_team_has_result(match: Match, team: Team) -> bool:
 
 
 def get_scout_field_schedule(id):
-    return FieldSchedule.objects.get(scout_field_sch_id=id)
+    return FieldSchedule.objects.get(id=id)
 
 
 def get_field_form():

@@ -87,7 +87,7 @@ class MatchSerializer(serializers.Serializer):
 
 
 class ScheduleSerializer(serializers.Serializer):
-    sch_id = serializers.IntegerField()
+    id = serializers.IntegerField()
     sch_typ = serializers.CharField()
     sch_nm = serializers.CharField()
     event_id = serializers.IntegerField()

@@ -335,7 +335,7 @@ def save_schedule(data):
     if data["end_time"] <= data["st_time"]:
         raise Exception("End time can't come before start.")
 
-    if data.get("sch_id", None) is None:
+    if data.get("id", None) is None:
         event = scouting.util.get_current_event()
 
         s = Schedule(
@@ -347,7 +347,7 @@ def save_schedule(data):
             void_ind=data["void_ind"],
         )
     else:
-        s = Schedule.objects.get(sch_id=data["sch_id"])
+        s = Schedule.objects.get(id=data["id"])
         s.user.pk = data.get("user", None)
         s.sch_typ.sch_typ = data.get("sch_typ", None)
         s.st_time = data["st_time"]
@@ -359,7 +359,7 @@ def save_schedule(data):
 
 
 def notify_user(id):
-    sch = Schedule.objects.get(sch_id=id)
+    sch = Schedule.objects.get(id=id)
     message = alerts.util.stage_schedule_alert(sch)
     alerts.util.send_alerts()
     sch.notified = True
@@ -370,7 +370,7 @@ def notify_user(id):
 
 def notify_users(id):
     event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
-    sfs = FieldSchedule.objects.get(scout_field_sch_id=id)
+    sfs = FieldSchedule.objects.get(id=id)
     message = alerts.util.stage_field_schedule_alerts(-1, [sfs], event)
     alerts.util.send_alerts()
     return message
