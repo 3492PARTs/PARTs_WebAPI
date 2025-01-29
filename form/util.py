@@ -897,7 +897,7 @@ def save_flow(data):
     ids = []
     for question in data.get("questions", []):
         if question.get("id", None) is None:
-            question_flow = QuestionFlow(flow=flow, question_id=question["question"]["question_id"])
+            question_flow = QuestionFlow(flow=flow, question_id=question["question"]["id"])
         else:
             question_flow = QuestionFlow.objects.get(id=question["id"])
 
