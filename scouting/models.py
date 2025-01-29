@@ -169,11 +169,11 @@ class PitImage(models.Model):
 
 
 class ScoutAuthGroup(models.Model):
-    scout_group = models.AutoField(unique=True, primary_key=True)
-    auth_group_id = models.ForeignKey(Group, models.PROTECT)
+    id = models.AutoField(unique=True, primary_key=True)
+    group = models.ForeignKey(Group, models.PROTECT)
 
     def __str__(self):
-        return str(self.scout_group) + " auth group: " + str(self.auth_group_id)
+        return str(self.id) + " auth group: " + str(self.group)
 
 
 class FieldSchedule(models.Model):

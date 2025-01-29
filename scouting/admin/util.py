@@ -108,9 +108,9 @@ def delete_event(event_id):
 
 
 def get_scout_auth_groups():
-    sags = ScoutAuthGroup.objects.all().order_by("auth_group_id__name")
+    sags = ScoutAuthGroup.objects.all().order_by("group__name")
 
-    groups = list(sag.auth_group_id for sag in sags)
+    groups = list(sag.group for sag in sags)
 
     return groups
 

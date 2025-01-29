@@ -93,9 +93,7 @@ class ScoutAuthGroupsView(APIView):
         try:
             groups = user.util.get_groups().filter(
                 id__in=list(
-                    ScoutAuthGroup.objects.all().values_list(
-                        "auth_group_id", flat=True
-                    )
+                    ScoutAuthGroup.objects.all().values_list("group_id", flat=True)
                 )
             )
             serializer = GroupSerializer(groups, many=True)
@@ -127,12 +125,12 @@ class ScoutAuthGroupsView(APIView):
                     for s in serializer.validated_data:
                         keep.append(s["id"])
                         try:
-                            ScoutAuthGroup.objects.get(auth_group_id_id=s["id"])
+                            ScoutAuthGroup.objects.get(group_id=s["id"])
                         except ScoutAuthGroup.DoesNotExist:
-                            sag = ScoutAuthGroup(auth_group_id_id=s["id"])
+                            sag = ScoutAuthGroup(group_id=s["id"])
                             sag.save()
 
-                    sags = ScoutAuthGroup.objects.filter(~Q(auth_group_id_id__in=keep))
+                    sags = ScoutAuthGroup.objects.filter(~Q(group_id__in=keep))
                     for s in sags:
                         s.delete()
 
