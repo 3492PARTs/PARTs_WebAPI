@@ -1,4 +1,3 @@
-
 from django.db import IntegrityError
 from django.db.models import Q
 
@@ -19,7 +18,8 @@ from scouting.models import (
     Team,
     TeamNote,
     Match,
-    UserInfo, FieldForm,
+    UserInfo,
+    FieldForm,
 )
 import scouting.util
 import scouting.models
@@ -215,7 +215,9 @@ def save_match(data):
         match = Match.objects.get(match_id=data["match_id"])
     else:
         season = Season.objects.get(season_id=data["event"]["season_id"])
-        match = Match(match_id=f"{season.season}{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}")
+        match = Match(
+            match_id=f"{season.season}{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}"
+        )
         match.event_id = data["event"]["event_id"]
 
     match.match_number = data["match_number"]
@@ -314,9 +316,7 @@ def save_scout_schedule(data):
             void_ind=data["void_ind"],
         )
     else:
-        sfs = FieldSchedule.objects.get(
-            scout_field_sch_id=data["scout_field_sch_id"]
-        )
+        sfs = FieldSchedule.objects.get(scout_field_sch_id=data["scout_field_sch_id"])
         sfs.red_one_id = data.get("red_one_id", None)
         sfs.red_two_id = data.get("red_two_id", None)
         sfs.red_three_id = data.get("red_three_id", None)
@@ -410,7 +410,7 @@ def toggle_user_under_review(user_id):
 
 
 def void_field_response(id):
-    sf = FieldResponse.objects.get(scout_field_id=id)
+    sf = FieldResponse.objects.get(id=id)
     sf.void_ind = "y"
     sf.save()
     return sf
@@ -442,7 +442,9 @@ def save_field_form(field_form):
 
     full_img = None
     if field_form.get("full_img", None) is not None:
-        full_img = general.cloudinary.upload_image(field_form["full_img"], ff.full_img_id)
+        full_img = general.cloudinary.upload_image(
+            field_form["full_img"], ff.full_img_id
+        )
 
     if img is not None:
         ff.img_id = img["public_id"]

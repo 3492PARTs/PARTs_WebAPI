@@ -131,7 +131,7 @@ class FieldForm(models.Model):
 
 
 class FieldResponse(models.Model):
-    scout_field_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
     team = models.ForeignKey(Team, models.PROTECT)
@@ -141,7 +141,7 @@ class FieldResponse(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"sf id: {self.scout_field_id} {self.match} {self.user}"
+        return f"sf id: {self.id} {self.match} {self.user}"
 
 
 class PitResponse(models.Model):

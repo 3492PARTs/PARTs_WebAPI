@@ -99,7 +99,7 @@ class EventToTeamsSerializer(serializers.Serializer):
 
 
 class ScoutFieldSerializer(serializers.Serializer):
-    scout_field_id = serializers.IntegerField()
+    id = serializers.IntegerField()
     event = serializers.IntegerField()
     team_no = serializers.IntegerField()
     user = serializers.IntegerField()

@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from form.serializers import (
-    QuestionSerializer, AnswerSerializer,
+    QuestionSerializer,
+    AnswerSerializer,
 )
 from scouting.serializers import EventSerializer, SeasonSerializer, MatchSerializer
 from user.serializers import UserSerializer
@@ -26,14 +27,14 @@ class ScoutResultAnswerSerializer(serializers.BaseSerializer):
 
 
 class ScoutFieldSerializer(serializers.Serializer):
-    scout_field_id = serializers.IntegerField()
-    # response = serializers.IntegerField()
-    # event = serializers.IntegerField()
-    # team_no = serializers.IntegerField()
-    # user = serializers.IntegerField()
-    # time = serializers.DateTimeField()
-    # match = serializers.IntegerField()
-    # void_ind = serializers.CharField()
+  id = serializers.IntegerField()
+# response = serializers.IntegerField()
+# event = serializers.IntegerField()
+# team_no = serializers.IntegerField()
+# user = serializers.IntegerField()
+# time = serializers.DateTimeField()
+# match = serializers.IntegerField()
+# void_ind = serializers.CharField()
 
 
 class ScoutFieldResultsSerializer(serializers.Serializer):
@@ -42,6 +43,7 @@ class ScoutFieldResultsSerializer(serializers.Serializer):
     current_season = SeasonSerializer()
     current_event = EventSerializer()
     removed_responses = ScoutFieldSerializer(many=True)
+
 
 class FieldResponseSerializer(serializers.Serializer):
     id = serializers.IntegerField()
