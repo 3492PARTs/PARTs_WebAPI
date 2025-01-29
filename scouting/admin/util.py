@@ -302,7 +302,7 @@ def save_scout_schedule(data):
     if data["end_time"] <= data["st_time"]:
         raise Exception("End time can't come before start.")
 
-    if data.get("scout_field_sch_id", None) is None:
+    if data.get("id", None) is None:
         sfs = FieldSchedule(
             event_id=data["event_id"],
             st_time=data["st_time"],
@@ -316,7 +316,7 @@ def save_scout_schedule(data):
             void_ind=data["void_ind"],
         )
     else:
-        sfs = FieldSchedule.objects.get(scout_field_sch_id=data["scout_field_sch_id"])
+        sfs = FieldSchedule.objects.get(id=data["id"])
         sfs.red_one_id = data.get("red_one_id", None)
         sfs.red_two_id = data.get("red_two_id", None)
         sfs.red_three_id = data.get("red_three_id", None)

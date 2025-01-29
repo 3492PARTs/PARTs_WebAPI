@@ -67,7 +67,9 @@ class MatchSerializer(serializers.Serializer):
 
     blue_three_id = serializers.IntegerField()
     blue_three_rank = serializers.IntegerField(required=False, allow_null=True)
-    blue_three_field_response = serializers.BooleanField(required=False, allow_null=True)
+    blue_three_field_response = serializers.BooleanField(
+        required=False, allow_null=True
+    )
 
     red_one_id = serializers.IntegerField()
     red_one_rank = serializers.IntegerField(required=False, allow_null=True)
@@ -97,7 +99,7 @@ class ScheduleSerializer(serializers.Serializer):
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):
-    scout_field_sch_id = serializers.IntegerField()
+    id = serializers.IntegerField()
     event_id = serializers.IntegerField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()

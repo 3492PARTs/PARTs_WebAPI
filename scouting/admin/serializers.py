@@ -28,7 +28,7 @@ class TeamCreateSerializer(serializers.Serializer):
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):
-    scout_field_sch_id = serializers.IntegerField()
+    id = serializers.IntegerField()
     event_id = serializers.IntegerField(read_only=True)
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
@@ -54,7 +54,7 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
 
 
 class ScoutFieldScheduleSaveSerializer(serializers.Serializer):
-    scout_field_sch_id = serializers.IntegerField(required=False, allow_null=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     event_id = serializers.IntegerField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()

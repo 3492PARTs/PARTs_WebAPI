@@ -177,7 +177,7 @@ class ScoutAuthGroup(models.Model):
 
 
 class FieldSchedule(models.Model):
-    scout_field_sch_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(
         User, models.PROTECT, related_name="red_one_user", null=True
@@ -211,7 +211,7 @@ class FieldSchedule(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.scout_field_sch_id} time: {self.st_time} - {self.end_time}"
+        return f"{self.id} time: {self.st_time} - {self.end_time}"
 
 
 class ScheduleType(models.Model):

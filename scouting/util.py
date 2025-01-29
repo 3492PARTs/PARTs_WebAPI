@@ -10,7 +10,8 @@ from scouting.models import (
     FieldSchedule,
     PitResponse,
     Season,
-    Team, FieldForm,
+    Team,
+    FieldForm,
 )
 
 
@@ -67,13 +68,15 @@ def get_teams(current: bool):
 
         for team in teamObjects:
             eti = get_event_team_info(team, current_event)
-            teams.append({
-                "team_no": team.team_no,
-                "team_nm": team.team_nm,
-                "checked": False,
-                "pit_result": team.pit_result,
-                "rank": eti.rank if eti is not None else None
-            })
+            teams.append(
+                {
+                    "team_no": team.team_no,
+                    "team_nm": team.team_nm,
+                    "checked": False,
+                    "pit_result": team.pit_result,
+                    "rank": eti.rank if eti is not None else None,
+                }
+            )
     else:
         teams = Team.objects.all().order_by("team_no")
 
@@ -82,7 +85,7 @@ def get_teams(current: bool):
 
 def format_scout_field_schedule_entry(fs: FieldSchedule):
     return {
-        "scout_field_sch_id": fs.scout_field_sch_id,
+        "id": fs.id,
         "event_id": fs.event_id,
         "st_time": fs.st_time,
         "end_time": fs.end_time,
@@ -176,7 +179,7 @@ def get_schedule_types():
 
 def parse_scout_field_schedule(s: FieldSchedule):
     return {
-        "scout_field_sch_id": s.scout_field_sch_id,
+        "id": s.id,
         "event_id": s.event_id,
         "st_time": s.st_time,
         "end_time": s.end_time,
@@ -325,9 +328,15 @@ def get_field_form():
         parsed_ff = {
             "id": field_form.id,
             "season_id": field_form.season.id,
-            "img_url": general.cloudinary.build_image_url(field_form.img_id, field_form.img_ver),
-            "inv_img_url": general.cloudinary.build_image_url(field_form.inv_img_id, field_form.inv_img_ver),
-            "full_img_url": general.cloudinary.build_image_url(field_form.full_img_id, field_form.full_img_ver)
+            "img_url": general.cloudinary.build_image_url(
+                field_form.img_id, field_form.img_ver
+            ),
+            "inv_img_url": general.cloudinary.build_image_url(
+                field_form.inv_img_id, field_form.inv_img_ver
+            ),
+            "full_img_url": general.cloudinary.build_image_url(
+                field_form.full_img_id, field_form.full_img_ver
+            ),
         }
     except FieldForm.DoesNotExist as dne:
         parsed_ff = {}
