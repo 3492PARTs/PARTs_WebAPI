@@ -26,6 +26,14 @@ class PhoneTypeSerializer(serializers.Serializer):
     phone_type = serializers.CharField()
 
 
+class LinkSerializer(serializers.Serializer):
+    id = serializers.IntegerField(allow_null=True, required=False)
+    permission = PermissionSerializer(allow_null=True, required=False)
+    menu_name = serializers.CharField()
+    routerlink = serializers.CharField()
+    order = serializers.IntegerField()
+
+
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     username = serializers.CharField()
@@ -40,10 +48,13 @@ class UserSerializer(serializers.Serializer):
     )
 
     groups = GroupSerializer(many=True, required=False)
+    permissions = PermissionSerializer(many=True, required=False)
     phone_type = PhoneTypeSerializer(required=False, allow_null=True)
     phone_type_id = serializers.IntegerField(required=False, allow_null=True)
 
     image = serializers.CharField(required=False)
+
+    links = LinkSerializer(many=True, required=False)
 
 
 class UserCreationSerializer(serializers.Serializer):
@@ -86,13 +97,6 @@ class UserUpdateSerializer(serializers.Serializer):
     last_name = serializers.CharField(required=False)
     image = serializers.ImageField(required=False)
 
-
-class LinkSerializer(serializers.Serializer):
-    id = serializers.IntegerField(allow_null=True, required=False)
-    permission = PermissionSerializer(allow_null=True, required=False)
-    menu_name = serializers.CharField()
-    routerlink = serializers.CharField()
-    order = serializers.IntegerField()
 
 
 class RetMessageSerializer(serializers.Serializer):

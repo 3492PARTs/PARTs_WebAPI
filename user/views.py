@@ -690,31 +690,10 @@ class UserData(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "user-data/"
 
-    def get_user(self):
-        user = User.objects.get(id=self.request.user.id)
-
-        user = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "name": user.first_name + " " + user.last_name,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "is_active": user.is_active,
-            "phone": user.phone,
-            "groups": user.groups,
-            "phone_type": user.phone_type,
-            "phone_type_id": user.phone_type_id,
-            "image": cloudinary.CloudinaryImage(
-                user.img_id, version=user.img_ver
-            ).build_url(secure=True),
-        }
-
-        return user
 
     def get(self, request, format=None):
         try:
-            req = self.get_user()
+            req = user.util.get_user(self.request.user.id)
             serializer = UserSerializer(req)
             return Response(serializer.data)
         except Exception as e:
@@ -854,8 +833,6 @@ class Permissions(APIView):
 
     def get(self, request, format=None):
         try:
-            serializer = PermissionSerializer(user.util.get_permissions(), many=True)
-
             user_id = request.query_params.get("user_id", None)
             if user_id is not None:
                 permissions = get_user_permissions(user_id)

@@ -2,10 +2,40 @@ from django.contrib.auth.models import Group, Permission
 from django.db.models import Q, Value, Count
 from django.db.models.functions import Lower, Concat
 
-import user
 from scouting.models import ScoutAuthGroup
 from user.models import User, PhoneType, Link
+import general.cloudinary
+import general.security
 
+
+def get_user(user_id: int):
+    usr = User.objects.get(id=user_id)
+
+    permissions = general.security.get_user_permissions(user_id)
+
+    user_links = Link.objects.filter(
+        Q(permission__in=permissions)
+        | Q(permission_id__isnull=True)
+    ).order_by("order")
+
+    usr = {
+        "id": usr.id,
+        "username": usr.username,
+        "email": usr.email,
+        "name": usr.get_full_name(),
+        "first_name": usr.first_name,
+        "last_name": usr.last_name,
+        "is_active": usr.is_active,
+        "phone": usr.phone,
+        "groups": usr.groups,
+        "permissions": permissions,
+        "phone_type": usr.phone_type,
+        "phone_type_id": usr.phone_type_id,
+        "image": general.cloudinary.build_image_url(usr.img_id, usr.img_ver),
+        "links": user_links
+    }
+
+    return usr
 
 def get_users(active, admin):
     user_active = Q()
@@ -61,14 +91,6 @@ def get_user_groups(user_id: int):
     user_groups = User.objects.get(id=user_id).groups.all().order_by("name")
 
     return user_groups
-
-
-"""
-def get_all_user_groups(user_id: int = None):
-    user_groups = Group.objects.all().order_by('name')
-
-    return user_groups
-"""
 
 
 def get_phone_types():
