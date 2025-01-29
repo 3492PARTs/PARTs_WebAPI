@@ -76,7 +76,7 @@ def get_phone_types():
 
 
 def delete_phone_type(phone_type_id: int):
-    phone_type = PhoneType.objects.get(phone_type_id=phone_type_id)
+    phone_type = PhoneType.objects.get(id=phone_type_id)
 
     if phone_type.user_set.exists():
         raise ValueError("Can't delete, there are users tied to this phone type.")

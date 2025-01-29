@@ -70,7 +70,11 @@ class TokenObtainPairView(APIView):
             serializer = TokenObtainPairSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
-                    "Invalid data", True, app_url + self.endpoint, -1, error_message=serializer.errors
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    -1,
+                    error_message=serializer.errors,
                 )
 
             """
@@ -105,7 +109,11 @@ class TokenRefreshView(APIView):
             serializer = TokenRefreshSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
-                    "Invalid data", True, app_url + self.endpoint, -1, error_message=serializer.errors
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    -1,
+                    error_message=serializer.errors,
                 )
 
             return Response(serializer.validated_data)
@@ -342,7 +350,9 @@ class UserProfile(APIView):
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
                         if user.img_id:
-                            response = general.cloudinary.upload_image(serializer.validated_data["image"], user.img_id)
+                            response = general.cloudinary.upload_image(
+                                serializer.validated_data["image"], user.img_id
+                            )
                         user.img_id = response["public_id"]
                         user.img_ver = str(response["version"])
                     if request.user.is_superuser:  # only allow role editing if admin
@@ -730,7 +740,8 @@ class UserLinksView(APIView):
         permissions = get_user_permissions(self.request.user.id)
 
         user_Link = Link.objects.filter(
-            Q(permission__in=[per.id for per in permissions]) | Q(permission_id__isnull=True)
+            Q(permission__in=[per.id for per in permissions])
+            | Q(permission_id__isnull=True)
         ).order_by("order")
 
         return user_Link

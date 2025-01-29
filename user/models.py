@@ -20,12 +20,12 @@ class Link(models.Model):
 
 
 class PhoneType(models.Model):
-    phone_type_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     carrier = models.CharField(max_length=255)
     phone_type = models.CharField(max_length=255)
 
     def __str__(self):
-        return str(self.phone_type_id) + " " + self.carrier + " " + self.phone_type
+        return f"{self.id} : {self.carrier} :{self.phone_type}"
 
 
 class ProfileManager(BaseUserManager):

@@ -199,10 +199,8 @@ class PhoneTypeView(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 data = serializer.validated_data
-                if data.get("phone_type_id", None) is not None:
-                    pt = user.models.PhoneType.objects.get(
-                        phone_type_id=data["phone_type_id"]
-                    )
+                if data.get("id", None) is not None:
+                    pt = user.models.PhoneType.objects.get(id=data["id"])
                     pt.phone_type = data["phone_type"]
                     pt.carrier = data["carrier"]
                     pt.save()
