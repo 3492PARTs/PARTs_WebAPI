@@ -417,7 +417,7 @@ def void_field_response(id):
 
 
 def void_scout_pit_response(id):
-    sp = PitResponse.objects.get(scout_pit_id=id)
+    sp = PitResponse.objects.get(id=id)
 
     sp.response.void_ind = "y"
     sp.void_ind = "y"

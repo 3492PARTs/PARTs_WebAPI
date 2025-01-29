@@ -145,7 +145,7 @@ class FieldResponse(models.Model):
 
 
 class PitResponse(models.Model):
-    scout_pit_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
     team = models.ForeignKey(Team, models.PROTECT)
@@ -153,7 +153,7 @@ class PitResponse(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.scout_pit_id
+        return self.id
 
 
 class PitImage(models.Model):

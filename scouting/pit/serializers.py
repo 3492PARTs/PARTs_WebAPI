@@ -27,7 +27,7 @@ class ScoutPitImageSerializer(serializers.Serializer):
 
 
 class ScoutPitResponseSerializer(serializers.Serializer):
-    scout_pit_id = serializers.IntegerField()
+    id = serializers.IntegerField()
     team_no = serializers.IntegerField()
     team_nm = serializers.CharField()
     pics = ScoutPitImageSerializer(many=True, required=False)

@@ -33,16 +33,18 @@ def get_responses(team=None):
         except PitResponse.DoesNotExist as e:
             pit_response = None
 
-        pit_images = PitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=pit_response)).order_by(
-            "scout_pit_img_id"
-        )
+        pit_images = PitImage.objects.filter(
+            Q(void_ind="n") & Q(scout_pit=pit_response)
+        ).order_by("scout_pit_img_id")
 
         pics = []
         for pit_image in pit_images:
             pics.append(
                 {
                     "scout_pit_img_id": pit_image.scout_pit_img_id,
-                    "pic": general.cloudinary.build_image_url(pit_image.img_id, pit_image.img_ver),
+                    "pic": general.cloudinary.build_image_url(
+                        pit_image.img_id, pit_image.img_ver
+                    ),
                     "default": pit_image.default,
                 }
             )
@@ -51,7 +53,7 @@ def get_responses(team=None):
             "team_no": team.team_no,
             "team_nm": team.team_nm,
             "pics": pics,
-            "scout_pit_id": pit_response.scout_pit_id if pit_response is not None else None,
+            "id": pit_response.id if pit_response is not None else None,
         }
 
         tmp_responses = []
@@ -78,7 +80,15 @@ def get_responses(team=None):
                     answer = "!FOUND"
 
                 tmp_responses.append(
-                    {"question": (" C: " if question["question_conditional_on"] is not None else "") + question["question"], "answer": answer}
+                    {
+                        "question": (
+                            " C: "
+                            if question["question_conditional_on"] is not None
+                            else ""
+                        )
+                        + question["question"],
+                        "answer": answer,
+                    }
                 )
 
                 """
@@ -113,7 +123,7 @@ def save_robot_picture(file, team_no):
 
     sp = PitResponse.objects.get(
         Q(event=current_event)
-        & Q(team_no_id=team_no)
+        & Q(team_id=team_no)
         & Q(void_ind="n")
         & Q(response__void_ind="n")
     )
@@ -152,9 +162,7 @@ def get_team_data(team_no=None):
         & Q(event=current_event)
     )
 
-    response_answers = form.util.get_response_answers(
-        sp.response
-    )
+    response_answers = form.util.get_response_answers(sp.response)
 
     questions = []
     for response_answer in response_answers:
