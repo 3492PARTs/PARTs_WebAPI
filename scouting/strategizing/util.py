@@ -64,7 +64,11 @@ def get_match_strategies(match_id: int = None, event: Event = None):
     if event is not None:
         q_event = Q(match__event=event)
 
-    match_strategies = MatchStrategy.objects.filter(q_match_id & q_event & Q(void_ind="n")).order_by("-time")
+    match_strategies = (MatchStrategy.objects
+                        .prefetch_related("match__event", "match__blue_one", "match__blue_two", "match__blue_three", "match__red_one", "match__red_two", "match__red_three",
+                      "match__fieldresponse_set",
+                      "match__blue_one__eventteaminfo_set", "match__blue_two__eventteaminfo_set", "match__blue_three__eventteaminfo_set", "match__red_one__eventteaminfo_set", "match__red_two__eventteaminfo_set", "match__red_three__eventteaminfo_set")
+                        .filter(q_match_id & q_event & Q(void_ind="n")).order_by("-time"))
 
     parsed_match_strategies = []
     for ms in match_strategies:

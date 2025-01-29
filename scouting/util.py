@@ -253,9 +253,14 @@ def parse_schedule(s: Schedule):
 
 def get_matches(event: Event):
 
-    matches = Match.objects.filter(Q(event=event) & Q(void_ind="n")).order_by(
+    matches = (Match.objects
+    .prefetch_related("event", "blue_one", "blue_two", "blue_three", "red_one", "red_two", "red_three",
+                      "fieldresponse_set",
+                      "blue_one__eventteaminfo_set", "blue_two__eventteaminfo_set", "blue_three__eventteaminfo_set", "red_one__eventteaminfo_set", "red_two__eventteaminfo_set", "red_three__eventteaminfo_set")
+    .filter(Q(event=event) & Q(void_ind="n"))
+    .order_by(
         "comp_level__comp_lvl_order", "match_number"
-    )
+    ))
 
     parsed_matches = []
     for m in matches:

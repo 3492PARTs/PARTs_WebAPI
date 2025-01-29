@@ -66,7 +66,9 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
         q_id = Q(id=qid)
 
     qs = (
-        Question.objects.prefetch_related("questionoption_set").annotate(
+        Question.objects
+        .prefetch_related("questionoption_set", "scout_question", "question_typ", "condition_question_from", "condition_question_to", "questionflow_set", "question_typ__scout_question_type")
+        .annotate(
             in_flow=Exists(
                 QuestionFlow.objects.filter(Q(question_id=OuterRef("pk")) & Q(active="y") & Q(void_ind="n"))
             )
@@ -90,10 +92,10 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
     return questions
 
 
-def format_question_values(q: Question):
+def format_question_values(in_question: Question):
     # Scout question type
     try:
-        sqt = q.question_typ.scout_question_type.get(void_ind="n")
+        sqt = in_question.question_typ.scout_question_type.get(void_ind="n")
         scout_question_type = {
             "id": sqt.id,
             "scorable": sqt.scorable
@@ -103,15 +105,15 @@ def format_question_values(q: Question):
 
     # Question Type
     question_type = {
-        "question_typ": q.question_typ.question_typ,
-        "question_typ_nm": q.question_typ.question_typ_nm,
-        "is_list": q.question_typ.is_list,
+        "question_typ": in_question.question_typ.question_typ,
+        "question_typ_nm": in_question.question_typ.question_typ_nm,
+        "is_list": in_question.question_typ.is_list,
         "scout_question_type": scout_question_type
     }
 
     # Scout Question
     try:
-        sq = q.scout_question.get(Q(void_ind="n"))
+        sq = in_question.scout_question.get(Q(void_ind="n"))
 
         scout_question = {
             "id": sq.id,
@@ -132,7 +134,7 @@ def format_question_values(q: Question):
 
     # List of options if applicable
     questionoption_set = []
-    for qo in q.questionoption_set.filter(Q(void_ind="n") & Q(active="y")):
+    for qo in in_question.questionoption_set.filter(Q(void_ind="n") & Q(active="y")):
         questionoption_set.append(
             {
                 "question_opt_id": qo.question_opt_id,
@@ -144,33 +146,33 @@ def format_question_values(q: Question):
 
     # Flag if question has conditions
     try:
-        conditional_questions = q.condition_question_from.filter(
+        conditional_questions = in_question.condition_question_from.filter(
             Q(void_ind="n") & Q(active="y") & Q(question_to__active="y"))
     except QuestionCondition.DoesNotExist:
         conditional_questions = None
 
     # Flag if question is condition of another
     try:
-        conditional_on_question = q.condition_question_to.get(Q(void_ind="n") & Q(active="y"))
+        conditional_on_question = in_question.condition_question_to.get(Q(void_ind="n") & Q(active="y"))
     except QuestionCondition.DoesNotExist:
         conditional_on_question = None
 
-    question_flows = QuestionFlow.objects.filter(Q(question=q) & Q(active="y") & Q(void_ind="n"))
+    question_flows = in_question.questionflow_set.filter(Q(active="y") & Q(void_ind="n"))
 
     return {
-        "id": q.id,
+        "id": in_question.id,
         "flow_id_set": set(qf.flow.id for qf in question_flows),
         "season_id": season,
-        "question": q.question,
-        "table_col_width": q.table_col_width,
-        "order": q.order,
-        "required": q.required,
-        "active": q.active,
+        "question": in_question.question,
+        "table_col_width": in_question.table_col_width,
+        "order": in_question.order,
+        "required": in_question.required,
+        "active": in_question.active,
         "question_typ": question_type,
-        "form_typ": q.form_typ,
-        "form_sub_typ": q.form_sub_typ,
+        "form_typ": in_question.form_typ,
+        "form_sub_typ": in_question.form_sub_typ,
         "questionoption_set": questionoption_set,
-        "display_value": f"{'' if q.active == 'y' else 'Deactivated: '} Order: {q.order}: {q.form_sub_typ.form_sub_nm + ': ' if q.form_sub_typ is not None else ''}{q.question}",
+        "display_value": f"{'' if in_question.active == 'y' else 'Deactivated: '} Order: {in_question.order}: {in_question.form_sub_typ.form_sub_nm + ': ' if in_question.form_sub_typ is not None else ''}{in_question.question}",
         "scout_question": scout_question,
         "question_conditional_on": conditional_on_question.question_from.id if conditional_on_question is not None else None,
         "question_condition_value": conditional_on_question.value if conditional_on_question is not None else None,

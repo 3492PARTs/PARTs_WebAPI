@@ -273,6 +273,7 @@ class AllScoutingInfo(APIView):
                 seasons = scouting.util.get_all_seasons()
                 events = scouting.util.get_all_events()
                 teams = scouting.util.get_teams(True)
+
                 matches = scouting.util.get_matches(current_event)
                 schedules = scouting.util.get_current_schedule_parsed()
                 scout_field_schedules = (
