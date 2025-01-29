@@ -157,15 +157,15 @@ class PitResponse(models.Model):
 
 
 class PitImage(models.Model):
-    scout_pit_img_id = models.AutoField(primary_key=True)
-    scout_pit = models.ForeignKey(PitResponse, models.PROTECT)
+    id = models.AutoField(primary_key=True)
+    pit_response = models.ForeignKey(PitResponse, models.PROTECT)
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
     default = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.scout_pit_img_id
+        return self.id
 
 
 class ScoutAuthGroup(models.Model):

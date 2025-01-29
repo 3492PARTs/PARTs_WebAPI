@@ -34,14 +34,14 @@ def get_responses(team=None):
             pit_response = None
 
         pit_images = PitImage.objects.filter(
-            Q(void_ind="n") & Q(scout_pit=pit_response)
-        ).order_by("scout_pit_img_id")
+            Q(void_ind="n") & Q(pit_response=pit_response)
+        ).order_by("id")
 
         pics = []
         for pit_image in pit_images:
             pics.append(
                 {
-                    "scout_pit_img_id": pit_image.scout_pit_img_id,
+                    "id": pit_image.id,
                     "pic": general.cloudinary.build_image_url(
                         pit_image.img_id, pit_image.img_ver
                     ),
@@ -140,9 +140,9 @@ def save_robot_picture(file, team_no):
 
 
 def set_default_team_image(id):
-    spi = PitImage.objects.get(Q(void_ind="n") & Q(scout_pit_img_id=id))
+    spi = PitImage.objects.get(Q(void_ind="n") & Q(id=id))
 
-    for pi in spi.scout_pit.scoutpitimage_set.filter(Q(void_ind="n")):
+    for pi in spi.pit_response.scoutpitimage_set.filter(Q(void_ind="n")):
         pi.default = False
         pi.save()
 
@@ -174,7 +174,7 @@ def get_team_data(team_no=None):
     for pic in sp.pitimage_set.filter(Q(void_ind="n")):
         pics.append(
             {
-                "scout_pit_img_id": pic.scout_pit_img_id,
+                "id": pic.id,
                 "pic": general.cloudinary.build_image_url(pic.img_id, pic.img_ver),
                 "default": pic.default,
             }

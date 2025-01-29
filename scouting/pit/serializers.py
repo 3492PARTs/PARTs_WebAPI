@@ -21,7 +21,7 @@ class ScoutPitResponseAnswerSerializer(serializers.Serializer):
 
 
 class ScoutPitImageSerializer(serializers.Serializer):
-    scout_pit_img_id = serializers.IntegerField(required=False)
+    id = serializers.IntegerField(required=False)
     pic = serializers.CharField()
     default = serializers.BooleanField()
 
