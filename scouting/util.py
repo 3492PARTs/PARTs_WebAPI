@@ -1,4 +1,4 @@
-from django.db.models import Q, Case, When
+from django.db.models import Q, Case, When, OuterRef, Subquery, Exists
 
 import general.cloudinary
 from scouting.models import (
@@ -11,7 +11,7 @@ from scouting.models import (
     PitResponse,
     Season,
     Team,
-    FieldForm,
+    FieldForm, FieldResponse,
 )
 
 
@@ -254,9 +254,23 @@ def parse_schedule(s: Schedule):
 def get_matches(event: Event):
 
     matches = (Match.objects
-    .prefetch_related("event", "blue_one", "blue_two", "blue_three", "red_one", "red_two", "red_three",
-                      "fieldresponse_set",
-                      "blue_one__eventteaminfo_set", "blue_two__eventteaminfo_set", "blue_three__eventteaminfo_set", "red_one__eventteaminfo_set", "red_two__eventteaminfo_set", "red_three__eventteaminfo_set")
+    .annotate(
+        blue_one_rank=Subquery(rank_query("blue_one")),
+        blue_two_rank=Subquery(rank_query("blue_two")),
+        blue_three_rank=Subquery(rank_query("blue_three")),
+        red_one_rank=Subquery(rank_query("red_one")),
+        red_two_rank=Subquery(rank_query("red_two")),
+        red_three_rank=Subquery(rank_query("red_three")),
+        blue_one_field_response=Exists(field_response_query("blue_one")),
+        blue_two_field_response=Exists(field_response_query("blue_two")),
+        blue_three_field_response=Exists(field_response_query("blue_three")),
+        red_one_field_response=Exists(field_response_query("red_one")),
+        red_two_field_response=Exists(field_response_query("red_two")),
+        red_three_field_response=Exists(field_response_query("red_three")),
+    )
+    #.prefetch_related("event", "blue_one", "blue_two", "blue_three", "red_one", "red_two", "red_three",
+    #                  "fieldresponse_set",
+    #                  "blue_one__eventteaminfo_set", "blue_two__eventteaminfo_set", "blue_three__eventteaminfo_set", "red_one__eventteaminfo_set", "red_two__eventteaminfo_set", "red_three__eventteaminfo_set")
     .filter(Q(event=event) & Q(void_ind="n"))
     .order_by(
         "comp_level__comp_lvl_order", "match_number"
@@ -269,43 +283,74 @@ def get_matches(event: Event):
     return parsed_matches
 
 
-def parse_match(m: Match):
-    eti_blue_one = get_event_team_info(m.blue_one, m.event)
-    eti_blue_two = get_event_team_info(m.blue_two, m.event)
-    eti_blue_three = get_event_team_info(m.blue_three, m.event)
+def parse_match(in_match: Match):
+    #print (in_match)
+    blue_one_rank = get_rank(in_match.blue_one, in_match.event, getattr(in_match, "blue_one_rank", None))
+    blue_two_rank = get_rank(in_match.blue_two, in_match.event, getattr(in_match, "blue_two_rank", None))
+    blue_three_rank = get_rank(in_match.blue_three, in_match.event, getattr(in_match, "blue_three_rank", None))
+    red_one_rank = get_rank(in_match.red_one, in_match.event, getattr(in_match, "red_one_rank", None))
+    red_two_rank = get_rank(in_match.red_two, in_match.event, getattr(in_match, "red_two_rank", None))
+    red_three_rank = get_rank(in_match.red_three, in_match.event, getattr(in_match, "red_three_rank", None))
 
-    eti_red_one = get_event_team_info(m.red_one, m.event)
-    eti_red_two = get_event_team_info(m.red_two, m.event)
-    eti_red_three = get_event_team_info(m.red_three, m.event)
+    blue_one_field_response = get_match_team_has_response(in_match, in_match.blue_one, getattr(in_match, "blue_one_field_response", None))
+    blue_two_field_response = get_match_team_has_response(in_match, in_match.blue_two, getattr(in_match, "blue_two_field_response", None))
+    blue_three_field_response = get_match_team_has_response(in_match, in_match.blue_three, getattr(in_match, "blue_three_field_response", None))
+    red_one_field_response = get_match_team_has_response(in_match, in_match.red_one, getattr(in_match, "red_one_field_response", None))
+    red_two_field_response = get_match_team_has_response(in_match, in_match.red_two, getattr(in_match, "red_two_field_response", None))
+    red_three_field_response = get_match_team_has_response(in_match, in_match.red_three, getattr(in_match, "red_three_field_response", None))
 
     return {
-        "match_id": m.match_id,
-        "event": m.event,
-        "match_number": m.match_number,
-        "red_score": m.red_score,
-        "blue_score": m.blue_score,
-        "time": m.time,
-        "blue_one_id": m.blue_one.team_no,
-        "blue_one_rank": (None if eti_blue_one is None else eti_blue_one.rank),
-        "blue_one_field_response": match_team_has_result(m, m.blue_one),
-        "blue_two_id": m.blue_two.team_no,
-        "blue_two_rank": (None if eti_blue_two is None else eti_blue_two.rank),
-        "blue_two_field_response": match_team_has_result(m, m.blue_two),
-        "blue_three_id": m.blue_three.team_no,
-        "blue_three_rank": (None if eti_blue_three is None else eti_blue_three.rank),
-        "blue_three_field_response": match_team_has_result(m, m.blue_three),
-        "red_one_id": m.red_one.team_no,
-        "red_one_rank": (None if eti_red_one is None else eti_red_one.rank),
-        "red_one_field_response": match_team_has_result(m, m.red_one),
-        "red_two_id": m.red_two.team_no,
-        "red_two_rank": (None if eti_red_two is None else eti_red_two.rank),
-        "red_two_field_response": match_team_has_result(m, m.red_two),
-        "red_three_id": m.red_three.team_no,
-        "red_three_rank": (None if eti_red_three is None else eti_red_three.rank),
-        "red_three_field_response": match_team_has_result(m, m.red_three),
-        "comp_level": m.comp_level,
-        "scout_field_result": len(m.fieldresponse_set.all()) > 0,
+        "match_id": in_match.match_id,
+        "event": in_match.event,
+        "match_number": in_match.match_number,
+        "red_score": in_match.red_score,
+        "blue_score": in_match.blue_score,
+        "time": in_match.time,
+        "blue_one_id": in_match.blue_one_id,
+        "blue_one_rank": blue_one_rank,
+        "blue_one_field_response": blue_one_field_response,
+        "blue_two_id": in_match.blue_two_id,
+        "blue_two_rank": blue_two_rank,
+        "blue_two_field_response": blue_two_field_response,
+        "blue_three_id": in_match.blue_three_id,
+        "blue_three_rank": blue_three_rank,
+        "blue_three_field_response": blue_three_field_response,
+        "red_one_id": in_match.red_one_id,
+        "red_one_rank": red_one_rank,
+        "red_one_field_response": red_one_field_response,
+        "red_two_id": in_match.red_two_id,
+        "red_two_rank": red_two_rank,
+        "red_two_field_response": red_two_field_response,
+        "red_three_id": in_match.red_three_id,
+        "red_three_rank": red_three_rank,
+        "red_three_field_response": red_three_field_response,
+        "comp_level": in_match.comp_level,
+        "scout_field_result": len(in_match.fieldresponse_set.all()) > 0,
     }
+
+
+def rank_query(outer_ref: str):
+    return EventTeamInfo.objects.filter(Q(event=OuterRef("event")) & Q(void_ind="n") & Q(team=OuterRef(outer_ref))).values("rank")[:1]
+
+
+def field_response_query(outer_ref):
+    return  FieldResponse.objects.filter(Q(void_ind="n") & Q(team=OuterRef(outer_ref)))
+
+
+def get_rank(team: Team, event: Event, rank=None):
+    if rank is None:
+        eti = get_event_team_info(team, event)
+        rank = None if eti is None else eti.rank
+
+    return rank
+
+
+
+def get_match_team_has_response(match: Match, team: Team, has_response=None):
+    if has_response is None:
+        return match_team_has_result(match, team)
+
+    return has_response
 
 
 def get_event_team_info(team: Team, event: Event):

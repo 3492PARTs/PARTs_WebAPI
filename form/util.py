@@ -723,7 +723,7 @@ def save_field_response(data, user_id):
 
     field_response = FieldResponse(
         event=current_event,
-        team_no_id=data["team_id"],
+        team_id=data["team_id"],
         match=m,
         user_id=user_id,
         response=response,
