@@ -59,6 +59,7 @@ class Question(models.Model):
     question = models.CharField(max_length=1000)
     table_col_width = models.CharField(max_length=255)
     order = models.IntegerField()
+    svg = models.CharField(max_length=2000, null=True)
     required = models.CharField(max_length=1)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")

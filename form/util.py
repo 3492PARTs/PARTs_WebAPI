@@ -168,6 +168,7 @@ def format_question_values(in_question: Question):
         "order": in_question.order,
         "required": in_question.required,
         "active": in_question.active,
+        "svg": in_question.svg,
         "question_typ": question_type,
         "form_typ": in_question.form_typ,
         "form_sub_typ": in_question.form_sub_typ,
@@ -181,51 +182,53 @@ def format_question_values(in_question: Question):
     }
 
 
-def save_question(question):
+def save_question(data):
     current_season = None
-    if question["form_typ"]["form_typ"] in ["pit", "field"]:
+    if data["form_typ"]["form_typ"] in ["pit", "field"]:
         current_season = scouting.util.get_current_season()
 
-    required = question.get("required", "n")
+    required = data.get("required", "n")
     required = required if required != "" else "n"
 
-    if question.get("question_id", None) is not None:
-        q = Question.objects.get(question_id=question["question_id"])
-        q.question = question["question"]
-        q.table_col_width = question["table_col_width"]
-        q.question_typ_id = question["question_typ"]["question_typ"]
-        q.order = question["order"]
-        q.required = required
-        q.active = question["active"]
+    if data.get("id", None) is not None:
+        question = Question.objects.get(id=data["id"])
+        question.question = data["question"]
+        question.table_col_width = data["table_col_width"]
+        question.question_typ_id = data["question_typ"]["question_typ"]
+        question.order = data["order"]
+        question.required = required
+        question.active = data["active"]
     else:
-        q = Question(
-            question_typ_id=question["question_typ"]["question_typ"],
-            form_typ_id=question["form_typ"]["form_typ"],
-            question=question["question"],
-            table_col_width=question["table_col_width"],
-            order=question["order"],
-            active=question["active"],
+        question = Question(
+            question_typ_id=data["question_typ"]["question_typ"],
+            form_typ_id=data["form_typ"]["form_typ"],
+            question=data["question"],
+            table_col_width=data["table_col_width"],
+            order=data["order"],
+            active=data["active"],
             required=required,
             void_ind="n",
         )
 
-    q.form_sub_typ_id = None if question.get("form_sub_typ", None) is None else question["form_sub_typ"].get("form_sub_typ", None)
+    question.svg = data.get("svg", None)
 
-    for qfid in question.get("question_flow_id_set", []):
-        q.question_flow.add(Flow.objects.get(id=qfid))
+    question.form_sub_typ_id = None if data.get("form_sub_typ", None) is None else data["form_sub_typ"].get("form_sub_typ", None)
 
-    q.save()
+    for qfid in data.get("question_flow_id_set", []):
+        question.question_flow.add(Flow.objects.get(id=qfid))
 
-    if question["form_typ"]["form_typ"] in ["pit", "field"]:
-        if question.get("scout_question", None).get("id", None) is not None:
-            sq = scouting.models.Question.objects.get(id=question["scout_question"]["id"])
+    question.save()
+
+    if data["form_typ"]["form_typ"] in ["pit", "field"]:
+        if data.get("scout_question", None).get("id", None) is not None:
+            sq = scouting.models.Question.objects.get(id=data["scout_question"]["id"])
         else:
-            sq = scouting.models.Question(question=q)
+            sq = scouting.models.Question(question=question)
 
         if sq.season is None:
             sq.season = current_season
 
-        scout_question = question.get("scout_question", None)
+        scout_question = data.get("scout_question", None)
         sq.x = scout_question.get("x", None)
         sq.y = scout_question.get("y", None)
         sq.width = scout_question.get("width", None)
@@ -235,9 +238,9 @@ def save_question(question):
         sq.value_multiplier = scout_question.get("value_multiplier", False)
         sq.save()
 
-    if question.get("id", None) is None:
+    if data.get("id", None) is None:
         # If adding a new question we need to make a null answer for it for all questions already answered
-        match question["form_typ"]["form_typ"]:
+        match data["form_typ"]["form_typ"]:
             case "pit":
                 pit_responses = PitResponse.objects.filter(
                     Q(void_ind="n")
@@ -266,28 +269,28 @@ def save_question(question):
                 )
             case _:
                 questions_answered = Response.objects.filter(
-                    Q(void_ind="n") & Q(form_typ_id=question["form_typ"])
+                    Q(void_ind="n") & Q(form_typ_id=data["form_typ"])
                 )
 
         for qa in questions_answered:
             Answer(
-                response=qa, question=q, value="!EXIST", void_ind="n"
+                response=qa, question=question, value="!EXIST", void_ind="n"
             ).save()
 
     if (
-            question["question_typ"]["is_list"] == "y"
-            and len(question.get("questionoption_set", [])) <= 0
+            data["question_typ"]["is_list"] == "y"
+            and len(data.get("questionoption_set", [])) <= 0
     ):
         raise Exception("Select questions must have options.")
 
-    for op in question.get("questionoption_set", []):
+    for op in data.get("questionoption_set", []):
         if op.get("question_opt_id", None) is not None:
             qop = QuestionOption.objects.get(question_opt_id=op["question_opt_id"])
             qop.option = op["option"]
             qop.active = op["active"]
         else:
             qop = QuestionOption(
-                option=op["option"], question=q, active=op["active"], void_ind="n"
+                option=op["option"], question=question, active=op["active"], void_ind="n"
             )
 
         qop.save()
