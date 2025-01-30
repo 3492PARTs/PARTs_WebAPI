@@ -67,7 +67,7 @@ def build_table_columns():
             )
 
         for flow in form_sub_type["question_flows"]:
-            for question_flow in flow["questions"]:
+            for question_flow in flow["question_flows"]:
                 all_questions.append(question_flow["question"])
                 table_cols.append(
                     {

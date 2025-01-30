@@ -128,7 +128,7 @@ class FlowSerializer(serializers.Serializer):
     single_run = serializers.BooleanField()
     form_typ = FormTypeSerializer()
     form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
-    questions = QuestionFlowSerializer(many=True, required=False)
+    question_flows = QuestionFlowSerializer(many=True, required=False)
     void_ind = serializers.CharField()
 
     flow_conditional_on = serializers.IntegerField(allow_null=True)

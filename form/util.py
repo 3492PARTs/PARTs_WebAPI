@@ -601,8 +601,8 @@ def get_flow_condition(form_typ: str):
         parsed.append(
             {
                 "id": qc.id,
-                "flow_from": format_question_flow_values(qc.flow_from),
-                "flow_to": format_question_flow_values(qc.flow_to),
+                "flow_from": format_flow_values(qc.flow_from),
+                "flow_to": format_flow_values(qc.flow_to),
                 "active": qc.active,
             }
         )
@@ -628,7 +628,7 @@ def save_question_flow_condition(data):
     return qfc
 
 
-def format_question_flow_values(flow: Flow):
+def format_flow_values(flow: Flow):
     # Flag if question flow has conditions
     try:
         count = flow.condition_flow_from.filter(
@@ -649,7 +649,7 @@ def format_question_flow_values(flow: Flow):
             "single_run": flow.single_run,
             "form_typ": flow.form_typ,
             "form_sub_typ": flow.form_sub_typ if flow.form_sub_typ is not None else None,
-            "questions": [{
+            "question_flows": [{
                 "id": qf.id,
                 "flow_id": flow.id,
                 "question": format_question_values(qf.question),
@@ -870,13 +870,13 @@ def get_flows(fid = None, form_typ=None, form_sub_typ=None):
         current_season = scouting.util.get_current_season()
         q_season = Q(scout_question_flow__season=current_season)
 
-    qfs = Flow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n")).order_by("form_sub_typ_id", "name")
+    flows = Flow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n")).order_by("form_sub_typ_id", "name")
 
-    parsed_qfs = []
-    for qf in qfs:
-        parsed_qfs.append(format_question_flow_values(qf))
+    parsed = []
+    for flow in flows:
+        parsed.append(format_flow_values(flow))
 
-    return parsed_qfs
+    return parsed
 
 
 def save_flow(data):
@@ -895,17 +895,17 @@ def save_flow(data):
     flow.save()
 
     ids = []
-    for question in data.get("questions", []):
-        if question.get("id", None) is None:
-            question_flow = QuestionFlow(flow=flow, question_id=question["question"]["id"])
+    for data_question_flow in data.get("question_flows", []):
+        if data_question_flow.get("id", None) is None:
+            question_flow = QuestionFlow(flow=flow, question_id=data_question_flow["question"]["id"])
         else:
-            question_flow = QuestionFlow.objects.get(id=question["id"])
+            question_flow = QuestionFlow.objects.get(id=data_question_flow["id"])
 
-        question_flow.order = question["order"]
+        question_flow.order = data_question_flow["order"]
 
         question_flow.save()
 
-        save_question(question["question"])
+        save_question(data_question_flow["question"])
 
         ids.append(question_flow.id)
 
