@@ -410,7 +410,7 @@ def get_responses(form_typ: int, archive_ind: str):
 
         for question in questions:
             question["answer"] = get_response_question_answer(
-                res, question["question_id"]
+                res, question["id"]
             )
 
         responses.append(
