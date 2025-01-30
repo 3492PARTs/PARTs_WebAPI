@@ -371,7 +371,7 @@ def get_response(response_id: int):
     questions = get_questions(res.form_typ, "y")
 
     for question in questions:
-        question["answer"] = get_response_question_answer(res, question["question_id"])
+        question["answer"] = get_response_question_answer(res, question["id"])
 
     return questions
 
