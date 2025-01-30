@@ -214,9 +214,8 @@ def save_match(data):
     if (data.get("match_id", None)) is not None and len(data["match_id"]) > 0:
         match = Match.objects.get(match_id=data["match_id"])
     else:
-        season = Season.objects.get(season_id=data["event"]["season_id"])
         match = Match(
-            match_id=f"{season.season}{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}"
+            match_id=f"{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}"
         )
         match.event_id = data["event"]["event_id"]
 
