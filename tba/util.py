@@ -26,7 +26,7 @@ tba_url = "https://www.thebluealliance.com/api/v3"
 
 
 def sync_season(season_id):
-    season = Season.objects.get(season_id=season_id)
+    season = Season.objects.get(id=season_id)
 
     request = requests.get(
         f"{tba_url}/team/frc3492/events/{season.season}",
@@ -173,7 +173,7 @@ def sync_matches():
     try:
         for match in matches:
             match_number = match.get("match_number", 0)
-            messages += save_tba_match(event, match)
+            messages += save_tba_match(match)
     except Exception as e:
         messages += f"(ERROR) {event.event_nm} {match_number} {e}\n"
     return messages
@@ -216,7 +216,7 @@ def sync_event_team_info(force: int):
 
             try:
                 eti = EventTeamInfo.objects.get(
-                    Q(event=event) & Q(team_no=team) & Q(void_ind="n")
+                    Q(event=event) & Q(team=team) & Q(void_ind="n")
                 )
 
                 eti.matches_played = matches_played
@@ -228,11 +228,11 @@ def sync_event_team_info(force: int):
                 eti.dq = dq
 
                 eti.save()
-                messages += f"(UPDATE) {event.event_nm} {team.team}\n"
+                messages += f"(UPDATE) {event.event_nm} {team.team_no}\n"
             except EventTeamInfo.DoesNotExist as odne:
                 eti = EventTeamInfo(
                     event=event,
-                    team_no=team,
+                    team=team,
                     matches_played=matches_played,
                     qual_average=qual_average,
                     losses=losses,
@@ -242,7 +242,7 @@ def sync_event_team_info(force: int):
                     dq=dq,
                 )
                 eti.save()
-                messages += f"(ADD) {event.event_nm} {team.team}\n"
+                messages += f"(ADD) {event.event_nm} {team.team_no}\n"
     else:
         messages = "No active event"
     return messages
