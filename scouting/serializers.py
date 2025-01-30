@@ -50,7 +50,7 @@ class CompetitionLevelSerializer(serializers.Serializer):
 
 
 class MatchSerializer(serializers.Serializer):
-    match_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    match_key = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     event = EventSerializer()
     match_number = serializers.IntegerField()
     red_score = serializers.IntegerField(required=False, allow_null=True)
@@ -139,7 +139,7 @@ class MatchStrategySerializer(serializers.Serializer):
 
 class SaveMatchStrategySerializer(serializers.Serializer):
     id = serializers.IntegerField(allow_null=True, required=False)
-    match_id = serializers.CharField()
+    match_key = serializers.CharField()
     user_id = serializers.IntegerField()
     strategy = serializers.CharField()
     img = serializers.FileField(allow_null=True, required=False)

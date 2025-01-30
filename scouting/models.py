@@ -20,7 +20,7 @@ class Season(models.Model):
     current = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.id) + " " + self.season
+        return f"{self.id} : {self.season}"
 
 
 class Team(models.Model):
@@ -29,7 +29,7 @@ class Team(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.team_no) + " " + self.team_nm
+        return f"{self.team_no} : {self.team_nm}"
 
 
 class Event(models.Model):
@@ -54,7 +54,7 @@ class Event(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} {self.event_nm}"
+        return f"{self.id} : {self.event_nm} : {self.season}"
 
 
 class EventTeamInfo(models.Model):
@@ -73,7 +73,7 @@ class EventTeamInfo(models.Model):
         unique_together = (("event", "team"),)
 
     def __str__(self):
-        return f"Event: {self.event} Team: {self.team}"
+        return f"Event: {self.event} : Team: {self.team}"
 
 
 class CompetitionLevel(models.Model):
@@ -83,11 +83,11 @@ class CompetitionLevel(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.comp_lvl_typ + " " + self.comp_lvl_typ_nm
+        return f"{self.comp_lvl_typ} : {self.comp_lvl_typ_nm}"
 
 
 class Match(models.Model):
-    match_id = models.CharField(primary_key=True, max_length=50)
+    match_key = models.CharField(primary_key=True, max_length=50)
     match_number = models.IntegerField()
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(
@@ -115,7 +115,7 @@ class Match(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"match: {self.event} {self.comp_level} match no:{self.match_number}"
+        return f"{self.match_key} : {self.match_number} : {self.comp_level} : {self.event}"
 
 
 class FieldForm(models.Model):
@@ -129,6 +129,9 @@ class FieldForm(models.Model):
     full_img_ver = models.CharField(max_length=500, blank=True, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
+    def __str__(self):
+        return f"{self.id} : {self.season}"
+
 
 class FieldResponse(models.Model):
     id = models.AutoField(primary_key=True)
@@ -141,7 +144,7 @@ class FieldResponse(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"sf id: {self.id} {self.match} {self.user}"
+        return f"{self.id} : {self.team} : {self.match} : {self.event} : {self.user}"
 
 
 class PitResponse(models.Model):
@@ -153,7 +156,7 @@ class PitResponse(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.id
+        return f"{self.id} : {self.team} : {self.event} : {self.user}"
 
 
 class PitImage(models.Model):
@@ -165,7 +168,7 @@ class PitImage(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.id
+        return f"{self.id} : {self.pit_response}"
 
 
 class ScoutAuthGroup(models.Model):
@@ -173,7 +176,7 @@ class ScoutAuthGroup(models.Model):
     group = models.ForeignKey(Group, models.PROTECT)
 
     def __str__(self):
-        return str(self.id) + " auth group: " + str(self.group)
+        return f"{self.id} : {self.group}"
 
 
 class FieldSchedule(models.Model):
@@ -211,7 +214,7 @@ class FieldSchedule(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} time: {self.st_time} - {self.end_time}"
+        return f"{self.id} time: {self.st_time} - {self.end_time}: {self.event}"
 
 
 class ScheduleType(models.Model):
@@ -233,7 +236,7 @@ class Schedule(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.user.get_full_name()} {self.st_time} {self.end_time}"
+        return f"{self.id} : {self.user} : {self.sch_typ} : {self.st_time} - {self.end_time} : {self.event}"
 
 
 class TeamNote(models.Model):
@@ -247,7 +250,7 @@ class TeamNote(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.id, self.team)
+        return f"{self.id} : {self.user} : {self.team} : {self.event} : {self.match}"
 
 
 class QuestionType(models.Model):
@@ -259,7 +262,7 @@ class QuestionType(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"Scout question type {self.id} {self.question_typ}"
+        return f"{self.id} : {self.question_typ}"
 
 
 class Question(models.Model):
@@ -278,19 +281,19 @@ class Question(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"Scout Question {self.id} {self.question}"
+        return f"{self.id} : {self.question}"
 
 
 class QuestionFlow(models.Model):
     id = models.AutoField(primary_key=True)
-    question_flow = models.ForeignKey(
+    flow = models.ForeignKey(
         form.models.Flow, models.PROTECT, related_name="scout_question_flow"
     )
     season = models.ForeignKey(Season, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"Scout Question Flow {self.id} {self.question_flow}"
+        return f"{self.id} {self.flow}"
 
 
 class UserInfo(models.Model):
@@ -300,7 +303,7 @@ class UserInfo(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.id, self.user)
+        return f"{self.id} : {self.user}"
 
 
 class MatchStrategy(models.Model):

@@ -300,7 +300,7 @@ def parse_match(in_match: Match):
     red_three_field_response = get_match_team_has_response(in_match, in_match.red_three, getattr(in_match, "red_three_field_response", None))
 
     return {
-        "match_id": in_match.match_id,
+        "match_key": in_match.match_key,
         "event": in_match.event,
         "match_number": in_match.match_number,
         "red_score": in_match.red_score,

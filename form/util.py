@@ -712,7 +712,7 @@ def save_field_response(data, user_id):
     current_event = scouting.util.get_current_event()
     # Build field scout object and check for match
     try:
-        m = Match.objects.get(match_id=data.get("match_id", None))
+        m = Match.objects.get(match_key=data.get("match_key", None))
     except Match.DoesNotExist:
         m = None
 
@@ -917,6 +917,6 @@ def save_flow(data):
         try:
             flow.scout_question_flow.get(void_ind="n")
         except scouting.models.QuestionFlow.DoesNotExist:
-            scouting.models.QuestionFlow(question_flow=flow, season=scouting.util.get_current_season()).save()
+            scouting.models.QuestionFlow(flow=flow, season=scouting.util.get_current_season()).save()
 
     return flow

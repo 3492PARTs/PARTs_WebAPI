@@ -31,7 +31,7 @@ def parse_team_note(n: TeamNote):
     return {
         "id": n.id,
         "team_id": n.team.team_no,
-        "match_id": n.match.match_id if n.match else None,
+        "match_id": n.match.match_key if n.match else None,
         "note": n.note,
         "time": n.time,
         "user": n.user
@@ -94,7 +94,7 @@ def save_match_strategy(data, img = None):
     else:
         match_strategy = MatchStrategy()
 
-    match_strategy.match_id = data["match_id"]
+    match_strategy.match_id = data["match_key"]
     match_strategy.user_id = data["user_id"]
     match_strategy.strategy = data["strategy"]
 
