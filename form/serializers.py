@@ -38,13 +38,6 @@ class ScoutQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     question_id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
-    x = serializers.FloatField(required=False, allow_null=True)
-    y = serializers.FloatField(required=False, allow_null=True)
-    width = serializers.FloatField(required=False, allow_null=True)
-    height = serializers.FloatField(required=False, allow_null=True)
-    icon = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    icon_only = serializers.BooleanField(required=False, allow_null=True)
-    value_multiplier = serializers.IntegerField(required=False, allow_null=True)
 
 
 class QuestionConditionTypeSerializer(serializers.Serializer):
@@ -61,6 +54,14 @@ class QuestionSerializer(serializers.Serializer):
     table_col_width = serializers.CharField()
     order = serializers.IntegerField()
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    svg = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    x = serializers.FloatField(required=False, allow_null=True)
+    y = serializers.FloatField(required=False, allow_null=True)
+    width = serializers.FloatField(required=False, allow_null=True)
+    height = serializers.FloatField(required=False, allow_null=True)
+    icon = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    icon_only = serializers.BooleanField(required=False, allow_null=True)
+    value_multiplier = serializers.IntegerField(required=False, allow_null=True)
     active = serializers.CharField()
     question_typ = QuestionTypeSerializer()
     form_typ = FormTypeSerializer()

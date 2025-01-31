@@ -271,13 +271,6 @@ class Question(models.Model):
         form.models.Question, models.PROTECT, related_name="scout_question"
     )
     season = models.ForeignKey(Season, models.PROTECT, null=True)
-    x = models.FloatField(null=True)
-    y = models.FloatField(null=True)
-    width = models.FloatField(null=True)
-    height = models.FloatField(null=True)
-    icon = models.CharField(max_length=255, null=True)
-    icon_only = models.BooleanField(default=False)
-    value_multiplier = models.IntegerField(null=True, default=None)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
