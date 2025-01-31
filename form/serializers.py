@@ -51,6 +51,7 @@ class QuestionSerializer(serializers.Serializer):
     flow_id_set = serializers.ListField()
 
     question = serializers.CharField()
+    svg = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     table_col_width = serializers.CharField()
     order = serializers.IntegerField()
     required = serializers.CharField(required=False, allow_blank=True, allow_null=True)
