@@ -3,6 +3,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 
+from scouting.models import Season
 from tba.serializers import EventUpdatedSerializer, VerificationMessageSerializer
 
 from rest_framework.views import APIView
@@ -60,7 +61,7 @@ class SyncEventView(APIView):
         try:
             if has_access(request.user.id, auth_obj):
                 return ret_message(
-                    tba.util.sync_event(
+                    tba.util.sync_event(Season.objects.get(id=request.query_params["season_id"]),
                         request.query_params.get("event_cd", None)
                     )
                 )

@@ -776,3 +776,35 @@ class FieldFormView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class ScoutingReportView(APIView):
+    """
+    API endpoint to sync a match
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "scouting-report/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.admin.util.foo()
+                return ret_message(req)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while generating the scouting report.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+

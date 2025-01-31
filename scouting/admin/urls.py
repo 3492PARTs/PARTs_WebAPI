@@ -21,4 +21,5 @@ urlpatterns = [
     path("toggle-scout-under-review/", ToggleScoutUnderReviewView.as_view()),
     path("mark-scout-present/", MarkScoutPresentView.as_view()),
     path("field-form/", FieldFormView.as_view()),
+    path("scouting-report/", ScoutingReportView.as_view()),
 ]

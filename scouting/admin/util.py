@@ -2,6 +2,7 @@ from django.db import IntegrityError
 from django.db.models import Q
 
 import general.cloudinary
+import tba.util
 from form.models import Answer
 from general.security import ret_message
 import scouting
@@ -458,3 +459,26 @@ def save_field_form(field_form):
         ff.full_img_ver = full_img["version"]
 
     ff.save()
+
+def foo():
+    team_3492 = Team.objects.get(team_no=3492)
+
+    current_season = scouting.util.get_current_season()
+
+    our_events = team_3492.event_set.filter(Q(void_ind="n") & Q(season=current_season))
+
+    event_cds = [event.event_cd for event in our_events]
+
+    for event in our_events:
+        teams = event.teams.filter(~Q(team_no=3492))
+        for team in teams:
+            print(team)
+            team_events = tba.util.get_events_for_team(team, current_season, event_cds)
+            for team_event in team_events:
+                if team_event["event_cd"] in event_cds:
+                    print(f"same as us {team_event['event_cd']}")
+                else:
+                    print(team_event["event_nm"])
+                    print(team_event["teams"])
+
+

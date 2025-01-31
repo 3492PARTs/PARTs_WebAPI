@@ -1,4 +1,3 @@
-from django.contrib.auth.models import Group
 from django.db import transaction
 from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -10,7 +9,6 @@ from scouting.models import ScoutAuthGroup
 from user.models import PhoneType
 from .serializers import (
     ErrorLogSerializer,
-    InitSerializer,
     GroupSerializer,
     PhoneTypeSerializer,
 )
@@ -246,3 +244,4 @@ class PhoneTypeView(APIView):
                 request.user.id,
                 e,
             )
+

@@ -25,6 +25,25 @@ from tba.models import Message
 tba_url = "https://www.thebluealliance.com/api/v3"
 
 
+def get_events_for_team(team: Team, season: Season, event_cds_to_ignore=None):
+
+    request = requests.get(
+        f"{tba_url}/team/frc{team.team_no}/events/{season.season}",
+        headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+    )
+    request = json.loads(request.text)
+
+    parsed = []
+
+    for event_requested in request:
+        if event_cds_to_ignore is None or event_requested["key"] not in event_cds_to_ignore:
+            data = get_tba_event(event_requested["key"])
+            parsed.append(data)
+        else:
+            parsed.append({"event_cd": event_requested["key"]})
+
+    return parsed
+
 def sync_season(season_id):
     season = Season.objects.get(id=season_id)
 
@@ -36,13 +55,13 @@ def sync_season(season_id):
 
     messages = ""
     for event in request:
-        messages += sync_event(event["key"])
+        messages += sync_event(season, event["key"])
         messages += "------------------------------------------------\n"
 
     return messages
 
 
-def sync_event(event_cd: str):
+def get_tba_event(event_cd: str):
     request = requests.get(
         f"{tba_url}/event/{event_cd}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
@@ -52,14 +71,13 @@ def sync_event(event_cd: str):
     if tba_event.get("Error", None) is not None:
         raise Exception(tba_event["Error"])
 
-    season = Season.objects.get(season=tba_event["year"])
     time_zone = (
         tba_event.get("timezone")
         if tba_event.get("timezone", None) is not None
         else "America/New_York"
     )
 
-    event_ = {
+    return {
         "event_nm": tba_event["name"],
         "date_st": datetime.datetime.strptime(
             tba_event["start_date"], "%Y-%m-%d"
@@ -81,64 +99,71 @@ def sync_event(event_cd: str):
             if len(tba_event["webcasts"]) > 0
             else ""
         ),
-        "teams": [],
-        "teams_to_keep": [],
+        "teams": get_tba_event_teams(event_cd),
     }
 
+
+def get_tba_event_teams(event_cd: str):
     request = requests.get(
-        f"{tba_url}/event/{tba_event['key']}/teams",
+        f"{tba_url}/event/{event_cd}/teams",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
     tba_teams = json.loads(request.text)
 
-    for t in tba_teams:
-        event_["teams"].append({"team_no": t["team_number"], "team_nm": t["nickname"]})
+    parsed = []
 
-        event_["teams_to_keep"].append(t["team_number"])
+    for team in tba_teams:
+        parsed.append({"team_no": team["team_number"], "team_nm": team["nickname"]})
+
+    return parsed
+
+
+def sync_event(season: Season, event_cd: str):
+    data = get_tba_event(event_cd)
 
     messages = ""
     try:
-        event = Event.objects.get(event_cd=event_["event_cd"])
+        event = Event.objects.get(event_cd=data["event_cd"])
         event.void_ind = "n"
-        event.date_st = event_["date_st"]
-        event.date_end = event_["date_end"]
+        event.date_st = data["date_st"]
+        event.date_end = data["date_end"]
 
-        messages += "(NO ADD) Already have event: " + event_["event_cd"] + "\n"
+        messages += "(NO ADD) Already have event: " + data["event_cd"] + "\n"
     except Event.DoesNotExist as e:
         event = Event(
             season=season,
-            event_cd=event_["event_cd"],
-            date_st=event_["date_st"],
-            date_end=event_["date_end"],
+            event_cd=data["event_cd"],
+            date_st=data["date_st"],
+            date_end=data["date_end"],
             current="n",
             competition_page_active="n",
             void_ind="n",
         )
 
         event.save(force_insert=True)
-        messages += "(ADD) Added event: " + event_["event_cd"] + "\n"
+        messages += "(ADD) Added event: " + data["event_cd"] + "\n"
 
-    event.event_nm = event_["event_nm"]
-    event.event_url = event_["event_url"]
-    event.address = event_["address"]
-    event.city = event_["city"]
-    event.state_prov = event_["state_prov"]
-    event.postal_code = event_["postal_code"]
-    event.location_name = event_["location_name"]
-    event.gmaps_url = event_["gmaps_url"]
-    event.webcast_url = event_["webcast_url"]
-    event.timezone = event_["timezone"]
+    event.event_nm = data["event_nm"]
+    event.event_url = data["event_url"]
+    event.address = data["address"]
+    event.city = data["city"]
+    event.state_prov = data["state_prov"]
+    event.postal_code = data["postal_code"]
+    event.location_name = data["location_name"]
+    event.gmaps_url = data["gmaps_url"]
+    event.webcast_url = data["webcast_url"]
+    event.timezone = data["timezone"]
     event.save()
 
     # remove teams that have been removed from an event
     teams = Team.objects.filter(
-        ~Q(team_no__in=event_["teams_to_keep"]) & Q(event=event)
+        ~Q(team_no__in=set(team["team_no"] for team in data["teams"])) & Q(event=event)
     )
     for team in teams:
         team.event_set.remove(event)
-        messages += f"(REMOVE) Removed team: {team['team_no']} {team['team_nm']} from event: {event_['event_cd']}\n"
+        messages += f"(REMOVE) Removed team: {team['team_no']} {team['team_nm']} from event: {data['event_cd']}\n"
 
-    for team_ in event_["teams"]:
+    for team_ in data["teams"]:
         try:
             team = Team(
                 team_no=team_["team_no"], team_nm=team_["team_nm"], void_ind="n"
@@ -153,9 +178,9 @@ def sync_event(event_cd: str):
 
         try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
             team.event_set.add(event)
-            messages += f"(LINK) Added team: {team_['team_no']} {team_['team_nm']} to event: {event_['event_cd']}\n"
+            messages += f"(LINK) Added team: {team_['team_no']} {team_['team_nm']} to event: {data['event_cd']}\n"
         except IntegrityError:
-            messages += f"(NO LINK) Team: {team_['team_no']} {team_['team_nm']} already at event: {event_['event_cd']}\n"
+            messages += f"(NO LINK) Team: {team_['team_no']} {team_['team_nm']} already at event: {data['event_cd']}\n"
 
     return messages
 
@@ -183,7 +208,7 @@ def sync_event_team_info(force: int):
     messages = ""
     event = Event.objects.get(current="y")
 
-    sync_event(event.event_cd)
+    sync_event(event.season, event.event_cd)
 
     now = datetime.datetime.combine(timezone.now(), datetime.time.min)
     date_st = datetime.datetime.combine(event.date_st, datetime.time.min)
@@ -291,7 +316,7 @@ def save_tba_match(tba_match):
     match_key = tba_match["key"]
 
     try:
-        match = Match.objects.get(Q(match_id=match_key))
+        match = Match.objects.get(Q(match_key=match_key))
 
         match.red_one = red_one
         match.red_two = red_two
@@ -342,3 +367,4 @@ def verify_tba_webhook_call(request):
         settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
     ).hexdigest()
     return hmac_hex == request.META.get("HTTP_X_TBA_HMAC", None)
+
