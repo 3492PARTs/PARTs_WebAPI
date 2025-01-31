@@ -116,7 +116,7 @@ class QuestionConditionSerializer(serializers.Serializer):
     question_to = QuestionSerializer()
     active = serializers.CharField()
 
-class QuestionFlowSerializer(serializers.Serializer):
+class FlowQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     flow_id = serializers.IntegerField(required=False, allow_null=True)
     question = QuestionSerializer()
@@ -130,7 +130,7 @@ class FlowSerializer(serializers.Serializer):
     single_run = serializers.BooleanField()
     form_typ = FormTypeSerializer()
     form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
-    question_flows = QuestionFlowSerializer(many=True, required=False)
+    flow_questions = FlowQuestionSerializer(many=True, required=False)
     void_ind = serializers.CharField()
 
     flow_conditional_on = serializers.IntegerField(allow_null=True)

@@ -19,7 +19,7 @@ from form.models import (
     QuestionAggregate,
     QuestionAggregateType,
     QuestionCondition, Flow, FlowAnswer,
-    QuestionConditionType, FlowCondition, QuestionFlow
+    QuestionConditionType, FlowCondition, FlowQuestion
 )
 from scouting.models import Match, Season, FieldResponse, PitResponse, Event
 
@@ -67,10 +67,10 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
 
     qs = (
         Question.objects
-        .prefetch_related("questionoption_set", "scout_question", "question_typ", "condition_question_from", "condition_question_to", "questionflow_set", "question_typ__scout_question_type")
+        .prefetch_related("questionoption_set", "scout_question", "question_typ", "condition_question_from", "condition_question_to", "flowquestion_set", "question_typ__scout_question_type")
         .annotate(
             in_flow=Exists(
-                QuestionFlow.objects.filter(Q(question_id=OuterRef("pk")) & Q(active="y") & Q(void_ind="n"))
+                FlowQuestion.objects.filter(Q(question_id=OuterRef("pk")) & Q(active="y") & Q(void_ind="n"))
             )
         ).filter(
             q_id
@@ -150,11 +150,11 @@ def format_question_values(in_question: Question):
     except QuestionCondition.DoesNotExist:
         conditional_on_question = None
 
-    question_flows = in_question.questionflow_set.filter(Q(active="y") & Q(void_ind="n"))
+    flow_questions = in_question.flowquestion_set.filter(Q(active="y") & Q(void_ind="n"))
 
     return {
         "id": in_question.id,
-        "flow_id_set": set(qf.flow.id for qf in question_flows),
+        "flow_id_set": set(qf.flow.id for qf in flow_questions),
         "season_id": season,
         "question": in_question.question,
         "table_col_width": in_question.table_col_width,
@@ -563,12 +563,8 @@ def save_question_condition(data):
     qc.question_condition_typ_id = data["question_condition_typ"]["question_condition_typ"]
     qc.active = data["active"]
 
-    qc.question_from = Question.objects.get(
-        question_id=data["question_from"]["question_id"]
-    )
-    qc.question_to = Question.objects.get(
-        question_id=data["question_to"]["question_id"]
-    )
+    qc.question_from_id = data["question_from"]["id"]
+    qc.question_to_id = data["question_to"]["id"]
 
     qc.save()
 
@@ -611,7 +607,7 @@ def get_flow_condition(form_typ: str):
     return parsed
 
 
-def save_question_flow_condition(data):
+def save_flow_condition(data):
     if data.get("id", None) is not None:
         qfc = FlowCondition.objects.get(
             id=data["id"]
@@ -650,13 +646,13 @@ def format_flow_values(flow: Flow):
             "single_run": flow.single_run,
             "form_typ": flow.form_typ,
             "form_sub_typ": flow.form_sub_typ if flow.form_sub_typ is not None else None,
-            "question_flows": [{
+            "flow_questions": [{
                 "id": qf.id,
                 "flow_id": flow.id,
                 "question": format_question_values(qf.question),
                 "order": qf.order,
                 "active": qf.active
-            } for qf in QuestionFlow.objects.filter(Q(flow=flow) & Q(active="y") & Q(void_ind="n")).order_by("order", "question__question")],
+            } for qf in FlowQuestion.objects.filter(Q(flow=flow) & Q(active="y") & Q(void_ind="n")).order_by("order", "question__question")],
             "void_ind": flow.void_ind,
             "has_conditions": has_conditions,
             "flow_conditional_on": question_flow_conditional_on.flow_from.id if question_flow_conditional_on is not None else None
@@ -681,7 +677,7 @@ def get_form_questions(
         form_parsed["form_sub_types"].append({
             "form_sub_typ": st,
             "questions": qs,
-            "question_flows": qfs
+            "flows": qfs
         })
 
     #print(form_parsed)
@@ -896,22 +892,22 @@ def save_flow(data):
     flow.save()
 
     ids = []
-    for data_question_flow in data.get("question_flows", []):
-        if data_question_flow.get("id", None) is None:
-            question_flow = QuestionFlow(flow=flow, question_id=data_question_flow["question"]["id"])
+    for data_flow_question in data.get("flow_questions", []):
+        if data_flow_question.get("id", None) is None:
+            question_flow = FlowQuestion(flow=flow, question_id=data_flow_question["question"]["id"])
         else:
-            question_flow = QuestionFlow.objects.get(id=data_question_flow["id"])
+            question_flow = FlowQuestion.objects.get(id=data_flow_question["id"])
 
-        question_flow.order = data_question_flow["order"]
+        question_flow.order = data_flow_question["order"]
 
         question_flow.save()
 
-        save_question(data_question_flow["question"])
+        save_question(data_flow_question["question"])
 
         ids.append(question_flow.id)
 
     # void questions no longer in flow
-    QuestionFlow.objects.filter(Q(flow=flow) & Q(void_ind="n") & ~Q(id__in=ids)).update(void_ind="y")
+    FlowQuestion.objects.filter(Q(flow=flow) & Q(void_ind="n") & ~Q(id__in=ids)).update(void_ind="y")
 
     #Create link to season if does not exist
     if data["form_typ"]["form_typ"] in ["pit", "field"]:

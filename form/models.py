@@ -128,7 +128,7 @@ class FlowCondition(models.Model):
         return f"{self.id}"
 
 
-class QuestionFlow(models.Model):
+class FlowQuestion(models.Model):
     id = models.AutoField(primary_key=True)
     flow = models.ForeignKey(
         Flow, models.PROTECT

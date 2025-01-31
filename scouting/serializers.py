@@ -169,7 +169,7 @@ class FormSubTypeFormSerializer(serializers.Serializer):
     form_sub_typ = FormSubTypeSerializer()
     questions = QuestionSerializer(many=True)
     # conditional_questions = QuestionSerializer(many=True)
-    question_flows = FlowSerializer(many=True)
+    flows = FlowSerializer(many=True)
 
 
 class FieldFormFormSerializer(serializers.Serializer):

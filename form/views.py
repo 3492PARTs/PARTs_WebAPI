@@ -710,7 +710,7 @@ class FlowConditionView(APIView):
                 request.user.id, "scoutadmin"
             ):
                 with transaction.atomic():
-                    form.util.save_question_flow_condition(serializer.validated_data)
+                    form.util.save_flow_condition(serializer.validated_data)
                 return ret_message("Saved flow condition successfully")
             else:
                 return ret_message(
