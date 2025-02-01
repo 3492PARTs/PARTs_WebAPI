@@ -179,7 +179,9 @@ def get_team_data(team_no=None):
         pics.append(
             {
                 "id": pic.id,
-                "pic": general.cloudinary.build_image_url(pic.img_id, pic.img_ver),
+                "img_url": general.cloudinary.build_image_url(pic.img_id, pic.img_ver),
+                "img_title": pic.img_title,
+                "pit_image_typ": pic.pit_image_typ,
                 "default": pic.default,
             }
         )
