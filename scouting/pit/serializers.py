@@ -9,9 +9,16 @@ class PitResponseAnswerSerializer(serializers.Serializer):
     answer = serializers.CharField(required=False, allow_null=True)
 
 
+class PitImageTypeSerializer(serializers.Serializer):
+    pit_image_typ = serializers.CharField()
+    pit_image_nm = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+
 class PitImageSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
-    pic = serializers.CharField()
+    img_url = serializers.CharField()
+    img_title = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    pit_image_typ = PitImageTypeSerializer()
     default = serializers.BooleanField()
 
 

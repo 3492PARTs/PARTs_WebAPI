@@ -159,11 +159,21 @@ class PitResponse(models.Model):
         return f"{self.id} : {self.team} : {self.event} : {self.user}"
 
 
+class PitImageType(models.Model):
+    pit_image_typ = models.CharField(primary_key=True, max_length=10)
+    pit_image_nm = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.pit_image_typ} : {self.pit_image_nm}"
+
+
 class PitImage(models.Model):
     id = models.AutoField(primary_key=True)
     pit_response = models.ForeignKey(PitResponse, models.PROTECT)
+    pit_image_typ = models.ForeignKey(PitImageType, models.PROTECT)
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
+    img_title = models.CharField(max_length=2000, blank=True, null=True)
     default = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
 

@@ -32,7 +32,7 @@ class SavePictureView(APIView):
             if has_access(request.user.id, auth_obj):
                 file_obj = request.FILES["file"]
                 ret = scouting.pit.util.save_robot_picture(
-                    file_obj, request.data.get("team_no", "")
+                    file_obj, request.data.get("team_no", ""), request.data.get("pit_image_typ", ""), request.data.get("img_title", "")
                 )
                 return ret
             else:

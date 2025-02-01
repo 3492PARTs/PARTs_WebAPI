@@ -42,10 +42,12 @@ def get_responses(team=None):
             pics.append(
                 {
                     "id": pit_image.id,
-                    "pic": general.cloudinary.build_image_url(
+                    "img_url": general.cloudinary.build_image_url(
                         pit_image.img_id, pit_image.img_ver
                     ),
+                    "img_title": pit_image.img_title,
                     "default": pit_image.default,
+                    "pit_image_typ": pit_image.pit_image_typ
                 }
             )
 
@@ -118,7 +120,7 @@ def get_responses(team=None):
     }
 
 
-def save_robot_picture(file, team_no):
+def save_robot_picture(file, team_no, pit_image_typ, img_title):
     current_event = scouting.util.get_current_event()
 
     sp = PitResponse.objects.get(
@@ -131,9 +133,11 @@ def save_robot_picture(file, team_no):
     response = general.cloudinary.upload_image(file)
 
     PitImage(
-        scout_pit=sp,
+        pit_response=sp,
+        pit_image_typ_id=pit_image_typ,
         img_id=response["public_id"],
         img_ver=str(response["version"]),
+        img_title=img_title
     ).save()
 
     return ret_message("Saved pit image successfully.")
