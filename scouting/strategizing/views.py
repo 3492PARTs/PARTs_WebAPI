@@ -29,7 +29,8 @@ class TeamNoteView(APIView):
                 request.user.id, auth_view_obj_scout_field
             ):
                 req = scouting.strategizing.util.get_team_notes(
-                    request.query_params.get("team_no", None)
+                    request.query_params.get("team_no", None),
+                    scouting.util.get_current_event()
                 )
                 serializer = TeamNoteSerializer(req, many=True)
                 return Response(serializer.data)
