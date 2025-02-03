@@ -101,7 +101,7 @@ class QuestionAggregateTypeSerializer(serializers.Serializer):
 
 
 class QuestionAggregateSerializer(serializers.Serializer):
-    question_aggregate_id = serializers.IntegerField(required=False)
+    id = serializers.IntegerField(required=False)
     field_name = serializers.CharField()
     question_aggregate_typ = QuestionAggregateTypeSerializer(required=False)
     questions = QuestionSerializer(many=True)

@@ -207,7 +207,7 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
                 ):
                     if answer.value is not None and answer.value != "!EXIST":
                         summation += int(answer.value)
-            response[f"ans_sqa{question_aggregate.question_aggregate_id}"] = summation
+            response[f"ans_sqa{question_aggregate.id}"] = summation
 
         response["match"] = (
             scout_field.match.match_number if scout_field.match else None

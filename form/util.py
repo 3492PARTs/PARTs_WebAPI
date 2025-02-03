@@ -448,7 +448,7 @@ def get_question_aggregates(form_typ: str):
             Q(void_ind="n") & Q(season=current_season)
         )
         season = Q(
-            questions__question_id__in=set(sq.id for sq in scout_questions)
+            questions__in=[sq.question for sq in scout_questions]
         )
 
     qas = QuestionAggregate.objects.filter(
@@ -457,12 +457,12 @@ def get_question_aggregates(form_typ: str):
     for qa in qas:
         question_aggregates.append(
             {
-                "question_aggregate_id": qa.question_aggregate_id,
+                "id": qa.id,
                 "field_name": qa.field_name,
                 "question_aggregate_typ": qa.question_aggregate_typ,
                 "questions": list(
                     format_question_values(q)
-                    for q in qa.questions.filter(Q(void_ind="n"))
+                    for q in qa.questions.filter(Q(void_ind="n") & Q(active="y"))
                 ),
                 "active": qa.active,
             }
@@ -476,9 +476,9 @@ def get_question_aggregate_types():
 
 
 def save_question_aggregate(data):
-    if data.get("question_aggregate_id", None) is not None:
+    if data.get("id", None) is not None:
         qa = QuestionAggregate.objects.get(
-            Q(question_aggregate_id=data["question_aggregate_id"])
+            Q(id=data["id"])
         )
     else:
         qa = QuestionAggregate()
@@ -496,7 +496,7 @@ def save_question_aggregate(data):
     qa.save()
 
     questions = Question.objects.filter(
-        question_id__in=set(q["question_id"] for q in data["questions"])
+        id__in=set(q["id"] for q in data["questions"])
     )
 
     for q in questions:
@@ -504,8 +504,8 @@ def save_question_aggregate(data):
 
     qa.save()
 
-    remove = qa.questions.all().filter(
-        ~Q(question_id__in=set(q.id for q in questions))
+    remove = qa.questions.filter(
+        ~Q(id__in=set(q.id for q in questions))
     )
     for r in remove:
         qa.questions.remove(r)
