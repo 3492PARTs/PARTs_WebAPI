@@ -263,18 +263,6 @@ class TeamNote(models.Model):
         return f"{self.id} : {self.user} : {self.team} : {self.event} : {self.match}"
 
 
-class QuestionType(models.Model):
-    id = models.AutoField(primary_key=True)
-    question_typ = models.ForeignKey(
-        form.models.QuestionType, models.PROTECT, related_name="scout_question_type"
-    )
-    scorable = models.CharField(max_length=1, default="n")
-    void_ind = models.CharField(max_length=1, default="n")
-
-    def __str__(self):
-        return f"{self.id} : {self.question_typ}"
-
-
 class Question(models.Model):
     id = models.AutoField(primary_key=True)
     question = models.ForeignKey(
@@ -297,6 +285,18 @@ class QuestionFlow(models.Model):
 
     def __str__(self):
         return f"{self.id} {self.flow}"
+
+
+class Graph(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph = models.ForeignKey(
+        form.models.Graph, models.PROTECT, related_name="scout_graph"
+    )
+    season = models.ForeignKey(Season, models.PROTECT, null=True)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.graph}"
 
 
 class UserInfo(models.Model):

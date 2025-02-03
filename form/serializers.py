@@ -3,16 +3,10 @@ from rest_framework import serializers
 from general.cloudinary import allowed_file
 
 
-class ScoutQuestionTypeSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False, allow_null=True)
-    scorable = serializers.CharField(required=False, allow_null=True)
-
-
 class QuestionTypeSerializer(serializers.Serializer):
     question_typ = serializers.CharField()
     question_typ_nm = serializers.CharField()
     is_list = serializers.CharField()
-    scout_question_type = ScoutQuestionTypeSerializer(required=False, allow_null=True)
 
 
 class FormTypeSerializer(serializers.Serializer):
@@ -182,24 +176,56 @@ class FormInitializationSerializer(serializers.Serializer):
 class GraphTypeSerializer(serializers.Serializer):
     graph_typ = serializers.CharField()
     graph_nm = serializers.CharField()
+    requires_bins = serializers.BooleanField()
+    requires_categories = serializers.BooleanField()
+
+
+class GraphBinsSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    graph_id = serializers.IntegerField()
+    bin = serializers.IntegerField()
+    active = serializers.CharField(max_length=1, default="y")
+
+
+class GraphCategoryAttributeSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    graph_category_id = serializers.IntegerField()
+    question = QuestionSerializer(required=False)
+    question_aggregate = QuestionAggregateSerializer(required=False)
+    question_condition_typ = QuestionConditionTypeSerializer(required=False)
+    value = serializers.CharField()
+    active = serializers.CharField()
+
+
+class GraphCategorySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    graph_id = serializers.IntegerField()
+    category = serializers.CharField(max_length=2000)
+    active = serializers.CharField(max_length=1, default="y")
+    graphcategoryattribute_set = GraphCategoryAttributeSerializer(many=True)
+
+
+class GraphQuestionTypeSerializer(serializers.Serializer):
+    graph_question_typ = serializers.CharField()
+    graph_question_nm = serializers.CharField()
+
+
+class GraphQuestionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    graph_id = serializers.IntegerField()
+    question = QuestionSerializer()
+    graph_question_typ = GraphQuestionTypeSerializer()
+    active = serializers.CharField()
 
 
 class GraphSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     graph_typ = GraphTypeSerializer()
     name = serializers.CharField()
+    scale_x = serializers.IntegerField()
+    scale_y = serializers.IntegerField()
     active = serializers.CharField()
+    graphbins_set = GraphBinsSerializer(many=True)
+    graphcategories_set = GraphCategorySerializer(many=True)
+    graphquestion_set = GraphQuestionSerializer(many=True)
 
-
-class GraphQuestionType(serializers.Serializer):
-    graph_question_typ = serializers.CharField()
-    graph_question_nm = serializers.CharField()
-    question_types = QuestionTypeSerializer(many=True)
-
-
-class GraphQuestion(serializers.Serializer):
-    id = serializers.IntegerField(required=False, allow_null=True)
-    graph = GraphSerializer()
-    question = QuestionSerializer()
-    graph_question_typ = GraphQuestionType()
-    active = serializers.CharField()

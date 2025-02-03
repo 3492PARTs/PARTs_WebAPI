@@ -206,6 +206,8 @@ class FlowAnswer(models.Model):
 class GraphType(models.Model):
     graph_typ = models.CharField(primary_key=True, max_length=10)
     graph_nm = models.CharField(max_length=255)
+    requires_bins = models.BooleanField(default=False)
+    requires_categories = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
@@ -216,6 +218,8 @@ class Graph(models.Model):
     id = models.AutoField(primary_key=True)
     graph_typ = models.ForeignKey(GraphType, models.PROTECT)
     name = models.CharField(max_length=255)
+    scale_x = models.IntegerField()
+    scale_y = models.IntegerField()
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -223,10 +227,46 @@ class Graph(models.Model):
         return f"{self.id} {self.name}"
 
 
+class GraphBin(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph = models.ForeignKey(Graph, models.PROTECT)
+    bin = models.IntegerField()
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.bin} : {self.graph}"
+
+
+class GraphCategory(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph = models.ForeignKey(Graph, models.PROTECT)
+    category = models.CharField(max_length=2000)
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.category} : {self.graph}"
+
+
+
+class GraphCategoryAttribute(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph_category = models.ForeignKey(GraphCategory, models.PROTECT)
+    question = models.ForeignKey(Question, models.PROTECT, null=True)
+    question_aggregate = models.ForeignKey(QuestionAggregate, models.PROTECT, null=True)
+    question_condition_typ = models.ForeignKey(QuestionConditionType, models.PROTECT)
+    value = models.CharField(max_length=1000)
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.graph_category} : {self.value}"
+
+
 class GraphQuestionType(models.Model):
     graph_question_typ = models.CharField(primary_key=True, max_length=10)
     graph_question_nm = models.CharField(max_length=255)
-    question_typ = models.ManyToManyField(QuestionType)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
@@ -236,10 +276,12 @@ class GraphQuestionType(models.Model):
 class GraphQuestion(models.Model):
     id = models.AutoField(primary_key=True)
     graph = models.ForeignKey(Graph, models.PROTECT)
-    question = models.ForeignKey(Question, models.PROTECT)
-    graph_question_typ = models.ForeignKey(GraphQuestionType, models.PROTECT)
+    graph_question_typ = models.ForeignKey(GraphQuestionType, models.PROTECT, null=True)
+    question = models.ForeignKey(Question, models.PROTECT, null=True)
+    question_aggregate = models.ForeignKey(QuestionAggregate, models.PROTECT, null=True)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
         return f"{self.id} : {self.graph} : {self.question}"
+

@@ -727,3 +727,137 @@ class FlowConditionView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class GraphEditorView(APIView):
+    """
+    API endpoint to edit graphs
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "graph-editor/"
+
+    def get(self, request, format=None):
+        try:
+            fid = request.query_params.get("id", None)
+            questions = form.util.get_flows(
+                fid,
+                request.query_params.get("form_typ", None),
+                request.query_params.get("form_sub_typ", None)
+            )
+            if fid is None:
+                serializer = FlowSerializer(questions, many=True)
+            else:
+                serializer = FlowSerializer(questions[0])
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question flows.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = FlowSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                with transaction.atomic():
+                    form.util.save_flow(serializer.validated_data)
+
+                return ret_message("Saved flow successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the flow.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class GraphView(APIView):
+    """
+    API endpoint to manage graphs
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "graph/"
+
+    """
+    def get(self, request, format=None):
+        try:
+            fid = request.query_params.get("id", None)
+            questions = form.util.get_flows(
+                fid,
+                request.query_params.get("form_typ", None),
+                request.query_params.get("form_sub_typ", None)
+            )
+            if fid is None:
+                serializer = FlowSerializer(questions, many=True)
+            else:
+                serializer = FlowSerializer(questions[0])
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question flows.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+    """
+
+    def post(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = FlowSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                with transaction.atomic():
+                    form.util.save_flow(serializer.validated_data)
+
+                return ret_message("Saved flow successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving graph.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )

@@ -19,7 +19,7 @@ from form.models import (
     QuestionAggregate,
     QuestionAggregateType,
     QuestionCondition, Flow, FlowAnswer,
-    QuestionConditionType, FlowCondition, FlowQuestion
+    QuestionConditionType, FlowCondition, FlowQuestion, GraphType, Graph, GraphCategory, GraphQuestion, GraphBin, GraphCategoryAttribute, GraphQuestionType
 )
 from scouting.models import Match, Season, FieldResponse, PitResponse, Event
 
@@ -67,7 +67,7 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
 
     qs = (
         Question.objects
-        .prefetch_related("questionoption_set", "scout_question", "question_typ", "condition_question_from", "condition_question_to", "flowquestion_set", "question_typ__scout_question_type")
+        .prefetch_related("questionoption_set", "scout_question", "question_typ", "condition_question_from", "condition_question_to", "flowquestion_set")
         .annotate(
             in_flow=Exists(
                 FlowQuestion.objects.filter(Q(question_id=OuterRef("pk")) & Q(active="y") & Q(void_ind="n"))
@@ -93,22 +93,12 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
 
 
 def format_question_values(in_question: Question):
-    # Scout question type
-    try:
-        sqt = in_question.question_typ.scout_question_type.get(void_ind="n")
-        scout_question_type = {
-            "id": sqt.id,
-            "scorable": sqt.scorable
-        }
-    except scouting.models.QuestionType.DoesNotExist:
-        scout_question_type = None
 
     # Question Type
     question_type = {
         "question_typ": in_question.question_typ.question_typ,
         "question_typ_nm": in_question.question_typ.question_typ_nm,
         "is_list": in_question.question_typ.is_list,
-        "scout_question_type": scout_question_type
     }
 
     # Scout Question
@@ -301,20 +291,11 @@ def get_question_types():
     question_types = []
 
     for qt in qts:
-        try:
-            sqt = qt.scout_question_type.get(void_ind="n")
-            scout_question_type = {
-                "id": sqt.id,
-                "scorable": sqt.scorable
-            }
-        except scouting.models.QuestionType.DoesNotExist:
-            scout_question_type = None
 
         question_types.append({
             "question_typ": qt.question_typ,
             "question_typ_nm": qt.question_typ_nm,
             "is_list": qt.is_list,
-            "scout_question_type": scout_question_type
         })
 
     return question_types
@@ -917,3 +898,135 @@ def save_flow(data):
             scouting.models.QuestionFlow(flow=flow, season=scouting.util.get_current_season()).save()
 
     return flow
+
+
+def get_graph_types():
+    return GraphType.objects.filter(Q(void_ind="n"))
+
+
+def get_graph_question_types():
+    return GraphQuestionType.objects.filter(Q(void_ind="n"))
+
+
+def parse_graph_category(graph_category: GraphCategory):
+    return {
+        "id": graph_category.id,
+        "graph_id": graph_category.graph.id,
+        "category": graph_category.category,
+        "active": graph_category.active,
+        "graphcategoryattribute_set": graph_category.graphcategoryattribute_set.filter(Q(void_ind="n") & Q(active="y"))
+    }
+
+
+def parse_graph_question(graph_question: GraphQuestion):
+    return {
+        "id": graph_question.id,
+        "graph_id": graph_question.graph.id,
+        "category": graph_question.category,
+        "graph_question_typ": graph_question.graph_question_typ,
+        "active": graph_question.active
+    }
+
+
+def get_graphs(for_current_season=False):
+    q_season = Q()
+    if for_current_season:
+        current_season = scouting.util.get_current_season()
+
+        q_season = Q(scout_graph__season=current_season)
+
+    graphs = Graph.objects.filter(q_season & Q(void_ind="n") & Q(active="y"))
+
+    parsed = []
+    for graph in graphs:
+        parsed.append({
+            "id": graph.id,
+            "graph_typ": graph.graph_typ,
+            "name": graph.name,
+            "scale_x": graph.scale_x,
+            "scale_y": graph.scale_y,
+            "active": graph.active,
+            "graphbins_set": graph.graphbins_set.filter(Q(void_ind="n") & Q(active="y")),
+            "graphcategories_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategories_set.filter(Q(void_ind="n") & Q(active="y"))],
+            "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y"))],
+        })
+
+def save_graph(data, for_current_season=False):
+    with transaction.atomic():
+        if data.get("id", None) is None:
+            graph = Graph()
+        else:
+            graph = Graph.objects.get(id=data["id"])
+
+        graph.graph_typ_id = data["graph_typ"]["graph_typ"]
+        graph.name = data["name"]
+        graph.scale_x = data["scale_x"]
+        graph.scale_y = data["scale_y"]
+        graph.active = data["active"]
+
+        graph.save()
+
+        if graph.graph_typ.requires_bins:
+            bins_data = data.get("graphbins_set", [])
+            if len(bins_data) <= 0:
+                raise Exception("No bins provided")
+
+            for bin_data in bins_data:
+                if bin_data.get("id", None) is None:
+                    graph_bin = GraphBin()
+                else:
+                    graph_bin = GraphBin.objects.get(id=bin_data["id"])
+
+                graph_bin.graph = graph
+                graph_bin.bin = bin_data["bin"]
+                graph_bin.active = bin_data["active"]
+
+                graph_bin.save()
+
+        if graph.graph_typ.requires_categories:
+            categories_data = data.get("graphcategories_set", [])
+            if len(categories_data) <= 0:
+                raise Exception("No categories provided")
+
+            for category_data in categories_data:
+                if category_data.get("id", None) is None:
+                    category = GraphCategory()
+                else:
+                    category = GraphCategory.objects.get(id=category_data["id"])
+
+                category.graph = graph
+                category.category = category_data["category"]
+                category.active = category_data["active"]
+
+                category_attributes_data = data.get("graphcategoryattribute_set", [])
+                if len(category_attributes_data) <= 0:
+                    raise Exception("No category attribute(s) provided")
+
+                for category_attribute_data in category_attributes_data:
+                    if category_attribute_data.get("id", None) is None:
+                        category_attribute = GraphCategoryAttribute()
+                    else:
+                        category_attribute = GraphCategoryAttribute.objects.get(id=category_attribute_data["id"])
+
+                    category_attribute.graph_category = category
+                    category_attribute.question_id = category_attribute_data.get("question", None).get("id", None)
+                    category_attribute.question_aggregate = category_attribute_data.get("question_aggregate", None).get("id", None)
+                    category_attribute.question_condition_typ_id = category_attribute_data.get("question_condition_typ", None).get("question_condition_typ", None)
+                    category_attribute.value = category_attribute_data["value"]
+                    category_attribute.active = category_attribute_data["active"]
+
+                    category_attribute_data.save()
+
+        for graph_question_data in data.get("graphquestion_set", []):
+            if graph_question_data.get("id", None) is None:
+                graph_question = GraphQuestion()
+            else:
+                graph_question = GraphQuestion.objects.get(id=graph_question_data["id"])
+
+            graph_question.graph = graph
+            graph_question.graph_question_typ_id = graph_question_data.get("graph_question_typ", None).get("graph_question_typ", None)
+            graph_question.question_id = graph_question_data.get("question", None).get("id", None)
+            graph_question.question_aggregate_id = graph_question_data.get("question_aggregate", None).get("id", None)
+            graph_question.active = graph_question_data["active"]
+
+            graph_question.save()
