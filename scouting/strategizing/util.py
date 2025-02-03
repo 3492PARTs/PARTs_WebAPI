@@ -138,7 +138,7 @@ def save_alliance_selections(data):
         else:
             selection = AllianceSelection()
 
-        selection.event_id = d["event"]["event_id"]
+        selection.event_id = d["event"]["id"]
         selection.team_id = d["team"]["team_no"]
         selection.note = d["note"]
         selection.order = d["order"]
