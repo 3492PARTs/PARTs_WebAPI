@@ -334,7 +334,7 @@ def rank_query(outer_ref: str):
 
 
 def field_response_query(outer_ref):
-    return  FieldResponse.objects.filter(Q(void_ind="n") & Q(team=OuterRef(outer_ref)))
+    return  FieldResponse.objects.filter(Q(void_ind="n") & Q(team=OuterRef(outer_ref)) & Q(event=OuterRef("event")))
 
 
 def get_rank(team: Team, event: Event, rank=None):
