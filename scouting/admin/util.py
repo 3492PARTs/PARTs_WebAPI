@@ -212,13 +212,13 @@ def save_event(data):
 
 
 def save_match(data):
-    if (data.get("match_id", None)) is not None and len(data["match_id"]) > 0:
-        match = Match.objects.get(match_id=data["match_id"])
+    if (data.get("match_key", None)) is not None and len(data["match_key"]) > 0:
+        match = Match.objects.get(match_key=data["match_key"])
     else:
         match = Match(
-            match_id=f"{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}"
+            match_key=f"{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}"
         )
-        match.event_id = data["event"]["event_id"]
+        match.event_id = data["event"]["id"]
 
     match.match_number = data["match_number"]
     match.red_one_id = data["red_one_id"]
@@ -241,7 +241,7 @@ def link_team_to_event(data):
         try:  # TODO it doesn't throw an error, and re-linking many to many only keeps one entry in the table for the link
             if t.get("checked", False):
                 team = Team.objects.get(team_no=t["team_no"], void_ind="n")
-                e = Event.objects.get(event_id=data["event_id"], void_ind="n")
+                e = Event.objects.get(id=data["event_id"], void_ind="n")
                 team.event_set.add(e)
                 messages += (
                     "(ADD) Added team: "
@@ -273,7 +273,7 @@ def remove_link_team_to_event(data):
         try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
             if t.get("checked", False):
                 team = Team.objects.get(team_no=t["team_no"], void_ind="n")
-                e = Event.objects.get(event_id=data["event_id"], void_ind="n")
+                e = Event.objects.get(id=data["id"], void_ind="n")
                 team.event_set.remove(e)
                 messages += (
                     "(REMOVE) Removed team: "

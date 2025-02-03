@@ -324,7 +324,7 @@ class TeamToEventView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while saving the team.",
+                "An error occurred while linking teams to event.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
