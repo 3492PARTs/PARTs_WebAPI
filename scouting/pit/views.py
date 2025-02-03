@@ -109,7 +109,7 @@ class SetDefaultPitImageView(APIView):
                 scouting.pit.util.set_default_team_image(
                     request.query_params.get("scout_pit_img_id", None)
                 )
-                return ret_message("Successfully set the team" "s default image.")
+                return ret_message("Successfully set the default image.")
             else:
                 return ret_message(
                     "You do not have access.",

@@ -146,7 +146,7 @@ def save_robot_picture(file, team_no, pit_image_typ, img_title):
 def set_default_team_image(id):
     spi = PitImage.objects.get(Q(void_ind="n") & Q(id=id))
 
-    for pi in spi.pit_response.scoutpitimage_set.filter(Q(void_ind="n")):
+    for pi in spi.pit_response.pitimage_set.filter(Q(void_ind="n") &Q(pit_image_typ=spi.pit_image_typ)):
         pi.default = False
         pi.save()
 
