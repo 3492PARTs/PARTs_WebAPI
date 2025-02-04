@@ -437,19 +437,23 @@ def get_question_aggregates(form_typ: str):
     ).distinct()
     for qa in qas:
         question_aggregates.append(
-            {
-                "id": qa.id,
-                "field_name": qa.field_name,
-                "question_aggregate_typ": qa.question_aggregate_typ,
-                "questions": list(
-                    format_question_values(q)
-                    for q in qa.questions.filter(Q(void_ind="n") & Q(active="y"))
-                ),
-                "active": qa.active,
-            }
+            parse_question_aggregate(qa)
         )
 
     return question_aggregates
+
+
+def parse_question_aggregate(question_aggregate: QuestionAggregate):
+    return {
+        "id": question_aggregate.id,
+        "field_name": question_aggregate.field_name,
+        "question_aggregate_typ": question_aggregate.question_aggregate_typ,
+        "questions": list(
+            format_question_values(q)
+            for q in question_aggregate.questions.filter(Q(void_ind="n") & Q(active="y"))
+        ),
+        "active": question_aggregate.active,
+    }
 
 
 def get_question_aggregate_types():
@@ -932,7 +936,8 @@ def parse_graph_question(graph_question: GraphQuestion):
     return {
         "id": graph_question.id,
         "graph_id": graph_question.graph.id,
-        "question": format_question_values(graph_question.question),
+        "question": format_question_values(graph_question.question) if graph_question.question is not None else None,
+        "question_aggregate": parse_question_aggregate(graph_question.question_aggregate) if graph_question.question_aggregate is not None else None,
         "graph_question_typ": graph_question.graph_question_typ,
         "active": graph_question.active
     }
@@ -1116,4 +1121,5 @@ def graph_team(graph_id, team_no):
                             [gb for gb in bins if int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
             data = bins
 
+    print(data)
     return data

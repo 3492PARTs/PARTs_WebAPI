@@ -191,8 +191,8 @@ class GraphBinSerializer(serializers.Serializer):
 class GraphCategoryAttributeSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     graph_category_id = serializers.IntegerField(required=False, allow_null=True)
-    question = QuestionSerializer(required=False)
-    question_aggregate = QuestionAggregateSerializer(required=False)
+    question = QuestionSerializer(required=False, allow_null=True)
+    question_aggregate = QuestionAggregateSerializer(required=False, allow_null=True)
     question_condition_typ = QuestionConditionTypeSerializer(required=False)
     value = serializers.CharField()
     active = serializers.CharField()
@@ -214,7 +214,7 @@ class GraphQuestionTypeSerializer(serializers.Serializer):
 class GraphQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     graph_id = serializers.IntegerField(required=False, allow_null=True)
-    question = QuestionSerializer()
+    question = QuestionSerializer(required=False, allow_null=True)
     question_aggregate = QuestionAggregateSerializer(required=False, allow_null=True)
     graph_question_typ = GraphQuestionTypeSerializer(required=False, allow_null=True)
     active = serializers.CharField()
