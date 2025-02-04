@@ -922,7 +922,7 @@ def parse_graph_question(graph_question: GraphQuestion):
     return {
         "id": graph_question.id,
         "graph_id": graph_question.graph.id,
-        "category": graph_question.category,
+        "question": format_question_values(graph_question.question),
         "graph_question_typ": graph_question.graph_question_typ,
         "active": graph_question.active
     }
@@ -950,10 +950,12 @@ def get_graphs(for_current_season=False, graph_id=None):
             "scale_x": graph.scale_x,
             "scale_y": graph.scale_y,
             "active": graph.active,
-            "graphbins_set": graph.graphbins_set.filter(Q(void_ind="n") & Q(active="y")),
-            "graphcategories_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategories_set.filter(Q(void_ind="n") & Q(active="y"))],
+            "graphbin_set": graph.graphbin_set.filter(Q(void_ind="n") & Q(active="y")),
+            "graphcategory_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategory_set.filter(Q(void_ind="n") & Q(active="y"))],
             "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y"))],
         })
+
+    return parsed
 
 
 def save_graph(data, for_current_season=False):
@@ -979,7 +981,7 @@ def save_graph(data, for_current_season=False):
 
 
         if graph.graph_typ.requires_bins:
-            bins_data = data.get("graphbins_set", [])
+            bins_data = data.get("graphbin_set", [])
             if len(bins_data) <= 0:
                 raise Exception("No bins provided")
 
@@ -996,7 +998,7 @@ def save_graph(data, for_current_season=False):
                 graph_bin.save()
 
         if graph.graph_typ.requires_categories:
-            categories_data = data.get("graphcategories_set", [])
+            categories_data = data.get("graphcategory_set", [])
             if len(categories_data) <= 0:
                 raise Exception("No categories provided")
 
@@ -1036,9 +1038,9 @@ def save_graph(data, for_current_season=False):
                 graph_question = GraphQuestion.objects.get(id=graph_question_data["id"])
 
             graph_question.graph = graph
-            graph_question.graph_question_typ_id = graph_question_data.get("graph_question_typ", None).get("graph_question_typ", None)
-            graph_question.question_id = graph_question_data.get("question", None).get("id", None)
-            graph_question.question_aggregate_id = graph_question_data.get("question_aggregate", None).get("id", None)
+            graph_question.graph_question_typ_id = graph_question_data.get("graph_question_typ", {}).get("graph_question_typ", None)
+            graph_question.question_id = graph_question_data.get("question", {}).get("id", None)
+            graph_question.question_aggregate_id = graph_question_data.get("question_aggregate", {}).get("id", None)
             graph_question.active = graph_question_data["active"]
 
             graph_question.save()

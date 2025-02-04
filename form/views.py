@@ -742,15 +742,17 @@ class GraphEditorView(APIView):
             graph_types = form.util.get_graph_types()
             graph_question_types = form.util.get_graph_question_types()
             graphs = form.util.get_graphs(True)
+            question_condition_types = form.util.get_question_condition_types()
             serializer = GraphEditorSerializer({
                 "graph_types": graph_types,
                 "graph_question_types": graph_question_types,
-                "graphs": graphs
+                "graphs": graphs,
+                'question_condition_types': question_condition_types
             })
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
-                "An error occurred while getting question flows.",
+                "An error occurred while getting graph editor.",
                 True,
                 app_url + self.endpoint,
                 -1,
@@ -801,7 +803,7 @@ class GraphView(APIView):
                         error_message=serializer.errors,
                     )
 
-                form.util.save_graph(serializer.validated_data)
+                form.util.save_graph(serializer.validated_data, True)
 
                 return ret_message("Saved graph successfully.")
             else:
