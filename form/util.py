@@ -914,9 +914,19 @@ def parse_graph_category(graph_category: GraphCategory):
         "graph_id": graph_category.graph.id,
         "category": graph_category.category,
         "active": graph_category.active,
-        "graphcategoryattribute_set": graph_category.graphcategoryattribute_set.filter(Q(void_ind="n") & Q(active="y"))
+        "graphcategoryattribute_set": [parse_graph_category_attribute(gc) for gc in graph_category.graphcategoryattribute_set.filter(Q(void_ind="n") & Q(active="y"))]
     }
 
+
+def parse_graph_category_attribute(graph_category_attribute: GraphCategoryAttribute):
+    return {
+        "id": graph_category_attribute.id,
+        "graph_category_id": graph_category_attribute.graph_category.id,
+        "question": format_question_values(graph_category_attribute.question),
+        "question_condition_typ": graph_category_attribute.question_condition_typ,
+        "value": graph_category_attribute.value,
+        "active": graph_category_attribute.active
+    }
 
 def parse_graph_question(graph_question: GraphQuestion):
     return {
@@ -1012,7 +1022,9 @@ def save_graph(data, for_current_season=False):
                 category.category = category_data["category"]
                 category.active = category_data["active"]
 
-                category_attributes_data = data.get("graphcategoryattribute_set", [])
+                category.save()
+
+                category_attributes_data = category_data.get("graphcategoryattribute_set", [])
                 if len(category_attributes_data) <= 0:
                     raise Exception("No category attribute(s) provided")
 
@@ -1023,13 +1035,13 @@ def save_graph(data, for_current_season=False):
                         category_attribute = GraphCategoryAttribute.objects.get(id=category_attribute_data["id"])
 
                     category_attribute.graph_category = category
-                    category_attribute.question_id = category_attribute_data.get("question", None).get("id", None)
-                    category_attribute.question_aggregate = category_attribute_data.get("question_aggregate", None).get("id", None)
-                    category_attribute.question_condition_typ_id = category_attribute_data.get("question_condition_typ", None).get("question_condition_typ", None)
+                    category_attribute.question_id = category_attribute_data.get("question", {}).get("id", None)
+                    category_attribute.question_aggregate = category_attribute_data.get("question_aggregate", {}).get("id", None)
+                    category_attribute.question_condition_typ_id = category_attribute_data.get("question_condition_typ", {}).get("question_condition_typ", None)
                     category_attribute.value = category_attribute_data["value"]
                     category_attribute.active = category_attribute_data["active"]
 
-                    category_attribute_data.save()
+                    category_attribute.save()
 
         for graph_question_data in data.get("graphquestion_set", []):
             if graph_question_data.get("id", None) is None:

@@ -189,7 +189,7 @@ class GraphBinSerializer(serializers.Serializer):
 
 class GraphCategoryAttributeSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
-    graph_category_id = serializers.IntegerField()
+    graph_category_id = serializers.IntegerField(required=False, allow_null=True)
     question = QuestionSerializer(required=False)
     question_aggregate = QuestionAggregateSerializer(required=False)
     question_condition_typ = QuestionConditionTypeSerializer(required=False)
