@@ -18,7 +18,7 @@ class QuestionType(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.question_typ + " " + self.question_typ_nm
+        return f"{self.question_typ} : {self.question_typ_nm}"
 
 
 class FormType(models.Model):
@@ -26,7 +26,7 @@ class FormType(models.Model):
     form_nm = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.form_typ + " " + self.form_nm
+        return f"{self.form_typ} : {self.form_nm}"
 
 
 class FormSubType(models.Model):
@@ -36,7 +36,7 @@ class FormSubType(models.Model):
     order = models.IntegerField()
 
     def __str__(self):
-        return self.form_sub_typ + " " + self.form_sub_nm
+        return f"{self.form_sub_typ} : {self.form_sub_nm}"
 
 
 class Flow(models.Model):
@@ -48,7 +48,7 @@ class Flow(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.id) + " " + str(self.name)
+        return f"{self.id} : {self.name}"
 
 
 class Question(models.Model):
@@ -61,7 +61,6 @@ class Question(models.Model):
     order = models.IntegerField()
     svg = models.CharField(max_length=2000, null=True)
     required = models.CharField(max_length=1)
-    svg = models.CharField(max_length=2000, null=True)
     x = models.FloatField(null=True)
     y = models.FloatField(null=True)
     width = models.FloatField(null=True)
@@ -110,7 +109,7 @@ class QuestionCondition(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.question_condition_id} : {self.condition}"
+        return f"{self.question_condition_id} : {self.value}"
 
 
 class FlowCondition(models.Model):
@@ -150,7 +149,7 @@ class QuestionAggregateType(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.question_aggregate_typ + " " + self.question_aggregate_nm
+        return f"{self.question_aggregate_typ} : {self.question_aggregate_nm}"
 
 
 class QuestionAggregate(models.Model):
@@ -162,7 +161,7 @@ class QuestionAggregate(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.id) + " " + str(self.question_aggregate_typ)
+        return f"{self.id} : {self.question_aggregate_typ}"
 
 
 class Response(models.Model):
@@ -174,7 +173,7 @@ class Response(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return str(self.response_id) + " " + str(self.form_typ)
+        return f"{self.response_id} : {self.form_typ}"
 
 
 class Answer(models.Model):
@@ -188,7 +187,7 @@ class Answer(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.id) + " " + str(self.value)
+        return f"{self.id} : {self.value}"
 
 
 class FlowAnswer(models.Model):
@@ -200,7 +199,7 @@ class FlowAnswer(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.id) + " " + str(self.value)
+        return f"{self.id} : {self.value}"
 
 
 class GraphType(models.Model):
