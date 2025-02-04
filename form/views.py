@@ -16,7 +16,7 @@ from form.serializers import (
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
     QuestionConditionSerializer, FlowSerializer, QuestionConditionTypeSerializer,
-    FlowConditionSerializer,
+    FlowConditionSerializer, GraphEditorSerializer, GraphSerializer
 )
 from general.security import has_access, ret_message
 
@@ -739,16 +739,14 @@ class GraphEditorView(APIView):
 
     def get(self, request, format=None):
         try:
-            fid = request.query_params.get("id", None)
-            questions = form.util.get_flows(
-                fid,
-                request.query_params.get("form_typ", None),
-                request.query_params.get("form_sub_typ", None)
-            )
-            if fid is None:
-                serializer = FlowSerializer(questions, many=True)
-            else:
-                serializer = FlowSerializer(questions[0])
+            graph_types = form.util.get_graph_types()
+            graph_question_types = form.util.get_graph_question_types()
+            graphs = form.util.get_graphs(True)
+            serializer = GraphEditorSerializer({
+                "graph_types": graph_types,
+                "graph_question_types": graph_question_types,
+                "graphs": graphs
+            })
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -756,41 +754,6 @@ class GraphEditorView(APIView):
                 True,
                 app_url + self.endpoint,
                 -1,
-                e,
-            )
-
-    def post(self, request, format=None):
-        try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
-                serializer = FlowSerializer(data=request.data)
-                if not serializer.is_valid():
-                    return ret_message(
-                        "Invalid data",
-                        True,
-                        app_url + self.endpoint,
-                        request.user.id,
-                        error_message=serializer.errors,
-                    )
-
-                with transaction.atomic():
-                    form.util.save_flow(serializer.validated_data)
-
-                return ret_message("Saved flow successfully.")
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while saving the flow.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
                 e,
             )
 
@@ -803,36 +766,32 @@ class GraphView(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "graph/"
 
-    """
+
     def get(self, request, format=None):
         try:
-            fid = request.query_params.get("id", None)
-            questions = form.util.get_flows(
-                fid,
-                request.query_params.get("form_typ", None),
-                request.query_params.get("form_sub_typ", None)
-            )
-            if fid is None:
-                serializer = FlowSerializer(questions, many=True)
+            gid = request.query_params.get("graph_id", None)
+            graphs = form.util.get_graphs(gid is None, gid)
+            if gid is None:
+                serializer = GraphSerializer(graphs, many=True)
             else:
-                serializer = FlowSerializer(questions[0])
+                serializer = FlowSerializer(graphs[0])
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
-                "An error occurred while getting question flows.",
+                "An error occurred while getting graphs.",
                 True,
                 app_url + self.endpoint,
                 -1,
                 e,
             )
-    """
+
 
     def post(self, request, format=None):
         try:
             if has_access(request.user.id, "admin") or has_access(
                 request.user.id, "scoutadmin"
             ):
-                serializer = FlowSerializer(data=request.data)
+                serializer = GraphSerializer(data=request.data)
                 if not serializer.is_valid():
                     return ret_message(
                         "Invalid data",
@@ -842,10 +801,9 @@ class GraphView(APIView):
                         error_message=serializer.errors,
                     )
 
-                with transaction.atomic():
-                    form.util.save_flow(serializer.validated_data)
+                form.util.save_graph(serializer.validated_data)
 
-                return ret_message("Saved flow successfully.")
+                return ret_message("Saved graph successfully.")
             else:
                 return ret_message(
                     "You do not have access.",

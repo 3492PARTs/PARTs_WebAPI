@@ -229,3 +229,8 @@ class GraphSerializer(serializers.Serializer):
     graphcategories_set = GraphCategorySerializer(many=True)
     graphquestion_set = GraphQuestionSerializer(many=True)
 
+class GraphEditorSerializer(serializers.Serializer):
+    graph_types = GraphTypeSerializer(many=True)
+    graph_question_types = GraphQuestionTypeSerializer(many=True)
+    graphs = GraphSerializer(many=True)
+

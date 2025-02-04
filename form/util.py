@@ -928,14 +928,18 @@ def parse_graph_question(graph_question: GraphQuestion):
     }
 
 
-def get_graphs(for_current_season=False):
+def get_graphs(for_current_season=False, graph_id=None):
     q_season = Q()
     if for_current_season:
         current_season = scouting.util.get_current_season()
 
         q_season = Q(scout_graph__season=current_season)
 
-    graphs = Graph.objects.filter(q_season & Q(void_ind="n") & Q(active="y"))
+    q_graph_id = Q()
+    if graph_id is not None:
+        q_graph_id = Q(id=graph_id)
+
+    graphs = Graph.objects.filter(q_graph_id & q_season & Q(void_ind="n") & Q(active="y"))
 
     parsed = []
     for graph in graphs:
