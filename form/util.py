@@ -1081,44 +1081,85 @@ def graph_team(graph_id, team_no):
     match graph["graph_typ"].graph_typ:
         case 'histogram':
             bins = []
-            for graph_bin in graph["graphbin_set"]:
-                bins.append({
-                    "bin": graph_bin.bin,
-                    "width": graph_bin.width,
-                    "count": 0
-                })
 
             for graph_question in graph["graphquestion_set"]:
-                question = graph_question["question"]
-                answers = Answer.objects.filter(
-                    Q(response__in=[resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n"))]) &
-                    (
-                            Q(question_id=question["id"]) |
-                            Exists(FlowAnswer.objects.filter(Q(question_id=question["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n")))
-                     ) &
-                    Q(void_ind="n")).order_by("response__time")
+                for graph_bin in graph["graphbin_set"]:
+                    bins.append({
+                        "question": graph_question["question"],
+                        "question_aggregate": graph_question["question_aggregate"],
+                        "bin": graph_bin.bin,
+                        "width": graph_bin.width,
+                        "count": 0
+                    })
+                if graph_question["question"] is not None:
+                    question = graph_question["question"]
+                    answers = Answer.objects.filter(
+                        Q(response__in=[resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]) &
+                        (
+                                Q(question_id=question["id"]) |
+                                Exists(FlowAnswer.objects.filter(Q(question_id=question["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n")))
+                         ) &
+                        Q(void_ind="n")).order_by("response__time")
 
-                print(answers.query)
-
-                for answer in answers:
-                    if answer.question is not None:
-                        value = int(answer.value)
-
-                        if question["value_multiplier"] is not None:
-                            value *= int(question["value_multiplier"])
-
-                        [gb for gb in bins if int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
-
-                    if answer.flow is not None:
-                        flow_answers = answer.flowanswer_set.filter(Q(question_id=question["id"]) & Q(void_ind="n")).order_by("value_time")
-
-                        for flow_answer in flow_answers:
-                            value = 1
+                    for answer in answers:
+                        if answer.question is not None:
+                            value = int(answer.value)
 
                             if question["value_multiplier"] is not None:
                                 value *= int(question["value_multiplier"])
 
-                            [gb for gb in bins if int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+                            [gb for gb in bins if (gb["question"] is not None and gb["question"]["id"] == question["id"]) and int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+
+                        if answer.flow is not None:
+                            flow_answers = answer.flowanswer_set.filter(Q(question_id=question["id"]) & Q(void_ind="n")).order_by("value_time")
+
+                            for flow_answer in flow_answers:
+                                value = 1
+
+                                if question["value_multiplier"] is not None:
+                                    value *= int(question["value_multiplier"])
+
+                                [gb for gb in bins if (gb["question"] is not None and gb["question"]["id"] == question["id"]) and int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+                else:
+                    questions = graph_question["question_aggregate"]["questions"]
+                    field_responses = FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n")& Q(event=scouting.util.get_current_event()))
+
+                    for field_response in field_responses:
+                        answers = Answer.objects.filter(
+                            Q(response=field_response.response) &
+                            (
+                                    Q(question_id__in=set(question["id"] for question in questions)) |
+                                    Exists(FlowAnswer.objects.filter(
+                                        Q(question_id__in=set(question["id"] for question in questions)) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n")))
+                            ) &
+                            Q(void_ind="n")).order_by("response__time")
+
+                        sum = 0
+                        for answer in answers:
+                            if answer.question is not None:
+                                value = int(answer.value)
+
+                                if answer.question.value_multiplier is not None:
+                                    value *= int(answer.question.value_multiplier)
+
+                                sum += value
+
+                            if answer.flow is not None:
+                                flow_answers = answer.flowanswer_set.filter(
+                                    Q(question_id__in=set(question["id"] for question in questions)) & Q(void_ind="n")).order_by("value_time")
+
+                                for flow_answer in flow_answers:
+                                    value = 1
+
+                                    if flow_answer.question.value_multiplier is not None:
+                                        value *= int(flow_answer.question.value_multiplier)
+
+                                    sum += value
+
+                        [gb for gb in bins if
+                         (gb["question_aggregate"] is not None and gb["question_aggregate"]["id"] == graph_question["question_aggregate"]["id"]) and int(
+                             gb["bin"]) <= sum < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+
             data = bins
 
     print(data)

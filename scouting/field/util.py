@@ -202,7 +202,7 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
             for question in question_aggregate.questions.filter(
                 Q(void_ind="n") & Q(active="y")
             ):
-                for answer in question.questionanswer_set.filter(
+                for answer in question.answer_set.filter(
                     Q(void_ind="n") & Q(response=scout_field.response)
                 ):
                     if answer.value is not None and answer.value != "!EXIST":
