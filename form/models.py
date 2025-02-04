@@ -230,6 +230,7 @@ class GraphBin(models.Model):
     id = models.AutoField(primary_key=True)
     graph = models.ForeignKey(Graph, models.PROTECT)
     bin = models.IntegerField()
+    width = models.IntegerField()
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 

@@ -1003,6 +1003,7 @@ def save_graph(data, for_current_season=False):
 
                 graph_bin.graph = graph
                 graph_bin.bin = bin_data["bin"]
+                graph_bin.width = bin_data["width"]
                 graph_bin.active = bin_data["active"]
 
                 graph_bin.save()
@@ -1035,9 +1036,14 @@ def save_graph(data, for_current_season=False):
                         category_attribute = GraphCategoryAttribute.objects.get(id=category_attribute_data["id"])
 
                     category_attribute.graph_category = category
-                    category_attribute.question_id = category_attribute_data.get("question", {}).get("id", None)
-                    category_attribute.question_aggregate = category_attribute_data.get("question_aggregate", {}).get("id", None)
-                    category_attribute.question_condition_typ_id = category_attribute_data.get("question_condition_typ", {}).get("question_condition_typ", None)
+
+                    question_condition_typ = category_attribute_data.get("question_condition_typ", None)
+                    question = category_attribute_data.get("question", None)
+                    question_aggregate = category_attribute_data.get("question_aggregate", None)
+
+                    category_attribute.question_id = None if question is None else question.get("id", None)
+                    category_attribute.question_aggregate = None if question_aggregate is None else question_aggregate.get("id", None)
+                    category_attribute.question_condition_typ_id = None if question_condition_typ is None else question_condition_typ.get("question_condition_typ", None)
                     category_attribute.value = category_attribute_data["value"]
                     category_attribute.active = category_attribute_data["active"]
 
@@ -1050,9 +1056,23 @@ def save_graph(data, for_current_season=False):
                 graph_question = GraphQuestion.objects.get(id=graph_question_data["id"])
 
             graph_question.graph = graph
-            graph_question.graph_question_typ_id = graph_question_data.get("graph_question_typ", {}).get("graph_question_typ", None)
-            graph_question.question_id = graph_question_data.get("question", {}).get("id", None)
-            graph_question.question_aggregate_id = graph_question_data.get("question_aggregate", {}).get("id", None)
+
+            graph_question_typ = graph_question_data.get("graph_question_typ", None)
+            question = graph_question_data.get("question", None)
+            question_aggregate = graph_question_data.get("question_aggregate", None)
+
+            graph_question.graph_question_typ_id = None if graph_question_typ is None else graph_question_typ.get("graph_question_typ", None)
+            graph_question.question_id = None if question is None else question.get("id", None)
+            graph_question.question_aggregate_id = None if question_aggregate is None else question_aggregate.get("id", None)
             graph_question.active = graph_question_data["active"]
 
             graph_question.save()
+
+
+def graph_team(graph_id, team_no):
+    graph = get_graphs(graph_id=graph_id)[0]
+    field_responses = FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n")).order_by("time")
+
+    match graph.graph_typ.graph_typ:
+        case 'histogram':
+            pass

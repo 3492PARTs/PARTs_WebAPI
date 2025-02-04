@@ -184,6 +184,7 @@ class GraphBinSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     graph_id = serializers.IntegerField(required=False, allow_null=True)
     bin = serializers.IntegerField()
+    width = serializers.IntegerField()
     active = serializers.CharField(max_length=1, default="y")
 
 
