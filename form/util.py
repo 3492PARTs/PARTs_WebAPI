@@ -960,7 +960,7 @@ def get_graphs(for_current_season=False, graph_id=None):
             "scale_x": graph.scale_x,
             "scale_y": graph.scale_y,
             "active": graph.active,
-            "graphbin_set": graph.graphbin_set.filter(Q(void_ind="n") & Q(active="y")),
+            "graphbin_set": graph.graphbin_set.filter(Q(void_ind="n") & Q(active="y")).order_by("bin"),
             "graphcategory_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategory_set.filter(Q(void_ind="n") & Q(active="y"))],
             "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y"))],
         })
@@ -1071,8 +1071,49 @@ def save_graph(data, for_current_season=False):
 
 def graph_team(graph_id, team_no):
     graph = get_graphs(graph_id=graph_id)[0]
-    field_responses = FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n")).order_by("time")
 
-    match graph.graph_typ.graph_typ:
+    data = None
+    match graph["graph_typ"].graph_typ:
         case 'histogram':
-            pass
+            bins = []
+            for graph_bin in graph["graphbin_set"]:
+                bins.append({
+                    "bin": graph_bin.bin,
+                    "width": graph_bin.width,
+                    "count": 0
+                })
+
+            for graph_question in graph["graphquestion_set"]:
+                question = graph_question["question"]
+                answers = Answer.objects.filter(
+                    Q(response__in=[resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n"))]) &
+                    (
+                            Q(question_id=question["id"]) |
+                            Exists(FlowAnswer.objects.filter(Q(question_id=question["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n")))
+                     ) &
+                    Q(void_ind="n")).order_by("response__time")
+
+                print(answers.query)
+
+                for answer in answers:
+                    if answer.question is not None:
+                        value = int(answer.value)
+
+                        if question["value_multiplier"] is not None:
+                            value *= int(question["value_multiplier"])
+
+                        [gb for gb in bins if int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+
+                    if answer.flow is not None:
+                        flow_answers = answer.flowanswer_set.filter(Q(question_id=question["id"]) & Q(void_ind="n")).order_by("value_time")
+
+                        for flow_answer in flow_answers:
+                            value = 1
+
+                            if question["value_multiplier"] is not None:
+                                value *= int(question["value_multiplier"])
+
+                            [gb for gb in bins if int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+            data = bins
+
+    return data

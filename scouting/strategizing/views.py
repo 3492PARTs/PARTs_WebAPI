@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db import transaction
 
+import form.util
 from general.security import ret_message, has_access
 import scouting.strategizing
 from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer, AllianceSelectionSerializer, \
@@ -209,4 +210,33 @@ class AllianceSelectionView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+            )
+
+
+class GraphTeamView(APIView):
+    """API endpoint to manage alliance selections"""
+
+    endpoint = "graph-team/"
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = form.util.graph_team(2, 3492)
+                return ret_message("hi")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+
+        except Exception as e:
+            return ret_message(
+                "An error occurred while graphing.",
+                True,
+                app_url + self.endpoint,
+                exception=e,
             )
