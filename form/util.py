@@ -951,6 +951,7 @@ def get_graphs(for_current_season=False):
             "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y"))],
         })
 
+
 def save_graph(data, for_current_season=False):
     with transaction.atomic():
         if data.get("id", None) is None:
@@ -965,6 +966,13 @@ def save_graph(data, for_current_season=False):
         graph.active = data["active"]
 
         graph.save()
+
+        if for_current_season:
+            try:
+                scouting.models.Graph.objects.get(Q(graph=graph) & Q(void_ind="n"))
+            except scouting.models.Graph.DoesNotExist:
+                scouting.models.Graph(season=scouting.util.get_current_season(), graph=graph).save()
+
 
         if graph.graph_typ.requires_bins:
             bins_data = data.get("graphbins_set", [])
