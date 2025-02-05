@@ -1122,6 +1122,7 @@ def graph_team(graph_id, team_no):
                                     value *= int(question["value_multiplier"])
 
                                 [gb for gb in bins if (gb["question"] is not None and gb["question"]["id"] == question["id"]) and int(gb["bin"]) <= value < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+                # based on a question aggregate
                 else:
                     questions = graph_question["question_aggregate"]["questions"]
                     field_responses = FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n")& Q(event=scouting.util.get_current_event()))
@@ -1136,31 +1137,11 @@ def graph_team(graph_id, team_no):
                             ) &
                             Q(void_ind="n")).order_by("response__time")
 
-                        sum = 0
-                        for answer in answers:
-                            if answer.question is not None:
-                                value = int(answer.value)
-
-                                if answer.question.value_multiplier is not None:
-                                    value *= int(answer.question.value_multiplier)
-
-                                sum += value
-
-                            if answer.flow is not None:
-                                flow_answers = answer.flowanswer_set.filter(
-                                    Q(question_id__in=set(question["id"] for question in questions)) & Q(void_ind="n")).order_by("value_time")
-
-                                for flow_answer in flow_answers:
-                                    value = 1
-
-                                    if flow_answer.question.value_multiplier is not None:
-                                        value *= int(flow_answer.question.value_multiplier)
-
-                                    sum += value
+                        summation = aggregate_response_questions(field_response, set(question["id"] for question in questions))
 
                         [gb for gb in bins if
                          (gb["question_aggregate"] is not None and gb["question_aggregate"]["id"] == graph_question["question_aggregate"]["id"]) and int(
-                             gb["bin"]) <= sum < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+                             gb["bin"]) <= summation < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
 
             data = bins
         case "ctg-histgrm":
@@ -1173,62 +1154,117 @@ def graph_team(graph_id, team_no):
                     "count": 0
                 })
 
+            # responses for a team
             field_responses = FieldResponse.objects.filter(
                 Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
 
+            # go response by response to find which match a catrgory
             for field_response in field_responses:
-                answers = Answer.objects.filter(
-                    Q(response=field_response.response) &
-                    Q(void_ind="n")).order_by("response__time")
-
+                passed_category = True
+                # process categories and see which answers pass it
                 for category in categories:
-                    passed = True
                     for category_attribute in category["graphcategoryattribute_set"]:
+
+                        # category attribute is based on a question
                         if category_attribute["question"] is not None:
-                            answers.filter(Q(question_id=category_attribute["question"]["id"]) &
+                            answers = Answer.objects.filter(Q(response=field_response.response) & Q(void_ind="n") &
                                            (
                                                    Q(question_id=category_attribute["question"]["id"]) |
                                                    Exists(FlowAnswer.objects.filter(Q(question_id=category_attribute["question"]["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n"))))
-                                           )
-                            passed_attribute = True
-                            """
-                            match category_attribute["question_condition_typ"]["question_condition_typ"]:
-                                case "equal":
+                                           ).order_by("response__time")
 
-                                case "gt":
-                                case "gt-equal":
-                                case "lt-equal":
-                                case "lt":
-                                case "exist":
+                            for answer in answers:
+                                if answer.question is not None:
+                                    value = answer.value
+
+                                    passed_category = passed_category and is_question_condition_passed(category_attribute["question_condition_typ"].question_condition_typ, value, category_attribute["value"])
+
+                                if answer.flow is not None:
+                                    flow_answers = answer.flowanswer_set.filter(
+                                        Q(question_id=category_attribute["question"]["id"]) & Q(
+                                            void_ind="n")).order_by("value_time")
+                                    value = 0
+                                    for flow_answer in flow_answers:
+                                        if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                            value += 1
+                                        else:
+                                            raise Exception("not accounted for yet")
+                                            value = flow_answer.value
+
+                                        if flow_answer.question.value_multiplier is not None:
+                                            value *= int(flow_answer.question.value_multiplier)
+
+                                    passed_category = passed_category and is_question_condition_passed(
+                                        category_attribute["question_condition_typ"].question_condition_typ, value,
+                                        category_attribute["value"])
+
+
+                        # category attribute is based on a question aggregate
                         else:
-                            """
+                            summation = aggregate_response_questions(field_response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
 
-                sum = 0
-                for answer in answers:
-                    if answer.question is not None:
-                        value = int(answer.value)
+                            passed_category = passed_category and is_question_condition_passed(
+                                category_attribute["question_condition_typ"].question_condition_typ, summation,
+                                category_attribute["value"])
 
-                        if answer.question.value_multiplier is not None:
-                            value *= int(answer.question.value_multiplier)
-
-                        sum += value
-
-                    if answer.flow is not None:
-                        flow_answers = answer.flowanswer_set.filter(
-                            Q(question_id__in=set(question["id"] for question in questions)) & Q(
-                                void_ind="n")).order_by("value_time")
-
-                        for flow_answer in flow_answers:
-                            value = 1
-
-                            if flow_answer.question.value_multiplier is not None:
-                                value *= int(flow_answer.question.value_multiplier)
-
-                            sum += value
-
-                [gb for gb in bins if
-                 (gb["question_aggregate"] is not None and gb["question_aggregate"]["id"] ==
-                  graph_question["question_aggregate"]["id"]) and int(
-                     gb["bin"]) <= sum < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
-
+                    # passes attribute, stop processing and move onto next response.
+                    if passed_category:
+                        category["count"] += 1
+                        break
+            data = categories
     return data
+
+
+def is_question_condition_passed(question_condition_typ, answer_value, match_value=None):
+    match question_condition_typ:
+        case "equal":
+            return answer_value == match_value
+        case "gt":
+            return int(answer_value) > int(match_value)
+        case "gt-equal":
+            return int(answer_value) >= int(match_value)
+        case "lt-equal":
+            return int(answer_value) <= int(match_value)
+        case "lt":
+            return int(answer_value) < int(match_value)
+        case "exist":
+            return answer_value is not None and len(str(answer_value)) > 0
+        case _:
+            raise Exception("no type")
+
+
+def aggregate_response_questions(field_response: FieldResponse, question_ids):
+    answers = Answer.objects.filter(
+        Q(response=field_response.response) &
+        (
+                Q(question_id__in=question_ids) |
+                Exists(FlowAnswer.objects.filter(
+                    Q(question_id__in=question_ids) & Q(answer_id=OuterRef("pk")) & Q(
+                        void_ind="n")))
+        ) &
+        Q(void_ind="n")).order_by("response__time")
+
+    summation = 0
+    for answer in answers:
+        if answer.question is not None:
+            value = int(answer.value)
+
+            if answer.question.value_multiplier is not None:
+                value *= int(answer.question.value_multiplier)
+
+            summation += value
+
+        if answer.flow is not None:
+            flow_answers = answer.flowanswer_set.filter(
+                Q(question_id__in=question_ids) & Q(void_ind="n")).order_by(
+                "value_time")
+
+            for flow_answer in flow_answers:
+                value = 1
+
+                if flow_answer.question.value_multiplier is not None:
+                    value *= int(flow_answer.question.value_multiplier)
+
+                summation += value
+
+        return summation

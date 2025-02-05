@@ -194,7 +194,7 @@ class GraphCategoryAttributeSerializer(serializers.Serializer):
     question = QuestionSerializer(required=False, allow_null=True)
     question_aggregate = QuestionAggregateSerializer(required=False, allow_null=True)
     question_condition_typ = QuestionConditionTypeSerializer(required=False)
-    value = serializers.CharField()
+    value = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     active = serializers.CharField()
 
 
