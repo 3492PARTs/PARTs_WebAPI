@@ -1060,7 +1060,18 @@ def save_graph(data, for_current_season=False):
 
                     category_attribute.save()
 
+        requirements = []
+        for required_graph_question_typ in data["graph_typ"]["requires_graph_question_typs"]:
+            requirements.append({
+                "graph_question_typ": required_graph_question_typ["graph_question_typ"],
+                "found": False
+            })
+
         for graph_question_data in data.get("graphquestion_set", []):
+            requirement = [req for req in requirements if req["graph_question_typ"] == graph_question_data["graph_question_typ"]["graph_question_typ"]]
+            if len(requirement) > 0:
+                requirement[0]["found"] = True
+
             if graph_question_data.get("id", None) is None:
                 graph_question = GraphQuestion()
             else:
@@ -1082,6 +1093,9 @@ def save_graph(data, for_current_season=False):
 
             graph_question.save()
 
+        for requirement in requirements:
+            if not requirement["found"]:
+                raise Exception(f"Missing graph question requirement: {requirement['graph_question_typ']}")
 
 def graph_team(graph_id, team_no):
     graph = get_graphs(graph_id=graph_id)[0]
