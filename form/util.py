@@ -1161,18 +1161,15 @@ def graph_team(graph_id, team_no):
 
             # go response by response to find which match a catrgory
             for field_response in field_responses:
-                passed_category = True
                 # process categories and see which answers pass it
                 for category in categories:
+                    passed_category = True
                     for category_attribute in category["graphcategoryattribute_set"]:
 
                         # category attribute is based on a question
                         if category_attribute["question"] is not None:
-                            answers = Answer.objects.filter(Q(response=field_response.response) & Q(void_ind="n") &
-                                           (
-                                                   Q(question_id=category_attribute["question"]["id"]) |
-                                                   Exists(FlowAnswer.objects.filter(Q(question_id=category_attribute["question"]["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n"))))
-                                           ).order_by("response__time")
+                            #check regular question answers
+                            answers = Answer.objects.filter(Q(response=field_response.response) & Q(void_ind="n") & Q(question_id=category_attribute["question"]["id"])).order_by("response__time")
 
                             for answer in answers:
                                 if answer.question is not None:
@@ -1180,25 +1177,27 @@ def graph_team(graph_id, team_no):
 
                                     passed_category = passed_category and is_question_condition_passed(category_attribute["question_condition_typ"].question_condition_typ, value, category_attribute["value"])
 
-                                if answer.flow is not None:
-                                    flow_answers = answer.flowanswer_set.filter(
-                                        Q(question_id=category_attribute["question"]["id"]) & Q(
-                                            void_ind="n")).order_by("value_time")
-                                    value = 0
-                                    for flow_answer in flow_answers:
-                                        if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
-                                            value += 1
-                                        else:
-                                            raise Exception("not accounted for yet")
-                                            value = flow_answer.value
 
-                                        if flow_answer.question.value_multiplier is not None:
-                                            value *= int(flow_answer.question.value_multiplier)
+                            # check flow answers, they need combined as they span the whole match
+                            flow_answers = FlowAnswer.objects.filter(Q(question_id=category_attribute["question"]["id"]) & Q(void_ind="n") & Q(answer__response=field_response.response)).order_by("value_time")
 
-                                    passed_category = passed_category and is_question_condition_passed(
-                                        category_attribute["question_condition_typ"].question_condition_typ, value,
-                                        category_attribute["value"])
+                            if len(flow_answers) <= 0:
+                                passed_category = False
 
+                            value = 0
+                            for flow_answer in flow_answers:
+                                if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                    value += 1
+                                else:
+                                    raise Exception("not accounted for yet")
+                                    value = flow_answer.value
+
+                                if flow_answer.question.value_multiplier is not None:
+                                    value *= int(flow_answer.question.value_multiplier)
+
+                            passed_category = passed_category and is_question_condition_passed(
+                                category_attribute["question_condition_typ"].question_condition_typ, value,
+                                category_attribute["value"])
 
                         # category attribute is based on a question aggregate
                         else:
