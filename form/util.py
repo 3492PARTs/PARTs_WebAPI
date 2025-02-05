@@ -1138,11 +1138,11 @@ def graph_team(graph_id, team_no):
                             ) &
                             Q(void_ind="n")).order_by("response__time")
 
-                        summation = aggregate_response_questions(field_response, set(question["id"] for question in questions))
+                        aggregate = aggregate_response_questions(graph_question["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in questions))
 
                         [gb for gb in bins if
                          (gb["question_aggregate"] is not None and gb["question_aggregate"]["id"] == graph_question["question_aggregate"]["id"]) and int(
-                             gb["bin"]) <= summation < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+                             gb["bin"]) <= aggregate < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
 
             data = bins
         case "ctg-histgrm":
@@ -1201,10 +1201,10 @@ def graph_team(graph_id, team_no):
 
                         # category attribute is based on a question aggregate
                         else:
-                            summation = aggregate_response_questions(field_response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
+                            aggregate = aggregate_response_questions(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
 
                             passed_category = passed_category and is_question_condition_passed(
-                                category_attribute["question_condition_typ"].question_condition_typ, summation,
+                                category_attribute["question_condition_typ"].question_condition_typ, aggregate,
                                 category_attribute["value"])
 
                     # passes attribute, stop processing and move onto next response.
@@ -1233,7 +1233,7 @@ def is_question_condition_passed(question_condition_typ, answer_value, match_val
             raise Exception("no type")
 
 
-def aggregate_response_questions(field_response: FieldResponse, question_ids):
+def aggregate_response_questions(question_aggregate_typ, field_response: FieldResponse, question_ids):
     answers = Answer.objects.filter(
         Q(response=field_response.response) &
         (
@@ -1245,6 +1245,7 @@ def aggregate_response_questions(field_response: FieldResponse, question_ids):
         Q(void_ind="n")).order_by("response__time")
 
     summation = 0
+    length = 0
     for answer in answers:
         if answer.question is not None:
             value = int(answer.value)
@@ -1252,6 +1253,7 @@ def aggregate_response_questions(field_response: FieldResponse, question_ids):
             if answer.question.value_multiplier is not None:
                 value *= int(answer.question.value_multiplier)
 
+            length += 1
             summation += value
 
         if answer.flow is not None:
@@ -1265,6 +1267,13 @@ def aggregate_response_questions(field_response: FieldResponse, question_ids):
                 if flow_answer.question.value_multiplier is not None:
                     value *= int(flow_answer.question.value_multiplier)
 
+                length += 1
                 summation += value
 
-        return summation
+        match question_aggregate_typ:
+            case "sum":
+                return summation
+            case "avg":
+                return summation/length
+            case _:
+                raise Exception("no type")
