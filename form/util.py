@@ -309,20 +309,21 @@ def get_form_sub_types(form_typ: str):
 
 
 def save_or_update_answer(data, response: Response):
-    q_question = Q()
+    q_question = Q(question_id=-99)
     if data.get("question", None) is not None:
         q_question = Q(question_id=data["question"]["id"])
 
-    q_question_flow = Q()
-    if data.get("flow", None) is not None:
-        q_question_flow = Q(flow_id=data["flow"]["id"])
+    #q_question_flow = Q()
+    #if data.get("flow", None) is not None:
+    #    q_question_flow = Q(flow_id=data["flow"]["id"])
+    # flows are not unique this causes them all to save under a single answer
 
     # Get answer to update or save new
     try:
         answer = Answer.objects.get(
             Q(response=response)
             & q_question
-            & q_question_flow
+            #& q_question_flow
             & Q(void_ind="n")
         )
         answer.value = data.get("value", "")
