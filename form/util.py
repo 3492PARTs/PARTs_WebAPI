@@ -1163,6 +1163,72 @@ def graph_team(graph_id, team_no):
                              gb["bin"]) <= sum < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
 
             data = bins
+        case "ctg-histgrm":
+            categories = []
+            for graph_category in graph["graphcategory_set"]:
+                categories.append({
+                    "id": graph_category["id"],
+                    "category": graph_category["category"],
+                    "graphcategoryattribute_set": graph_category["graphcategoryattribute_set"],
+                    "count": 0
+                })
 
-    print(data)
+            field_responses = FieldResponse.objects.filter(
+                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
+
+            for field_response in field_responses:
+                answers = Answer.objects.filter(
+                    Q(response=field_response.response) &
+                    Q(void_ind="n")).order_by("response__time")
+
+                for category in categories:
+                    passed = True
+                    for category_attribute in category["graphcategoryattribute_set"]:
+                        if category_attribute["question"] is not None:
+                            answers.filter(Q(question_id=category_attribute["question"]["id"]) &
+                                           (
+                                                   Q(question_id=category_attribute["question"]["id"]) |
+                                                   Exists(FlowAnswer.objects.filter(Q(question_id=category_attribute["question"]["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n"))))
+                                           )
+                            passed_attribute = True
+                            """
+                            match category_attribute["question_condition_typ"]["question_condition_typ"]:
+                                case "equal":
+
+                                case "gt":
+                                case "gt-equal":
+                                case "lt-equal":
+                                case "lt":
+                                case "exist":
+                        else:
+                            """
+
+                sum = 0
+                for answer in answers:
+                    if answer.question is not None:
+                        value = int(answer.value)
+
+                        if answer.question.value_multiplier is not None:
+                            value *= int(answer.question.value_multiplier)
+
+                        sum += value
+
+                    if answer.flow is not None:
+                        flow_answers = answer.flowanswer_set.filter(
+                            Q(question_id__in=set(question["id"] for question in questions)) & Q(
+                                void_ind="n")).order_by("value_time")
+
+                        for flow_answer in flow_answers:
+                            value = 1
+
+                            if flow_answer.question.value_multiplier is not None:
+                                value *= int(flow_answer.question.value_multiplier)
+
+                            sum += value
+
+                [gb for gb in bins if
+                 (gb["question_aggregate"] is not None and gb["question_aggregate"]["id"] ==
+                  graph_question["question_aggregate"]["id"]) and int(
+                     gb["bin"]) <= sum < (int(gb["bin"]) + int(gb["width"]))][0]["count"] += 1
+
     return data
