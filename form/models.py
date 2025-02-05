@@ -202,11 +202,21 @@ class FlowAnswer(models.Model):
         return f"{self.id} : {self.value}"
 
 
+class GraphQuestionType(models.Model):
+    graph_question_typ = models.CharField(primary_key=True, max_length=10)
+    graph_question_nm = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.graph_question_typ} {self.graph_question_nm}"
+
+
 class GraphType(models.Model):
     graph_typ = models.CharField(primary_key=True, max_length=10)
     graph_nm = models.CharField(max_length=255)
     requires_bins = models.BooleanField(default=False)
     requires_categories = models.BooleanField(default=False)
+    requires_graph_question_typs = models.ManyToManyField(GraphQuestionType)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
@@ -264,14 +274,6 @@ class GraphCategoryAttribute(models.Model):
     def __str__(self):
         return f"{self.id} : {self.graph_category} : {self.value}"
 
-
-class GraphQuestionType(models.Model):
-    graph_question_typ = models.CharField(primary_key=True, max_length=10)
-    graph_question_nm = models.CharField(max_length=255)
-    void_ind = models.CharField(max_length=1, default="n")
-
-    def __str__(self):
-        return f"{self.graph_question_typ} {self.graph_question_nm}"
 
 
 class GraphQuestion(models.Model):

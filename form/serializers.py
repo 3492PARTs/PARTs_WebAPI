@@ -173,11 +173,17 @@ class FormInitializationSerializer(serializers.Serializer):
     flows = FlowSerializer(many=True, required=False)
 
 
+class GraphQuestionTypeSerializer(serializers.Serializer):
+    graph_question_typ = serializers.CharField()
+    graph_question_nm = serializers.CharField()
+
+
 class GraphTypeSerializer(serializers.Serializer):
     graph_typ = serializers.CharField()
     graph_nm = serializers.CharField()
     requires_bins = serializers.BooleanField()
     requires_categories = serializers.BooleanField()
+    requires_graph_question_typs = GraphQuestionTypeSerializer(many=True)
 
 
 class GraphBinSerializer(serializers.Serializer):
@@ -205,11 +211,6 @@ class GraphCategorySerializer(serializers.Serializer):
     order = serializers.IntegerField()
     active = serializers.CharField(max_length=1, default="y")
     graphcategoryattribute_set = GraphCategoryAttributeSerializer(many=True)
-
-
-class GraphQuestionTypeSerializer(serializers.Serializer):
-    graph_question_typ = serializers.CharField()
-    graph_question_nm = serializers.CharField()
 
 
 class GraphQuestionSerializer(serializers.Serializer):

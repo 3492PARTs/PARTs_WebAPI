@@ -1049,6 +1049,9 @@ def save_graph(data, for_current_season=False):
                     question = category_attribute_data.get("question", None)
                     question_aggregate = category_attribute_data.get("question_aggregate", None)
 
+                    if question is None and question_aggregate is None:
+                        raise Exception("No question or aggregate")
+
                     category_attribute.question_id = None if question is None else question.get("id", None)
                     category_attribute.question_aggregate = None if question_aggregate is None else question_aggregate.get("id", None)
                     category_attribute.question_condition_typ_id = None if question_condition_typ is None else question_condition_typ.get("question_condition_typ", None)
@@ -1068,6 +1071,9 @@ def save_graph(data, for_current_season=False):
             graph_question_typ = graph_question_data.get("graph_question_typ", None)
             question = graph_question_data.get("question", None)
             question_aggregate = graph_question_data.get("question_aggregate", None)
+
+            if question is None and question_aggregate is None:
+                raise Exception("No question or aggregate")
 
             graph_question.graph_question_typ_id = None if graph_question_typ is None else graph_question_typ.get("graph_question_typ", None)
             graph_question.question_id = None if question is None else question.get("id", None)
