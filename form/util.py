@@ -1264,6 +1264,23 @@ def aggregate_response_questions(question_aggregate_typ, field_response: FieldRe
         ) &
         Q(void_ind="n")).order_by("response__time")
 
+    return aggregate_answers(question_aggregate_typ, answers)
+
+
+def aggregate_team_questions(question_aggregate_typ, team_no, question_ids):
+    answers = Answer.objects.filter(
+        Q(response__field_response__team_id=team_no) &
+        (
+                Q(question_id__in=question_ids) |
+                Exists(FlowAnswer.objects.filter(
+                    Q(question_id__in=question_ids) & Q(answer_id=OuterRef("pk")) & Q(
+                        void_ind="n")))
+        ) &
+        Q(void_ind="n")).order_by("response__time")
+
+    return aggregate_answers(question_aggregate_typ, answers)
+
+def aggregate_answers(question_aggregate_typ, answers):
     summation = 0
     length = 0
     for answer in answers:
