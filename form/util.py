@@ -638,7 +638,7 @@ def format_flow_values(flow: Flow):
                 "question": format_question_values(qf.question),
                 "order": qf.order,
                 "active": qf.active
-            } for qf in FlowQuestion.objects.filter(Q(flow=flow) & Q(active="y") & Q(void_ind="n")).order_by("order", "question__question")],
+            } for qf in FlowQuestion.objects.filter(Q(flow=flow) & Q(active="y") & Q(question__void_ind="n")& Q(question__active="y") & Q(void_ind="n")).order_by("order", "question__question")],
             "void_ind": flow.void_ind,
             "has_conditions": has_conditions,
             "flow_conditional_on": question_flow_conditional_on.flow_from.id if question_flow_conditional_on is not None else None
