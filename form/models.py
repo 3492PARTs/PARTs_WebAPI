@@ -242,6 +242,7 @@ class GraphCategory(models.Model):
     id = models.AutoField(primary_key=True)
     graph = models.ForeignKey(Graph, models.PROTECT)
     category = models.CharField(max_length=2000)
+    order = models.IntegerField()
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
