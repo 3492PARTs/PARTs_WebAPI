@@ -917,6 +917,7 @@ def parse_graph_category(graph_category: GraphCategory):
         "id": graph_category.id,
         "graph_id": graph_category.graph.id,
         "category": graph_category.category,
+        "order": graph_category.order,
         "active": graph_category.active,
         "graphcategoryattribute_set": [parse_graph_category_attribute(gc) for gc in graph_category.graphcategoryattribute_set.filter(Q(void_ind="n") & Q(active="y"))]
     }
@@ -966,7 +967,7 @@ def get_graphs(for_current_season=False, graph_id=None):
             "scale_y": graph.scale_y,
             "active": graph.active,
             "graphbin_set": graph.graphbin_set.filter(Q(void_ind="n") & Q(active="y")).order_by("bin"),
-            "graphcategory_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategory_set.filter(Q(void_ind="n") & Q(active="y"))],
+            "graphcategory_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategory_set.filter(Q(void_ind="n") & Q(active="y")).order_by("order")],
             "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y"))],
         })
 
@@ -1026,6 +1027,7 @@ def save_graph(data, for_current_season=False):
 
                 category.graph = graph
                 category.category = category_data["category"]
+                category.order = category_data["order"]
                 category.active = category_data["active"]
 
                 category.save()

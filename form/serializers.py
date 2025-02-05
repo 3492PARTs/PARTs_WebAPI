@@ -202,6 +202,7 @@ class GraphCategorySerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     graph_id = serializers.IntegerField(required=False, allow_null=True)
     category = serializers.CharField(max_length=2000)
+    order = serializers.IntegerField()
     active = serializers.CharField(max_length=1, default="y")
     graphcategoryattribute_set = GraphCategoryAttributeSerializer(many=True)
 
