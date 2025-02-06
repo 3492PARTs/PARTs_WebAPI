@@ -1195,6 +1195,9 @@ def graph_team(graph_id, team_no):
                                 if answer.question is not None:
                                     value = answer.value
 
+                                    if answer.question.value_multiplier is not None:
+                                        value = int(value) * int(answer.question.value_multiplier)
+
                                     passed_category = passed_category and is_question_condition_passed(category_attribute["question_condition_typ"].question_condition_typ, value, category_attribute["value"])
 
 
@@ -1236,6 +1239,76 @@ def graph_team(graph_id, team_no):
             plot = []
             ref_pt = [gq for gq in graph["graphquestion_set"] if gq.graph_question_typ.graph_question_typ == 'ref-pt'][0]
             aggregate = aggregate_team_questions(ref_pt["question_aggregate"]["question_aggregate_typ"], team_no, ref_pt["question_aggregate"]["questions"])
+            graph_questions = [gq for gq in graph["graphquestion_set"] if gq.graph_question_typ.graph_question_typ != 'ref-pt']
+
+            for graph_question in graph_questions:
+                plot_entry = {
+                    "question": graph_question["question"],
+                    "question_aggregate": graph_question["question_aggregate"],
+                    "data": []
+                }
+                plot.append(plot_entry)
+
+                # responses for a team
+                field_responses = FieldResponse.objects.filter(
+                    Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
+
+                # go response by response to compute difference
+                for field_response in field_responses:
+                    if graph_question["question"] is not None:
+                        question = graph_question["question"]
+                        # check regular question answers
+                        try:
+                            answer = Answer.objects.get(Q(response=field_response.response) & Q(void_ind="n") & Q(
+                                question_id=question["id"])).order_by("response__time")
+
+                            value = int(answer.value)
+
+                            if answer.question.value_multiplier is not None:
+                                value *= int(answer.question.value_multiplier)
+
+                            plot_entry["data"].append({
+                                "value": value - aggregate,
+                                "time": answer.time
+                            })
+                        except Answer.DoesNotExist:
+                            pass
+
+                        # check flow answers, they need combined as they span the whole match
+                        flow_answers = FlowAnswer.objects.filter(
+                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
+                                answer__response=field_response.response)).order_by("value_time")
+
+                        value = 0
+                        time = None
+                        for flow_answer in flow_answers:
+                            time = flow_answer.answer.time
+
+                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                value += 1
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = flow_answer.value
+
+                            if flow_answer.question.value_multiplier is not None:
+                                value *= int(flow_answer.question.value_multiplier)
+
+                        if len(flow_answers) > 0:
+                            plot_entry["data"].append({
+                                "value": value - aggregate,
+                                "time": time
+                            })
+
+                    # based on a question aggregate
+                    else:
+                        aggregate_value = aggregate_response_questions(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+                        plot_entry["data"].append({
+                            "value": aggregate_value - aggregate,
+                            "time": field_response.time
+                        })
+
+            data = plot
+
 
     return data
 
