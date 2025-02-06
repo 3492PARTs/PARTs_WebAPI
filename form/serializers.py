@@ -96,7 +96,8 @@ class QuestionAggregateTypeSerializer(serializers.Serializer):
 
 class QuestionAggregateSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
-    field_name = serializers.CharField()
+    name = serializers.CharField()
+    horizontal = serializers.BooleanField()
     question_aggregate_typ = QuestionAggregateTypeSerializer(required=False)
     questions = QuestionSerializer(many=True)
     active = serializers.CharField()

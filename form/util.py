@@ -447,7 +447,8 @@ def get_question_aggregates(form_typ: str):
 def parse_question_aggregate(question_aggregate: QuestionAggregate):
     return {
         "id": question_aggregate.id,
-        "field_name": question_aggregate.field_name,
+        "name": question_aggregate.name,
+        "horizontal": question_aggregate.horizontal,
         "question_aggregate_typ": question_aggregate.question_aggregate_typ,
         "questions": list(
             format_question_values(q)
@@ -469,7 +470,8 @@ def save_question_aggregate(data):
     else:
         qa = QuestionAggregate()
 
-    qa.field_name = data["field_name"]
+    qa.name = data["name"]
+    qa.horizontal = data["horizontal"]
     qa.active = data["active"]
     qa.question_aggregate_typ = QuestionAggregateType.objects.get(
         Q(void_ind="n")
@@ -1358,7 +1360,7 @@ def aggregate_team_questions(question_aggregate_typ, team_no, question_ids):
 
     return aggregate_answers(question_aggregate_typ, answers)
 
-def aggregate_answers(question_aggregate_typ, answers):
+def aggregate_answers(question_aggregate_typ, answers, question_ids=None):
     summation = 0
     length = 0
     for answer in answers:
