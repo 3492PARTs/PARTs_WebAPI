@@ -1232,6 +1232,11 @@ def graph_team(graph_id, team_no):
                         category["count"] += 1
                         break
             data = categories
+        case "res-plot":
+            plot = []
+            ref_pt = [gq for gq in graph["graphquestion_set"] if gq.graph_question_typ.graph_question_typ == 'ref-pt'][0]
+            aggregate = aggregate_team_questions(ref_pt["question_aggregate"]["question_aggregate_typ"], team_no, ref_pt["question_aggregate"]["questions"])
+
     return data
 
 
