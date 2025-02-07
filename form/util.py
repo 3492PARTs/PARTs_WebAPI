@@ -1108,7 +1108,7 @@ def graph_team(graph_id, team_no):
 
     data = None
     match graph["graph_typ"].graph_typ:
-        case 'histogram':
+        case "histogram":
             bins = []
 
             for graph_question in graph["graphquestion_set"]:
@@ -1314,7 +1314,69 @@ def graph_team(graph_id, team_no):
                         })
 
             data = plot
+        case "diff-plot":
+            plot = []
 
+            # responses for a team
+            field_responses = FieldResponse.objects.filter(
+                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
+
+            for graph_question in graph["graphquestion_set"]:
+                plot_entry = {
+                    "question": graph_question["question"],
+                    "question_aggregate": graph_question["question_aggregate"],
+                    "data": []
+                }
+                plot.append(plot_entry)
+
+                # go response by response to compute difference
+                previous = None
+                for field_response in field_responses:
+                    if graph_question["question"] is not None:
+                        question = graph_question["question"]
+                        # check regular question answers
+                        try:
+                            answer = Answer.objects.get(Q(response=field_response.response) & Q(void_ind="n") & Q(
+                                question_id=question["id"])).order_by("response__time")
+
+                            value = int(answer.value)
+
+                            if answer.question.value_multiplier is not None:
+                                value *= int(answer.question.value_multiplier)
+
+                        except Answer.DoesNotExist:
+                            pass
+
+                        # check flow answers, they need combined as they span the whole match
+                        flow_answers = FlowAnswer.objects.filter(
+                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
+                                answer__response=field_response.response)).order_by("value_time")
+
+                        value = 0
+                        for flow_answer in flow_answers:
+
+                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                value += 1
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = flow_answer.value
+
+                            if flow_answer.question.value_multiplier is not None:
+                                value *= int(flow_answer.question.value_multiplier)
+                    # based on a question aggregate
+                    else:
+                        value = aggregate_answers_horizontally(
+                            category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
+                            field_response,
+                            set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+
+                    plot_entry["data"].append({
+                        "value": previous - value if previous is not None else 0,
+                        "time": field_response.time
+                    })
+                    previous = value
+
+            data = plot
 
     return data
 
@@ -1363,6 +1425,7 @@ def aggregate_answers_vertically(question_aggregate_typ: str, team_no, question_
         Q(void_ind="n")).order_by("response__time")
 
     return aggregate_answers(question_aggregate_typ, answers, question_ids)
+
 
 def aggregate_answers(question_aggregate_typ: str, answers, question_ids):
     summation = 0
