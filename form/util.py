@@ -1377,6 +1377,73 @@ def graph_team(graph_id, team_no):
                     previous = value
 
             data = plot
+        case "box-wskr":
+            plot = []
+
+            # responses for a team
+            field_responses = FieldResponse.objects.filter(
+                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
+
+            for graph_question in graph["graphquestion_set"]:
+                plot_entry = {
+                    "question": graph_question["question"],
+                    "question_aggregate": graph_question["question_aggregate"],
+                    "dataset": [],
+                }
+                plot.append(plot_entry)
+
+                # go response by response to compute difference
+                for field_response in field_responses:
+                    if graph_question["question"] is not None:
+                        question = graph_question["question"]
+                        # check regular question answers
+                        try:
+                            answer = Answer.objects.get(Q(response=field_response.response) & Q(void_ind="n") & Q(
+                                question_id=question["id"])).order_by("response__time")
+
+                            value = int(answer.value)
+
+                            if answer.question.value_multiplier is not None:
+                                value *= int(answer.question.value_multiplier)
+
+                        except Answer.DoesNotExist:
+                            pass
+
+                        # check flow answers, they need combined as they span the whole match
+                        flow_answers = FlowAnswer.objects.filter(
+                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
+                                answer__response=field_response.response)).order_by("value_time")
+
+                        value = 0
+                        for flow_answer in flow_answers:
+
+                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                value += 1
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = flow_answer.value
+
+                            if flow_answer.question.value_multiplier is not None:
+                                value *= int(flow_answer.question.value_multiplier)
+                    # based on a question aggregate
+                    else:
+                        value = aggregate_answers_horizontally(
+                            category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
+                            field_response,
+                            set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+
+                    plot_entry["dataset"].append(value)
+
+                # sort data to build box and whisker plot
+                plot_entry["dataset"].sort()
+                quartiles = compute_quartiles(plot_entry["dataset"])
+                plot_entry["q1"] = quartiles["Q1"]
+                plot_entry["q2"] = quartiles["Q2"]
+                plot_entry["q3"] = quartiles["Q3"]
+                plot_entry["min"] = plot_entry["dataset"][0]
+                plot_entry["max"] = plot_entry["dataset"][len(plot_entry["dataset"]) - 1]
+
+            data = plot
 
     return data
 
@@ -1461,3 +1528,50 @@ def aggregate_answers(question_aggregate_typ: str, answers, question_ids):
             return summation/length
         case _:
             raise Exception("no type")
+
+
+def compute_quartiles(data):
+    """
+    Computes the first, second (median), and third quartiles of a dataset.
+
+    Args:
+        data: A list of numerical data.
+
+    Returns:
+        A dictionary containing the first quartile (Q1), median (Q2), and
+        third quartile (Q3). Returns an empty dictionary if the input data
+        is empty. Raises a TypeError if the input is not a list or if the
+        elements of the list are not numeric.
+    """
+
+    if not isinstance(data, list):
+        raise TypeError("Input data must be a list.")
+
+    if not data:  # Handle empty data case
+        return {}
+
+    for x in data:
+        if not isinstance(x, (int, float)):
+            raise TypeError("All elements of the list must be numeric.")
+
+    sorted_data = sorted(data)  # Sort the data
+    n = len(sorted_data)
+
+    def _calculate_quartile(fraction):  # Helper function
+        index = (n - 1) * fraction
+        i = int(index)
+        decimal_part = index - i
+
+        if i < 0: #Handles edge cases where n is small.
+            return sorted_data[0]
+        elif i >= n -1:
+            return sorted_data[-1]
+
+        return sorted_data[i] + (sorted_data[i + 1] - sorted_data[i]) * decimal_part
+
+    q1 = _calculate_quartile(0.25)
+    q2 = _calculate_quartile(0.50)  # Median
+    q3 = _calculate_quartile(0.75)
+
+    return {"Q1": q1, "Q2": q2, "Q3": q3}
+
