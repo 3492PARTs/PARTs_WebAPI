@@ -1175,7 +1175,7 @@ def graph_team(graph_id, team_no):
             for graph_category in graph["graphcategory_set"]:
                 categories.append({
                     "id": graph_category["id"],
-                    "category": graph_category["category"],
+                    "bin": graph_category["category"],
                     "graphcategoryattribute_set": graph_category["graphcategoryattribute_set"],
                     "count": 0
                 })
