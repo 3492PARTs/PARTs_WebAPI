@@ -4,8 +4,7 @@ from form.serializers import QuestionSerializer, QuestionAggregateSerializer
 
 
 class HistogramBinSerializer(serializers.Serializer):
-    bin = serializers.IntegerField()
-    width = serializers.IntegerField()
+    bin = serializers.CharField()
     count = serializers.IntegerField()
 
 class HistogramSerializer(serializers.Serializer):

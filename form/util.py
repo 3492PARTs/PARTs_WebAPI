@@ -1124,7 +1124,7 @@ def graph_team(graph_id, team_no):
                         "width": int(gb.width),
                         "count": 0
                     }
-                    question_bins["bins"].append(graph_bin)
+
 
                     if graph_question["question"] is not None:
                         question = graph_question["question"]
@@ -1167,7 +1167,8 @@ def graph_team(graph_id, team_no):
 
                             if graph_bin["bin"] <= aggregate < graph_bin["bin"] + graph_bin["width"]:
                                 graph_bin["count"] += 1
-
+                    graph_bin["bin"] = f"{graph_bin['bin']} - {graph_bin['bin'] + graph_bin['width'] - 1}"
+                    question_bins["bins"].append(graph_bin)
             data = all_bins
         case "ctg-histgrm":
             categories = []
