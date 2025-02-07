@@ -11,7 +11,7 @@ from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer, Al
     SaveMatchStrategySerializer
 import scouting.strategizing.util
 import scouting.util
-from scouting.strategizing.serializers import HistogramSerializer, HistogramBinSerializer
+from scouting.strategizing.serializers import HistogramSerializer, HistogramBinSerializer, PlotSerializer
 
 auth_obj = "matchplanning"
 auth_view_obj_scout_field = "scoutFieldResults"
@@ -224,9 +224,10 @@ class GraphTeamView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                data = form.util.graph_team(3, 3492)
+                data = form.util.graph_team(4, 3492)
                 #serializer = HistogramSerializer(data, many=True)
-                serializer = HistogramBinSerializer(data, many=True)
+                #serializer = HistogramBinSerializer(data, many=True)
+                serializer = PlotSerializer(data, many=True)
                 return Response(serializer.data)
             else:
                 return ret_message(

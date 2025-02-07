@@ -1252,9 +1252,8 @@ def graph_team(graph_id, team_no):
 
             for graph_question in graph_questions:
                 plot_entry = {
-                    "question": graph_question["question"],
-                    "question_aggregate": graph_question["question_aggregate"],
-                    "data": []
+                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
+                    "points": []
                 }
                 plot.append(plot_entry)
 
@@ -1272,8 +1271,8 @@ def graph_team(graph_id, team_no):
                             if answer.question.value_multiplier is not None:
                                 value *= int(answer.question.value_multiplier)
 
-                            plot_entry["data"].append({
-                                "value": value - aggregate,
+                            plot_entry["points"].append({
+                                "point": value - aggregate,
                                 "time": answer.time
                             })
                         except Answer.DoesNotExist:
@@ -1299,16 +1298,16 @@ def graph_team(graph_id, team_no):
                                 value *= int(flow_answer.question.value_multiplier)
 
                         if len(flow_answers) > 0:
-                            plot_entry["data"].append({
-                                "value": value - aggregate,
+                            plot_entry["points"].append({
+                                "point": value - aggregate,
                                 "time": time
                             })
 
                     # based on a question aggregate
                     else:
                         aggregate_value = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
-                        plot_entry["data"].append({
-                            "value": aggregate_value - aggregate,
+                        plot_entry["points"].append({
+                            "point": aggregate_value - aggregate,
                             "time": field_response.time
                         })
 
