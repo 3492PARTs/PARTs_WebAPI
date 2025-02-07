@@ -1113,11 +1113,11 @@ def graph_team(graph_id, team_no):
 
             for graph_question in graph["graphquestion_set"]:
                 question_bins = {
-                    "question": graph_question["question"],
-                    "question_aggregate": graph_question["question_aggregate"],
+                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
                     "bins": []
                 }
                 all_bins.append(question_bins)
+
                 for gb in graph["graphbin_set"]:
                     graph_bin = {
                         "bin": int(gb.bin),
