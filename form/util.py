@@ -318,6 +318,9 @@ def save_or_update_answer(data, response: Response):
     #    q_question_flow = Q(flow_id=data["flow"]["id"])
     # flows are not unique this causes them all to save under a single answer
 
+    if data.get("question", None) is None and data.get("flow", None) is None:
+        raise Exception("No question or flow")
+
     # Get answer to update or save new
     try:
         answer = Answer.objects.get(
@@ -1070,9 +1073,10 @@ def save_graph(data, for_current_season=False):
             })
 
         for graph_question_data in data.get("graphquestion_set", []):
-            requirement = [req for req in requirements if req["graph_question_typ"] == graph_question_data["graph_question_typ"]["graph_question_typ"]]
-            if len(requirement) > 0:
-                requirement[0]["found"] = True
+            if graph_question_data.get("graph_question_typ", None) is not None:
+                requirement = [req for req in requirements if req["graph_question_typ"] == graph_question_data["graph_question_typ"]["graph_question_typ"]]
+                if len(requirement) > 0:
+                    requirement[0]["found"] = True
 
             if graph_question_data.get("id", None) is None:
                 graph_question = GraphQuestion()
@@ -1160,7 +1164,7 @@ def graph_team(graph_id, team_no):
                             ) &
                             Q(void_ind="n")).order_by("response__time")
 
-                        aggregate = aggregate_response_questions(graph_question["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in questions))
+                        aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in questions))
 
                         [gb for gb in bins if
                          (gb["question_aggregate"] is not None and gb["question_aggregate"]["id"] == graph_question["question_aggregate"]["id"]) and int(
@@ -1226,7 +1230,7 @@ def graph_team(graph_id, team_no):
 
                         # category attribute is based on a question aggregate
                         else:
-                            aggregate = aggregate_response_questions(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
+                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
 
                             passed_category = passed_category and is_question_condition_passed(
                                 category_attribute["question_condition_typ"].question_condition_typ, aggregate,
@@ -1239,9 +1243,13 @@ def graph_team(graph_id, team_no):
             data = categories
         case "res-plot":
             plot = []
-            ref_pt = [gq for gq in graph["graphquestion_set"] if gq.graph_question_typ.graph_question_typ == 'ref-pt'][0]
-            aggregate = aggregate_team_questions(ref_pt["question_aggregate"]["question_aggregate_typ"], team_no, ref_pt["question_aggregate"]["questions"])
-            graph_questions = [gq for gq in graph["graphquestion_set"] if gq.graph_question_typ.graph_question_typ != 'ref-pt']
+            ref_pt = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is not None and gq["graph_question_typ"].graph_question_typ == 'ref-pnt'][0]
+            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, team_no, set(q["id"] for q in ref_pt["question_aggregate"]["questions"]))
+            graph_questions = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is None]
+
+            # responses for a team
+            field_responses = FieldResponse.objects.filter(
+                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
 
             for graph_question in graph_questions:
                 plot_entry = {
@@ -1250,10 +1258,6 @@ def graph_team(graph_id, team_no):
                     "data": []
                 }
                 plot.append(plot_entry)
-
-                # responses for a team
-                field_responses = FieldResponse.objects.filter(
-                    Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
 
                 # go response by response to compute difference
                 for field_response in field_responses:
@@ -1284,7 +1288,7 @@ def graph_team(graph_id, team_no):
                         value = 0
                         time = None
                         for flow_answer in flow_answers:
-                            time = flow_answer.answer.time
+                            time = flow_answer.answer.response.time
 
                             if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
                                 value += 1
@@ -1303,7 +1307,7 @@ def graph_team(graph_id, team_no):
 
                     # based on a question aggregate
                     else:
-                        aggregate_value = aggregate_response_questions(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+                        aggregate_value = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
                         plot_entry["data"].append({
                             "value": aggregate_value - aggregate,
                             "time": field_response.time
@@ -1315,7 +1319,7 @@ def graph_team(graph_id, team_no):
     return data
 
 
-def is_question_condition_passed(question_condition_typ, answer_value, match_value=None):
+def is_question_condition_passed(question_condition_typ: str, answer_value, match_value=None):
     match question_condition_typ:
         case "equal":
             return answer_value == match_value
@@ -1333,7 +1337,7 @@ def is_question_condition_passed(question_condition_typ, answer_value, match_val
             raise Exception("no type")
 
 
-def aggregate_response_questions(question_aggregate_typ, field_response: FieldResponse, question_ids):
+def aggregate_answers_horizontally(question_aggregate_typ: str, field_response: FieldResponse, question_ids):
     answers = Answer.objects.filter(
         Q(response=field_response.response) &
         (
@@ -1344,12 +1348,12 @@ def aggregate_response_questions(question_aggregate_typ, field_response: FieldRe
         ) &
         Q(void_ind="n")).order_by("response__time")
 
-    return aggregate_answers(question_aggregate_typ, answers)
+    return aggregate_answers(question_aggregate_typ, answers, question_ids)
 
 
-def aggregate_team_questions(question_aggregate_typ, team_no, question_ids):
+def aggregate_answers_vertically(question_aggregate_typ: str, team_no, question_ids):
     answers = Answer.objects.filter(
-        Q(response__field_response__team_id=team_no) &
+        Q(response__in=(FieldResponse.objects.filter(Q(void_ind="n") & Q(team_id=team_no) & Q(event=scouting.util.get_current_event())).values("response"))) &
         (
                 Q(question_id__in=question_ids) |
                 Exists(FlowAnswer.objects.filter(
@@ -1358,9 +1362,9 @@ def aggregate_team_questions(question_aggregate_typ, team_no, question_ids):
         ) &
         Q(void_ind="n")).order_by("response__time")
 
-    return aggregate_answers(question_aggregate_typ, answers)
+    return aggregate_answers(question_aggregate_typ, answers, question_ids)
 
-def aggregate_answers(question_aggregate_typ, answers, question_ids=None):
+def aggregate_answers(question_aggregate_typ: str, answers, question_ids):
     summation = 0
     length = 0
     for answer in answers:
@@ -1387,10 +1391,10 @@ def aggregate_answers(question_aggregate_typ, answers, question_ids=None):
                 length += 1
                 summation += value
 
-        match question_aggregate_typ:
-            case "sum":
-                return summation
-            case "avg":
-                return summation/length
-            case _:
-                raise Exception("no type")
+    match question_aggregate_typ:
+        case "sum":
+            return summation
+        case "avg":
+            return summation/length
+        case _:
+            raise Exception("no type")

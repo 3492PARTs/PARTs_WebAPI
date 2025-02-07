@@ -223,7 +223,7 @@ class GraphTeamView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                req = form.util.graph_team(3, 3492)
+                req = form.util.graph_team(4, 3492)
                 return ret_message("hi")
             else:
                 return ret_message(

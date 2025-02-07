@@ -188,7 +188,7 @@ class Answer(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} : {self.value}"
+        return f"{self.id} : {self.value} : {self.question} : {self.flow}"
 
 
 class FlowAnswer(models.Model):
