@@ -1383,8 +1383,7 @@ def graph_team(graph_id, team_no):
 
             for graph_question in graph["graphquestion_set"]:
                 plot_entry = {
-                    "question": graph_question["question"],
-                    "question_aggregate": graph_question["question_aggregate"],
+                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
                     "dataset": [],
                 }
                 plot.append(plot_entry)

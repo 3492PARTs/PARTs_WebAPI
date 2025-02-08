@@ -20,3 +20,11 @@ class PlotPointSerializer(serializers.Serializer):
 class PlotSerializer(serializers.Serializer):
     label = serializers.CharField()
     points = PlotPointSerializer(many=True)
+
+class BoxAndWhiskerPlotSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    q1 = serializers.FloatField()
+    q2 = serializers.FloatField()
+    q3 = serializers.FloatField()
+    min = serializers.FloatField()
+    max = serializers.FloatField()
