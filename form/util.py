@@ -1103,7 +1103,8 @@ def save_graph(data, for_current_season=False):
             if not requirement["found"]:
                 raise Exception(f"Missing graph question requirement: {requirement['graph_question_typ']}")
 
-def graph_team(graph_id, team_no):
+
+def graph_responses(graph_id, responses):
     graph = get_graphs(graph_id=graph_id)[0]
 
     data = None
@@ -1125,11 +1126,10 @@ def graph_team(graph_id, team_no):
                         "count": 0
                     }
 
-
                     if graph_question["question"] is not None:
                         question = graph_question["question"]
                         answers = Answer.objects.filter(
-                            Q(response__in=[resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]) &
+                            Q(response__in=responses) &
                             (
                                     Q(question_id=question["id"]) |
                                     Exists(FlowAnswer.objects.filter(Q(question_id=question["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n")))
@@ -1160,10 +1160,9 @@ def graph_team(graph_id, team_no):
                     # based on a question aggregate
                     else:
                         questions = graph_question["question_aggregate"]["questions"]
-                        field_responses = FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n")& Q(event=scouting.util.get_current_event()))
 
-                        for field_response in field_responses:
-                            aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, field_response, set(question["id"] for question in questions))
+                        for response in responses:
+                            aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, set(question["id"] for question in questions))
 
                             if graph_bin["bin"] <= aggregate < graph_bin["bin"] + graph_bin["width"]:
                                 graph_bin["count"] += 1
@@ -1180,12 +1179,8 @@ def graph_team(graph_id, team_no):
                     "count": 0
                 })
 
-            # responses for a team
-            field_responses = FieldResponse.objects.filter(
-                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
-
             # go response by response to find which match a catrgory
-            for field_response in field_responses:
+            for response in responses:
                 # process categories and see which answers pass it
                 for category in categories:
                     passed_category = True
@@ -1194,7 +1189,7 @@ def graph_team(graph_id, team_no):
                         # category attribute is based on a question
                         if category_attribute["question"] is not None:
                             #check regular question answers
-                            answers = Answer.objects.filter(Q(response=field_response.response) & Q(void_ind="n") & Q(question_id=category_attribute["question"]["id"])).order_by("response__time")
+                            answers = Answer.objects.filter(Q(response=response) & Q(void_ind="n") & Q(question_id=category_attribute["question"]["id"])).order_by("response__time")
 
                             for answer in answers:
                                 if answer.question is not None:
@@ -1207,7 +1202,7 @@ def graph_team(graph_id, team_no):
 
 
                             # check flow answers, they need combined as they span the whole match
-                            flow_answers = FlowAnswer.objects.filter(Q(question_id=category_attribute["question"]["id"]) & Q(void_ind="n") & Q(answer__response=field_response.response)).order_by("value_time")
+                            flow_answers = FlowAnswer.objects.filter(Q(question_id=category_attribute["question"]["id"]) & Q(void_ind="n") & Q(answer__response=response)).order_by("value_time")
 
                             if len(flow_answers) <= 0:
                                 passed_category = False
@@ -1229,7 +1224,7 @@ def graph_team(graph_id, team_no):
 
                         # category attribute is based on a question aggregate
                         else:
-                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
+                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
 
                             passed_category = passed_category and is_question_condition_passed(
                                 category_attribute["question_condition_typ"].question_condition_typ, aggregate,
@@ -1243,12 +1238,8 @@ def graph_team(graph_id, team_no):
         case "res-plot":
             plot = []
             ref_pt = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is not None and gq["graph_question_typ"].graph_question_typ == 'ref-pnt'][0]
-            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, team_no, set(q["id"] for q in ref_pt["question_aggregate"]["questions"]))
+            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, responses, set(q["id"] for q in ref_pt["question_aggregate"]["questions"]))
             graph_questions = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is None]
-
-            # responses for a team
-            field_responses = FieldResponse.objects.filter(
-                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
 
             for graph_question in graph_questions:
                 plot_entry = {
@@ -1258,12 +1249,12 @@ def graph_team(graph_id, team_no):
                 plot.append(plot_entry)
 
                 # go response by response to compute difference
-                for field_response in field_responses:
+                for response in responses:
                     if graph_question["question"] is not None:
                         question = graph_question["question"]
                         # check regular question answers
                         try:
-                            answer = Answer.objects.get(Q(response=field_response.response) & Q(void_ind="n") & Q(
+                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
                                 question_id=question["id"])).order_by("response__time")
 
                             value = int(answer.value)
@@ -1281,7 +1272,7 @@ def graph_team(graph_id, team_no):
                         # check flow answers, they need combined as they span the whole match
                         flow_answers = FlowAnswer.objects.filter(
                             Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                answer__response=field_response.response)).order_by("value_time")
+                                answer__response=response)).order_by("value_time")
 
                         value = 0
                         time = None
@@ -1305,7 +1296,7 @@ def graph_team(graph_id, team_no):
 
                     # based on a question aggregate
                     else:
-                        aggregate_value = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, field_response, set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+                        aggregate_value = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, response, set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
                         plot_entry["points"].append({
                             "point": aggregate_value - aggregate,
                             "time": field_response.time
@@ -1314,11 +1305,6 @@ def graph_team(graph_id, team_no):
             data = plot
         case "diff-plot":
             plot = []
-
-            # responses for a team
-            field_responses = FieldResponse.objects.filter(
-                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
-
             for graph_question in graph["graphquestion_set"]:
                 plot_entry = {
                     "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
@@ -1328,12 +1314,12 @@ def graph_team(graph_id, team_no):
 
                 # go response by response to compute difference
                 previous = None
-                for field_response in field_responses:
+                for response in responses:
                     if graph_question["question"] is not None:
                         question = graph_question["question"]
                         # check regular question answers
                         try:
-                            answer = Answer.objects.get(Q(response=field_response.response) & Q(void_ind="n") & Q(
+                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
                                 question_id=question["id"])).order_by("response__time")
 
                             value = int(answer.value)
@@ -1347,7 +1333,7 @@ def graph_team(graph_id, team_no):
                         # check flow answers, they need combined as they span the whole match
                         flow_answers = FlowAnswer.objects.filter(
                             Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                answer__response=field_response.response)).order_by("value_time")
+                                answer__response=response)).order_by("value_time")
 
                         value = 0
                         for flow_answer in flow_answers:
@@ -1364,22 +1350,18 @@ def graph_team(graph_id, team_no):
                     else:
                         value = aggregate_answers_horizontally(
                             category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
-                            field_response,
+                            response,
                             set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
 
                     plot_entry["points"].append({
                         "point": previous - value if previous is not None else 0,
-                        "time": field_response.time
+                        "time": response.time
                     })
                     previous = value
 
             data = plot
         case "box-wskr":
             plot = []
-
-            # responses for a team
-            field_responses = FieldResponse.objects.filter(
-                Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))
 
             for graph_question in graph["graphquestion_set"]:
                 plot_entry = {
@@ -1389,12 +1371,12 @@ def graph_team(graph_id, team_no):
                 plot.append(plot_entry)
 
                 # go response by response to compute difference
-                for field_response in field_responses:
+                for response in responses:
                     if graph_question["question"] is not None:
                         question = graph_question["question"]
                         # check regular question answers
                         try:
-                            answer = Answer.objects.get(Q(response=field_response.response) & Q(void_ind="n") & Q(
+                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
                                 question_id=question["id"])).order_by("response__time")
 
                             value = int(answer.value)
@@ -1408,7 +1390,7 @@ def graph_team(graph_id, team_no):
                         # check flow answers, they need combined as they span the whole match
                         flow_answers = FlowAnswer.objects.filter(
                             Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                answer__response=field_response.response)).order_by("value_time")
+                                answer__response=response)).order_by("value_time")
 
                         value = 0
                         for flow_answer in flow_answers:
@@ -1425,7 +1407,7 @@ def graph_team(graph_id, team_no):
                     else:
                         value = aggregate_answers_horizontally(
                             category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
-                            field_response,
+                            response,
                             set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
 
                     plot_entry["dataset"].append(value)
@@ -1462,9 +1444,9 @@ def is_question_condition_passed(question_condition_typ: str, answer_value, matc
             raise Exception("no type")
 
 
-def aggregate_answers_horizontally(question_aggregate_typ: str, field_response: FieldResponse, question_ids):
+def aggregate_answers_horizontally(question_aggregate_typ: str, response: Response, question_ids):
     answers = Answer.objects.filter(
-        Q(response=field_response.response) &
+        Q(response=response) &
         (
                 Q(question_id__in=question_ids) |
                 Exists(FlowAnswer.objects.filter(
@@ -1476,9 +1458,9 @@ def aggregate_answers_horizontally(question_aggregate_typ: str, field_response: 
     return aggregate_answers(question_aggregate_typ, answers, question_ids)
 
 
-def aggregate_answers_vertically(question_aggregate_typ: str, team_no, question_ids):
+def aggregate_answers_vertically(question_aggregate_typ: str, responses, question_ids):
     answers = Answer.objects.filter(
-        Q(response__in=(FieldResponse.objects.filter(Q(void_ind="n") & Q(team_id=team_no) & Q(event=scouting.util.get_current_event())).values("response"))) &
+        Q(response__in=responses) &
         (
                 Q(question_id__in=question_ids) |
                 Exists(FlowAnswer.objects.filter(

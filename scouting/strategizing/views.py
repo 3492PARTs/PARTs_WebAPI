@@ -225,11 +225,11 @@ class GraphTeamView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                data = form.util.graph_team(6, 3492)
-                #serializer = HistogramSerializer(data, many=True)
+                data = scouting.strategizing.util.graph_team(2, 3492)
+                serializer = HistogramSerializer(data, many=True)
                 #serializer = HistogramBinSerializer(data, many=True)
                 #serializer = PlotSerializer(data, many=True)
-                serializer = BoxAndWhiskerPlotSerializer(data, many=True)
+                #serializer = BoxAndWhiskerPlotSerializer(data, many=True)
                 return Response(serializer.data)
             else:
                 return ret_message(

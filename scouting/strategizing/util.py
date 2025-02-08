@@ -6,8 +6,9 @@ import general.cloudinary
 import scouting
 import scouting.util
 from general.security import ret_message
-from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection
+from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection, FieldResponse
 from user.models import User
+import  form.util
 
 
 def get_team_notes(team_no: int = None, event: Event = None):
@@ -144,3 +145,8 @@ def save_alliance_selections(data):
         selection.order = d["order"]
 
         selection.save()
+
+
+def graph_team(graph_id, team_no):
+    responses = [resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
+    return  form.util.graph_responses(graph_id, responses)
