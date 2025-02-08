@@ -1321,9 +1321,8 @@ def graph_team(graph_id, team_no):
 
             for graph_question in graph["graphquestion_set"]:
                 plot_entry = {
-                    "question": graph_question["question"],
-                    "question_aggregate": graph_question["question_aggregate"],
-                    "data": []
+                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
+                    "points": []
                 }
                 plot.append(plot_entry)
 
@@ -1368,8 +1367,8 @@ def graph_team(graph_id, team_no):
                             field_response,
                             set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
 
-                    plot_entry["data"].append({
-                        "value": previous - value if previous is not None else 0,
+                    plot_entry["points"].append({
+                        "point": previous - value if previous is not None else 0,
                         "time": field_response.time
                     })
                     previous = value

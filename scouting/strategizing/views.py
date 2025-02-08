@@ -224,7 +224,7 @@ class GraphTeamView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                data = form.util.graph_team(4, 3492)
+                data = form.util.graph_team(5, 3492)
                 #serializer = HistogramSerializer(data, many=True)
                 #serializer = HistogramBinSerializer(data, many=True)
                 serializer = PlotSerializer(data, many=True)
