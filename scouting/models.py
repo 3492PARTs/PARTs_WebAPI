@@ -333,3 +333,26 @@ class AllianceSelection(models.Model):
 
     def __str__(self):
         return f"{self.id} : {self.order} : {self.team}"
+
+
+class Dashboard(models.Model):
+    id = models.AutoField(primary_key=True)
+    season = models.ForeignKey(Season, models.PROTECT)
+    user = models.ForeignKey(User, models.PROTECT)
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.user}"
+
+
+class DashboardGraph(models.Model):
+    id = models.AutoField(primary_key=True)
+    dashboard = models.ForeignKey(Dashboard, models.PROTECT)
+    graph = models.ForeignKey(Graph, models.PROTECT)
+    order = models.IntegerField()
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.graph}"

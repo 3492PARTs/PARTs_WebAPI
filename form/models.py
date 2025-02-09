@@ -291,15 +291,3 @@ class GraphQuestion(models.Model):
     def __str__(self):
         return f"{self.id} : {self.graph} : {self.question}"
 
-
-class UserGraphDashboard(models.Model):
-    id = models.AutoField(primary_key=True)
-    graph = models.ForeignKey(Graph, models.PROTECT)
-    user = models.ForeignKey(User, models.PROTECT)
-    order = models.IntegerField()
-    active = models.CharField(max_length=1, default="y")
-    void_ind = models.CharField(max_length=1, default="n")
-
-    def __str__(self):
-        return f"{self.id} : {self.graph} : {self.user}"
-

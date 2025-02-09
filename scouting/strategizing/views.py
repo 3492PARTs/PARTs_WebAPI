@@ -12,7 +12,7 @@ from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer, Al
 import scouting.strategizing.util
 import scouting.util
 from scouting.strategizing.serializers import HistogramSerializer, HistogramBinSerializer, PlotSerializer, \
-    BoxAndWhiskerPlotSerializer
+    BoxAndWhiskerPlotSerializer, DashboardSerializer
 
 auth_obj = "matchplanning"
 auth_view_obj_scout_field = "scoutFieldResults"
@@ -245,4 +245,69 @@ class GraphTeamView(APIView):
                 True,
                 app_url + self.endpoint,
                 exception=e,
+            )
+
+
+class DashboardView(APIView):
+    """
+    API endpoint to manage dashboards
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "dashboard/"
+
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                dashboard = scouting.strategizing.util.get_dashboard(request.user.id)
+                serializer = DashboardSerializer(dashboard)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting graphs.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+
+    def post(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                serializer = DashboardSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                scouting.strategizing.util.save_dashboard(serializer.validated_data, request.user.id)
+
+                return ret_message("Saved dashboard successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving dashboard.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
             )

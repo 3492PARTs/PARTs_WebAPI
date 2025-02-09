@@ -939,6 +939,7 @@ def parse_graph_category_attribute(graph_category_attribute: GraphCategoryAttrib
         "active": graph_category_attribute.active
     }
 
+
 def parse_graph_question(graph_question: GraphQuestion):
     return {
         "id": graph_question.id,
@@ -955,7 +956,7 @@ def get_graphs(for_current_season=False, graph_id=None):
     if for_current_season:
         current_season = scouting.util.get_current_season()
 
-        q_season = Q(scout_graph__season=current_season)
+        q_season = Q(Q(scout_graph__season=current_season) & Q(scout_graph__void_ind="n"))
 
     q_graph_id = Q()
     if graph_id is not None:
@@ -980,10 +981,10 @@ def get_graphs(for_current_season=False, graph_id=None):
     return parsed
 
 
-def save_graph(data, for_current_season=False):
+def save_graph(data, user_id, for_current_season=False):
     with transaction.atomic():
         if data.get("id", None) is None:
-            graph = Graph()
+            graph = Graph(creator_id=user_id)
         else:
             graph = Graph.objects.get(id=data["id"])
 
@@ -1104,7 +1105,7 @@ def save_graph(data, for_current_season=False):
                 raise Exception(f"Missing graph question requirement: {requirement['graph_question_typ']}")
 
 
-def graph_responses(graph_id, responses):
+def graph_responses(graph_id, responses, aggregate_responses=None):
     graph = get_graphs(graph_id=graph_id)[0]
 
     data = None
@@ -1238,7 +1239,7 @@ def graph_responses(graph_id, responses):
         case "res-plot":
             plot = []
             ref_pt = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is not None and gq["graph_question_typ"].graph_question_typ == 'ref-pnt'][0]
-            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, responses, set(q["id"] for q in ref_pt["question_aggregate"]["questions"]))
+            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, responses if aggregate_responses is None else aggregate_responses, set(q["id"] for q in ref_pt["question_aggregate"]["questions"]))
             graph_questions = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is None]
 
             for graph_question in graph_questions:
@@ -1552,4 +1553,3 @@ def compute_quartiles(data):
     q3 = _calculate_quartile(0.75)
 
     return {"Q1": q1, "Q2": q2, "Q3": q3}
-

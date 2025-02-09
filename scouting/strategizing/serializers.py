@@ -28,3 +28,18 @@ class BoxAndWhiskerPlotSerializer(serializers.Serializer):
     q3 = serializers.FloatField()
     min = serializers.FloatField()
     max = serializers.FloatField()
+
+
+class DashboardGraphSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    graph_id = serializers.IntegerField()
+    graph_name = serializers.CharField(required=False)
+    graph_typ_nm = serializers.CharField(required=False)
+    order = serializers.IntegerField()
+    active = serializers.CharField()
+
+
+class DashboardSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    active = serializers.CharField()
+    graphs = DashboardGraphSerializer(many=True)

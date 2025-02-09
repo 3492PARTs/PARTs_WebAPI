@@ -776,7 +776,7 @@ class GraphView(APIView):
             if gid is None:
                 serializer = GraphSerializer(graphs, many=True)
             else:
-                serializer = FlowSerializer(graphs[0])
+                serializer = GraphSerializer(graphs[0])
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -803,7 +803,7 @@ class GraphView(APIView):
                         error_message=serializer.errors,
                     )
 
-                form.util.save_graph(serializer.validated_data, True)
+                form.util.save_graph(serializer.validated_data, request.user.id, True)
 
                 return ret_message("Saved graph successfully.")
             else:
@@ -821,3 +821,4 @@ class GraphView(APIView):
                 request.user.id,
                 e,
             )
+

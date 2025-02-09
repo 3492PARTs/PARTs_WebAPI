@@ -1,12 +1,14 @@
 import pytz
 from django.db.models import Q
+from django.db import transaction
 
 import alerts.util
 import general.cloudinary
 import scouting
 import scouting.util
 from general.security import ret_message
-from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection, FieldResponse
+from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection, FieldResponse, Dashboard, \
+    DashboardGraph
 from user.models import User
 import  form.util
 
@@ -150,3 +152,52 @@ def save_alliance_selections(data):
 def graph_team(graph_id, team_no):
     responses = [resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
     return  form.util.graph_responses(graph_id, responses)
+
+
+def get_dashboard(user_id):
+    try:
+        dashboard = Dashboard.objects.get(user_id=user_id & Q(season=scouting.util.get_current_season()) & Q(void_ind="n") & Q(active="y"))
+    except Dashboard.DoesNotExist:
+        dashboard = Dashboard()
+        dashboard.save()
+
+    parsed = {
+        "id": dashboard.id,
+        "active": dashboard.active,
+        "graphs": [{
+            "id": dashboard_graph.id,
+            "graph_id": dashboard_graph.graph.id,
+            "graph_name": dashboard_graph.graph.name,
+            "graph_typ_nm": dashboard_graph.graph.graph_typ.graph_typ_nm,
+            "order": dashboard_graph.order,
+            "active": dashboard_graph.active
+        } for dashboard_graph in dashboard.dashboardgraph_set.filter(Q(active="y") & Q(void_ind="n") & Q(graph__active="y") & Q(graph__void_ind="n"))]
+    }
+
+    return parsed
+
+def save_dashboard(data, user_id):
+    with transaction.atomic():
+        if data.get("id", None) is None:
+            dashboard = Dashboard(user_id=user_id)
+        else:
+            dashboard = Dashboard.objects.get(id=data["id"])
+
+        if dashboard.season is None:
+            dashboard.season = scouting.util.get_current_season()
+
+        dashboard.active = data["active"]
+
+        dashboard.save()
+
+        for graph in data.get("graphs", []):
+            if graph.get("id", None) is None:
+                dashboard_graph = DashboardGraph(dashboard=dashboard)
+            else:
+                dashboard_graph = DashboardGraph.objects.get(id=graph["id"])
+
+            dashboard_graph.graph_id = graph["graph_id"]
+            dashboard_graph.order = graph["order"]
+            dashboard_graph.active = graph["active"]
+
+            dashboard_graph.save()
