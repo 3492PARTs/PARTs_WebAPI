@@ -337,8 +337,8 @@ class AllianceSelection(models.Model):
 
 class DashboardActiveTeam(models.Model):
     id = models.AutoField(primary_key=True)
-    team = models.ForeignKey(Team, models.PROTECT)
-    reference_team = models.ForeignKey(Team, models.PROTECT, related_name="reference_team")
+    team = models.ForeignKey(Team, models.PROTECT, null=True)
+    reference_team = models.ForeignKey(Team, models.PROTECT, related_name="reference_team", null=True)
 
     def __str__(self):
         return f"{self.id} : {self.team} : {self.reference_team}"
@@ -359,7 +359,7 @@ class Dashboard(models.Model):
 class DashboardGraph(models.Model):
     id = models.AutoField(primary_key=True)
     dashboard = models.ForeignKey(Dashboard, models.PROTECT)
-    graph = models.ForeignKey(Graph, models.PROTECT)
+    graph = models.ForeignKey(form.models.Graph, models.PROTECT)
     order = models.IntegerField()
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")

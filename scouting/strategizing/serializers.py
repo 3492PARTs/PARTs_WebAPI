@@ -31,22 +31,22 @@ class BoxAndWhiskerPlotSerializer(serializers.Serializer):
 
 
 class DashboardGraphSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
+    id = serializers.IntegerField(required=False, allow_null=True)
     graph_id = serializers.IntegerField()
-    graph_name = serializers.CharField(required=False)
-    graph_typ_nm = serializers.CharField(required=False)
+    graph_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    graph_nm = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     order = serializers.IntegerField()
     active = serializers.CharField()
 
 
 class DashboardActiveTeamSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=True)
-    team_id = serializers.IntegerField()
-    reference_team_id = serializers.IntegerField(required=False)
+    id = serializers.IntegerField(required=True, allow_null=True)
+    team_id = serializers.IntegerField(required=False, allow_null=True)
+    reference_team_id = serializers.IntegerField(required=False, allow_null=True)
 
 
 class DashboardSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
+    id = serializers.IntegerField(required=False, allow_null=True)
     active = serializers.CharField()
-    graphs = DashboardGraphSerializer(many=True)
+    dashboard_graphs = DashboardGraphSerializer(many=True)
     active_team = DashboardActiveTeamSerializer(required=False)

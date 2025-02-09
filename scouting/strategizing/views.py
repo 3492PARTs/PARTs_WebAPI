@@ -272,7 +272,7 @@ class DashboardView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while getting graphs.",
+                "An error occurred while getting the dashboard.",
                 True,
                 app_url + self.endpoint,
                 -1,

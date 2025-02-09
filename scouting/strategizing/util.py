@@ -156,23 +156,23 @@ def graph_team(graph_id, team_no):
 
 def get_dashboard(user_id):
     try:
-        dashboard = Dashboard.objects.get(user_id=user_id & Q(season=scouting.util.get_current_season()) & Q(void_ind="n") & Q(active="y"))
+        dashboard = Dashboard.objects.get(Q(user_id=user_id) & Q(season=scouting.util.get_current_season()) & Q(void_ind="n") & Q(active="y"))
     except Dashboard.DoesNotExist:
-        dashboard = Dashboard()
+        dashboard = Dashboard(user_id=user_id, season=scouting.util.get_current_season())
         dashboard.save()
 
     parsed = {
         "id": dashboard.id,
         "active": dashboard.active,
         "active_team": dashboard.active_team,
-        "graphs": [{
+        "dashboard_graphs": [{
             "id": dashboard_graph.id,
             "graph_id": dashboard_graph.graph.id,
             "graph_name": dashboard_graph.graph.name,
-            "graph_typ_nm": dashboard_graph.graph.graph_typ.graph_typ_nm,
+            "graph_nm": dashboard_graph.graph.graph_typ.graph_nm,
             "order": dashboard_graph.order,
             "active": dashboard_graph.active
-        } for dashboard_graph in dashboard.dashboardgraph_set.filter(Q(active="y") & Q(void_ind="n") & Q(graph__active="y") & Q(graph__void_ind="n"))]
+        } for dashboard_graph in dashboard.dashboardgraph_set.filter(Q(active="y") & Q(void_ind="n") & Q(graph__active="y") & Q(graph__void_ind="n")).order_by("order")]
     }
 
     return parsed
@@ -196,13 +196,13 @@ def save_dashboard(data, user_id):
             if dashboard.active_team is None:
                 dashboard.active_team = DashboardActiveTeam()
 
-            dashboard.active_team.team_id = data["active_team"]["team_id"]
+            dashboard.active_team.team_id = data["active_team"].get("team_id", None)
             dashboard.active_team.reference_team_id = data["active_team"].get("reference_team_id", None)
             dashboard.active_team.save()
 
         dashboard.save()
 
-        for graph in data.get("graphs", []):
+        for graph in data.get("dashboard_graphs", []):
             if graph.get("id", None) is None:
                 dashboard_graph = DashboardGraph(dashboard=dashboard)
             else:
