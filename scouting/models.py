@@ -335,10 +335,20 @@ class AllianceSelection(models.Model):
         return f"{self.id} : {self.order} : {self.team}"
 
 
+class DashboardActiveTeam(models.Model):
+    id = models.AutoField(primary_key=True)
+    team = models.ForeignKey(Team, models.PROTECT)
+    reference_team = models.ForeignKey(Team, models.PROTECT, related_name="reference_team")
+
+    def __str__(self):
+        return f"{self.id} : {self.team} : {self.reference_team}"
+
+
 class Dashboard(models.Model):
     id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
+    active_team = models.ForeignKey(DashboardActiveTeam, models.PROTECT, null=True)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -355,4 +365,6 @@ class DashboardGraph(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} : {self.graph}"
+        return f"{self.id} : {self.dashboard} : {self.graph}"
+
+

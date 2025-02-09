@@ -8,7 +8,7 @@ import scouting
 import scouting.util
 from general.security import ret_message
 from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection, FieldResponse, Dashboard, \
-    DashboardGraph
+    DashboardGraph, DashboardActiveTeam
 from user.models import User
 import  form.util
 
@@ -164,6 +164,7 @@ def get_dashboard(user_id):
     parsed = {
         "id": dashboard.id,
         "active": dashboard.active,
+        "active_team": dashboard.active_team,
         "graphs": [{
             "id": dashboard_graph.id,
             "graph_id": dashboard_graph.graph.id,
@@ -187,6 +188,17 @@ def save_dashboard(data, user_id):
             dashboard.season = scouting.util.get_current_season()
 
         dashboard.active = data["active"]
+
+        if data.get("active_team", None) is None and dashboard.active_team is not None:
+            dashboard.active_team = None
+
+        if data.get("active_team", None) is not None:
+            if dashboard.active_team is None:
+                dashboard.active_team = DashboardActiveTeam()
+
+            dashboard.active_team.team_id = data["active_team"]["team_id"]
+            dashboard.active_team.reference_team_id = data["active_team"].get("reference_team_id", None)
+            dashboard.active_team.save()
 
         dashboard.save()
 

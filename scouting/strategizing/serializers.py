@@ -39,7 +39,14 @@ class DashboardGraphSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
+class DashboardActiveTeamSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True)
+    team_id = serializers.IntegerField()
+    reference_team_id = serializers.IntegerField(required=False)
+
+
 class DashboardSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
     active = serializers.CharField()
     graphs = DashboardGraphSerializer(many=True)
+    active_team = DashboardActiveTeamSerializer(required=False)
