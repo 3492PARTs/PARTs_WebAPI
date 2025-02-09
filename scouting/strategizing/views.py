@@ -225,12 +225,8 @@ class GraphTeamView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                data = scouting.strategizing.util.graph_team(2, 3492)
-                serializer = HistogramSerializer(data, many=True)
-                #serializer = HistogramBinSerializer(data, many=True)
-                #serializer = PlotSerializer(data, many=True)
-                #serializer = BoxAndWhiskerPlotSerializer(data, many=True)
-                return Response(serializer.data)
+                data = scouting.strategizing.util.serialize_graph_team(request.query_params["graph_id"], request.query_params["team_id"],request.query_params.get("reference_team_id", None))
+                return Response(data)
             else:
                 return ret_message(
                     "You do not have access.",

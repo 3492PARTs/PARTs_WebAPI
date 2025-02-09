@@ -9,8 +9,11 @@ import scouting.util
 from general.security import ret_message
 from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection, FieldResponse, Dashboard, \
     DashboardGraph, DashboardActiveTeam
+from scouting.strategizing.serializers import HistogramSerializer, PlotSerializer, BoxAndWhiskerPlotSerializer, \
+    HistogramBinSerializer
 from user.models import User
 import  form.util
+import  form.models
 
 
 def get_team_notes(team_no: int = None, event: Event = None):
@@ -149,10 +152,34 @@ def save_alliance_selections(data):
         selection.save()
 
 
-def graph_team(graph_id, team_no):
-    responses = [resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_no) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
-    return  form.util.graph_responses(graph_id, responses)
+def graph_team(graph_id, team_id, reference_team_id=None):
+    responses = [resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_id) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
+    aggregate_responses = None
+    if reference_team_id is not None:
+        responses = [resp.response for resp in FieldResponse.objects.filter(
+            Q(team_id=reference_team_id) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
 
+    return  form.util.graph_responses(graph_id, responses, aggregate_responses)
+
+
+def serialize_graph_team(graph_id, team_id, reference_team_id=None):
+    data = graph_team(graph_id, team_id, reference_team_id)
+
+    graph = form.models.Graph.objects.get(id=graph_id)
+    serializer = None
+    match graph.graph_typ.graph_typ:
+        case "histogram":
+            serializer = HistogramSerializer(data, many=True)
+        case "ctg-histgrm":
+            serializer = HistogramBinSerializer(data, many=True)
+        case "res-plot":
+            serializer = PlotSerializer(data, many=True)
+        case "diff-plot":
+            serializer = PlotSerializer(data, many=True)
+        case "box-wskr":
+            serializer = BoxAndWhiskerPlotSerializer(data, many=True)
+
+    return serializer.data
 
 def get_dashboard(user_id):
     try:
@@ -169,6 +196,7 @@ def get_dashboard(user_id):
             "id": dashboard_graph.id,
             "graph_id": dashboard_graph.graph.id,
             "graph_name": dashboard_graph.graph.name,
+            "graph_typ": dashboard_graph.graph.graph_typ.graph_typ,
             "graph_nm": dashboard_graph.graph.graph_typ.graph_nm,
             "order": dashboard_graph.order,
             "active": dashboard_graph.active
