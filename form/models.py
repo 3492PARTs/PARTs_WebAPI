@@ -9,6 +9,7 @@
 import django
 from django.db import models
 from simple_history.models import HistoricalRecords
+from user.models import User
 
 
 class QuestionType(models.Model):
@@ -232,6 +233,7 @@ class Graph(models.Model):
     scale_y = models.IntegerField()
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
+    creator = models.ForeignKey(User, models.PROTECT)
 
     def __str__(self):
         return f"{self.id} {self.name}"
@@ -288,4 +290,16 @@ class GraphQuestion(models.Model):
 
     def __str__(self):
         return f"{self.id} : {self.graph} : {self.question}"
+
+
+class UserGraphDashboard(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph = models.ForeignKey(Graph, models.PROTECT)
+    user = models.ForeignKey(User, models.PROTECT)
+    order = models.IntegerField()
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.graph} : {self.user}"
 
