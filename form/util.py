@@ -1369,7 +1369,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
                     "dataset": [],
                 }
-                plot.append(plot_entry)
+
 
                 # go response by response to compute difference
                 for response in responses:
@@ -1414,13 +1414,15 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     plot_entry["dataset"].append(value)
 
                 # sort data to build box and whisker plot
-                plot_entry["dataset"].sort()
-                quartiles = compute_quartiles(plot_entry["dataset"])
-                plot_entry["q1"] = quartiles["Q1"]
-                plot_entry["q2"] = quartiles["Q2"]
-                plot_entry["q3"] = quartiles["Q3"]
-                plot_entry["min"] = plot_entry["dataset"][0]
-                plot_entry["max"] = plot_entry["dataset"][len(plot_entry["dataset"]) - 1]
+                if len(plot_entry["dataset"]) > 0:
+                    plot_entry["dataset"].sort()
+                    quartiles = compute_quartiles(plot_entry["dataset"])
+                    plot_entry["q1"] = quartiles["Q1"]
+                    plot_entry["q2"] = quartiles["Q2"]
+                    plot_entry["q3"] = quartiles["Q3"]
+                    plot_entry["min"] = plot_entry["dataset"][0]
+                    plot_entry["max"] = plot_entry["dataset"][len(plot_entry["dataset"]) - 1]
+                    plot.append(plot_entry)
 
             data = plot
 
