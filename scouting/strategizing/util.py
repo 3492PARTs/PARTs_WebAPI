@@ -155,7 +155,7 @@ def save_alliance_selections(data):
 def graph_team(graph_id, team_id, reference_team_id=None):
     responses = [resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_id) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
     aggregate_responses = None
-    if reference_team_id is not None:
+    if reference_team_id is not None and reference_team_id != 'null':
         aggregate_responses = [resp.response for resp in FieldResponse.objects.filter(
             Q(team_id=reference_team_id) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
 
