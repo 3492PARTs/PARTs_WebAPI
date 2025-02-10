@@ -50,14 +50,9 @@ class DashboardGraphSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
-class DashboardActiveTeamSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=True, allow_null=True)
-    team_id = serializers.IntegerField(required=False, allow_null=True)
-    reference_team_id = serializers.IntegerField(required=False, allow_null=True)
-
-
 class DashboardSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     active = serializers.CharField()
     dashboard_graphs = DashboardGraphSerializer(many=True)
-    active_team = DashboardActiveTeamSerializer(required=False)
+    team_id = serializers.IntegerField(required=False, allow_null=True)
+    reference_team_id = serializers.IntegerField(required=False, allow_null=True)

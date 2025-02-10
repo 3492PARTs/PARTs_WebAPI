@@ -27,6 +27,7 @@ services:
       ENVIRONMENT: ${TAG}
     volumes:
       - ./keys:/code/keys
+      - ./dumps:/code/dumps
     ports:
       - "${API_PORT}:9090"
     restart: always
