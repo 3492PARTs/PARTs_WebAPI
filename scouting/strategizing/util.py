@@ -10,7 +10,7 @@ from general.security import ret_message
 from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection, FieldResponse, Dashboard, \
     DashboardGraph, DashboardActiveTeam
 from scouting.strategizing.serializers import HistogramSerializer, PlotSerializer, BoxAndWhiskerPlotSerializer, \
-    HistogramBinSerializer
+    HistogramBinSerializer, HeatmapSerializer
 from user.models import User
 import  form.util
 import  form.models
@@ -178,6 +178,8 @@ def serialize_graph_team(graph_id, team_id, reference_team_id=None):
             serializer = PlotSerializer(data, many=True)
         case "box-wskr":
             serializer = BoxAndWhiskerPlotSerializer(data, many=True)
+        case "ht-map":
+            serializer = HeatmapSerializer(data, many=True)
 
     return serializer.data
 

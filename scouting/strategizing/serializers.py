@@ -21,6 +21,7 @@ class PlotSerializer(serializers.Serializer):
     label = serializers.CharField()
     points = PlotPointSerializer(many=True)
 
+
 class BoxAndWhiskerPlotSerializer(serializers.Serializer):
     label = serializers.CharField()
     q1 = serializers.FloatField()
@@ -29,6 +30,15 @@ class BoxAndWhiskerPlotSerializer(serializers.Serializer):
     min = serializers.FloatField()
     max = serializers.FloatField()
 
+
+class HeatMapPointSerializer(serializers.Serializer):
+    x = serializers.IntegerField()
+    y = serializers.IntegerField()
+
+
+class HeatmapSerializer(serializers.Serializer):
+    question = QuestionSerializer()
+    points = HeatMapPointSerializer(many=True)
 
 class DashboardGraphSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)

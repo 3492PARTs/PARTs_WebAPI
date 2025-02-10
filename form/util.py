@@ -3,6 +3,8 @@ from django.db import transaction
 from django.db.models import Q, Exists, OuterRef
 from django.db.models.functions import Lower
 
+import json
+
 import alerts.util
 import form.models
 import scouting.models
@@ -1425,7 +1427,58 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     plot.append(plot_entry)
 
             data = plot
+        case "ht-map":
+            maps = []
 
+            for graph_question in graph["graphquestion_set"]:
+                map_entry = {
+                    "question": graph_question["question"],
+                    "points": [],
+                }
+
+                # go response by response to compute difference
+                for response in responses:
+                    if graph_question["question"] is not None:
+                        question = graph_question["question"]
+                        # check regular question answers
+                        try:
+                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
+                                question_id=question["id"])).order_by("response__time")
+
+                            if answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                map_entry["points"].append(json.loads(answer.value))
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = answer.value
+
+                        except Answer.DoesNotExist:
+                            pass
+
+                        # check flow answers, they need combined as they span the whole match
+                        flow_answers = FlowAnswer.objects.filter(
+                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
+                                answer__response=response)).order_by("value_time")
+
+                        for flow_answer in flow_answers:
+
+                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                map_entry["points"].append(json.loads(flow_answer.value))
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = flow_answer.value
+
+                    # based on a question aggregate
+                    else:
+                        value = aggregate_answers_horizontally(
+                            category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
+                            response,
+                            set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+
+                        raise Exception("not accounted for yet")
+
+                maps.append(map_entry)
+
+            data = maps
     return data
 
 
@@ -1506,6 +1559,8 @@ def aggregate_answers(question_aggregate_typ: str, answers, question_ids):
         case "sum":
             return summation
         case "avg":
+            if length == 0:
+                raise Exception("No division by 0 for aggregating averages")
             return summation/length
         case _:
             raise Exception("no type")
