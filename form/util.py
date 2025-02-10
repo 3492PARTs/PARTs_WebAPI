@@ -1172,7 +1172,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     graph_bin["bin"] = f"{graph_bin['bin']} - {graph_bin['bin'] + graph_bin['width'] - 1}"
                     question_bins["bins"].append(graph_bin)
             data = all_bins
-        case "ctg-histgrm":
+        case "ctg-hstgrm":
             categories = []
             for graph_category in graph["graphcategory_set"]:
                 categories.append({

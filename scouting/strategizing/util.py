@@ -170,7 +170,7 @@ def serialize_graph_team(graph_id, team_id, reference_team_id=None):
     match graph.graph_typ.graph_typ:
         case "histogram":
             serializer = HistogramSerializer(data, many=True)
-        case "ctg-histgrm":
+        case "ctg-hstgrm":
             serializer = HistogramBinSerializer(data, many=True)
         case "res-plot":
             serializer = PlotSerializer(data, many=True)
