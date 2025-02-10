@@ -95,7 +95,6 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
 
 
 def format_question_values(in_question: Question):
-
     # Question Type
     question_type = {
         "question_typ": in_question.question_typ.question_typ,
@@ -935,7 +934,8 @@ def parse_graph_category_attribute(graph_category_attribute: GraphCategoryAttrib
     return {
         "id": graph_category_attribute.id,
         "graph_category_id": graph_category_attribute.graph_category.id,
-        "question": format_question_values(graph_category_attribute.question),
+        "question": format_question_values(graph_category_attribute.question) if graph_category_attribute.question is not None else None,
+        "question_aggregate": parse_question_aggregate(graph_category_attribute.question_aggregate) if graph_category_attribute.question_aggregate is not None else None,
         "question_condition_typ": graph_category_attribute.question_condition_typ,
         "value": graph_category_attribute.value,
         "active": graph_category_attribute.active
@@ -1061,7 +1061,7 @@ def save_graph(data, user_id, for_current_season=False):
                         raise Exception("No question or aggregate")
 
                     category_attribute.question_id = None if question is None else question.get("id", None)
-                    category_attribute.question_aggregate = None if question_aggregate is None else question_aggregate.get("id", None)
+                    category_attribute.question_aggregate_id = None if question_aggregate is None else question_aggregate.get("id", None)
                     category_attribute.question_condition_typ_id = None if question_condition_typ is None else question_condition_typ.get("question_condition_typ", None)
                     category_attribute.value = category_attribute_data["value"]
                     category_attribute.active = category_attribute_data["active"]
@@ -1227,7 +1227,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                         # category attribute is based on a question aggregate
                         else:
-                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
+                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
 
                             passed_category = passed_category and is_question_condition_passed(
                                 category_attribute["question_condition_typ"].question_condition_typ, aggregate,
@@ -1409,7 +1409,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     # based on a question aggregate
                     else:
                         value = aggregate_answers_horizontally(
-                            category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
+                            graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ,
                             response,
                             set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
 
