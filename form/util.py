@@ -662,7 +662,7 @@ def get_form_questions(
         "form_sub_types": []
     }
 
-    sub_types = FormSubType.objects.filter(form_typ=form_type)
+    sub_types = FormSubType.objects.filter(form_typ=form_type).order_by("order")
     for st in sub_types:
         qs = get_questions("field", "y", st.form_sub_typ, not_in_flow=True)
         qfs = get_flows(form_typ="field", form_sub_typ=st.form_sub_typ)
