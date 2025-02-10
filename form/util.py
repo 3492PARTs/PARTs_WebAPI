@@ -1128,47 +1128,44 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                         "width": int(gb.width),
                         "count": 0
                     }
+                    for response in responses:
+                        if graph_question["question"] is not None:
+                            question = graph_question["question"]
 
-                    if graph_question["question"] is not None:
-                        question = graph_question["question"]
-                        answers = Answer.objects.filter(
-                            Q(response__in=responses) &
-                            (
-                                    Q(question_id=question["id"]) |
-                                    Exists(FlowAnswer.objects.filter(Q(question_id=question["id"]) & Q(answer_id=OuterRef("pk")) & Q(void_ind="n")))
-                             ) &
-                            Q(void_ind="n")).order_by("response__time")
+                            try:
+                                answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
+                                    question_id=question["id"])).order_by("response__time")
 
-                        for answer in answers:
-                            if answer.question is not None:
-                                value = int(answer.value)
-
-                                if question["value_multiplier"] is not None:
-                                    value *= int(question["value_multiplier"])
+                                value = answer.value
 
                                 if graph_bin["bin"] <= value < graph_bin["bin"] + graph_bin["width"]:
                                     graph_bin["count"] += 1
+                            except Answer.DoesNotExist:
+                                pass
 
-                            if answer.flow is not None:
-                                flow_answers = answer.flowanswer_set.filter(Q(question_id=question["id"]) & Q(void_ind="n")).order_by("value_time")
+                            # check flow answers, they need combined as they span the whole match
+                            flow_answers = FlowAnswer.objects.filter(
+                                Q(question_id=question["id"]) & Q(void_ind="n") & Q(
+                                    answer__response=response)).order_by("value_time")
+                            value = 0
+                            for flow_answer in flow_answers:
 
-                                for flow_answer in flow_answers:
-                                    value = 1
+                                if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                    value += 1
+                                else:
+                                    value += int(flow_answer.value)
 
-                                    if question["value_multiplier"] is not None:
-                                        value *= int(question["value_multiplier"])
-
-                                    if graph_bin["bin"] <= value < graph_bin["bin"] + graph_bin["width"]:
-                                        graph_bin["count"] += 1
-                    # based on a question aggregate
-                    else:
-                        questions = graph_question["question_aggregate"]["questions"]
-
-                        for response in responses:
-                            aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, set(question["id"] for question in questions))
-
-                            if graph_bin["bin"] <= aggregate < graph_bin["bin"] + graph_bin["width"]:
+                            if graph_bin["bin"] <= value < graph_bin["bin"] + graph_bin["width"]:
                                 graph_bin["count"] += 1
+                        # based on a question aggregate
+                        else:
+                            questions = graph_question["question_aggregate"]["questions"]
+
+                            for response in responses:
+                                aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, set(question["id"] for question in questions))
+
+                                if graph_bin["bin"] <= aggregate < graph_bin["bin"] + graph_bin["width"]:
+                                    graph_bin["count"] += 1
                     graph_bin["bin"] = f"{graph_bin['bin']} - {graph_bin['bin'] + graph_bin['width'] - 1}"
                     question_bins["bins"].append(graph_bin)
             data = all_bins

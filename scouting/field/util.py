@@ -82,7 +82,7 @@ def build_table_columns():
                             .upper()
                             + ": "
                         )
-                        + " QF: "
+                        + " F: "
                         + question_flow["question"]["question"],
                         "Width": question_flow["question"]["table_col_width"],
                         "order": question_flow["question"]["order"],
