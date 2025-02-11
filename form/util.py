@@ -1,3 +1,6 @@
+import statistics
+from statistics import median
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Exists, OuterRef
@@ -89,12 +92,12 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
     )
 
     for q in qs:
-        questions.append(format_question_values(q))
+        questions.append(parse_question(q))
 
     return questions
 
 
-def format_question_values(in_question: Question):
+def parse_question(in_question: Question):
     # Question Type
     question_type = {
         "question_typ": in_question.question_typ.question_typ,
@@ -164,6 +167,7 @@ def format_question_values(in_question: Question):
         "form_typ": in_question.form_typ,
         "form_sub_typ": in_question.form_sub_typ,
         "questionoption_set": questionoption_set,
+        "short_display_value": f"{'' if in_question.active == 'y' else 'Deactivated: '} {in_question.form_sub_typ.form_sub_nm + ': ' if in_question.form_sub_typ is not None else ''}{in_question.question}",
         "display_value": f"{'' if in_question.active == 'y' else 'Deactivated: '} Order: {in_question.order}: {in_question.form_sub_typ.form_sub_nm + ': ' if in_question.form_sub_typ is not None else ''}{in_question.question}",
         "scout_question": scout_question,
         "question_conditional_on": conditional_on_question.question_from.id if conditional_on_question is not None else None,
@@ -455,7 +459,7 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
         "horizontal": question_aggregate.horizontal,
         "question_aggregate_typ": question_aggregate.question_aggregate_typ,
         "questions": list(
-            format_question_values(q)
+            parse_question(q)
             for q in question_aggregate.questions.filter(Q(void_ind="n") & Q(active="y"))
         ),
         "active": question_aggregate.active,
@@ -530,8 +534,8 @@ def get_question_condition(form_typ: str):
                 "question_condition_id": qc.question_condition_id,
                 "question_condition_typ": qc.question_condition_typ,
                 "value": qc.value,
-                "question_from": format_question_values(qc.question_from),
-                "question_to": format_question_values(qc.question_to),
+                "question_from": parse_question(qc.question_from),
+                "question_to": parse_question(qc.question_to),
                 "active": qc.active,
             }
         )
@@ -567,8 +571,8 @@ def format_question_condition_values(qc: QuestionCondition):
     return {
         "question_condition_id": qc.question_condition_id,
         "condition": qc.condition,
-        "question_from": format_question_values(qc.question_from),
-        "question_to": format_question_values(qc.question_to),
+        "question_from": parse_question(qc.question_from),
+        "question_to": parse_question(qc.question_to),
         "active": qc.active,
     }
 
@@ -641,7 +645,7 @@ def format_flow_values(flow: Flow):
             "flow_questions": [{
                 "id": qf.id,
                 "flow_id": flow.id,
-                "question": format_question_values(qf.question),
+                "question": parse_question(qf.question),
                 "order": qf.order,
                 "active": qf.active
             } for qf in FlowQuestion.objects.filter(Q(flow=flow) & Q(active="y") & Q(question__void_ind="n")& Q(question__active="y") & Q(void_ind="n")).order_by("order", "question__question")],
@@ -688,7 +692,7 @@ def get_response_answers(response: Response):
             "flow": get_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
             "answer": question_answer.value,
             "flow_answers": list({
-                "question": format_question_values(qfa.question),
+                "question": parse_question(qfa.question),
                 "value": qfa.value,
                 "value_time": qfa.value_time
                                          } for qfa in question_answer.flowanswer_set.filter(void_ind="n").order_by("value_time"))
@@ -934,7 +938,7 @@ def parse_graph_category_attribute(graph_category_attribute: GraphCategoryAttrib
     return {
         "id": graph_category_attribute.id,
         "graph_category_id": graph_category_attribute.graph_category.id,
-        "question": format_question_values(graph_category_attribute.question) if graph_category_attribute.question is not None else None,
+        "question": parse_question(graph_category_attribute.question) if graph_category_attribute.question is not None else None,
         "question_aggregate": parse_question_aggregate(graph_category_attribute.question_aggregate) if graph_category_attribute.question_aggregate is not None else None,
         "question_condition_typ": graph_category_attribute.question_condition_typ,
         "value": graph_category_attribute.value,
@@ -946,7 +950,7 @@ def parse_graph_question(graph_question: GraphQuestion):
     return {
         "id": graph_question.id,
         "graph_id": graph_question.graph.id,
-        "question": format_question_values(graph_question.question) if graph_question.question is not None else None,
+        "question": parse_question(graph_question.question) if graph_question.question is not None else None,
         "question_aggregate": parse_question_aggregate(graph_question.question_aggregate) if graph_question.question_aggregate is not None else None,
         "graph_question_typ": graph_question.graph_question_typ,
         "active": graph_question.active
@@ -1228,7 +1232,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                         # category attribute is based on a question aggregate
                         else:
-                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, set(question["id"] for question in category_attribute["question_aggregate"]["questions"]))
+                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"], response, category_attribute["question_aggregate"]["questions"])
 
                             passed_category = passed_category and is_question_condition_passed(
                                 category_attribute["question_condition_typ"].question_condition_typ, aggregate,
@@ -1242,7 +1246,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
         case "res-plot":
             plot = []
             ref_pt = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is not None and gq["graph_question_typ"].graph_question_typ == 'ref-pnt'][0]
-            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, responses if aggregate_responses is None else aggregate_responses, set(q["id"] for q in ref_pt["question_aggregate"]["questions"]))
+            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"], responses if aggregate_responses is None else aggregate_responses, ref_pt["question_aggregate"]["questions"])
             graph_questions = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is None]
 
             for graph_question in graph_questions:
@@ -1501,68 +1505,99 @@ def is_question_condition_passed(question_condition_typ: str, answer_value, matc
             raise Exception("no type")
 
 
-def aggregate_answers_horizontally(question_aggregate_typ: str, response: Response, question_ids):
-    answers = Answer.objects.filter(
-        Q(response=response) &
-        (
-                Q(question_id__in=question_ids) |
-                Exists(FlowAnswer.objects.filter(
-                    Q(question_id__in=question_ids) & Q(answer_id=OuterRef("pk")) & Q(
-                        void_ind="n")))
-        ) &
-        Q(void_ind="n")).order_by("response__time")
-
-    return aggregate_answers(question_aggregate_typ, answers, question_ids)
+def aggregate_answers_horizontally(question_aggregate: QuestionAggregate, response: Response, questions):
+    response_question_answers = get_responses_question_answers([response], questions)
 
 
-def aggregate_answers_vertically(question_aggregate_typ: str, responses, question_ids):
-    answers = Answer.objects.filter(
-        Q(response__in=responses) &
-        (
-                Q(question_id__in=question_ids) |
-                Exists(FlowAnswer.objects.filter(
-                    Q(question_id__in=question_ids) & Q(answer_id=OuterRef("pk")) & Q(
-                        void_ind="n")))
-        ) &
-        Q(void_ind="n")).order_by("response__time")
-
-    return aggregate_answers(question_aggregate_typ, answers, question_ids)
+    return aggregate_answers(question_aggregate, response_question_answers)
 
 
-def aggregate_answers(question_aggregate_typ: str, answers, question_ids):
-    summation = 0
-    length = 0
-    for answer in answers:
-        if answer.question is not None:
-            value = int(answer.value)
+def aggregate_answers_vertically(question_aggregate: QuestionAggregate, responses, questions):
+    response_question_answers = get_responses_question_answers(responses, questions)
 
-            if answer.question.value_multiplier is not None:
-                value *= int(answer.question.value_multiplier)
+    return aggregate_answers(question_aggregate, response_question_answers)
 
-            length += 1
-            summation += value
 
-        if answer.flow is not None:
-            flow_answers = answer.flowanswer_set.filter(
-                Q(question_id__in=question_ids) & Q(void_ind="n")).order_by(
-                "value_time")
+def get_responses_question_answers(responses, questions):
+    response_question_answers = []
+    for response in responses:
+        question_answers = []
+        for question in questions:
+            try:
+                answer = Answer.objects.get(
+                    Q(response=response) &
+                    Q(question_id=question["id"]) &
+                    Q(void_ind="n"))
 
-            for flow_answer in flow_answers:
-                value = 1
+                question_answers.append({
+                    "value": answer.value,
+                    "question": question
+                })
+            except Answer.DoesNotExist:
+                pass
 
-                if flow_answer.question.value_multiplier is not None:
-                    value *= int(flow_answer.question.value_multiplier)
+            # check flow answers, they need combined as they span the whole response
+            flow_answers = FlowAnswer.objects.filter(
+                Q(question_id=question["id"]) & Q(void_ind="n") & Q(
+                    answer__response=response)).order_by("value_time")
+            question_answers.append({
+                "flow_answers": flow_answers,
+                "question": question
+            })
+        response_question_answers.append({
+            "response_id": response.response_id,
+            "question_answers": question_answers
+        })
+    return response_question_answers
 
-                length += 1
-                summation += value
 
-    match question_aggregate_typ:
+
+def aggregate_answers(question_aggregate: QuestionAggregate, response_question_answers):
+    values = []
+
+    #go horizontal then vertical
+    responses_values = []
+    for response in response_question_answers:
+        response_values = []
+        print(response["response_id"])
+
+        for question_answer in response["question_answers"]:
+            print(question_answer["question"])
+
+            if question_answer.get("value", None) is not None:
+                value = int(question_answer["value"])
+
+                if question_answer["question"].value_multiplier is not None:
+                    value *= int(question_answer["question"].value_multiplier)
+                response_values.append(value)
+            elif question_answer.get("flow_answers", None) is not None:
+                flow_value = 0
+                for flow_answer in question_answer["flow_answers"]:
+                    if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                        value = 1
+                    else:
+                        raise Exception("not accounted for yet")
+                        value = flow_answer.value
+
+                    if flow_answer.question.value_multiplier is not None:
+                        value *= int(flow_answer.question.value_multiplier)
+                    flow_value += value
+                response_values.append(flow_value)
+        responses_values.append(response_values)
+
+    match question_aggregate["question_aggregate_typ"].question_aggregate_typ:
         case "sum":
-            return summation
+            return sum([sum(values) for values in responses_values])
         case "avg":
-            if length == 0:
+            if len(responses_values) == 0:
                 raise Exception("No division by 0 for aggregating averages")
-            return summation/length
+            return sum([sum(values) for values in responses_values])/len(responses_values)
+        case "logical":
+            return median(values)
+        case "median":
+            return median([median(values) for values in responses_values])
+        case "stdev":
+            return statistics.stdev(statistics.stdev([median(values) for values in responses_values]))
         case _:
             raise Exception("no type")
 

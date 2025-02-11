@@ -61,6 +61,7 @@ class QuestionSerializer(serializers.Serializer):
     question_typ = QuestionTypeSerializer()
     form_typ = FormTypeSerializer()
     form_sub_typ = FormSubTypeSerializer(required=False, allow_null=True)
+    short_display_value = serializers.CharField(read_only=True)
     display_value = serializers.CharField(read_only=True)
 
     questionoption_set = QuestionOptionsSerializer(

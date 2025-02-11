@@ -86,7 +86,7 @@ def ret_message(
             ).save()
         except Exception as e:
             message += "\nCritical Error: please email the team admin at team3492@gmail.com\nSend them this message:\n"
-            message += e
+            message += str(e)
             try:
                 ErrorLog(
                     user=User.objects.get(id=-1),
