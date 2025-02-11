@@ -46,6 +46,10 @@ class DashboardGraphSerializer(serializers.Serializer):
     graph_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     graph_nm = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     graph_typ = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    x_scale_min = serializers.IntegerField()
+    x_scale_max = serializers.IntegerField()
+    y_scale_min = serializers.IntegerField()
+    y_scale_max = serializers.IntegerField()
     order = serializers.IntegerField()
     active = serializers.CharField()
 

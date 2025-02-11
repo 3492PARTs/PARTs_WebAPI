@@ -972,8 +972,10 @@ def get_graphs(for_current_season=False, graph_id=None):
             "id": graph.id,
             "graph_typ": graph.graph_typ,
             "name": graph.name,
-            "scale_x": graph.scale_x,
-            "scale_y": graph.scale_y,
+            "x_scale_min": graph.x_scale_min,
+            "x_scale_max": graph.x_scale_max,
+            "y_scale_min": graph.y_scale_min,
+            "y_scale_max": graph.y_scale_max,
             "active": graph.active,
             "graphbin_set": graph.graphbin_set.filter(Q(void_ind="n") & Q(active="y")).order_by("bin"),
             "graphcategory_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategory_set.filter(Q(void_ind="n") & Q(active="y")).order_by("order")],
@@ -992,8 +994,10 @@ def save_graph(data, user_id, for_current_season=False):
 
         graph.graph_typ_id = data["graph_typ"]["graph_typ"]
         graph.name = data["name"]
-        graph.scale_x = data["scale_x"]
-        graph.scale_y = data["scale_y"]
+        graph.x_scale_min = data["x_scale_min"]
+        graph.x_scale_max = data["x_scale_max"]
+        graph.y_scale_min = data["y_scale_min"]
+        graph.y_scale_max = data["y_scale_max"]
         graph.active = data["active"]
 
         graph.save()

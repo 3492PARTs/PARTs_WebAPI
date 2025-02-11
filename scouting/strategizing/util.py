@@ -201,6 +201,10 @@ def get_dashboard(user_id):
             "graph_name": dashboard_graph.graph.name,
             "graph_typ": dashboard_graph.graph.graph_typ.graph_typ,
             "graph_nm": dashboard_graph.graph.graph_typ.graph_nm,
+            "x_scale_min": dashboard_graph.graph.x_scale_min,
+            "x_scale_max": dashboard_graph.graph.x_scale_max,
+            "y_scale_min": dashboard_graph.graph.y_scale_min,
+            "y_scale_max": dashboard_graph.graph.y_scale_max,
             "order": dashboard_graph.order,
             "active": dashboard_graph.active
         } for dashboard_graph in dashboard.dashboardgraph_set.filter(Q(active="y") & Q(void_ind="n") & Q(graph__active="y") & Q(graph__void_ind="n")).order_by("order")]
