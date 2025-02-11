@@ -1229,7 +1229,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                         # category attribute is based on a question aggregate
                         else:
-                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"], response, category_attribute["question_aggregate"]["questions"])
+                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"], response, [question_aggregate_question.question for question_aggregate_question in category_attribute["question_aggregate"]["aggregate_questions"]])
 
                             passed_category = passed_category and is_question_condition_passed(
                                 category_attribute["question_condition_typ"].question_condition_typ, aggregate,
@@ -1243,7 +1243,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
         case "res-plot":
             plot = []
             ref_pt = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is not None and gq["graph_question_typ"].graph_question_typ == 'ref-pnt'][0]
-            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"], responses if aggregate_responses is None else aggregate_responses, ref_pt["question_aggregate"]["questions"])
+            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"], responses if aggregate_responses is None else aggregate_responses, [question_aggregate_question.question for question_aggregate_question in ref_pt["question_aggregate"]["aggregate_questions"]])
             graph_questions = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is None]
 
             for graph_question in graph_questions:
