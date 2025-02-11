@@ -469,16 +469,25 @@ def foo():
 
     event_cds = [event.event_cd for event in our_events]
 
+    csv = "team,sharing event,other events\n"
+
     for event in our_events:
         teams = event.teams.filter(~Q(team_no=3492))
         for team in teams:
-            print(team)
+            #print(team)
+
             team_events = tba.util.get_events_for_team(team, current_season, event_cds)
+
+            sharing = ""
+            other = ""
+
             for team_event in team_events:
                 if team_event["event_cd"] in event_cds:
-                    print(f"same as us {team_event['event_cd']}")
+                    #print(f"same as us {team_event['event_cd']}")
+                    sharing += f"{[event.event_nm for event in our_events if event.event_cd == team_event['event_cd']][0]}, "
                 else:
-                    print(team_event["event_nm"])
-                    print(team_event["teams"])
+                    #print(f"Different {team_event['event_nm']}")
+                    other += f"{team_event['event_nm']}, "
 
-
+            csv += f"{team.team_no},\"{sharing[:len(sharing) - 2]}\",\"{other[:len(other) - 2]}\"\n"
+    return csv

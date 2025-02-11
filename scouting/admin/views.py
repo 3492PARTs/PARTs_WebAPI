@@ -375,7 +375,6 @@ class RemoveTeamToEventView(APIView):
             )
 
 
-
 class MatchView(APIView):
     """
     API endpoint to manage an event
@@ -440,6 +439,7 @@ class MatchView(APIView):
                 e,
             )
     """
+
 
 class ScoutFieldScheduleView(APIView):
     """API endpoint to save scout schedule entry"""

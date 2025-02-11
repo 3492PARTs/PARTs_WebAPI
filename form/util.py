@@ -1565,10 +1565,10 @@ def aggregate_answers(question_aggregate, response_question_answers):
     responses_values = []
     for response in response_question_answers:
         response_values = []
-        print(response["response_id"])
+        #print(response["response_id"])
 
         for question_answer in response["question_answers"]:
-            print(question_answer["question"])
+            #print(question_answer["question"])
 
             if question_answer.get("value", None) is not None:
                 value = int(question_answer["value"])

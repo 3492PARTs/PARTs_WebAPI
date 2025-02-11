@@ -44,6 +44,7 @@ def get_events_for_team(team: Team, season: Season, event_cds_to_ignore=None):
 
     return parsed
 
+
 def sync_season(season_id):
     season = Season.objects.get(id=season_id)
 
@@ -99,7 +100,6 @@ def get_tba_event(event_cd: str):
             if len(tba_event["webcasts"]) > 0
             else ""
         ),
-        "teams": get_tba_event_teams(event_cd),
     }
 
 
@@ -120,6 +120,7 @@ def get_tba_event_teams(event_cd: str):
 
 def sync_event(season: Season, event_cd: str):
     data = get_tba_event(event_cd)
+    data["teams"] = get_tba_event_teams(event_cd)
 
     messages = ""
     try:
@@ -204,6 +205,31 @@ def sync_matches():
     return messages
 
 
+def get_tba_event_team_info(event_cd: str):
+    request = requests.get(
+        f"{tba_url}/event/{event_cd}/rankings",
+        headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+    )
+    rankings = json.loads(request.text)
+
+    ret = []
+    for info in rankings.get("rankings", []):
+        ret.append({
+        "matches_played": info.get("matches_played", 0),
+        "qual_average": info.get("qual_average", 0),
+        "losses": (
+            info["record"].get("losses", 0) if info.get("record", 0) is not None else 0
+        ),
+        "wins": info["record"].get("wins", 0) if info.get("record", 0) is not None else 0,
+        "ties": info["record"].get("ties", 0) if info.get("record", 0) is not None else 0,
+        "rank": info.get("rank", 0),
+        "dq": info.get("dq", 0),
+        "team_id": info["team_key"].replace("frc", "")
+        })
+
+    return ret
+
+
 def sync_event_team_info(force: int):
     messages = ""
     event = Event.objects.get(current="y")
@@ -216,58 +242,28 @@ def sync_event_team_info(force: int):
 
     # Only sync information if the event is active or forcing an update
     if force == 1 or date_st <= now <= date_end:
-        request = requests.get(
-            f"{tba_url}/event/{event.event_cd}/rankings",
-            headers={"X-TBA-Auth-Key": settings.TBA_KEY},
-        )
-        rankings = json.loads(request.text)
-
-        if rankings is None:
-            return "Nothing to sync"
-
-        for info in rankings.get("rankings", []):
-            matches_played = info.get("matches_played", 0)
-            qual_average = info.get("qual_average", 0)
-            losses = (
-                info["record"].get("losses", 0) if info.get("record", 0) is not None else 0
-            )
-            wins = info["record"].get("wins", 0) if info.get("record", 0) is not None else 0
-            ties = info["record"].get("ties", 0) if info.get("record", 0) is not None else 0
-            rank = info.get("rank", 0)
-            dq = info.get("dq", 0)
-            team = Team.objects.get(
-                Q(team_no=info["team_key"].replace("frc", "")) & Q(void_ind="n")
-            )
-
+        for info in get_tba_event_team_info(event.event_cd):
             try:
                 eti = EventTeamInfo.objects.get(
-                    Q(event=event) & Q(team=team) & Q(void_ind="n")
+                    Q(event=event) & Q(team_id=info["team_id"]) & Q(void_ind="n")
                 )
-
-                eti.matches_played = matches_played
-                eti.qual_average = qual_average
-                eti.losses = losses
-                eti.wins = wins
-                eti.ties = ties
-                eti.rank = rank
-                eti.dq = dq
-
-                eti.save()
-                messages += f"(UPDATE) {event.event_nm} {team.team_no}\n"
+                messages += f"(UPDATE) {event.event_nm} {eti.team.team_no}\n"
             except EventTeamInfo.DoesNotExist as odne:
                 eti = EventTeamInfo(
                     event=event,
-                    team=team,
-                    matches_played=matches_played,
-                    qual_average=qual_average,
-                    losses=losses,
-                    wins=wins,
-                    ties=ties,
-                    rank=rank,
-                    dq=dq,
+                    team_id=info["team_id"],
                 )
-                eti.save()
-                messages += f"(ADD) {event.event_nm} {team.team_no}\n"
+                messages += f"(ADD) {event.event_nm} {eti.team.team_no}\n"
+
+            eti.matches_played = info["matches_played"]
+            eti.qual_average = info["qual_average"]
+            eti.losses = info["losses"]
+            eti.wins = info["wins"]
+            eti.ties = info["ties"]
+            eti.rank = info["rank"]
+            eti.dq = info["dq"]
+
+            eti.save()
     else:
         messages = "No active event"
     return messages
