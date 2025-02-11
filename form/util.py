@@ -979,7 +979,7 @@ def get_graphs(for_current_season=False, graph_id=None):
             "active": graph.active,
             "graphbin_set": graph.graphbin_set.filter(Q(void_ind="n") & Q(active="y")).order_by("bin"),
             "graphcategory_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategory_set.filter(Q(void_ind="n") & Q(active="y")).order_by("order")],
-            "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y"))],
+            "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y")).order_by("question__order")],
         })
 
     return parsed
