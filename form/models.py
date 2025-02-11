@@ -156,8 +156,6 @@ class QuestionAggregateType(models.Model):
 class QuestionAggregate(models.Model):
     id = models.AutoField(primary_key=True)
     question_aggregate_typ = models.ForeignKey(QuestionAggregateType, models.PROTECT)
-    question_condition_typ = models.ForeignKey(QuestionConditionType, models.PROTECT, null=True)
-    questions = models.ManyToManyField(Question)
     name = models.CharField(max_length=1000)
     horizontal = models.BooleanField(default=True)
     active = models.CharField(max_length=1, default="y")
@@ -165,6 +163,19 @@ class QuestionAggregate(models.Model):
 
     def __str__(self):
         return f"{self.id} : {self.question_aggregate_typ}"
+
+
+class QuestionAggregateQuestion(models.Model):
+    id = models.AutoField(primary_key=True)
+    question_aggregate = models.ForeignKey(QuestionAggregate, models.PROTECT)
+    question_condition_typ = models.ForeignKey(QuestionConditionType, models.PROTECT, null=True)
+    condition_value = models.CharField(max_length=1000, null=True)
+    question = models.ForeignKey(Question, models.PROTECT)
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.question_aggregate} : {self.question}"
 
 
 class Response(models.Model):

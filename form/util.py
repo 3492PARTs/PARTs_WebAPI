@@ -24,7 +24,8 @@ from form.models import (
     QuestionAggregate,
     QuestionAggregateType,
     QuestionCondition, Flow, FlowAnswer,
-    QuestionConditionType, FlowCondition, FlowQuestion, GraphType, Graph, GraphCategory, GraphQuestion, GraphBin, GraphCategoryAttribute, GraphQuestionType
+    QuestionConditionType, FlowCondition, FlowQuestion, GraphType, Graph, GraphCategory, GraphQuestion, GraphBin,
+    GraphCategoryAttribute, GraphQuestionType, QuestionAggregateQuestion
 )
 from scouting.models import Match, Season, FieldResponse, PitResponse, Event
 
@@ -437,12 +438,12 @@ def get_question_aggregates(form_typ: str):
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
-        season = Q(
-            questions__in=[sq.question for sq in scout_questions]
-        )
+        season = Q(question__in=[sq.question for sq in scout_questions])
+
+    q_questions = Exists(QuestionAggregateQuestion.objects.filter(Q(void_ind="n") & Q(question_aggregate_id=OuterRef("pk")) & Q(question__form_typ=form_typ) & season))
 
     qas = QuestionAggregate.objects.filter(
-        Q(void_ind="n") & Q(questions__form_typ=form_typ) & season
+        Q(void_ind="n") & q_questions
     ).distinct()
     for qa in qas:
         question_aggregates.append(
@@ -458,10 +459,16 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
         "name": question_aggregate.name,
         "horizontal": question_aggregate.horizontal,
         "question_aggregate_typ": question_aggregate.question_aggregate_typ,
-        "questions": list(
-            parse_question(q)
-            for q in question_aggregate.questions.filter(Q(void_ind="n") & Q(active="y"))
-        ),
+        "aggregate_questions": [
+            {
+                "id": question_aggregate_question.id,
+                "question_condition_typ": question_aggregate_question.question_condition_typ,
+                "question": parse_question(question_aggregate_question.question),
+                "condition_value": question_aggregate_question.condition_value,
+                "active": question_aggregate_question.active
+            }
+            for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(Q(void_ind="n") & Q(active="y") & Q(question__void_ind="n") & Q(question__active="y"))
+        ],
         "active": question_aggregate.active,
     }
 
@@ -471,42 +478,32 @@ def get_question_aggregate_types():
 
 
 def save_question_aggregate(data):
-    if data.get("id", None) is not None:
-        qa = QuestionAggregate.objects.get(
-            Q(id=data["id"])
-        )
-    else:
-        qa = QuestionAggregate()
+    with transaction.atomic():
+        if data.get("id", None) is not None:
+            qa = QuestionAggregate.objects.get(
+                Q(id=data["id"])
+            )
+        else:
+            qa = QuestionAggregate()
 
-    qa.name = data["name"]
-    qa.horizontal = data["horizontal"]
-    qa.active = data["active"]
-    qa.question_aggregate_typ = QuestionAggregateType.objects.get(
-        Q(void_ind="n")
-        & Q(
-            question_aggregate_typ=data["question_aggregate_typ"][
-                "question_aggregate_typ"
-            ]
-        )
-    )
-    qa.save()
+        qa.name = data["name"]
+        qa.horizontal = data["horizontal"]
+        qa.active = data["active"]
+        qa.question_aggregate_typ_id = data["question_aggregate_typ"]["question_aggregate_typ"]
+        qa.save()
 
-    questions = Question.objects.filter(
-        id__in=set(q["id"] for q in data["questions"])
-    )
+        for question_aggregate_question in data["aggregate_questions"]:
+            if question_aggregate_question.get("id", None) is None:
+                qaq = QuestionAggregateQuestion()
+            else:
+                qaq = QuestionAggregateQuestion.objects.get(id=question_aggregate_question["id"])
 
-    for q in questions:
-        qa.questions.add(q)
-
-    qa.save()
-
-    remove = qa.questions.filter(
-        ~Q(id__in=set(q.id for q in questions))
-    )
-    for r in remove:
-        qa.questions.remove(r)
-
-    qa.save()
+            qaq.question_aggregate = qa
+            qaq.question_condition_typ_id = question_aggregate_question.get("question_condition_typ", {}).get("question_condition_typ", None)
+            qaq.question_id = question_aggregate_question["question"]["id"]
+            qaq.condition_value = question_aggregate_question["condition_value"]
+            qaq.active = question_aggregate_question["active"]
+            qaq.save()
 
     return qa
 
@@ -1552,7 +1549,7 @@ def get_responses_question_answers(responses, questions):
 
 
 
-def aggregate_answers(question_aggregate: QuestionAggregate, response_question_answers):
+def aggregate_answers(question_aggregate, response_question_answers):
     values = []
 
     #go horizontal then vertical
@@ -1597,7 +1594,7 @@ def aggregate_answers(question_aggregate: QuestionAggregate, response_question_a
         case "median":
             return median([median(values) for values in responses_values])
         case "stdev":
-            return statistics.stdev(statistics.stdev([median(values) for values in responses_values]))
+            return statistics.stdev([statistics.stdev(values) for values in responses_values])
         case _:
             raise Exception("no type")
 

@@ -88,13 +88,13 @@ def build_table_columns():
                         "order": question_flow["question"]["order"],
                     }
                 )
-
+        """
         question_aggregates = QuestionAggregate.objects.filter(
             Q(void_ind="n")
             & Q(active="y")
             & Q(questions__id__in=set(q["id"] for q in all_questions))
         ).distinct()
-        """
+        
         question_aggregate_count = 1
         for question_aggregate in question_aggregates:
             table_cols.append(

@@ -95,12 +95,20 @@ class QuestionAggregateTypeSerializer(serializers.Serializer):
     question_aggregate_nm = serializers.CharField()
 
 
+class QuestionAggregateQuestionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    question_condition_typ = QuestionConditionTypeSerializer(required=False)
+    question = QuestionSerializer()
+    condition_value = serializers.CharField()
+    active = serializers.CharField()
+
+
 class QuestionAggregateSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
     name = serializers.CharField()
     horizontal = serializers.BooleanField()
     question_aggregate_typ = QuestionAggregateTypeSerializer(required=False)
-    questions = QuestionSerializer(many=True)
+    aggregate_questions = QuestionAggregateQuestionSerializer(many=True)
     active = serializers.CharField()
 
 
