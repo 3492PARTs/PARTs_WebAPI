@@ -85,7 +85,7 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
             & q_is_not_conditional
             & Q(void_ind="n")
         )
-        .order_by("form_sub_typ__order", "order")
+        .order_by("form_sub_typ__order", "order", Lower("question"))
     )
 
     for q in qs:
