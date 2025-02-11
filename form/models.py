@@ -156,6 +156,7 @@ class QuestionAggregateType(models.Model):
 class QuestionAggregate(models.Model):
     id = models.AutoField(primary_key=True)
     question_aggregate_typ = models.ForeignKey(QuestionAggregateType, models.PROTECT)
+    question_condition_typ = models.ForeignKey(QuestionConditionType, models.PROTECT, null=True)
     questions = models.ManyToManyField(Question)
     name = models.CharField(max_length=1000)
     horizontal = models.BooleanField(default=True)

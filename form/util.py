@@ -964,7 +964,7 @@ def get_graphs(for_current_season=False, graph_id=None):
     if graph_id is not None:
         q_graph_id = Q(id=graph_id)
 
-    graphs = Graph.objects.filter(q_graph_id & q_season & Q(void_ind="n") & Q(active="y")).order_by(Lower("name"))
+    graphs = Graph.objects.filter(q_graph_id & q_season & Q(void_ind="n") & Q(active="y")).order_by(Lower("graph_typ__graph_nm"), Lower("name"))
 
     parsed = []
     for graph in graphs:
