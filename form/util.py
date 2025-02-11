@@ -1164,10 +1164,10 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 graph_bin["count"] += 1
                         # based on a question aggregate
                         else:
-                            questions = graph_question["question_aggregate"]["questions"]
+                            questions = [question_aggregate_question.question for question_aggregate_question in graph_question["question_aggregate"]["aggregate_questions"]]
 
                             for response in responses:
-                                aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, set(question["id"] for question in questions))
+                                aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, questions)
 
                                 if graph_bin["bin"] <= aggregate < graph_bin["bin"] + graph_bin["width"]:
                                     graph_bin["count"] += 1
@@ -1301,7 +1301,9 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                     # based on a question aggregate
                     else:
-                        aggregate_value = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, response, set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+                        questions = [question_aggregate_question.question for question_aggregate_question in
+                                     graph_question["question_aggregate"]["aggregate_questions"]]
+                        aggregate_value = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, response, questions)
                         plot_entry["points"].append({
                             "point": aggregate_value - aggregate,
                             "time": field_response.time
@@ -1353,10 +1355,12 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 value *= int(flow_answer.question.value_multiplier)
                     # based on a question aggregate
                     else:
+                        questions = [question_aggregate_question.question for question_aggregate_question in
+                                     graph_question["question_aggregate"]["aggregate_questions"]]
                         value = aggregate_answers_horizontally(
                             category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
                             response,
-                            set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+                            questions)
 
                     plot_entry["points"].append({
                         "point": previous - value if previous is not None else 0,
@@ -1410,10 +1414,12 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 value *= int(flow_answer.question.value_multiplier)
                     # based on a question aggregate
                     else:
+                        questions = [question_aggregate_question.question for question_aggregate_question in
+                                     graph_question["question_aggregate"]["aggregate_questions"]]
                         value = aggregate_answers_horizontally(
                             graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ,
                             response,
-                            set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+                            questions)
 
                     plot_entry["dataset"].append(value)
 
@@ -1471,10 +1477,13 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                     # based on a question aggregate
                     else:
+                        questions = [question_aggregate_question.question for question_aggregate_question in
+                                     graph_question["question_aggregate"]["aggregate_questions"]]
+
                         value = aggregate_answers_horizontally(
                             category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
                             response,
-                            set(question["id"] for question in graph_question["question_aggregate"]["questions"]))
+                            questions)
 
                         raise Exception("not accounted for yet")
 
