@@ -1187,7 +1187,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     "label": graph_category["category"],
                     "graphcategoryattribute_set": graph_category["graphcategoryattribute_set"],
                     "bins": [{
-                        "bin": "dataset",
+                        "bin": "Dataset",
                         "count": 0
                     }]
                 })
