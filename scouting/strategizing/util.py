@@ -249,11 +249,17 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
 
                         all_graphs.append(label)
                 case "diff-plot":
-                    all_graphs = team_graph
+                    for label in team_graph:
+                        label["label"] = f"{team_id}: {label['label']}"
+
+                        all_graphs.append(label)
                 case "box-wskr":
                     all_graphs = team_graph
                 case "ht-map":
-                    all_graphs = team_graph
+                    for heatmap in team_graph:
+                        heatmap["question"]["question"] = f"{team_id}: {heatmap['question']['question']}"
+
+                        all_graphs.append(heatmap)
 
     return all_graphs
 
