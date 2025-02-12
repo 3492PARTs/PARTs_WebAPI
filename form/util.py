@@ -1177,11 +1177,19 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
         case "ctg-hstgrm":
             categories = []
             for graph_category in graph["graphcategory_set"]:
-                categories.append({
+                """categories.append({
                     "id": graph_category["id"],
                     "bin": graph_category["category"],
                     "graphcategoryattribute_set": graph_category["graphcategoryattribute_set"],
                     "count": 0
+                })"""
+                categories.append({
+                    "label": graph_category["category"],
+                    "graphcategoryattribute_set": graph_category["graphcategoryattribute_set"],
+                    "bins": [{
+                        "bin": "dataset",
+                        "count": 0
+                    }]
                 })
 
             # go response by response to find which match a catrgory
@@ -1237,8 +1245,10 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                     # passes attribute, stop processing and move onto next response.
                     if passed_category:
-                        category["count"] += 1
+                        category["bins"][0]["count"] += 1
                         break
+
+
             data = categories
         case "res-plot":
             plot = []

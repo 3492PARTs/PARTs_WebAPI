@@ -229,20 +229,18 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                         all_graphs = team_graph
 
                 case "ctg-hstgrm":
-                    for g_bin in team_graph:
-                        label = {
-                            "label": g_bin["bin"],
-                            "bins": [{
-                                "bin": team_id,
-                                "count": g_bin["count"]
-                            }]
-                        }
-                        all_graph_label = [l for l in all_graphs if l["label"] == label["label"]]
-                        # merge graphs
-                        if len(all_graph_label) > 0:
-                            all_graph_label[0]["bins"].append(label["bins"][0])
-                        else:
-                            all_graphs.append(label)
+                    for label in team_graph:
+                        for g_bin in label["bins"]:
+                            g_bin["bin"] = f"{team_id}: {g_bin['bin']}"
+
+                            # merge graphs
+                            if len(all_graphs) > 0:
+                                for all_label in all_graphs:
+                                    if all_label["label"] == label["label"]:
+                                        all_label["bins"].append(g_bin)
+                    # merge graphs
+                    if len(all_graphs) <= 0:
+                        all_graphs = team_graph
                 case "res-plot":
                     for label in team_graph:
                         label["label"] = f"{team_id}: {label['label']}"
