@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from form.serializers import QuestionSerializer, QuestionAggregateSerializer
+from scouting.serializers import TeamSerializer
 
 
 class HistogramBinSerializer(serializers.Serializer):
@@ -58,5 +59,5 @@ class DashboardSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     active = serializers.CharField()
     dashboard_graphs = DashboardGraphSerializer(many=True)
-    team_id = serializers.IntegerField(required=False, allow_null=True)
+    teams = TeamSerializer(many=True)
     reference_team_id = serializers.IntegerField(required=False, allow_null=True)

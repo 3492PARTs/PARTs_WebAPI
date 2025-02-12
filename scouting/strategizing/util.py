@@ -7,13 +7,26 @@ import general.cloudinary
 import scouting
 import scouting.util
 from general.security import ret_message
-from scouting.models import Event, Team, TeamNote, MatchStrategy, AllianceSelection, FieldResponse, Dashboard, \
-    DashboardGraph
-from scouting.strategizing.serializers import HistogramSerializer, PlotSerializer, BoxAndWhiskerPlotSerializer, \
-    HistogramBinSerializer, HeatmapSerializer
+from scouting.models import (
+    Event,
+    Team,
+    TeamNote,
+    MatchStrategy,
+    AllianceSelection,
+    FieldResponse,
+    Dashboard,
+    DashboardGraph,
+)
+from scouting.strategizing.serializers import (
+    HistogramSerializer,
+    PlotSerializer,
+    BoxAndWhiskerPlotSerializer,
+    HistogramBinSerializer,
+    HeatmapSerializer,
+)
 from user.models import User
-import  form.util
-import  form.models
+import form.util
+import form.models
 
 
 def get_team_notes(team_no: int = None, event: Event = None):
@@ -26,9 +39,9 @@ def get_team_notes(team_no: int = None, event: Event = None):
     if event is not None:
         q_event = Q(event=event)
 
-    notes = TeamNote.objects.filter(
-        Q(void_ind="n") & q_team & q_event
-    ).order_by("-time")
+    notes = TeamNote.objects.filter(Q(void_ind="n") & q_team & q_event).order_by(
+        "-time"
+    )
 
     return [parse_team_note(n) for n in notes]
 
@@ -40,7 +53,7 @@ def parse_team_note(n: TeamNote):
         "match_id": n.match.match_key if n.match else None,
         "note": n.note,
         "time": n.time,
-        "user": n.user
+        "user": n.user,
     }
 
 
@@ -70,29 +83,45 @@ def get_match_strategies(match_id: int = None, event: Event = None):
     if event is not None:
         q_event = Q(match__event=event)
 
-    match_strategies = (MatchStrategy.objects
-                        .prefetch_related("match__event", "match__blue_one", "match__blue_two", "match__blue_three", "match__red_one", "match__red_two", "match__red_three",
-                      "match__fieldresponse_set",
-                      "match__blue_one__eventteaminfo_set", "match__blue_two__eventteaminfo_set", "match__blue_three__eventteaminfo_set", "match__red_one__eventteaminfo_set", "match__red_two__eventteaminfo_set", "match__red_three__eventteaminfo_set")
-                        .filter(q_match_id & q_event & Q(void_ind="n")).order_by("-time"))
+    match_strategies = (
+        MatchStrategy.objects.prefetch_related(
+            "match__event",
+            "match__blue_one",
+            "match__blue_two",
+            "match__blue_three",
+            "match__red_one",
+            "match__red_two",
+            "match__red_three",
+            "match__fieldresponse_set",
+            "match__blue_one__eventteaminfo_set",
+            "match__blue_two__eventteaminfo_set",
+            "match__blue_three__eventteaminfo_set",
+            "match__red_one__eventteaminfo_set",
+            "match__red_two__eventteaminfo_set",
+            "match__red_three__eventteaminfo_set",
+        )
+        .filter(q_match_id & q_event & Q(void_ind="n"))
+        .order_by("-time")
+    )
 
     parsed_match_strategies = []
     for ms in match_strategies:
-        parsed_match_strategies.append({
-            "id": ms.id,
-            "match": scouting.util.parse_match(ms.match),
-            "user": ms.user,
-            "strategy": ms.strategy,
-            "img_url": general.cloudinary.build_image_url(ms.img_id, ms.img_ver),
-            "time": ms.time,
-            "display_value": f"{ms.user.get_full_name()} {ms.time.astimezone(pytz.timezone('America/New_York' if event is None else event.timezone)).strftime('%m/%d/%Y, %I:%M%p')}"
-
-        })
+        parsed_match_strategies.append(
+            {
+                "id": ms.id,
+                "match": scouting.util.parse_match(ms.match),
+                "user": ms.user,
+                "strategy": ms.strategy,
+                "img_url": general.cloudinary.build_image_url(ms.img_id, ms.img_ver),
+                "time": ms.time,
+                "display_value": f"{ms.user.get_full_name()} {ms.time.astimezone(pytz.timezone('America/New_York' if event is None else event.timezone)).strftime('%m/%d/%Y, %I:%M%p')}",
+            }
+        )
 
     return parsed_match_strategies
 
 
-def save_match_strategy(data, img = None):
+def save_match_strategy(data, img=None):
     send_alert = False
     if data.get("id", None) is not None:
         match_strategy = MatchStrategy.objects.get(id=data["id"])
@@ -118,21 +147,26 @@ def save_match_strategy(data, img = None):
         f"New match strategy from {match_strategy.user.get_full_name()} on match {match_strategy.match.match_number}",
         "match_strat_added",
         ["notification", "txt"],
-        match_strategy.user.id)
+        match_strategy.user.id,
+    )
+
 
 def get_alliance_selections():
     selections = AllianceSelection.objects.filter(
-        Q(event=scouting.util.get_current_event()) & Q(void_ind="n")).order_by("order")
+        Q(event=scouting.util.get_current_event()) & Q(void_ind="n")
+    ).order_by("order")
 
     parsed = []
     for selection in selections:
-        parsed.append({
-            "id": selection.id,
-            "event": selection.event,
-            "team": selection.team,
-            "note": selection.note,
-            "order": selection.order
-        })
+        parsed.append(
+            {
+                "id": selection.id,
+                "event": selection.event,
+                "team": selection.team,
+                "note": selection.note,
+                "order": selection.order,
+            }
+        )
 
     return selections
 
@@ -153,13 +187,26 @@ def save_alliance_selections(data):
 
 
 def graph_team(graph_id, team_id, reference_team_id=None):
-    responses = [resp.response for resp in FieldResponse.objects.filter(Q(team_id=team_id) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
+    responses = [
+        resp.response
+        for resp in FieldResponse.objects.filter(
+            Q(team_id=team_id)
+            & Q(void_ind="n")
+            & Q(event=scouting.util.get_current_event())
+        )
+    ]
     aggregate_responses = None
-    if reference_team_id is not None and reference_team_id != 'null':
-        aggregate_responses = [resp.response for resp in FieldResponse.objects.filter(
-            Q(team_id=reference_team_id) & Q(void_ind="n") & Q(event=scouting.util.get_current_event()))]
+    if reference_team_id is not None and reference_team_id != "null":
+        aggregate_responses = [
+            resp.response
+            for resp in FieldResponse.objects.filter(
+                Q(team_id=reference_team_id)
+                & Q(void_ind="n")
+                & Q(event=scouting.util.get_current_event())
+            )
+        ]
 
-    return  form.util.graph_responses(graph_id, responses, aggregate_responses)
+    return form.util.graph_responses(graph_id, responses, aggregate_responses)
 
 
 def serialize_graph_team(graph_id, team_id, reference_team_id=None):
@@ -183,34 +230,53 @@ def serialize_graph_team(graph_id, team_id, reference_team_id=None):
 
     return serializer.data
 
+
 def get_dashboard(user_id):
     try:
-        dashboard = Dashboard.objects.get(Q(user_id=user_id) & Q(season=scouting.util.get_current_season()) & Q(void_ind="n") & Q(active="y"))
+        dashboard = Dashboard.objects.get(
+            Q(user_id=user_id)
+            & Q(season=scouting.util.get_current_season())
+            & Q(void_ind="n")
+            & Q(active="y")
+        )
     except Dashboard.DoesNotExist:
-        dashboard = Dashboard(user_id=user_id, season=scouting.util.get_current_season())
+        dashboard = Dashboard(
+            user_id=user_id, season=scouting.util.get_current_season()
+        )
         dashboard.save()
 
     parsed = {
         "id": dashboard.id,
         "active": dashboard.active,
-        "team_id": dashboard.team_id,
+        "teams": [
+            scouting.util.parse_team(team, True) for team in dashboard.teams.all()
+        ],
         "reference_team_id": dashboard.reference_team_id,
-        "dashboard_graphs": [{
-            "id": dashboard_graph.id,
-            "graph_id": dashboard_graph.graph.id,
-            "graph_name": dashboard_graph.graph.name,
-            "graph_typ": dashboard_graph.graph.graph_typ.graph_typ,
-            "graph_nm": dashboard_graph.graph.graph_typ.graph_nm,
-            "x_scale_min": dashboard_graph.graph.x_scale_min,
-            "x_scale_max": dashboard_graph.graph.x_scale_max,
-            "y_scale_min": dashboard_graph.graph.y_scale_min,
-            "y_scale_max": dashboard_graph.graph.y_scale_max,
-            "order": dashboard_graph.order,
-            "active": dashboard_graph.active
-        } for dashboard_graph in dashboard.dashboardgraph_set.filter(Q(active="y") & Q(void_ind="n") & Q(graph__active="y") & Q(graph__void_ind="n")).order_by("order")]
+        "dashboard_graphs": [
+            {
+                "id": dashboard_graph.id,
+                "graph_id": dashboard_graph.graph.id,
+                "graph_name": dashboard_graph.graph.name,
+                "graph_typ": dashboard_graph.graph.graph_typ.graph_typ,
+                "graph_nm": dashboard_graph.graph.graph_typ.graph_nm,
+                "x_scale_min": dashboard_graph.graph.x_scale_min,
+                "x_scale_max": dashboard_graph.graph.x_scale_max,
+                "y_scale_min": dashboard_graph.graph.y_scale_min,
+                "y_scale_max": dashboard_graph.graph.y_scale_max,
+                "order": dashboard_graph.order,
+                "active": dashboard_graph.active,
+            }
+            for dashboard_graph in dashboard.dashboardgraph_set.filter(
+                Q(active="y")
+                & Q(void_ind="n")
+                & Q(graph__active="y")
+                & Q(graph__void_ind="n")
+            ).order_by("order")
+        ],
     }
 
     return parsed
+
 
 def save_dashboard(data, user_id):
     with transaction.atomic():
@@ -224,7 +290,13 @@ def save_dashboard(data, user_id):
 
         dashboard.active = data["active"]
 
-        dashboard.team_id = data.get("team_id", None)
+        dashboard.teams.set(
+            Team.objects.filter(
+                team_no__in=set(
+                    team["team_no"] for team in data["teams"] if team["checked"]
+                )
+            )
+        )
         dashboard.reference_team_id = data.get("reference_team_id", None)
 
         dashboard.save()

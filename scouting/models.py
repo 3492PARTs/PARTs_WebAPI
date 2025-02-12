@@ -340,7 +340,7 @@ class Dashboard(models.Model):
     id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
-    team = models.ForeignKey(Team, models.PROTECT, null=True)
+    teams = models.ManyToManyField(Team)
     reference_team = models.ForeignKey(Team, models.PROTECT, related_name="reference_team", null=True)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
