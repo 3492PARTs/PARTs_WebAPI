@@ -244,7 +244,10 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                         else:
                             all_graphs.append(label)
                 case "res-plot":
-                    all_graphs = team_graph
+                    for label in team_graph:
+                        label["label"] = f"{team_id}: {label['label']}"
+
+                        all_graphs.append(label)
                 case "diff-plot":
                     all_graphs = team_graph
                 case "box-wskr":
@@ -266,6 +269,7 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
         case "histogram":
             serializer = HistogramSerializer(data, many=True)
         case "ctg-hstgrm":
+            # TODO how to handle single
             serializer = HistogramSerializer(data, many=True)
         case "res-plot":
             serializer = PlotSerializer(data, many=True)
