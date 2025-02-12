@@ -360,14 +360,17 @@ def save_dashboard(data, user_id):
 
         dashboard.save()
 
-        for graph in data.get("dashboard_graphs", []):
-            if graph.get("id", None) is None:
-                dashboard_graph = DashboardGraph(dashboard=dashboard)
+        for dashboard_graph_data in data.get("dashboard_graphs", []):
+            if dashboard_graph_data.get("id", None) is None:
+                try:
+                    dashboard_graph = DashboardGraph.objects.get(graph_id=dashboard_graph_data["graph_id"])
+                except DashboardGraph.DoesNotExist:
+                    dashboard_graph = DashboardGraph(dashboard=dashboard)
             else:
-                dashboard_graph = DashboardGraph.objects.get(id=graph["id"])
+                dashboard_graph = DashboardGraph.objects.get(id=dashboard_graph_data["id"])
 
-            dashboard_graph.graph_id = graph["graph_id"]
-            dashboard_graph.order = graph["order"]
-            dashboard_graph.active = graph["active"]
+            dashboard_graph.graph_id = dashboard_graph_data["graph_id"]
+            dashboard_graph.order = dashboard_graph_data["order"]
+            dashboard_graph.active = dashboard_graph_data["active"]
 
             dashboard_graph.save()
