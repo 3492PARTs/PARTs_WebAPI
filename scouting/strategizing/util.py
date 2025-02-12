@@ -217,7 +217,7 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                 case "histogram":
                     for label in team_graph:
                         for g_bin in label["bins"]:
-                            g_bin["bin"] = f"{team_id} - {g_bin['bin']}"
+                            g_bin["bin"] = f"{team_id}: {g_bin['bin']}"
 
                             #merge graphs
                             if len(all_graphs) > 0:
@@ -229,7 +229,20 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                         all_graphs = team_graph
 
                 case "ctg-hstgrm":
-                    all_graphs = team_graph
+                    for g_bin in team_graph:
+                        label = {
+                            "label": g_bin["bin"],
+                            "bins": [{
+                                "bin": team_id,
+                                "count": g_bin["count"]
+                            }]
+                        }
+                        all_graph_label = [l for l in all_graphs if l["label"] == label["label"]]
+                        # merge graphs
+                        if len(all_graph_label) > 0:
+                            all_graph_label[0]["bins"].append(label["bins"][0])
+                        else:
+                            all_graphs.append(label)
                 case "res-plot":
                     all_graphs = team_graph
                 case "diff-plot":
@@ -253,7 +266,7 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
         case "histogram":
             serializer = HistogramSerializer(data, many=True)
         case "ctg-hstgrm":
-            serializer = HistogramBinSerializer(data, many=True)
+            serializer = HistogramSerializer(data, many=True)
         case "res-plot":
             serializer = PlotSerializer(data, many=True)
         case "diff-plot":
