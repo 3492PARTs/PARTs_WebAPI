@@ -186,33 +186,68 @@ def save_alliance_selections(data):
         selection.save()
 
 
-def graph_team(graph_id, team_id, reference_team_id=None):
-    responses = [
-        resp.response
-        for resp in FieldResponse.objects.filter(
-            Q(team_id=team_id)
-            & Q(void_ind="n")
-            & Q(event=scouting.util.get_current_event())
-        )
-    ]
-    aggregate_responses = None
-    if reference_team_id is not None and reference_team_id != "null":
-        aggregate_responses = [
+def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
+    all_graphs = []
+    for team_id in team_ids:
+        responses = [
             resp.response
             for resp in FieldResponse.objects.filter(
-                Q(team_id=reference_team_id)
+                Q(team_id=team_id)
                 & Q(void_ind="n")
                 & Q(event=scouting.util.get_current_event())
             )
         ]
+        aggregate_responses = None
+        if reference_team_id is not None and reference_team_id != "null":
+            aggregate_responses = [
+                resp.response
+                for resp in FieldResponse.objects.filter(
+                    Q(team_id=reference_team_id)
+                    & Q(void_ind="n")
+                    & Q(event=scouting.util.get_current_event())
+                )
+            ]
 
-    return form.util.graph_responses(graph_id, responses, aggregate_responses)
+        team_graph = form.util.graph_responses(graph.id, responses, aggregate_responses)
+
+        if len(team_ids) <= 1:
+            all_graphs = team_graph
+        else:
+            match graph.graph_typ.graph_typ:
+                case "histogram":
+                    for label in team_graph:
+                        for g_bin in label["bins"]:
+                            g_bin["bin"] = f"{team_id} - {g_bin['bin']}"
+
+                            #merge graphs
+                            if len(all_graphs) > 0:
+                                for all_label in all_graphs:
+                                    if all_label["label"] == label["label"]:
+                                        all_label["bins"].append(g_bin)
+                    # merge graphs
+                    if len(all_graphs) <= 0:
+                        all_graphs = team_graph
+
+                case "ctg-hstgrm":
+                    all_graphs = team_graph
+                case "res-plot":
+                    all_graphs = team_graph
+                case "diff-plot":
+                    all_graphs = team_graph
+                case "box-wskr":
+                    all_graphs = team_graph
+                case "ht-map":
+                    all_graphs = team_graph
+
+    return all_graphs
 
 
-def serialize_graph_team(graph_id, team_id, reference_team_id=None):
-    data = graph_team(graph_id, team_id, reference_team_id)
-
+def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
     graph = form.models.Graph.objects.get(id=graph_id)
+
+    data = graph_team(graph, team_ids, reference_team_id)
+
+
     serializer = None
     match graph.graph_typ.graph_typ:
         case "histogram":

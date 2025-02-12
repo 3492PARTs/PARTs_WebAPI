@@ -225,7 +225,7 @@ class GraphTeamView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                data = scouting.strategizing.util.serialize_graph_team(request.query_params["graph_id"], request.query_params["team_id"],request.query_params.get("reference_team_id", None))
+                data = scouting.strategizing.util.serialize_graph_team(request.query_params["graph_id"], request.query_params.getlist("team_ids", []),request.query_params.get("reference_team_id", None))
                 return Response(data)
             else:
                 return ret_message(
