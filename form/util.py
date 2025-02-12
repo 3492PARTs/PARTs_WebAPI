@@ -1164,10 +1164,10 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 graph_bin["count"] += 1
                         # based on a question aggregate
                         else:
-                            questions = [question_aggregate_question.question for question_aggregate_question in graph_question["question_aggregate"]["aggregate_questions"]]
+                            questions = [question_aggregate_question["question"] for question_aggregate_question in graph_question["question_aggregate"]["aggregate_questions"]]
 
                             for response in responses:
-                                aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ, response, questions)
+                                aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"], response, questions)
 
                                 if graph_bin["bin"] <= aggregate < graph_bin["bin"] + graph_bin["width"]:
                                     graph_bin["count"] += 1
@@ -1243,7 +1243,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
         case "res-plot":
             plot = []
             ref_pt = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is not None and gq["graph_question_typ"].graph_question_typ == 'ref-pnt'][0]
-            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"], responses if aggregate_responses is None else aggregate_responses, [question_aggregate_question.question for question_aggregate_question in ref_pt["question_aggregate"]["aggregate_questions"]])
+            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"], responses if aggregate_responses is None else aggregate_responses, [question_aggregate_question["question"] for question_aggregate_question in ref_pt["question_aggregate"]["aggregate_questions"]])
             graph_questions = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is None]
 
             for graph_question in graph_questions:
@@ -1511,14 +1511,14 @@ def is_question_condition_passed(question_condition_typ: str, answer_value, matc
             raise Exception("no type")
 
 
-def aggregate_answers_horizontally(question_aggregate: QuestionAggregate, response: Response, questions):
+def aggregate_answers_horizontally(question_aggregate, response: Response, questions):
     response_question_answers = get_responses_question_answers([response], questions)
 
 
     return aggregate_answers(question_aggregate, response_question_answers)
 
 
-def aggregate_answers_vertically(question_aggregate: QuestionAggregate, responses, questions):
+def aggregate_answers_vertically(question_aggregate, responses, questions):
     response_question_answers = get_responses_question_answers(responses, questions)
 
     return aggregate_answers(question_aggregate, response_question_answers)
