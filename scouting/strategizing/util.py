@@ -346,7 +346,7 @@ def get_dashboard(user_id):
                 ],
             }
             for dashboard_view in dashboard.dashboardview_set.filter(
-                Q(active="y") & Q(void_ind="n")
+                Q(void_ind="n")
             ).order_by("order")
         ],
     }
