@@ -2,25 +2,16 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 import scouting
-from scouting.models import (
-    ScoutPit,
-    ScoutPitImage,
-)
 import scouting.pit
 import scouting.pit.util
 import scouting.util
 from .serializers import (
     PitTeamDataSerializer,
-    ScoutPitResponsesSerializer,
+    PitResponsesSerializer,
 )
 from rest_framework.views import APIView
 from general.security import ret_message, has_access
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-from django.db.models import Q
 from rest_framework.response import Response
-import form.util
 
 auth_obj = "scoutpit"
 auth_view_obj = "scoutPitResults"
@@ -41,7 +32,7 @@ class SavePictureView(APIView):
             if has_access(request.user.id, auth_obj):
                 file_obj = request.FILES["file"]
                 ret = scouting.pit.util.save_robot_picture(
-                    file_obj, request.data.get("team_no", "")
+                    file_obj, request.data.get("team_no", ""), request.data.get("pit_image_typ", ""), request.data.get("img_title", "")
                 )
                 return ret
             else:
@@ -84,7 +75,7 @@ class ResponsesView(APIView):
                 if type(ret) == Response:
                     return ret
 
-                serializer = ScoutPitResponsesSerializer(ret)
+                serializer = PitResponsesSerializer(ret)
                 return Response(serializer.data)
             else:
                 return ret_message(
@@ -118,7 +109,7 @@ class SetDefaultPitImageView(APIView):
                 scouting.pit.util.set_default_team_image(
                     request.query_params.get("scout_pit_img_id", None)
                 )
-                return ret_message("Successfully set the team" "s default image.")
+                return ret_message("Successfully set the default image.")
             else:
                 return ret_message(
                     "You do not have access.",

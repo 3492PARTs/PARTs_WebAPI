@@ -15,12 +15,12 @@ from user.models import User
 
 
 class Season(models.Model):
-    season_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     season = models.CharField(max_length=45)
     current = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.season_id) + " " + self.season
+        return f"{self.id} : {self.season}"
 
 
 class Team(models.Model):
@@ -29,11 +29,11 @@ class Team(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return str(self.team_no) + " " + self.team_nm
+        return f"{self.team_no} : {self.team_nm}"
 
 
 class Event(models.Model):
-    event_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
     teams = models.ManyToManyField(Team)
     event_nm = models.CharField(max_length=255)
@@ -54,12 +54,12 @@ class Event(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.event_id} {self.event_nm}"
+        return f"{self.id} : {self.event_nm} : {self.season}"
 
 
 class EventTeamInfo(models.Model):
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     matches_played = models.IntegerField(null=True)
     qual_average = models.IntegerField(null=True)
     losses = models.IntegerField(null=True)
@@ -70,12 +70,10 @@ class EventTeamInfo(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     class Meta:
-        unique_together = (("event", "team_no"),)
+        unique_together = (("event", "team"),)
 
     def __str__(self):
-        return "Event {event}. Team {team}. ".format(
-            event=self.event.event_id, team=self.team_no.team_no
-        )
+        return f"Event: {self.event} : Team: {self.team}"
 
 
 class CompetitionLevel(models.Model):
@@ -85,11 +83,11 @@ class CompetitionLevel(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.comp_lvl_typ + " " + self.comp_lvl_typ_nm
+        return f"{self.comp_lvl_typ} : {self.comp_lvl_typ_nm}"
 
 
 class Match(models.Model):
-    match_id = models.CharField(primary_key=True, max_length=50)
+    match_key = models.CharField(primary_key=True, max_length=50)
     match_number = models.IntegerField()
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(
@@ -117,57 +115,82 @@ class Match(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"match: {self.event} {self.comp_level} match no:{self.match_number}"
+        return f"{self.match_key} : {self.match_number} : {self.comp_level} : {self.event}"
 
 
-class ScoutField(models.Model):
-    scout_field_id = models.AutoField(primary_key=True)
+class FieldForm(models.Model):
+    id = models.AutoField(primary_key=True)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
+    inv_img_id = models.CharField(max_length=500, blank=True, null=True)
+    inv_img_ver = models.CharField(max_length=500, blank=True, null=True)
+    full_img_id = models.CharField(max_length=500, blank=True, null=True)
+    full_img_ver = models.CharField(max_length=500, blank=True, null=True)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.season}"
+
+
+class FieldResponse(models.Model):
+    id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT, null=True)
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"sf id: {self.scout_field_id} {self.match} {self.user}"
+        return f"{self.id} : {self.team} : {self.match} : {self.event} : {self.user}"
 
 
-class ScoutPit(models.Model):
-    scout_pit_id = models.AutoField(primary_key=True)
+class PitResponse(models.Model):
+    id = models.AutoField(primary_key=True)
     response = models.ForeignKey(form.models.Response, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.scout_pit_id
+        return f"{self.id} : {self.team} : {self.event} : {self.user}"
 
 
-class ScoutPitImage(models.Model):
-    scout_pit_img_id = models.AutoField(primary_key=True)
-    scout_pit = models.ForeignKey(ScoutPit, models.PROTECT)
+class PitImageType(models.Model):
+    pit_image_typ = models.CharField(primary_key=True, max_length=10)
+    pit_image_nm = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.pit_image_typ} : {self.pit_image_nm}"
+
+
+class PitImage(models.Model):
+    id = models.AutoField(primary_key=True)
+    pit_response = models.ForeignKey(PitResponse, models.PROTECT)
+    pit_image_typ = models.ForeignKey(PitImageType, models.PROTECT)
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
+    img_title = models.CharField(max_length=2000, blank=True, null=True)
     default = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.scout_pit_img_id
+        return f"{self.id} : {self.pit_response}"
 
 
-class ScoutAuthGroups(models.Model):
-    scout_group = models.AutoField(unique=True, primary_key=True)
-    auth_group_id = models.ForeignKey(Group, models.PROTECT)
+class ScoutAuthGroup(models.Model):
+    id = models.AutoField(unique=True, primary_key=True)
+    group = models.ForeignKey(Group, models.PROTECT)
 
     def __str__(self):
-        return str(self.scout_group) + " auth group: " + str(self.auth_group_id)
+        return f"{self.id} : {self.group}"
 
 
-class ScoutFieldSchedule(models.Model):
-    scout_field_sch_id = models.AutoField(primary_key=True)
+class FieldSchedule(models.Model):
+    id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
     red_one = models.ForeignKey(
         User, models.PROTECT, related_name="red_one_user", null=True
@@ -201,7 +224,7 @@ class ScoutFieldSchedule(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.scout_field_sch_id} time: {self.st_time} - {self.end_time}"
+        return f"{self.id} time: {self.st_time} - {self.end_time}: {self.event}"
 
 
 class ScheduleType(models.Model):
@@ -209,11 +232,11 @@ class ScheduleType(models.Model):
     sch_nm = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.sch_typ + " " + self.sch_nm
+        return f"{self.sch_typ} : {self.sch_nm}"
 
 
 class Schedule(models.Model):
-    sch_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     sch_typ = models.ForeignKey(ScheduleType, models.PROTECT)
     event = models.ForeignKey(Event, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
@@ -223,13 +246,13 @@ class Schedule(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.user.get_full_name()} {self.st_time} {self.end_time}"
+        return f"{self.id} : {self.user} : {self.sch_typ} : {self.st_time} - {self.end_time} : {self.event}"
 
 
-class TeamNotes(models.Model):
-    team_note_id = models.AutoField(primary_key=True)
+class TeamNote(models.Model):
+    id = models.AutoField(primary_key=True)
     event = models.ForeignKey(Event, models.PROTECT)
-    team_no = models.ForeignKey(Team, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
     user = models.ForeignKey(User, models.PROTECT)
     note = models.TextField()
@@ -237,7 +260,7 @@ class TeamNotes(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.team_note_id, self.team_no)
+        return f"{self.id} : {self.user} : {self.team} : {self.event} : {self.match}"
 
 
 class Question(models.Model):
@@ -246,11 +269,34 @@ class Question(models.Model):
         form.models.Question, models.PROTECT, related_name="scout_question"
     )
     season = models.ForeignKey(Season, models.PROTECT, null=True)
-    scorable = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.id, self.question)
+        return f"{self.id} : {self.question}"
+
+
+class QuestionFlow(models.Model):
+    id = models.AutoField(primary_key=True)
+    flow = models.ForeignKey(
+        form.models.Flow, models.PROTECT, related_name="scout_question_flow"
+    )
+    season = models.ForeignKey(Season, models.PROTECT, null=True)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} {self.flow}"
+
+
+class Graph(models.Model):
+    id = models.AutoField(primary_key=True)
+    graph = models.ForeignKey(
+        form.models.Graph, models.PROTECT, related_name="scout_graph"
+    )
+    season = models.ForeignKey(Season, models.PROTECT, null=True)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.graph}"
 
 
 class UserInfo(models.Model):
@@ -260,4 +306,58 @@ class UserInfo(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return "{} {}".format(self.id, self.user)
+        return f"{self.id} : {self.user}"
+
+
+class MatchStrategy(models.Model):
+    id = models.AutoField(primary_key=True)
+    match = models.ForeignKey(Match, models.PROTECT, null=True)
+    user = models.ForeignKey(User, models.PROTECT)
+    strategy = models.TextField()
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
+    time = models.DateTimeField(default=django.utils.timezone.now)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.match} : {self.user}"
+
+
+class AllianceSelection(models.Model):
+    id = models.AutoField(primary_key=True)
+    event = models.ForeignKey(Event, models.PROTECT)
+    team = models.ForeignKey(Team, models.PROTECT)
+    note = models.TextField()
+    order = models.IntegerField()
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.order} : {self.team}"
+
+
+
+class Dashboard(models.Model):
+    id = models.AutoField(primary_key=True)
+    season = models.ForeignKey(Season, models.PROTECT)
+    user = models.ForeignKey(User, models.PROTECT)
+    teams = models.ManyToManyField(Team)
+    reference_team = models.ForeignKey(Team, models.PROTECT, related_name="reference_team", null=True)
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.user}"
+
+
+class DashboardGraph(models.Model):
+    id = models.AutoField(primary_key=True)
+    dashboard = models.ForeignKey(Dashboard, models.PROTECT)
+    graph = models.ForeignKey(form.models.Graph, models.PROTECT)
+    order = models.IntegerField()
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.dashboard} : {self.graph}"
+
+

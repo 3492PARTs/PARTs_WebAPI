@@ -21,16 +21,24 @@ class GroupSerializer(serializers.Serializer):
 
 
 class PhoneTypeSerializer(serializers.Serializer):
-    phone_type_id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(read_only=True)
     carrier = serializers.CharField()
     phone_type = serializers.CharField()
 
 
+class LinkSerializer(serializers.Serializer):
+    id = serializers.IntegerField(allow_null=True, required=False)
+    permission = PermissionSerializer(allow_null=True, required=False)
+    menu_name = serializers.CharField()
+    routerlink = serializers.CharField()
+    order = serializers.IntegerField()
+
+
 class UserSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     username = serializers.CharField()
     email = serializers.CharField()
-    name = serializers.CharField()
+    name = serializers.CharField(required=False)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     is_active = serializers.BooleanField()
@@ -40,10 +48,13 @@ class UserSerializer(serializers.Serializer):
     )
 
     groups = GroupSerializer(many=True, required=False)
+    permissions = PermissionSerializer(many=True, required=False)
     phone_type = PhoneTypeSerializer(required=False, allow_null=True)
     phone_type_id = serializers.IntegerField(required=False, allow_null=True)
 
     image = serializers.CharField(required=False)
+
+    links = LinkSerializer(many=True, required=False)
 
 
 class UserCreationSerializer(serializers.Serializer):
@@ -87,13 +98,6 @@ class UserUpdateSerializer(serializers.Serializer):
     image = serializers.ImageField(required=False)
 
 
-class LinkSerializer(serializers.Serializer):
-    link_id = serializers.IntegerField(allow_null=True, required=False)
-    permission = PermissionSerializer(allow_null=True, required=False)
-    menu_name = serializers.CharField()
-    routerlink = serializers.CharField()
-    order = serializers.IntegerField()
-
 
 class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
@@ -102,8 +106,8 @@ class RetMessageSerializer(serializers.Serializer):
 
 
 class GetAlertsSerializer(serializers.Serializer):
-    alert_id = serializers.IntegerField()
-    alert_channel_send_id = serializers.IntegerField()
-    alert_subject = serializers.CharField()
-    alert_body = serializers.CharField()
+    id = serializers.IntegerField()
+    channel_send_id = serializers.IntegerField()
+    subject = serializers.CharField()
+    body = serializers.CharField()
     staged_time = serializers.DateTimeField()

@@ -15,9 +15,9 @@ from scouting.models import (
 )
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
-from django.conf import settings
-from django.db.models import Q
 from rest_framework.response import Response
+
+from ..serializers import FieldFormSerializer, MatchSerializer
 
 auth_obj = "scoutadmin"
 app_url = "scouting/admin/"
@@ -55,130 +55,6 @@ class ScoutAuthGroupsView(APIView):
             )
 
 
-class SyncSeasonView(APIView):
-    """
-    API endpoint to sync a season
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "sync-season/"
-
-    def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.sync_season(
-                    request.query_params.get("season_id", None)
-                )
-                return ret_message(req)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while syncing the season.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
-
-
-class SyncEventView(APIView):
-    """
-    API endpoint to sync an event
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "sync-event/"
-
-    def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                return ret_message(
-                    scouting.admin.util.sync_event(
-                        request.query_params.get("event_cd", None)
-                    )
-                )
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while syncing the event.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
-
-
-class SyncMatchesView(APIView):
-    """
-    API endpoint to sync a match
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "sync-matches/"
-
-    def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.sync_matches()
-                return ret_message(req)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while syncing matches.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
-
-
-class SyncEventTeamInfoView(APIView):
-    """
-    API endpoint to sync the info for a teams at an event
-    """
-
-    # commented out so the server can call to update
-    # authentication_classes = (JWTAuthentication,)
-    # permission_classes = (IsAuthenticated,)
-    endpoint = "sync-event-team-info/"
-
-    def get(self, request, format=None):
-        try:
-            req = scouting.admin.util.sync_event_team_info(
-                int(request.query_params.get("force", "0"))
-            )
-            return ret_message(req)
-        except Exception as e:
-            return ret_message(
-                "An error occurred while syncing event team info.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
-
-
 class SetSeasonEventView(APIView):
     """
     API endpoint to set the season
@@ -188,38 +64,15 @@ class SetSeasonEventView(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "set-season-event/"
 
-    def set(self, season_id, event_id, competition_page_active):
-        msg = ""
-
-        Season.objects.filter(current="y").update(current="n")
-        season = Season.objects.get(season_id=season_id)
-        season.current = "y"
-        season.save()
-        msg = "Successfully set the season to: " + season.season
-
-        if event_id is not None:
-            Event.objects.filter(current="y").update(
-                current="n", competition_page_active="n"
-            )
-            event = Event.objects.get(event_id=event_id)
-            event.current = "y"
-            event.competition_page_active = competition_page_active
-            event.save()
-            msg += "\nSuccessfully set the event to: " + event.event_nm
-
-            msg += f"\nCompetition page {'active' if competition_page_active == 'y' else 'inactive'}"
-
-        return ret_message(msg)
-
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                req = self.set(
+                req = scouting.admin.util.set_current_season_event(
                     request.query_params.get("season_id", None),
                     request.query_params.get("event_id", None),
                     request.query_params.get("competition_page_active", "n"),
                 )
-                return req
+                return ret_message(req)
             except Exception as e:
                 return ret_message(
                     "An error occurred while setting the season.",
@@ -256,7 +109,7 @@ class SeasonView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
                 req = scouting.admin.util.add_season(
                     serializer.validated_data["season"]
@@ -288,7 +141,7 @@ class SeasonView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
                 req = scouting.admin.util.save_season(serializer.validated_data)
                 ret_message("Successfully saved season")
@@ -340,7 +193,7 @@ class EventView(APIView):
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "add-event/"
+    endpoint = "event/"
 
     def post(self, request, format=None):
         try:
@@ -351,7 +204,7 @@ class EventView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -415,7 +268,7 @@ class TeamView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -456,11 +309,11 @@ class TeamToEventView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.link_team_to_Event(serializer.validated_data)
+                req = scouting.admin.util.link_team_to_event(serializer.validated_data)
                 return ret_message(req)
             else:
                 return ret_message(
@@ -471,7 +324,7 @@ class TeamToEventView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while saving the team.",
+                "An error occurred while linking teams to event.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
@@ -497,11 +350,11 @@ class RemoveTeamToEventView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.remove_link_team_to_Event(
+                req = scouting.admin.util.remove_link_team_to_event(
                     serializer.validated_data
                 )
                 return ret_message(req)
@@ -522,6 +375,72 @@ class RemoveTeamToEventView(APIView):
             )
 
 
+class MatchView(APIView):
+    """
+    API endpoint to manage an event
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "match/"
+
+    def post(self, request, format=None):
+        try:
+            serializer = MatchSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            if has_access(request.user.id, auth_obj):
+                scouting.admin.util.save_match(serializer.validated_data)
+                return ret_message("Successfully added the match.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the match.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+    """
+    def delete(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.admin.util.delete_event(
+                    request.query_params.get("event_id", None)
+                )
+                return req
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while deleting the event.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+    """
+
+
 class ScoutFieldScheduleView(APIView):
     """API endpoint to save scout schedule entry"""
 
@@ -538,7 +457,7 @@ class ScoutFieldScheduleView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -577,7 +496,7 @@ class ScheduleView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, auth_obj):
@@ -801,3 +720,91 @@ class PitResponseView(APIView):
                 app_url + self.endpoint,
                 request.user.id,
             )
+
+
+class FieldFormView(APIView):
+    """
+    API endpoint to manage the field scouting form
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "field-form/"
+
+    def get(self, request, format=None):
+        try:
+            ff = scouting.util.get_field_form()
+            serializer = FieldFormSerializer(ff)
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while field form.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+
+            if has_access(request.user.id, "admin"):
+                serializer = FieldFormSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                scouting.admin.util.save_field_form(serializer.validated_data)
+
+                return ret_message("Saved field form successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the field form.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class ScoutingReportView(APIView):
+    """
+    API endpoint to sync a match
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "scouting-report/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = scouting.admin.util.foo()
+                return ret_message(req)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while generating the scouting report.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+

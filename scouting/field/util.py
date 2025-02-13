@@ -1,21 +1,27 @@
 from django.db.models import Q
 from django.conf import settings
 from django.utils import timezone
+import datetime
 
-from form.models import QuestionAggregate, QuestionAnswer
-import scouting
+from form.models import QuestionAggregate, Answer, FormSubType, FlowAnswer
+import scouting.util
 import form
-from scouting.models import EventTeamInfo, ScoutField, ScoutFieldSchedule
+from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule
+import general.util
+import form.util
 
 
 def build_table_columns():
-    sqsa = form.util.get_questions_with_conditions("field", "auto")
-    sqst = form.util.get_questions_with_conditions("field", "teleop")
-    sqso = form.util.get_questions_with_conditions("field", None)
+    # sqsa = form.util.get_form_questions("field", "auto")
+    # sqst = form.util.get_form_questions("field", "teleop")
+    # sqso = form.util.get_form_questions("field", "post")
+
+    form_questions = form.util.get_form_questions("field")
+    all_questions = []
 
     table_cols = [
         {
-            "PropertyName": "team_no",
+            "PropertyName": "team_id",
             "ColLabel": "Team No",
             "Width": "75px",
             "scorable": False,
@@ -37,73 +43,78 @@ def build_table_columns():
         },
     ]
 
-    for sqs in [sqsa, sqst, sqso]:
-        for sq in sqs:
-            scout_question = scouting.models.Question.objects.get(
-                Q(void_ind="n") & Q(question_id=sq["question_id"])
-            )
+    for form_sub_type in form_questions["form_sub_types"]:
+        for question in form_sub_type["questions"]:
+            all_questions.append(question)
             table_cols.append(
                 {
-                    "PropertyName": "ans" + str(sq["question_id"]),
+                    "PropertyName": "ans" + str(question["id"]),
                     "ColLabel": (
                         ""
-                        if sq.get("form_sub_typ", None) is None
-                        else sq["form_sub_typ"][0:1].upper() + ": "
+                        if question.get("form_sub_typ", None) is None
+                        else question.get("form_sub_typ").form_sub_typ[0:1].upper()
+                        + ": "
                     )
-                    + sq["question"],
-                    "Width": sq["table_col_width"],
-                    "scorable": scout_question.scorable,
-                    "order": sq["order"],
+                    + (
+                        " C: "
+                        if question["question_conditional_on"] is not None
+                        else ""
+                    )
+                    + question["question"],
+                    "Width": question["table_col_width"],
+                    "order": question["order"],
                 }
             )
 
-            for c in sq.get("conditions", []):
-                scout_question = scouting.models.Question.objects.get(
-                    Q(void_ind="n") & Q(question_id=c["question_to"]["question_id"])
-                )
+        for flow in form_sub_type["flows"]:
+            for question_flow in flow["flow_questions"]:
+                all_questions.append(question_flow["question"])
                 table_cols.append(
                     {
-                        "PropertyName": "ans" + str(c["question_to"]["question_id"]),
+                        "PropertyName": "ans" + str(question_flow["question"]["id"]),
                         "ColLabel": (
                             ""
-                            if c["question_to"].get("form_sub_typ", None) is None
-                            else c["question_to"]["form_sub_typ"][0:1].upper() + ": "
+                            if question_flow["question"].get("form_sub_typ", None)
+                            is None
+                            else question_flow["question"]
+                            .get("form_sub_typ")
+                            .form_sub_typ[0:1]
+                            .upper()
+                            + ": "
                         )
-                        + "C: "
-                        + c["condition"]
-                        + " "
-                        + c["question_to"]["question"],
-                        "Width": c["question_to"]["table_col_width"],
-                        "scorable": scout_question.scorable,
-                        "order": c["question_to"]["order"],
+                        + " F: "
+                        + question_flow["question"]["question"],
+                        "Width": question_flow["question"]["table_col_width"],
+                        "order": question_flow["question"]["order"],
                     }
                 )
-
-        qas = QuestionAggregate.objects.filter(
+        """
+        question_aggregates = QuestionAggregate.objects.filter(
             Q(void_ind="n")
             & Q(active="y")
-            & Q(questions__question_id__in=set(sq["question_id"] for sq in sqs))
+            & Q(questions__id__in=set(q["id"] for q in all_questions))
         ).distinct()
-        sqas_cnt = 1
-        for qa in qas:
+        
+        question_aggregate_count = 1
+        for question_aggregate in question_aggregates:
             table_cols.append(
                 {
-                    "PropertyName": "ans_sqa" + str(qa.question_aggregate_id),
+                    "PropertyName": "ans_sqa" + str(question_aggregate.question_aggregate_id),
                     "ColLabel": (
                         ""
                         if sqs[0].get("form_sub_typ", None) is None
                         else sqs[0]["form_sub_typ"][0:1].upper() + ": "
                     )
                     + "AGG: "
-                    + qa.field_name,
+                    + question_aggregate.field_name,
                     "Width": "100px",
                     "scorable": True,
-                    "order": sqs[len(sqs) - 1]["order"] + sqas_cnt,
+                    "order": sqs[len(sqs) - 1]["order"] + question_aggregate_count,
                 }
             )
 
-            sqas_cnt += 1
-
+            question_aggregate_count += 1
+    """
     table_cols.append(
         {
             "PropertyName": "user",
@@ -126,7 +137,9 @@ def build_table_columns():
     return table_cols
 
 
-def get_responses(request, team=None, user=None, after_date_time=None):
+def get_responses(request, team=None, user=None, after_scout_field_id=None):
+    loading_all = False
+
     table_cols = build_table_columns()
 
     field_scouting_responses = []
@@ -143,67 +156,75 @@ def get_responses(request, team=None, user=None, after_date_time=None):
     # Pull responses by what input
     if team is not None:
         # get response for individual team
-        sfs = ScoutField.objects.filter(
+        scout_fields = FieldResponse.objects.filter(
             Q(event=current_event) & Q(team_no_id=team) & Q(void_ind="n")
-        ).order_by("-time", "-scout_field_id")
+        ).order_by("-time", "-id")
     elif user is not None:
         # get response for individual scout
-        sfs = ScoutField.objects.filter(
+        scout_fields = FieldResponse.objects.filter(
             Q(event=current_event) & Q(user=user) & Q(void_ind="n")
-        ).order_by("-time", "-scout_field_id")
-    elif after_date_time is not None:
+        ).order_by("-time", "-id")
+    elif after_scout_field_id is not None:
         # get response for individual scout
-        sfs = ScoutField.objects.filter(
-            Q(event=current_event) & Q(time__gt=after_date_time) & Q(void_ind="n")
-        ).order_by("-time", "-scout_field_id")
+        scout_fields = FieldResponse.objects.filter(
+            Q(event=current_event) & Q(id__gt=after_scout_field_id) & Q(void_ind="n")
+        ).order_by("-time", "-id")
     else:
-        # get responses for all teams
-        if settings.DEBUG:
-            # don't fetch all responses on local as it's too much
-            sfs = ScoutField.objects.filter(
-                Q(event=current_event) & Q(void_ind="n")
-            ).order_by(
-                "-time", "-scout_field_id"
-            )  # [:30]
-        else:
-            # get everything
-            sfs = ScoutField.objects.filter(
-                Q(event=current_event) & Q(void_ind="n")
-            ).order_by("-time", "-scout_field_id")
+        loading_all = True
+        # get everything
+        scout_fields = FieldResponse.objects.filter(
+            Q(event=current_event) & Q(void_ind="n")
+        ).order_by("-time", "-id")
 
     # Loop over all the responses selected and put in table
-    for sf in sfs:
-        qas = QuestionAnswer.objects.filter(Q(response=sf.response) & Q(void_ind="n"))
+    for scout_field in scout_fields:
+        answers = Answer.objects.filter(
+            Q(response=scout_field.response) & Q(void_ind="n")
+        )
 
         response = {}
-        for qa in qas:
-            response["ans" + str(qa.question_id)] = qa.answer
+        for answer in answers:
+            if answer.question is not None:
+                response[f"ans{answer.question.id}"] = answer.value
+            if answer.flow is not None:
+                for flow_answer in answer.flowanswer_set.filter(void_ind="n"):
+                    response[f"ans{flow_answer.question.id}"] = 1 + response.get(
+                        f"ans{flow_answer.question.id}", 0
+                    )
 
         # get aggregates
-        qas = QuestionAggregate.objects.filter(
+        '''
+        question_aggregates = QuestionAggregate.objects.filter(
             Q(void_ind="n") & Q(active="y") & Q(questions__form_typ="field")
         ).distinct()
 
-        for qa in qas:
-            sum = 0
-            for q in qa.questions.filter(Q(void_ind="n") & Q(active="y")):
-                for a in q.questionanswer_set.filter(
-                    Q(void_ind="n") & Q(response=sf.response)
+        for question_aggregate in question_aggregates:
+            summation = 0
+            for question in question_aggregate.questions.filter(
+                Q(void_ind="n") & Q(active="y")
+            ):
+                for answer in question.answer_set.filter(
+                    Q(void_ind="n") & Q(response=scout_field.response)
                 ):
-                    if a.answer is not None and a.answer != "!EXIST":
-                        sum += int(a.answer)
-            response["ans_sqa" + str(qa.question_aggregate_id)] = sum
+                    if answer.value is not None and answer.value != "!EXIST":
+                        summation += int(answer.value)
+            response[f"ans_sqa{question_aggregate.id}"] = summation
+            '''
 
-        response["match"] = sf.match.match_number if sf.match else None
-        response["user"] = sf.user.first_name + " " + sf.user.last_name
-        response["time"] = sf.time
-        response["user_id"] = sf.user.id
-        response["team_no"] = sf.team_no_id
-        response["scout_field_id"] = sf.scout_field_id
+        response["match"] = (
+            scout_field.match.match_number if scout_field.match else None
+        )
+        response["user"] = (
+            scout_field.user.first_name + " " + scout_field.user.last_name
+        )
+        response["time"] = scout_field.time
+        response["user_id"] = scout_field.user.id
+        response["team_id"] = scout_field.team_id
+        response["id"] = scout_field.id
 
         try:
             eti = EventTeamInfo.objects.get(
-                Q(event=current_event) & Q(team_no=sf.team_no) & Q(void_ind="n")
+                Q(event=current_event) & Q(team=scout_field.team) & Q(void_ind="n")
             )
             response["rank"] = eti.rank
         except EventTeamInfo.DoesNotExist:
@@ -216,24 +237,26 @@ def get_responses(request, team=None, user=None, after_date_time=None):
         "scoutAnswers": field_scouting_responses,
         "current_season": current_season,
         "current_event": current_event,
-        "removed_responses": get_removed_responses(after_date_time),
+        "removed_responses": [field_response.id for field_response in
+                              (get_removed_responses(after_scout_field_id) if not loading_all else [])]
+        ,
     }
 
 
-def get_removed_responses(before_date_time):
-    timeCondition = Q()
+def get_removed_responses(before_scout_field_id=None):
+    condition = Q()
 
-    if before_date_time is not None:
-        timeCondition = Q(time__lte=before_date_time)
+    if before_scout_field_id is not None:
+        condition = Q(id__lte=before_scout_field_id)
 
-    removed = ScoutField.objects.filter(
-        timeCondition & (Q(void_ind="y") | Q(response__void_ind="y"))
+    removed = FieldResponse.objects.filter(
+        condition & (Q(void_ind="y") | Q(response__void_ind="y"))
     )
 
     return removed
 
 
-def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
+def check_in_scout(sfs: FieldSchedule, user_id: int):
     check_in = False
     if sfs.red_one and not sfs.red_one_check_in and sfs.red_one.id == user_id:
         sfs.red_one_check_in = timezone.now()
@@ -260,3 +283,52 @@ def check_in_scout(sfs: ScoutFieldSchedule, user_id: int):
         sfs.save()
         return "Successfully checked in scout for their shift."
     return ""
+
+
+def get_field_form():
+    field_form = scouting.util.get_field_form()
+
+    form_parsed = {
+        "field_form": field_form,
+        "form_sub_types": form.util.get_form_questions("field")["form_sub_types"],
+    }
+
+    return form_parsed
+
+
+def get_graph_options(graph_type):
+    match graph_type:
+        case "bar":
+            v = 9
+
+
+# need % and avg
+
+
+def get_scouting_responses():
+    parsed_responses = []
+    event = scouting.util.get_current_event()
+
+    responses = FieldResponse.objects.filter(Q(event=event) & Q(void_ind="n")).order_by(
+        "-time"
+    )
+
+    for response in responses[:10]:
+        parsed_answers = form.util.get_response_answers(response.response)
+
+        parsed_responses.append(
+            {
+                "id": response.id,
+                "match": (
+                    scouting.util.parse_match(response.match)
+                    if response.match is not None
+                    else None
+                ),
+                "user": response.user,
+                "time": response.time,
+                "answers": parsed_answers,
+                "display_value": f"{'Match: ' + str(response.match.match_number) + ' ' if response.match is not None else ''}Team: {response.team.team_no} {response.user.get_full_name()} {general.util.date_time_to_mdyhm(response.time, event.timezone)}",
+            }
+        )
+
+    return parsed_responses

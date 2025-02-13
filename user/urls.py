@@ -13,7 +13,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     #TokenRefreshView.as_view()
     path('user-data/', UserData.as_view()),
-    path('user-links/', UserLinksView.as_view()),
+    #path('user-links/', UserLinksView.as_view()),
     path('groups/', Groups.as_view()),
     path('permissions/', Permissions.as_view()),
     path('profile/', UserProfile.as_view()),

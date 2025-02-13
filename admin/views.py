@@ -1,4 +1,3 @@
-from django.contrib.auth.models import Group
 from django.db import transaction
 from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -6,11 +5,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 import user.util
-from scouting.models import ScoutAuthGroups
+from scouting.models import ScoutAuthGroup
 from user.models import PhoneType
 from .serializers import (
     ErrorLogSerializer,
-    InitSerializer,
     GroupSerializer,
     PhoneTypeSerializer,
 )
@@ -93,9 +91,7 @@ class ScoutAuthGroupsView(APIView):
         try:
             groups = user.util.get_groups().filter(
                 id__in=list(
-                    ScoutAuthGroups.objects.all().values_list(
-                        "auth_group_id", flat=True
-                    )
+                    ScoutAuthGroup.objects.all().values_list("group_id", flat=True)
                 )
             )
             serializer = GroupSerializer(groups, many=True)
@@ -117,7 +113,7 @@ class ScoutAuthGroupsView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):
@@ -127,12 +123,12 @@ class ScoutAuthGroupsView(APIView):
                     for s in serializer.validated_data:
                         keep.append(s["id"])
                         try:
-                            ScoutAuthGroups.objects.get(auth_group_id_id=s["id"])
-                        except ScoutAuthGroups.DoesNotExist:
-                            sag = ScoutAuthGroups(auth_group_id_id=s["id"])
+                            ScoutAuthGroup.objects.get(group_id=s["id"])
+                        except ScoutAuthGroup.DoesNotExist:
+                            sag = ScoutAuthGroup(group_id=s["id"])
                             sag.save()
 
-                    sags = ScoutAuthGroups.objects.filter(~Q(auth_group_id_id__in=keep))
+                    sags = ScoutAuthGroup.objects.filter(~Q(group_id__in=keep))
                     for s in sags:
                         s.delete()
 
@@ -195,16 +191,14 @@ class PhoneTypeView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, auth_obj):
             try:
                 data = serializer.validated_data
-                if data.get("phone_type_id", None) is not None:
-                    pt = user.models.PhoneType.objects.get(
-                        phone_type_id=data["phone_type_id"]
-                    )
+                if data.get("id", None) is not None:
+                    pt = user.models.PhoneType.objects.get(id=data["id"])
                     pt.phone_type = data["phone_type"]
                     pt.carrier = data["carrier"]
                     pt.save()
@@ -250,3 +244,4 @@ class PhoneTypeView(APIView):
                 request.user.id,
                 e,
             )
+

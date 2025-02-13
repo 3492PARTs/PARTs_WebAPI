@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "public.apps.PublicConfig",
     "scouting.apps.ScoutingConfig",
     "sponsoring.apps.SponsoringConfig",
+    "tba.apps.TbaConfig",
     "user.apps.UserConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -236,6 +237,7 @@ EMAIL_PORT = os.getenv("EMAIL_PORT")
 os.environ["CLOUDINARY_URL"] = os.getenv("CLOUDINARY_URL")
 
 TBA_KEY = os.getenv("TBA_KEY")
+TBA_WEBHOOK_SECRET = os.getenv("TBA_WEBHOOK_SECRET")
 
 DISCORD_NOTIFICATION_WEBHOOK = os.getenv("DISCORD_NOTIFICATION_WEBHOOK")
 

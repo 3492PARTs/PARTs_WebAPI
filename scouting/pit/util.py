@@ -1,11 +1,11 @@
 from django.db.models import Q
-import cloudinary
 
-from form.models import QuestionAnswer
+import general.cloudinary
+from form.models import Answer
 from general.security import ret_message
 import scouting
 import form
-from scouting.models import EventTeamInfo, ScoutPit, ScoutPitImage, Team
+from scouting.models import EventTeamInfo, PitResponse, PitImage, Team
 
 
 def get_responses(team=None):
@@ -22,66 +22,81 @@ def get_responses(team=None):
     )
 
     results = []
-    for t in teams:
+    for team in teams:
         try:
-            sp = ScoutPit.objects.get(
-                Q(team_no=t)
+            pit_response = PitResponse.objects.get(
+                Q(team=team)
                 & Q(event=current_event)
                 & Q(void_ind="n")
                 & Q(response__void_ind="n")
             )
-        except ScoutPit.DoesNotExist as e:
-            sp = None
+        except PitResponse.DoesNotExist as e:
+            pit_response = None
 
-        spis = ScoutPitImage.objects.filter(Q(void_ind="n") & Q(scout_pit=sp)).order_by(
-            "scout_pit_img_id"
-        )
+        pit_images = PitImage.objects.filter(
+            Q(void_ind="n") & Q(pit_response=pit_response)
+        ).order_by("id")
 
         pics = []
-        for spi in spis:
+        for pit_image in pit_images:
             pics.append(
                 {
-                    "scout_pit_img_id": spi.scout_pit_img_id,
-                    "pic": cloudinary.CloudinaryImage(
-                        spi.img_id, version=spi.img_ver
-                    ).build_url(secure=True),
-                    "default": spi.default,
+                    "id": pit_image.id,
+                    "img_url": general.cloudinary.build_image_url(
+                        pit_image.img_id, pit_image.img_ver
+                    ),
+                    "img_title": pit_image.img_title,
+                    "default": pit_image.default,
+                    "pit_image_typ": pit_image.pit_image_typ
                 }
             )
 
         team_response = {
-            "team_no": t.team_no,
-            "team_nm": t.team_nm,
+            "team_no": team.team_no,
+            "team_nm": team.team_nm,
             "pics": pics,
-            "scout_pit_id": sp.scout_pit_id if sp is not None else None,
+            "id": pit_response.id if pit_response is not None else None,
         }
 
         tmp_responses = []
 
         try:
             eti = EventTeamInfo.objects.get(
-                Q(event=current_event) & Q(team_no=t.team_no) & Q(void_ind="n")
+                Q(event=current_event) & Q(team=team) & Q(void_ind="n")
             )
             tmp_responses.append({"question": "Rank", "answer": eti.rank})
         except EventTeamInfo.DoesNotExist:
-            x = 1
+            pass
 
-        questions = form.util.get_questions_with_conditions("pit")
+        questions = form.util.get_questions("pit")
 
-        if sp is not None:
-            for q in questions:
-                answer = QuestionAnswer.objects.get(
-                    Q(response=sp.response)
-                    & Q(void_ind="n")
-                    & Q(question_id=q["question_id"])
-                )
+        if pit_response is not None:
+            for question in questions:
+                try:
+                    answer = Answer.objects.get(
+                        Q(response=pit_response.response)
+                        & Q(void_ind="n")
+                        & Q(question_id=question["id"])
+                    ).value
+                except Answer.DoesNotExist:
+                    answer = "!FOUND"
+
                 tmp_responses.append(
-                    {"question": q["question"], "answer": answer.answer}
+                    {
+                        "question": (
+                            " C: "
+                            if question["question_conditional_on"] is not None
+                            else ""
+                        )
+                        + question["question"],
+                        "answer": answer,
+                    }
                 )
 
-                for c in q.get("conditions", []):
-                    answer = QuestionAnswer.objects.get(
-                        Q(response=sp.response)
+                """
+                for c in question.get("conditions", []):
+                    answer = Answer.objects.get(
+                        Q(response=pit_response.response)
                         & Q(void_ind="n")
                         & Q(question_id=c["question_to"]["question_id"])
                     )
@@ -91,10 +106,10 @@ def get_responses(team=None):
                             + c["condition"]
                             + " "
                             + c["question_to"]["question"],
-                            "answer": answer.answer,
+                            "answer": answer.value,
                         }
                     )
-
+                """
         team_response["responses"] = tmp_responses
         results.append(team_response)
 
@@ -105,42 +120,33 @@ def get_responses(team=None):
     }
 
 
-def save_robot_picture(file, team_no):
+def save_robot_picture(file, team_no, pit_image_typ, img_title):
     current_event = scouting.util.get_current_event()
 
-    if not allowed_file(file.content_type):
-        raise Exception("Invalid file type.")
-
-    sp = ScoutPit.objects.get(
+    sp = PitResponse.objects.get(
         Q(event=current_event)
-        & Q(team_no_id=team_no)
+        & Q(team_id=team_no)
         & Q(void_ind="n")
         & Q(response__void_ind="n")
     )
 
-    response = cloudinary.uploader.upload(file)
+    response = general.cloudinary.upload_image(file)
 
-    ScoutPitImage(
-        scout_pit=sp,
+    PitImage(
+        pit_response=sp,
+        pit_image_typ_id=pit_image_typ,
         img_id=response["public_id"],
         img_ver=str(response["version"]),
+        img_title=img_title
     ).save()
 
     return ret_message("Saved pit image successfully.")
 
 
-def allowed_file(filename):
-    """Returns whether a filename's extension indicates that it is an image.
-    :param str filename: A filename.
-    :return: Whether the filename has an recognized image file extension
-    :rtype: bool"""
-    return filename.rsplit("/", 1)[1].lower() in {"png", "jpg", "jpeg", "gif"}
-
-
 def set_default_team_image(id):
-    spi = ScoutPitImage.objects.get(Q(void_ind="n") & Q(scout_pit_img_id=id))
+    spi = PitImage.objects.get(Q(void_ind="n") & Q(id=id))
 
-    for pi in spi.scout_pit.scoutpitimage_set.filter(Q(void_ind="n")):
+    for pi in spi.pit_response.pitimage_set.filter(Q(void_ind="n") &Q(pit_image_typ=spi.pit_image_typ)):
         pi.default = False
         pi.save()
 
@@ -153,32 +159,35 @@ def set_default_team_image(id):
 def get_team_data(team_no=None):
     current_event = scouting.util.get_current_event()
 
-    sp = ScoutPit.objects.get(
-        Q(team_no=team_no)
+    sp = PitResponse.objects.get(
+        Q(team_id=team_no)
         & Q(void_ind="n")
         & Q(response__void_ind="n")
         & Q(event=current_event)
     )
 
-    scout_questions = form.util.get_question_with_conditions_response_answers(
-        sp.response
-    )
+    response_answers = form.util.get_response_answers(sp.response)
+
+    questions = []
+    for response_answer in response_answers:
+        response_answer["question"]["answer"] = response_answer["answer"]
+        questions.append(response_answer["question"])
 
     pics = []
 
-    for pic in sp.scoutpitimage_set.filter(Q(void_ind="n")):
+    for pic in sp.pitimage_set.filter(Q(void_ind="n")):
         pics.append(
             {
-                "scout_pit_img_id": pic.scout_pit_img_id,
-                "pic": cloudinary.CloudinaryImage(
-                    pic.img_id, version=pic.img_ver
-                ).build_url(secure=True),
+                "id": pic.id,
+                "img_url": general.cloudinary.build_image_url(pic.img_id, pic.img_ver),
+                "img_title": pic.img_title,
+                "pit_image_typ": pic.pit_image_typ,
                 "default": pic.default,
             }
         )
 
     return {
         "response_id": sp.response_id,
-        "questions": scout_questions,
+        "questions": questions,
         "pics": pics,
     }
