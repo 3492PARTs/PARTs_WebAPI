@@ -272,7 +272,9 @@ class DashboardView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                dashboard = scouting.strategizing.util.get_dashboard(request.user.id)
+                dashboard = scouting.strategizing.util.get_dashboard(
+                    request.user.id, request.query_params.get("dash_view_typ_id", None)
+                )
                 serializer = DashboardSerializer(dashboard)
                 return Response(serializer.data)
             else:

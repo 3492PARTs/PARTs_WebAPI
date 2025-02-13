@@ -293,7 +293,7 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
     return serializer.data
 
 
-def get_dashboard(user_id):
+def get_dashboard(user_id, dash_view_typ_id=None):
     try:
         dashboard = Dashboard.objects.get(
             Q(user_id=user_id)
@@ -346,7 +346,14 @@ def get_dashboard(user_id):
                 ],
             }
             for dashboard_view in dashboard.dashboardview_set.filter(
-                Q(void_ind="n") & Q(dash_view_typ=dashboard.default_dash_view_typ)
+                Q(void_ind="n")
+                & Q(
+                    dash_view_typ_id=(
+                        dash_view_typ_id
+                        if dash_view_typ_id is not None
+                        else dashboard.default_dash_view_typ.dash_view_typ
+                    )
+                )
             ).order_by("order")
         ],
     }
