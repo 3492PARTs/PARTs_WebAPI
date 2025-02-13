@@ -70,6 +70,7 @@ class DashboardViewSerializer(serializers.Serializer):
     teams = TeamSerializer(many=True)
     reference_team_id = serializers.IntegerField(required=False, allow_null=True)
     dashboard_graphs = DashboardGraphSerializer(many=True)
+    name = serializers.CharField()
     order = serializers.IntegerField()
     active = serializers.CharField()
 
@@ -78,3 +79,4 @@ class DashboardSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     active = serializers.CharField()
     dashboard_views = DashboardViewSerializer(many=True)
+    default_dash_view_typ = DashboardViewTypeSerializer()

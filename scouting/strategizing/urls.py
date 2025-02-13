@@ -7,4 +7,5 @@ urlpatterns = [
     path("alliance-selection/", AllianceSelectionView.as_view()),
     path("graph-team/", GraphTeamView.as_view()),
     path("dashboard/", DashboardView.as_view()),
+    path("dashboard-view-types/", DashboardViewTypeView.as_view()),
 ]

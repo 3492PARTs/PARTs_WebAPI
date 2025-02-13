@@ -9,6 +9,7 @@ import scouting.util
 from general.security import ret_message
 from scouting.models import (
     DashboardView,
+    DashboardViewType,
     Event,
     Team,
     TeamNote,
@@ -309,15 +310,17 @@ def get_dashboard(user_id):
     parsed = {
         "id": dashboard.id,
         "active": dashboard.active,
+        "default_dash_view_typ": dashboard.default_dash_view_typ,
         "dashboard_views": [
             {
                 "id": dashboard_view.id,
-                "dash_view_typ": dashboard_view.dash_view_typ.id,
+                "dash_view_typ": dashboard_view.dash_view_typ,
                 "teams": [
                     scouting.util.parse_team(team, True)
                     for team in dashboard_view.teams.all()
                 ],
-                "reference_team_id": dashboard.reference_team_id,
+                "reference_team_id": dashboard_view.reference_team_id,
+                "name": dashboard_view.name,
                 "order": dashboard_view.order,
                 "active": dashboard_view.active,
                 "dashboard_graphs": [
@@ -362,6 +365,7 @@ def save_dashboard(data, user_id):
             dashboard.season = scouting.util.get_current_season()
 
         dashboard.active = data["active"]
+        dashboard.dash_view_typ_id = data["default_dash_view_typ"]["dash_view_typ"]
 
         dashboard.save()
 
@@ -371,20 +375,26 @@ def save_dashboard(data, user_id):
             else:
                 dashboard_view = DashboardView.objects.get(id=dashboard_view_data["id"])
 
-            dashboard_view.teams.set(
-                Team.objects.filter(
-                    team_no__in=set(
-                        team["team_no"] for team in data["teams"] if team["checked"]
-                    )
-                )
-            )
             dashboard_view.reference_team_id = dashboard_view_data.get(
                 "reference_team_id", None
             )
             dashboard_view.dash_view_typ_id = dashboard_view_data["dash_view_typ"][
                 "dash_view_typ"
             ]
+            dashboard_view.name = dashboard_view_data["name"]
+            dashboard_view.order = dashboard_view_data["order"]
+            dashboard_view.active = dashboard_view_data["active"]
             dashboard_view.save()
+
+            dashboard_view.teams.set(
+                Team.objects.filter(
+                    team_no__in=set(
+                        team["team_no"]
+                        for team in dashboard_view_data["teams"]
+                        if team["checked"]
+                    )
+                )
+            )
 
             for dashboard_graph_data in dashboard_view_data.get("dashboard_graphs", []):
                 if dashboard_view_data.get("id", None) is None:
@@ -395,7 +405,7 @@ def save_dashboard(data, user_id):
                             & Q(graph_id=dashboard_graph_data["graph_id"])
                         )
                     except DashboardGraph.DoesNotExist:
-                        dashboard_graph = DashboardGraph(dashboard=dashboard)
+                        dashboard_graph = DashboardGraph(dashboard_view=dashboard_view)
                 else:
                     dashboard_graph = DashboardGraph.objects.get(
                         id=dashboard_graph_data["id"]
@@ -406,3 +416,7 @@ def save_dashboard(data, user_id):
                 dashboard_graph.active = dashboard_graph_data["active"]
 
                 dashboard_graph.save()
+
+
+def get_dashboard_view_types():
+    return DashboardViewType.objects.all()
