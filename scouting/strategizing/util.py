@@ -346,7 +346,7 @@ def get_dashboard(user_id):
                 ],
             }
             for dashboard_view in dashboard.dashboardview_set.filter(
-                Q(void_ind="n")
+                Q(void_ind="n") & Q(dash_view_typ=dashboard.default_dash_view_typ)
             ).order_by("order")
         ],
     }
@@ -365,7 +365,9 @@ def save_dashboard(data, user_id):
             dashboard.season = scouting.util.get_current_season()
 
         dashboard.active = data["active"]
-        dashboard.dash_view_typ_id = data["default_dash_view_typ"]["dash_view_typ"]
+        dashboard.default_dash_view_typ_id = data["default_dash_view_typ"][
+            "dash_view_typ"
+        ]
 
         dashboard.save()
 
