@@ -8,6 +8,7 @@ import scouting
 import scouting.util
 from general.security import ret_message
 from scouting.models import (
+    DashboardView,
     Event,
     Team,
     TeamNote,
@@ -308,29 +309,41 @@ def get_dashboard(user_id):
     parsed = {
         "id": dashboard.id,
         "active": dashboard.active,
-        "teams": [
-            scouting.util.parse_team(team, True) for team in dashboard.teams.all()
-        ],
-        "reference_team_id": dashboard.reference_team_id,
-        "dashboard_graphs": [
+        "dashboard_views": [
             {
-                "id": dashboard_graph.id,
-                "graph_id": dashboard_graph.graph.id,
-                "graph_name": dashboard_graph.graph.name,
-                "graph_typ": dashboard_graph.graph.graph_typ.graph_typ,
-                "graph_nm": dashboard_graph.graph.graph_typ.graph_nm,
-                "x_scale_min": dashboard_graph.graph.x_scale_min,
-                "x_scale_max": dashboard_graph.graph.x_scale_max,
-                "y_scale_min": dashboard_graph.graph.y_scale_min,
-                "y_scale_max": dashboard_graph.graph.y_scale_max,
-                "order": dashboard_graph.order,
-                "active": dashboard_graph.active,
+                "id": dashboard_view.id,
+                "dash_view_typ": dashboard_view.dash_view_typ.id,
+                "teams": [
+                    scouting.util.parse_team(team, True)
+                    for team in dashboard_view.teams.all()
+                ],
+                "reference_team_id": dashboard.reference_team_id,
+                "order": dashboard_view.order,
+                "active": dashboard_view.active,
+                "dashboard_graphs": [
+                    {
+                        "id": dashboard_graph.id,
+                        "graph_id": dashboard_graph.graph.id,
+                        "graph_name": dashboard_graph.graph.name,
+                        "graph_typ": dashboard_graph.graph.graph_typ.graph_typ,
+                        "graph_nm": dashboard_graph.graph.graph_typ.graph_nm,
+                        "x_scale_min": dashboard_graph.graph.x_scale_min,
+                        "x_scale_max": dashboard_graph.graph.x_scale_max,
+                        "y_scale_min": dashboard_graph.graph.y_scale_min,
+                        "y_scale_max": dashboard_graph.graph.y_scale_max,
+                        "order": dashboard_graph.order,
+                        "active": dashboard_graph.active,
+                    }
+                    for dashboard_graph in dashboard_view.dashboardgraph_set.filter(
+                        Q(active="y")
+                        & Q(void_ind="n")
+                        & Q(graph__active="y")
+                        & Q(graph__void_ind="n")
+                    ).order_by("order")
+                ],
             }
-            for dashboard_graph in dashboard.dashboardgraph_set.filter(
-                Q(active="y")
-                & Q(void_ind="n")
-                & Q(graph__active="y")
-                & Q(graph__void_ind="n")
+            for dashboard_view in dashboard.dashboardview_set.filter(
+                Q(active="y") & Q(void_ind="n")
             ).order_by("order")
         ],
     }
@@ -350,34 +363,46 @@ def save_dashboard(data, user_id):
 
         dashboard.active = data["active"]
 
-        dashboard.teams.set(
-            Team.objects.filter(
-                team_no__in=set(
-                    team["team_no"] for team in data["teams"] if team["checked"]
-                )
-            )
-        )
-        dashboard.reference_team_id = data.get("reference_team_id", None)
-
         dashboard.save()
 
-        for dashboard_graph_data in data.get("dashboard_graphs", []):
-            if dashboard_graph_data.get("id", None) is None:
-                try:
-                    dashboard_graph = DashboardGraph.objects.get(
-                        Q(dashboard=dashboard)
-                        & Q(void_ind="n")
-                        & Q(graph_id=dashboard_graph_data["graph_id"])
-                    )
-                except DashboardGraph.DoesNotExist:
-                    dashboard_graph = DashboardGraph(dashboard=dashboard)
+        for dashboard_view_data in data.get("dashboard_views", []):
+            if dashboard_view_data.get("id", None) is None:
+                dashboard_view = DashboardView(dashboard=dashboard)
             else:
-                dashboard_graph = DashboardGraph.objects.get(
-                    id=dashboard_graph_data["id"]
+                dashboard_view = DashboardView.objects.get(id=dashboard_view_data["id"])
+
+            dashboard_view.teams.set(
+                Team.objects.filter(
+                    team_no__in=set(
+                        team["team_no"] for team in data["teams"] if team["checked"]
+                    )
                 )
+            )
+            dashboard_view.reference_team_id = dashboard_view_data.get(
+                "reference_team_id", None
+            )
+            dashboard_view.dash_view_typ_id = dashboard_view_data["dash_view_typ"][
+                "dash_view_typ"
+            ]
+            dashboard_view.save()
 
-            dashboard_graph.graph_id = dashboard_graph_data["graph_id"]
-            dashboard_graph.order = dashboard_graph_data["order"]
-            dashboard_graph.active = dashboard_graph_data["active"]
+            for dashboard_graph_data in dashboard_view_data.get("dashboard_graphs", []):
+                if dashboard_view_data.get("id", None) is None:
+                    try:
+                        dashboard_graph = DashboardGraph.objects.get(
+                            Q(dashboard_view=dashboard_view)
+                            & Q(void_ind="n")
+                            & Q(graph_id=dashboard_graph_data["graph_id"])
+                        )
+                    except DashboardGraph.DoesNotExist:
+                        dashboard_graph = DashboardGraph(dashboard=dashboard)
+                else:
+                    dashboard_graph = DashboardGraph.objects.get(
+                        id=dashboard_graph_data["id"]
+                    )
 
-            dashboard_graph.save()
+                dashboard_graph.graph_id = dashboard_graph_data["graph_id"]
+                dashboard_graph.order = dashboard_graph_data["order"]
+                dashboard_graph.active = dashboard_graph_data["active"]
+
+                dashboard_graph.save()

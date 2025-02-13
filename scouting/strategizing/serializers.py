@@ -8,6 +8,7 @@ class HistogramBinSerializer(serializers.Serializer):
     bin = serializers.CharField()
     count = serializers.IntegerField()
 
+
 class HistogramSerializer(serializers.Serializer):
     label = serializers.CharField()
     bins = HistogramBinSerializer(many=True)
@@ -41,10 +42,13 @@ class HeatmapSerializer(serializers.Serializer):
     question = QuestionSerializer()
     points = HeatMapPointSerializer(many=True)
 
+
 class DashboardGraphSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     graph_id = serializers.IntegerField()
-    graph_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    graph_name = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
     graph_nm = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     graph_typ = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     x_scale_min = serializers.IntegerField()
@@ -55,9 +59,22 @@ class DashboardGraphSerializer(serializers.Serializer):
     active = serializers.CharField()
 
 
+class DashboardViewTypeSerializer(serializers.Serializer):
+    dash_view_typ = serializers.CharField()
+    dash_view_nm = serializers.CharField()
+
+
+class DashboardViewSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    dash_view_typ = DashboardViewTypeSerializer()
+    teams = TeamSerializer(many=True)
+    reference_team_id = serializers.IntegerField(required=False, allow_null=True)
+    dashboard_graphs = DashboardGraphSerializer(many=True)
+    order = serializers.IntegerField()
+    active = serializers.CharField()
+
+
 class DashboardSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     active = serializers.CharField()
-    dashboard_graphs = DashboardGraphSerializer(many=True)
-    teams = TeamSerializer(many=True)
-    reference_team_id = serializers.IntegerField(required=False, allow_null=True)
+    dashboard_views = DashboardViewSerializer(many=True)
