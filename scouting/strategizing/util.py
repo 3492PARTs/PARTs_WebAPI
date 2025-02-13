@@ -219,7 +219,7 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                         for g_bin in label["bins"]:
                             g_bin["bin"] = f"{team_id}: {g_bin['bin']}"
 
-                            #merge graphs
+                            # merge graphs
                             if len(all_graphs) > 0:
                                 for all_label in all_graphs:
                                     if all_label["label"] == label["label"]:
@@ -258,7 +258,9 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                         all_graphs.append(plot)
                 case "ht-map":
                     for heatmap in team_graph:
-                        heatmap["question"]["question"] = f"{team_id}: {heatmap['question']['question']}"
+                        heatmap["question"][
+                            "question"
+                        ] = f"{team_id}: {heatmap['question']['question']}"
 
                         all_graphs.append(heatmap)
 
@@ -269,7 +271,6 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
     graph = form.models.Graph.objects.get(id=graph_id)
 
     data = graph_team(graph, team_ids, reference_team_id)
-
 
     serializer = None
     match graph.graph_typ.graph_typ:
@@ -363,11 +364,17 @@ def save_dashboard(data, user_id):
         for dashboard_graph_data in data.get("dashboard_graphs", []):
             if dashboard_graph_data.get("id", None) is None:
                 try:
-                    dashboard_graph = DashboardGraph.objects.get(graph_id=dashboard_graph_data["graph_id"])
+                    dashboard_graph = DashboardGraph.objects.get(
+                        Q(dashboard=dashboard)
+                        & Q(void_ind="n")
+                        & Q(graph_id=dashboard_graph_data["graph_id"])
+                    )
                 except DashboardGraph.DoesNotExist:
                     dashboard_graph = DashboardGraph(dashboard=dashboard)
             else:
-                dashboard_graph = DashboardGraph.objects.get(id=dashboard_graph_data["id"])
+                dashboard_graph = DashboardGraph.objects.get(
+                    id=dashboard_graph_data["id"]
+                )
 
             dashboard_graph.graph_id = dashboard_graph_data["graph_id"]
             dashboard_graph.order = dashboard_graph_data["order"]

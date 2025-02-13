@@ -23,14 +23,33 @@ from form.models import (
     QuestionType,
     QuestionAggregate,
     QuestionAggregateType,
-    QuestionCondition, Flow, FlowAnswer,
-    QuestionConditionType, FlowCondition, FlowQuestion, GraphType, Graph, GraphCategory, GraphQuestion, GraphBin,
-    GraphCategoryAttribute, GraphQuestionType, QuestionAggregateQuestion
+    QuestionCondition,
+    Flow,
+    FlowAnswer,
+    QuestionConditionType,
+    FlowCondition,
+    FlowQuestion,
+    GraphType,
+    Graph,
+    GraphCategory,
+    GraphQuestion,
+    GraphBin,
+    GraphCategoryAttribute,
+    GraphQuestionType,
+    QuestionAggregateQuestion,
 )
 from scouting.models import Match, Season, FieldResponse, PitResponse, Event
 
 
-def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = "", not_in_flow = False, is_conditional=False, is_not_conditional=False, qid = None):
+def get_questions(
+    form_typ: str = None,
+    active: str = "",
+    form_sub_typ: str = "",
+    not_in_flow=False,
+    is_conditional=False,
+    is_not_conditional=False,
+    qid=None,
+):
     questions = []
     q_season = Q()
     q_active_ind = Q()
@@ -63,22 +82,43 @@ def get_questions(form_typ: str = None, active: str = "", form_sub_typ: str = ""
         q_not_in_flow = Q(in_flow=False)
 
     if is_conditional:
-        q_is_conditional = Q(Q(condition_question_to__void_ind="n") & Q(condition_question_to__active="y"))
+        q_is_conditional = Q(
+            Q(condition_question_to__void_ind="n")
+            & Q(condition_question_to__active="y")
+        )
 
     if is_not_conditional:
-        q_is_not_conditional = Q(Q(condition_question_to__isnull=True) | (Q(condition_question_to__isnull=False) & (Q(condition_question_to__active="n") | Q(condition_question_to__void_ind="y"))))
+        q_is_not_conditional = Q(
+            Q(condition_question_to__isnull=True)
+            | (
+                Q(condition_question_to__isnull=False)
+                & (
+                    Q(condition_question_to__active="n")
+                    | Q(condition_question_to__void_ind="y")
+                )
+            )
+        )
 
     if qid is not None:
         q_id = Q(id=qid)
 
     qs = (
-        Question.objects
-        .prefetch_related("questionoption_set", "scout_question", "question_typ", "condition_question_from", "condition_question_to", "flowquestion_set")
+        Question.objects.prefetch_related(
+            "questionoption_set",
+            "scout_question",
+            "question_typ",
+            "condition_question_from",
+            "condition_question_to",
+            "flowquestion_set",
+        )
         .annotate(
             in_flow=Exists(
-                FlowQuestion.objects.filter(Q(question_id=OuterRef("pk")) & Q(active="y") & Q(void_ind="n"))
+                FlowQuestion.objects.filter(
+                    Q(question_id=OuterRef("pk")) & Q(active="y") & Q(void_ind="n")
+                )
             )
-        ).filter(
+        )
+        .filter(
             q_id
             & q_season
             & q_form_typ
@@ -135,17 +175,22 @@ def parse_question(in_question: Question):
     # Flag if question has conditions
     try:
         conditional_questions = in_question.condition_question_from.filter(
-            Q(void_ind="n") & Q(active="y") & Q(question_to__active="y"))
+            Q(void_ind="n") & Q(active="y") & Q(question_to__active="y")
+        )
     except QuestionCondition.DoesNotExist:
         conditional_questions = None
 
     # Flag if question is condition of another
     try:
-        conditional_on_question = in_question.condition_question_to.get(Q(void_ind="n") & Q(active="y"))
+        conditional_on_question = in_question.condition_question_to.get(
+            Q(void_ind="n") & Q(active="y")
+        )
     except QuestionCondition.DoesNotExist:
         conditional_on_question = None
 
-    flow_questions = in_question.flowquestion_set.filter(Q(active="y") & Q(void_ind="n"))
+    flow_questions = in_question.flowquestion_set.filter(
+        Q(active="y") & Q(void_ind="n")
+    )
 
     return {
         "id": in_question.id,
@@ -171,10 +216,24 @@ def parse_question(in_question: Question):
         "short_display_value": f"{'' if in_question.active == 'y' else 'Deactivated: '} {in_question.form_sub_typ.form_sub_nm + ': ' if in_question.form_sub_typ is not None else ''}{in_question.question}",
         "display_value": f"{'' if in_question.active == 'y' else 'Deactivated: '} Order: {in_question.order}: {in_question.form_sub_typ.form_sub_nm + ': ' if in_question.form_sub_typ is not None else ''}{in_question.question}",
         "scout_question": scout_question,
-        "question_conditional_on": conditional_on_question.question_from.id if conditional_on_question is not None else None,
-        "question_condition_value": conditional_on_question.value if conditional_on_question is not None else None,
-        "question_condition_typ": conditional_on_question.question_condition_typ if conditional_on_question is not None else None,
-        "conditional_question_id_set": set(cq.question_to.id for cq in conditional_questions),
+        "question_conditional_on": (
+            conditional_on_question.question_from.id
+            if conditional_on_question is not None
+            else None
+        ),
+        "question_condition_value": (
+            conditional_on_question.value
+            if conditional_on_question is not None
+            else None
+        ),
+        "question_condition_typ": (
+            conditional_on_question.question_condition_typ
+            if conditional_on_question is not None
+            else None
+        ),
+        "conditional_question_id_set": set(
+            cq.question_to.id for cq in conditional_questions
+        ),
     }
 
 
@@ -206,7 +265,11 @@ def save_question(data):
             void_ind="n",
         )
 
-    question.form_sub_typ_id = None if data.get("form_sub_typ", None) is None else data["form_sub_typ"].get("form_sub_typ", None)
+    question.form_sub_typ_id = (
+        None
+        if data.get("form_sub_typ", None) is None
+        else data["form_sub_typ"].get("form_sub_typ", None)
+    )
     question.x = data.get("x", None)
     question.y = data.get("y", None)
     question.width = data.get("width", None)
@@ -267,13 +330,11 @@ def save_question(data):
                 )
 
         for qa in questions_answered:
-            Answer(
-                response=qa, question=question, value="!EXIST", void_ind="n"
-            ).save()
+            Answer(response=qa, question=question, value="!EXIST", void_ind="n").save()
 
     if (
-            data["question_typ"]["is_list"] == "y"
-            and len(data.get("questionoption_set", [])) <= 0
+        data["question_typ"]["is_list"] == "y"
+        and len(data.get("questionoption_set", [])) <= 0
     ):
         raise Exception("Select questions must have options.")
 
@@ -284,25 +345,28 @@ def save_question(data):
             qop.active = op["active"]
         else:
             qop = QuestionOption(
-                option=op["option"], question=question, active=op["active"], void_ind="n"
+                option=op["option"],
+                question=question,
+                active=op["active"],
+                void_ind="n",
             )
 
         qop.save()
 
 
 def get_question_types():
-    qts = QuestionType.objects.filter(void_ind="n").order_by(
-        Lower("question_typ_nm")
-    )
+    qts = QuestionType.objects.filter(void_ind="n").order_by(Lower("question_typ_nm"))
     question_types = []
 
     for qt in qts:
 
-        question_types.append({
-            "question_typ": qt.question_typ,
-            "question_typ_nm": qt.question_typ_nm,
-            "is_list": qt.is_list,
-        })
+        question_types.append(
+            {
+                "question_typ": qt.question_typ,
+                "question_typ_nm": qt.question_typ_nm,
+                "is_list": qt.is_list,
+            }
+        )
 
     return question_types
 
@@ -319,8 +383,8 @@ def save_or_update_answer(data, response: Response):
     if data.get("question", None) is not None:
         q_question = Q(question_id=data["question"]["id"])
 
-    #q_question_flow = Q()
-    #if data.get("flow", None) is not None:
+    # q_question_flow = Q()
+    # if data.get("flow", None) is not None:
     #    q_question_flow = Q(flow_id=data["flow"]["id"])
     # flows are not unique this causes them all to save under a single answer
 
@@ -332,17 +396,20 @@ def save_or_update_answer(data, response: Response):
         answer = Answer.objects.get(
             Q(response=response)
             & q_question
-            #& q_question_flow
+            # & q_question_flow
             & Q(void_ind="n")
         )
         answer.value = data.get("value", "")
         answer.save()
     except Answer.DoesNotExist:
         answer = Answer(
-            question_id=data.get("question", {}).get("id", None), flow_id=data.get("flow", {}).get("id", None), value=data.get("value", ""), response=response, void_ind="n"
+            question_id=data.get("question", {}).get("id", None),
+            flow_id=data.get("flow", {}).get("id", None),
+            value=data.get("value", ""),
+            response=response,
+            void_ind="n",
         )
         answer.save()
-
 
     for flow_answer in data.get("flow_answers", []):
         save_question_flow_answer(flow_answer, answer)
@@ -351,9 +418,13 @@ def save_or_update_answer(data, response: Response):
 
 
 def save_question_flow_answer(data, answer: Answer):
-    flow_answer = FlowAnswer(answer=answer,
-                     question_id=data['question']['id'], value=data.get("value", ""), value_time=data['value_time'], void_ind="n"
-                     )
+    flow_answer = FlowAnswer(
+        answer=answer,
+        question_id=data["question"]["id"],
+        value=data.get("value", ""),
+        value_time=data["value_time"],
+        void_ind="n",
+    )
     flow_answer.save()
     return flow_answer
 
@@ -401,9 +472,7 @@ def get_responses(form_typ: int, archive_ind: str):
         questions = get_questions(res.form_typ, "y")
 
         for question in questions:
-            question["answer"] = get_response_question_answer(
-                res, question["id"]
-            )
+            question["answer"] = get_response_question_answer(res, question["id"])
 
         responses.append(
             {
@@ -440,15 +509,18 @@ def get_question_aggregates(form_typ: str):
         )
         season = Q(question__in=[sq.question for sq in scout_questions])
 
-    q_questions = Exists(QuestionAggregateQuestion.objects.filter(Q(void_ind="n") & Q(question_aggregate_id=OuterRef("pk")) & Q(question__form_typ=form_typ) & season))
-
-    qas = QuestionAggregate.objects.filter(
-        Q(void_ind="n") & q_questions
-    ).distinct()
-    for qa in qas:
-        question_aggregates.append(
-            parse_question_aggregate(qa)
+    q_questions = Exists(
+        QuestionAggregateQuestion.objects.filter(
+            Q(void_ind="n")
+            & Q(question_aggregate_id=OuterRef("pk"))
+            & Q(question__form_typ=form_typ)
+            & season
         )
+    )
+
+    qas = QuestionAggregate.objects.filter(Q(void_ind="n") & q_questions).distinct()
+    for qa in qas:
+        question_aggregates.append(parse_question_aggregate(qa))
 
     return question_aggregates
 
@@ -465,9 +537,14 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
                 "question_condition_typ": question_aggregate_question.question_condition_typ,
                 "question": parse_question(question_aggregate_question.question),
                 "condition_value": question_aggregate_question.condition_value,
-                "active": question_aggregate_question.active
+                "active": question_aggregate_question.active,
             }
-            for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(Q(void_ind="n") & Q(active="y") & Q(question__void_ind="n") & Q(question__active="y"))
+            for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(
+                Q(void_ind="n")
+                & Q(active="y")
+                & Q(question__void_ind="n")
+                & Q(question__active="y")
+            )
         ],
         "active": question_aggregate.active,
     }
@@ -480,26 +557,30 @@ def get_question_aggregate_types():
 def save_question_aggregate(data):
     with transaction.atomic():
         if data.get("id", None) is not None:
-            qa = QuestionAggregate.objects.get(
-                Q(id=data["id"])
-            )
+            qa = QuestionAggregate.objects.get(Q(id=data["id"]))
         else:
             qa = QuestionAggregate()
 
         qa.name = data["name"]
         qa.horizontal = data["horizontal"]
         qa.active = data["active"]
-        qa.question_aggregate_typ_id = data["question_aggregate_typ"]["question_aggregate_typ"]
+        qa.question_aggregate_typ_id = data["question_aggregate_typ"][
+            "question_aggregate_typ"
+        ]
         qa.save()
 
         for question_aggregate_question in data["aggregate_questions"]:
             if question_aggregate_question.get("id", None) is None:
                 qaq = QuestionAggregateQuestion()
             else:
-                qaq = QuestionAggregateQuestion.objects.get(id=question_aggregate_question["id"])
+                qaq = QuestionAggregateQuestion.objects.get(
+                    id=question_aggregate_question["id"]
+                )
 
             qaq.question_aggregate = qa
-            qaq.question_condition_typ_id = question_aggregate_question.get("question_condition_typ", {}).get("question_condition_typ", None)
+            qaq.question_condition_typ_id = question_aggregate_question.get(
+                "question_condition_typ", {}
+            ).get("question_condition_typ", None)
             qaq.question_id = question_aggregate_question["question"]["id"]
             qaq.condition_value = question_aggregate_question["condition_value"]
             qaq.active = question_aggregate_question["active"]
@@ -517,9 +598,7 @@ def get_question_condition(form_typ: str):
         scout_questions = scouting.models.Question.objects.filter(
             Q(void_ind="n") & Q(season=current_season)
         )
-        season = Q(
-            question_from__in=[q.question for q in scout_questions]
-        )
+        season = Q(question_from__in=[q.question for q in scout_questions])
 
     question_conditions = QuestionCondition.objects.filter(
         Q(void_ind="n") & Q(question_from__form_typ=form_typ) & season
@@ -553,7 +632,9 @@ def save_question_condition(data):
         qc = QuestionCondition()
 
     qc.value = data["value"]
-    qc.question_condition_typ_id = data["question_condition_typ"]["question_condition_typ"]
+    qc.question_condition_typ_id = data["question_condition_typ"][
+        "question_condition_typ"
+    ]
     qc.active = data["active"]
 
     qc.question_from_id = data["question_from"]["id"]
@@ -602,9 +683,7 @@ def get_flow_condition(form_typ: str):
 
 def save_flow_condition(data):
     if data.get("id", None) is not None:
-        qfc = FlowCondition.objects.get(
-            id=data["id"]
-        )
+        qfc = FlowCondition.objects.get(id=data["id"])
     else:
         qfc = FlowCondition()
 
@@ -622,7 +701,8 @@ def format_flow_values(flow: Flow):
     # Flag if question flow has conditions
     try:
         count = flow.condition_flow_from.filter(
-            Q(void_ind="n") & Q(flow_to__void_ind="n")).count()
+            Q(void_ind="n") & Q(flow_to__void_ind="n")
+        ).count()
         has_conditions = "y" if count > 0 else "n"
     except FlowCondition.DoesNotExist:
         has_conditions = "n"
@@ -634,46 +714,51 @@ def format_flow_values(flow: Flow):
         question_flow_conditional_on = None
 
     return {
-            "id": flow.id,
-            "name": flow.name,
-            "single_run": flow.single_run,
-            "form_typ": flow.form_typ,
-            "form_sub_typ": flow.form_sub_typ if flow.form_sub_typ is not None else None,
-            "flow_questions": [{
+        "id": flow.id,
+        "name": flow.name,
+        "single_run": flow.single_run,
+        "form_typ": flow.form_typ,
+        "form_sub_typ": flow.form_sub_typ if flow.form_sub_typ is not None else None,
+        "flow_questions": [
+            {
                 "id": qf.id,
                 "flow_id": flow.id,
                 "question": parse_question(qf.question),
                 "order": qf.order,
-                "active": qf.active
-            } for qf in FlowQuestion.objects.filter(Q(flow=flow) & Q(active="y") & Q(question__void_ind="n")& Q(question__active="y") & Q(void_ind="n")).order_by("order", "question__question")],
-            "void_ind": flow.void_ind,
-            "has_conditions": has_conditions,
-            "flow_conditional_on": question_flow_conditional_on.flow_from.id if question_flow_conditional_on is not None else None
-        }
-
-
-
-def get_form_questions(
-        form_typ: str
-):
-    form_type = FormType.objects.get(form_typ=form_typ)
-    form_parsed = {
-        "form_type": form_type,
-        "form_sub_types": []
+                "active": qf.active,
+            }
+            for qf in FlowQuestion.objects.filter(
+                Q(flow=flow)
+                & Q(active="y")
+                & Q(question__void_ind="n")
+                & Q(question__active="y")
+                & Q(void_ind="n")
+            ).order_by("order", "question__question")
+        ],
+        "void_ind": flow.void_ind,
+        "has_conditions": has_conditions,
+        "flow_conditional_on": (
+            question_flow_conditional_on.flow_from.id
+            if question_flow_conditional_on is not None
+            else None
+        ),
     }
+
+
+def get_form_questions(form_typ: str):
+    form_type = FormType.objects.get(form_typ=form_typ)
+    form_parsed = {"form_type": form_type, "form_sub_types": []}
 
     sub_types = FormSubType.objects.filter(form_typ=form_type).order_by("order")
     for st in sub_types:
         qs = get_questions("field", "y", st.form_sub_typ, not_in_flow=True)
         qfs = get_flows(form_typ="field", form_sub_typ=st.form_sub_typ)
 
-        form_parsed["form_sub_types"].append({
-            "form_sub_typ": st,
-            "questions": qs,
-            "flows": qfs
-        })
+        form_parsed["form_sub_types"].append(
+            {"form_sub_typ": st, "questions": qs, "flows": qfs}
+        )
 
-    #print(form_parsed)
+    # print(form_parsed)
 
     return form_parsed
 
@@ -684,16 +769,31 @@ def get_response_answers(response: Response):
     question_answers = Answer.objects.filter(Q(response=response) & Q(void_ind="n"))
 
     for question_answer in question_answers:
-        answers.append({
-            "question": get_questions(qid=question_answer.question.id)[0] if question_answer.question is not None else None,
-            "flow": get_flows(question_answer.flow.id)[0] if question_answer.flow is not None else None,
-            "answer": question_answer.value,
-            "flow_answers": list({
-                "question": parse_question(qfa.question),
-                "value": qfa.value,
-                "value_time": qfa.value_time
-                                         } for qfa in question_answer.flowanswer_set.filter(void_ind="n").order_by("value_time"))
-        })
+        answers.append(
+            {
+                "question": (
+                    get_questions(qid=question_answer.question.id)[0]
+                    if question_answer.question is not None
+                    else None
+                ),
+                "flow": (
+                    get_flows(question_answer.flow.id)[0]
+                    if question_answer.flow is not None
+                    else None
+                ),
+                "answer": question_answer.value,
+                "flow_answers": list(
+                    {
+                        "question": parse_question(qfa.question),
+                        "value": qfa.value,
+                        "value_time": qfa.value_time,
+                    }
+                    for qfa in question_answer.flowanswer_set.filter(
+                        void_ind="n"
+                    ).order_by("value_time")
+                ),
+            }
+        )
 
     return answers
 
@@ -842,7 +942,7 @@ def save_answers(data):
             alerts.util.stage_channel_send_for_all_channels(a, acct)
 
 
-def get_flows(fid = None, form_typ=None, form_sub_typ=None):
+def get_flows(fid=None, form_typ=None, form_sub_typ=None):
     q_id = Q()
     if fid is not None:
         q_id = Q(id=fid)
@@ -860,7 +960,9 @@ def get_flows(fid = None, form_typ=None, form_sub_typ=None):
         current_season = scouting.util.get_current_season()
         q_season = Q(scout_question_flow__season=current_season)
 
-    flows = Flow.objects.filter(q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind ="n")).order_by("form_sub_typ_id", "name")
+    flows = Flow.objects.filter(
+        q_id & q_form_typ & q_form_sub_typ & q_season & Q(void_ind="n")
+    ).order_by("form_sub_typ_id", "name")
 
     parsed = []
     for flow in flows:
@@ -887,7 +989,9 @@ def save_flow(data):
     ids = []
     for data_flow_question in data.get("flow_questions", []):
         if data_flow_question.get("id", None) is None:
-            question_flow = FlowQuestion(flow=flow, question_id=data_flow_question["question"]["id"])
+            question_flow = FlowQuestion(
+                flow=flow, question_id=data_flow_question["question"]["id"]
+            )
         else:
             question_flow = FlowQuestion.objects.get(id=data_flow_question["id"])
 
@@ -900,14 +1004,18 @@ def save_flow(data):
         ids.append(question_flow.id)
 
     # void questions no longer in flow
-    FlowQuestion.objects.filter(Q(flow=flow) & Q(void_ind="n") & ~Q(id__in=ids)).update(void_ind="y")
+    FlowQuestion.objects.filter(Q(flow=flow) & Q(void_ind="n") & ~Q(id__in=ids)).update(
+        void_ind="y"
+    )
 
-    #Create link to season if does not exist
+    # Create link to season if does not exist
     if data["form_typ"]["form_typ"] in ["pit", "field"]:
         try:
             flow.scout_question_flow.get(void_ind="n")
         except scouting.models.QuestionFlow.DoesNotExist:
-            scouting.models.QuestionFlow(flow=flow, season=scouting.util.get_current_season()).save()
+            scouting.models.QuestionFlow(
+                flow=flow, season=scouting.util.get_current_season()
+            ).save()
 
     return flow
 
@@ -927,7 +1035,12 @@ def parse_graph_category(graph_category: GraphCategory):
         "category": graph_category.category,
         "order": graph_category.order,
         "active": graph_category.active,
-        "graphcategoryattribute_set": [parse_graph_category_attribute(gc) for gc in graph_category.graphcategoryattribute_set.filter(Q(void_ind="n") & Q(active="y"))]
+        "graphcategoryattribute_set": [
+            parse_graph_category_attribute(gc)
+            for gc in graph_category.graphcategoryattribute_set.filter(
+                Q(void_ind="n") & Q(active="y")
+            )
+        ],
     }
 
 
@@ -935,11 +1048,19 @@ def parse_graph_category_attribute(graph_category_attribute: GraphCategoryAttrib
     return {
         "id": graph_category_attribute.id,
         "graph_category_id": graph_category_attribute.graph_category.id,
-        "question": parse_question(graph_category_attribute.question) if graph_category_attribute.question is not None else None,
-        "question_aggregate": parse_question_aggregate(graph_category_attribute.question_aggregate) if graph_category_attribute.question_aggregate is not None else None,
+        "question": (
+            parse_question(graph_category_attribute.question)
+            if graph_category_attribute.question is not None
+            else None
+        ),
+        "question_aggregate": (
+            parse_question_aggregate(graph_category_attribute.question_aggregate)
+            if graph_category_attribute.question_aggregate is not None
+            else None
+        ),
         "question_condition_typ": graph_category_attribute.question_condition_typ,
         "value": graph_category_attribute.value,
-        "active": graph_category_attribute.active
+        "active": graph_category_attribute.active,
     }
 
 
@@ -947,10 +1068,18 @@ def parse_graph_question(graph_question: GraphQuestion):
     return {
         "id": graph_question.id,
         "graph_id": graph_question.graph.id,
-        "question": parse_question(graph_question.question) if graph_question.question is not None else None,
-        "question_aggregate": parse_question_aggregate(graph_question.question_aggregate) if graph_question.question_aggregate is not None else None,
+        "question": (
+            parse_question(graph_question.question)
+            if graph_question.question is not None
+            else None
+        ),
+        "question_aggregate": (
+            parse_question_aggregate(graph_question.question_aggregate)
+            if graph_question.question_aggregate is not None
+            else None
+        ),
         "graph_question_typ": graph_question.graph_question_typ,
-        "active": graph_question.active
+        "active": graph_question.active,
     }
 
 
@@ -959,29 +1088,47 @@ def get_graphs(for_current_season=False, graph_id=None):
     if for_current_season:
         current_season = scouting.util.get_current_season()
 
-        q_season = Q(Q(scout_graph__season=current_season) & Q(scout_graph__void_ind="n"))
+        q_season = Q(
+            Q(scout_graph__season=current_season) & Q(scout_graph__void_ind="n")
+        )
 
     q_graph_id = Q()
     if graph_id is not None:
         q_graph_id = Q(id=graph_id)
 
-    graphs = Graph.objects.filter(q_graph_id & q_season & Q(void_ind="n") & Q(active="y")).order_by(Lower("graph_typ__graph_nm"), Lower("name"))
+    graphs = Graph.objects.filter(
+        q_graph_id & q_season & Q(void_ind="n") & Q(active="y")
+    ).order_by(Lower("graph_typ__graph_nm"), Lower("name"))
 
     parsed = []
     for graph in graphs:
-        parsed.append({
-            "id": graph.id,
-            "graph_typ": graph.graph_typ,
-            "name": graph.name,
-            "x_scale_min": graph.x_scale_min,
-            "x_scale_max": graph.x_scale_max,
-            "y_scale_min": graph.y_scale_min,
-            "y_scale_max": graph.y_scale_max,
-            "active": graph.active,
-            "graphbin_set": graph.graphbin_set.filter(Q(void_ind="n") & Q(active="y")).order_by("bin"),
-            "graphcategory_set": [parse_graph_category(graph_category) for graph_category in graph.graphcategory_set.filter(Q(void_ind="n") & Q(active="y")).order_by("order")],
-            "graphquestion_set":[parse_graph_question(graph_question) for graph_question in graph.graphquestion_set.filter(Q(void_ind="n") & Q(active="y")).order_by("question__order")],
-        })
+        parsed.append(
+            {
+                "id": graph.id,
+                "graph_typ": graph.graph_typ,
+                "name": graph.name,
+                "x_scale_min": graph.x_scale_min,
+                "x_scale_max": graph.x_scale_max,
+                "y_scale_min": graph.y_scale_min,
+                "y_scale_max": graph.y_scale_max,
+                "active": graph.active,
+                "graphbin_set": graph.graphbin_set.filter(
+                    Q(void_ind="n") & Q(active="y")
+                ).order_by("bin"),
+                "graphcategory_set": [
+                    parse_graph_category(graph_category)
+                    for graph_category in graph.graphcategory_set.filter(
+                        Q(void_ind="n") & Q(active="y")
+                    ).order_by("order")
+                ],
+                "graphquestion_set": [
+                    parse_graph_question(graph_question)
+                    for graph_question in graph.graphquestion_set.filter(
+                        Q(void_ind="n") & Q(active="y")
+                    ).order_by("question__order")
+                ],
+            }
+        )
 
     return parsed
 
@@ -1007,8 +1154,9 @@ def save_graph(data, user_id, for_current_season=False):
             try:
                 scouting.models.Graph.objects.get(Q(graph=graph) & Q(void_ind="n"))
             except scouting.models.Graph.DoesNotExist:
-                scouting.models.Graph(season=scouting.util.get_current_season(), graph=graph).save()
-
+                scouting.models.Graph(
+                    season=scouting.util.get_current_season(), graph=graph
+                ).save()
 
         if graph.graph_typ.requires_bins:
             bins_data = data.get("graphbin_set", [])
@@ -1046,7 +1194,9 @@ def save_graph(data, user_id, for_current_season=False):
 
                 category.save()
 
-                category_attributes_data = category_data.get("graphcategoryattribute_set", [])
+                category_attributes_data = category_data.get(
+                    "graphcategoryattribute_set", []
+                )
                 if len(category_attributes_data) <= 0:
                     raise Exception("No category attribute(s) provided")
 
@@ -1054,35 +1204,62 @@ def save_graph(data, user_id, for_current_season=False):
                     if category_attribute_data.get("id", None) is None:
                         category_attribute = GraphCategoryAttribute()
                     else:
-                        category_attribute = GraphCategoryAttribute.objects.get(id=category_attribute_data["id"])
+                        category_attribute = GraphCategoryAttribute.objects.get(
+                            id=category_attribute_data["id"]
+                        )
 
                     category_attribute.graph_category = category
 
-                    question_condition_typ = category_attribute_data.get("question_condition_typ", None)
+                    question_condition_typ = category_attribute_data.get(
+                        "question_condition_typ", None
+                    )
                     question = category_attribute_data.get("question", None)
-                    question_aggregate = category_attribute_data.get("question_aggregate", None)
+                    question_aggregate = category_attribute_data.get(
+                        "question_aggregate", None
+                    )
 
                     if question is None and question_aggregate is None:
                         raise Exception("No question or aggregate")
 
-                    category_attribute.question_id = None if question is None else question.get("id", None)
-                    category_attribute.question_aggregate_id = None if question_aggregate is None else question_aggregate.get("id", None)
-                    category_attribute.question_condition_typ_id = None if question_condition_typ is None else question_condition_typ.get("question_condition_typ", None)
+                    category_attribute.question_id = (
+                        None if question is None else question.get("id", None)
+                    )
+                    category_attribute.question_aggregate_id = (
+                        None
+                        if question_aggregate is None
+                        else question_aggregate.get("id", None)
+                    )
+                    category_attribute.question_condition_typ_id = (
+                        None
+                        if question_condition_typ is None
+                        else question_condition_typ.get("question_condition_typ", None)
+                    )
                     category_attribute.value = category_attribute_data["value"]
                     category_attribute.active = category_attribute_data["active"]
 
                     category_attribute.save()
 
         requirements = []
-        for required_graph_question_typ in data["graph_typ"]["requires_graph_question_typs"]:
-            requirements.append({
-                "graph_question_typ": required_graph_question_typ["graph_question_typ"],
-                "found": False
-            })
+        for required_graph_question_typ in data["graph_typ"][
+            "requires_graph_question_typs"
+        ]:
+            requirements.append(
+                {
+                    "graph_question_typ": required_graph_question_typ[
+                        "graph_question_typ"
+                    ],
+                    "found": False,
+                }
+            )
 
         for graph_question_data in data.get("graphquestion_set", []):
             if graph_question_data.get("graph_question_typ", None) is not None:
-                requirement = [req for req in requirements if req["graph_question_typ"] == graph_question_data["graph_question_typ"]["graph_question_typ"]]
+                requirement = [
+                    req
+                    for req in requirements
+                    if req["graph_question_typ"]
+                    == graph_question_data["graph_question_typ"]["graph_question_typ"]
+                ]
                 if len(requirement) > 0:
                     requirement[0]["found"] = True
 
@@ -1100,16 +1277,28 @@ def save_graph(data, user_id, for_current_season=False):
             if question is None and question_aggregate is None:
                 raise Exception("No question or aggregate")
 
-            graph_question.graph_question_typ_id = None if graph_question_typ is None else graph_question_typ.get("graph_question_typ", None)
-            graph_question.question_id = None if question is None else question.get("id", None)
-            graph_question.question_aggregate_id = None if question_aggregate is None else question_aggregate.get("id", None)
+            graph_question.graph_question_typ_id = (
+                None
+                if graph_question_typ is None
+                else graph_question_typ.get("graph_question_typ", None)
+            )
+            graph_question.question_id = (
+                None if question is None else question.get("id", None)
+            )
+            graph_question.question_aggregate_id = (
+                None
+                if question_aggregate is None
+                else question_aggregate.get("id", None)
+            )
             graph_question.active = graph_question_data["active"]
 
             graph_question.save()
 
         for requirement in requirements:
             if not requirement["found"]:
-                raise Exception(f"Missing graph question requirement: {requirement['graph_question_typ']}")
+                raise Exception(
+                    f"Missing graph question requirement: {requirement['graph_question_typ']}"
+                )
 
 
 def graph_responses(graph_id, responses, aggregate_responses=None):
@@ -1122,56 +1311,87 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
             for graph_question in graph["graphquestion_set"]:
                 question_bins = {
-                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
-                    "bins": []
+                    "label": (
+                        graph_question["question"]["question"]
+                        if graph_question["question"] is not None
+                        else graph_question["question_aggregate"]["name"]
+                    ),
+                    "bins": [],
                 }
                 all_bins.append(question_bins)
 
                 for gb in graph["graphbin_set"]:
-                    graph_bin = {
-                        "bin": int(gb.bin),
-                        "width": int(gb.width),
-                        "count": 0
-                    }
+                    graph_bin = {"bin": int(gb.bin), "width": int(gb.width), "count": 0}
                     for response in responses:
                         if graph_question["question"] is not None:
                             question = graph_question["question"]
 
                             try:
-                                answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
-                                    question_id=question["id"])).order_by("response__time")
+                                answer = Answer.objects.get(
+                                    Q(response=response)
+                                    & Q(void_ind="n")
+                                    & Q(question_id=question["id"])
+                                ).order_by("response__time")
 
                                 value = answer.value
 
-                                if graph_bin["bin"] <= value < graph_bin["bin"] + graph_bin["width"]:
+                                if (
+                                    graph_bin["bin"]
+                                    <= value
+                                    < graph_bin["bin"] + graph_bin["width"]
+                                ):
                                     graph_bin["count"] += 1
                             except Answer.DoesNotExist:
                                 pass
 
                             # check flow answers, they need combined as they span the whole match
                             flow_answers = FlowAnswer.objects.filter(
-                                Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                    answer__response=response)).order_by("value_time")
+                                Q(question_id=question["id"])
+                                & Q(void_ind="n")
+                                & Q(answer__response=response)
+                            ).order_by("value_time")
                             value = 0
                             for flow_answer in flow_answers:
 
-                                if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                if (
+                                    flow_answer.question.question_typ.question_typ
+                                    == "mnt-psh-btn"
+                                ):
                                     value += 1
                                 else:
                                     value += int(flow_answer.value)
 
-                            if graph_bin["bin"] <= value < graph_bin["bin"] + graph_bin["width"]:
+                            if (
+                                graph_bin["bin"]
+                                <= value
+                                < graph_bin["bin"] + graph_bin["width"]
+                            ):
                                 graph_bin["count"] += 1
                         # based on a question aggregate
                         else:
-                            questions = [question_aggregate_question["question"] for question_aggregate_question in graph_question["question_aggregate"]["aggregate_questions"]]
+                            questions = [
+                                question_aggregate_question["question"]
+                                for question_aggregate_question in graph_question[
+                                    "question_aggregate"
+                                ]["aggregate_questions"]
+                            ]
 
                             for response in responses:
-                                aggregate = aggregate_answers_horizontally(graph_question["question_aggregate"], response, questions)
+                                aggregate = aggregate_answers_horizontally(
+                                    graph_question["question_aggregate"],
+                                    response,
+                                    questions,
+                                )
 
-                                if graph_bin["bin"] <= aggregate < graph_bin["bin"] + graph_bin["width"]:
+                                if (
+                                    graph_bin["bin"]
+                                    <= aggregate
+                                    < graph_bin["bin"] + graph_bin["width"]
+                                ):
                                     graph_bin["count"] += 1
-                    graph_bin["bin"] = f"{graph_bin['bin']} - {graph_bin['bin'] + graph_bin['width'] - 1}"
+                    graph_bin["bin"] = (
+                        f"{graph_bin['bin']} - {graph_bin['bin'] + graph_bin['width'] - 1}"
+                    )
                     question_bins["bins"].append(graph_bin)
             data = all_bins
         case "ctg-hstgrm":
@@ -1183,14 +1403,15 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     "graphcategoryattribute_set": graph_category["graphcategoryattribute_set"],
                     "count": 0
                 })"""
-                categories.append({
-                    "label": graph_category["category"],
-                    "graphcategoryattribute_set": graph_category["graphcategoryattribute_set"],
-                    "bins": [{
-                        "bin": "Dataset",
-                        "count": 0
-                    }]
-                })
+                categories.append(
+                    {
+                        "label": graph_category["category"],
+                        "graphcategoryattribute_set": graph_category[
+                            "graphcategoryattribute_set"
+                        ],
+                        "bins": [{"bin": "Dataset", "count": 0}],
+                    }
+                )
 
             # go response by response to find which match a catrgory
             for response in responses:
@@ -1201,28 +1422,49 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                         # category attribute is based on a question
                         if category_attribute["question"] is not None:
-                            #check regular question answers
-                            answers = Answer.objects.filter(Q(response=response) & Q(void_ind="n") & Q(question_id=category_attribute["question"]["id"])).order_by("response__time")
+                            # check regular question answers
+                            answers = Answer.objects.filter(
+                                Q(response=response)
+                                & Q(void_ind="n")
+                                & Q(question_id=category_attribute["question"]["id"])
+                            ).order_by("response__time")
 
                             for answer in answers:
                                 if answer.question is not None:
                                     value = answer.value
 
                                     if answer.question.value_multiplier is not None:
-                                        value = int(value) * int(answer.question.value_multiplier)
+                                        value = int(value) * int(
+                                            answer.question.value_multiplier
+                                        )
 
-                                    passed_category = passed_category and is_question_condition_passed(category_attribute["question_condition_typ"].question_condition_typ, value, category_attribute["value"])
-
+                                    passed_category = (
+                                        passed_category
+                                        and is_question_condition_passed(
+                                            category_attribute[
+                                                "question_condition_typ"
+                                            ].question_condition_typ,
+                                            value,
+                                            category_attribute["value"],
+                                        )
+                                    )
 
                             # check flow answers, they need combined as they span the whole match
-                            flow_answers = FlowAnswer.objects.filter(Q(question_id=category_attribute["question"]["id"]) & Q(void_ind="n") & Q(answer__response=response)).order_by("value_time")
+                            flow_answers = FlowAnswer.objects.filter(
+                                Q(question_id=category_attribute["question"]["id"])
+                                & Q(void_ind="n")
+                                & Q(answer__response=response)
+                            ).order_by("value_time")
 
                             if len(flow_answers) <= 0:
                                 passed_category = False
 
                             value = 0
                             for flow_answer in flow_answers:
-                                if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                                if (
+                                    flow_answer.question.question_typ.question_typ
+                                    == "mnt-psh-btn"
+                                ):
                                     value += 1
                                 else:
                                     raise Exception("not accounted for yet")
@@ -1231,35 +1473,81 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 if flow_answer.question.value_multiplier is not None:
                                     value *= int(flow_answer.question.value_multiplier)
 
-                            passed_category = passed_category and is_question_condition_passed(
-                                category_attribute["question_condition_typ"].question_condition_typ, value,
-                                category_attribute["value"])
+                            passed_category = (
+                                passed_category
+                                and is_question_condition_passed(
+                                    category_attribute[
+                                        "question_condition_typ"
+                                    ].question_condition_typ,
+                                    value,
+                                    category_attribute["value"],
+                                )
+                            )
 
                         # category attribute is based on a question aggregate
                         else:
-                            aggregate = aggregate_answers_horizontally(category_attribute["question_aggregate"], response, [question_aggregate_question.question for question_aggregate_question in category_attribute["question_aggregate"]["aggregate_questions"]])
+                            aggregate = aggregate_answers_horizontally(
+                                category_attribute["question_aggregate"],
+                                response,
+                                [
+                                    question_aggregate_question.question
+                                    for question_aggregate_question in category_attribute[
+                                        "question_aggregate"
+                                    ][
+                                        "aggregate_questions"
+                                    ]
+                                ],
+                            )
 
-                            passed_category = passed_category and is_question_condition_passed(
-                                category_attribute["question_condition_typ"].question_condition_typ, aggregate,
-                                category_attribute["value"])
+                            passed_category = (
+                                passed_category
+                                and is_question_condition_passed(
+                                    category_attribute[
+                                        "question_condition_typ"
+                                    ].question_condition_typ,
+                                    aggregate,
+                                    category_attribute["value"],
+                                )
+                            )
 
                     # passes attribute, stop processing and move onto next response.
                     if passed_category:
                         category["bins"][0]["count"] += 1
                         break
 
-
             data = categories
         case "res-plot":
             plot = []
-            ref_pt = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is not None and gq["graph_question_typ"].graph_question_typ == 'ref-pnt'][0]
-            aggregate = aggregate_answers_vertically(ref_pt["question_aggregate"], responses if aggregate_responses is None else aggregate_responses, [question_aggregate_question["question"] for question_aggregate_question in ref_pt["question_aggregate"]["aggregate_questions"]])
-            graph_questions = [gq for gq in graph["graphquestion_set"] if gq["graph_question_typ"] is None]
+            ref_pt = [
+                gq
+                for gq in graph["graphquestion_set"]
+                if gq["graph_question_typ"] is not None
+                and gq["graph_question_typ"].graph_question_typ == "ref-pnt"
+            ][0]
+            aggregate = aggregate_answers_vertically(
+                ref_pt["question_aggregate"],
+                responses if aggregate_responses is None else aggregate_responses,
+                [
+                    question_aggregate_question["question"]
+                    for question_aggregate_question in ref_pt["question_aggregate"][
+                        "aggregate_questions"
+                    ]
+                ],
+            )
+            graph_questions = [
+                gq
+                for gq in graph["graphquestion_set"]
+                if gq["graph_question_typ"] is None
+            ]
 
             for graph_question in graph_questions:
                 plot_entry = {
-                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
-                    "points": []
+                    "label": (
+                        graph_question["question"]["question"]
+                        if graph_question["question"] is not None
+                        else graph_question["question_aggregate"]["name"]
+                    ),
+                    "points": [],
                 }
                 plot.append(plot_entry)
 
@@ -1269,32 +1557,39 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                         question = graph_question["question"]
                         # check regular question answers
                         try:
-                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
-                                question_id=question["id"])).order_by("response__time")
+                            answer = Answer.objects.get(
+                                Q(response=response)
+                                & Q(void_ind="n")
+                                & Q(question_id=question["id"])
+                            ).order_by("response__time")
 
                             value = int(answer.value)
 
                             if answer.question.value_multiplier is not None:
                                 value *= int(answer.question.value_multiplier)
 
-                            plot_entry["points"].append({
-                                "point": value - aggregate,
-                                "time": answer.time
-                            })
+                            plot_entry["points"].append(
+                                {"point": value - aggregate, "time": answer.time}
+                            )
                         except Answer.DoesNotExist:
                             pass
 
                         # check flow answers, they need combined as they span the whole match
                         flow_answers = FlowAnswer.objects.filter(
-                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                answer__response=response)).order_by("value_time")
+                            Q(question_id=question["id"])
+                            & Q(void_ind="n")
+                            & Q(answer__response=response)
+                        ).order_by("value_time")
 
                         value = 0
                         time = None
                         for flow_answer in flow_answers:
                             time = flow_answer.answer.response.time
 
-                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                            if (
+                                flow_answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
                                 value += 1
                             else:
                                 raise Exception("not accounted for yet")
@@ -1304,28 +1599,43 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 value *= int(flow_answer.question.value_multiplier)
 
                         if len(flow_answers) > 0:
-                            plot_entry["points"].append({
-                                "point": value - aggregate,
-                                "time": time
-                            })
+                            plot_entry["points"].append(
+                                {"point": value - aggregate, "time": time}
+                            )
 
                     # based on a question aggregate
                     else:
-                        questions = [question_aggregate_question.question for question_aggregate_question in
-                                     graph_question["question_aggregate"]["aggregate_questions"]]
-                        aggregate_value = aggregate_answers_horizontally(category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ, response, questions)
-                        plot_entry["points"].append({
-                            "point": aggregate_value - aggregate,
-                            "time": field_response.time
-                        })
+                        questions = [
+                            question_aggregate_question.question
+                            for question_aggregate_question in graph_question[
+                                "question_aggregate"
+                            ]["aggregate_questions"]
+                        ]
+                        aggregate_value = aggregate_answers_horizontally(
+                            category_attribute[
+                                "question_aggregate"
+                            ].question_aggregate_typ.question_aggregate_typ,
+                            response,
+                            questions,
+                        )
+                        plot_entry["points"].append(
+                            {
+                                "point": aggregate_value - aggregate,
+                                "time": field_response.time,
+                            }
+                        )
 
             data = plot
         case "diff-plot":
             plot = []
             for graph_question in graph["graphquestion_set"]:
                 plot_entry = {
-                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
-                    "points": []
+                    "label": (
+                        graph_question["question"]["question"]
+                        if graph_question["question"] is not None
+                        else graph_question["question_aggregate"]["name"]
+                    ),
+                    "points": [],
                 }
                 plot.append(plot_entry)
 
@@ -1336,8 +1646,11 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                         question = graph_question["question"]
                         # check regular question answers
                         try:
-                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
-                                question_id=question["id"])).order_by("response__time")
+                            answer = Answer.objects.get(
+                                Q(response=response)
+                                & Q(void_ind="n")
+                                & Q(question_id=question["id"])
+                            ).order_by("response__time")
 
                             value = int(answer.value)
 
@@ -1349,13 +1662,18 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                         # check flow answers, they need combined as they span the whole match
                         flow_answers = FlowAnswer.objects.filter(
-                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                answer__response=response)).order_by("value_time")
+                            Q(question_id=question["id"])
+                            & Q(void_ind="n")
+                            & Q(answer__response=response)
+                        ).order_by("value_time")
 
                         value = 0
                         for flow_answer in flow_answers:
 
-                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                            if (
+                                flow_answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
                                 value += 1
                             else:
                                 raise Exception("not accounted for yet")
@@ -1365,17 +1683,26 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 value *= int(flow_answer.question.value_multiplier)
                     # based on a question aggregate
                     else:
-                        questions = [question_aggregate_question.question for question_aggregate_question in
-                                     graph_question["question_aggregate"]["aggregate_questions"]]
+                        questions = [
+                            question_aggregate_question.question
+                            for question_aggregate_question in graph_question[
+                                "question_aggregate"
+                            ]["aggregate_questions"]
+                        ]
                         value = aggregate_answers_horizontally(
-                            category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
+                            category_attribute[
+                                "question_aggregate"
+                            ].question_aggregate_typ.question_aggregate_typ,
                             response,
-                            questions)
+                            questions,
+                        )
 
-                    plot_entry["points"].append({
-                        "point": previous - value if previous is not None else 0,
-                        "time": response.time
-                    })
+                    plot_entry["points"].append(
+                        {
+                            "point": previous - value if previous is not None else 0,
+                            "time": response.time,
+                        }
+                    )
                     previous = value
 
             data = plot
@@ -1384,10 +1711,13 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
             for graph_question in graph["graphquestion_set"]:
                 plot_entry = {
-                    "label": graph_question["question"]["question"] if graph_question["question"] is not None else graph_question["question_aggregate"]["name"],
+                    "label": (
+                        graph_question["question"]["question"]
+                        if graph_question["question"] is not None
+                        else graph_question["question_aggregate"]["name"]
+                    ),
                     "dataset": [],
                 }
-
 
                 # go response by response to compute difference
                 for response in responses:
@@ -1395,8 +1725,11 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                         question = graph_question["question"]
                         # check regular question answers
                         try:
-                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
-                                question_id=question["id"])).order_by("response__time")
+                            answer = Answer.objects.get(
+                                Q(response=response)
+                                & Q(void_ind="n")
+                                & Q(question_id=question["id"])
+                            ).order_by("response__time")
 
                             value = int(answer.value)
 
@@ -1408,13 +1741,18 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                         # check flow answers, they need combined as they span the whole match
                         flow_answers = FlowAnswer.objects.filter(
-                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                answer__response=response)).order_by("value_time")
+                            Q(question_id=question["id"])
+                            & Q(void_ind="n")
+                            & Q(answer__response=response)
+                        ).order_by("value_time")
 
                         value = 0
                         for flow_answer in flow_answers:
 
-                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
+                            if (
+                                flow_answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
                                 value += 1
                             else:
                                 raise Exception("not accounted for yet")
@@ -1424,12 +1762,15 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 value *= int(flow_answer.question.value_multiplier)
                     # based on a question aggregate
                     else:
-                        questions = [question_aggregate_question.question for question_aggregate_question in
-                                     graph_question["question_aggregate"]["aggregate_questions"]]
+                        questions = [
+                            question_aggregate_question.question
+                            for question_aggregate_question in graph_question[
+                                "question_aggregate"
+                            ]["aggregate_questions"]
+                        ]
                         value = aggregate_answers_horizontally(
-                            graph_question["question_aggregate"]["question_aggregate_typ"].question_aggregate_typ,
-                            response,
-                            questions)
+                            graph_question["question_aggregate"], response, questions
+                        )
 
                     plot_entry["dataset"].append(value)
 
@@ -1441,7 +1782,9 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     plot_entry["q2"] = quartiles["Q2"]
                     plot_entry["q3"] = quartiles["Q3"]
                     plot_entry["min"] = plot_entry["dataset"][0]
-                    plot_entry["max"] = plot_entry["dataset"][len(plot_entry["dataset"]) - 1]
+                    plot_entry["max"] = plot_entry["dataset"][
+                        len(plot_entry["dataset"]) - 1
+                    ]
                     plot.append(plot_entry)
 
             data = plot
@@ -1460,10 +1803,16 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                         question = graph_question["question"]
                         # check regular question answers
                         try:
-                            answer = Answer.objects.get(Q(response=response) & Q(void_ind="n") & Q(
-                                question_id=question["id"])).order_by("response__time")
+                            answer = Answer.objects.get(
+                                Q(response=response)
+                                & Q(void_ind="n")
+                                & Q(question_id=question["id"])
+                            ).order_by("response__time")
 
-                            if answer.question.question_typ.question_typ == "mnt-psh-btn":
+                            if (
+                                answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
                                 map_entry["points"].append(json.loads(answer.value))
                             else:
                                 raise Exception("not accounted for yet")
@@ -1474,26 +1823,40 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                         # check flow answers, they need combined as they span the whole match
                         flow_answers = FlowAnswer.objects.filter(
-                            Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                                answer__response=response)).order_by("value_time")
+                            Q(question_id=question["id"])
+                            & Q(void_ind="n")
+                            & Q(answer__response=response)
+                        ).order_by("value_time")
 
                         for flow_answer in flow_answers:
 
-                            if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
-                                map_entry["points"].append(json.loads(flow_answer.value))
+                            if (
+                                flow_answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
+                                map_entry["points"].append(
+                                    json.loads(flow_answer.value)
+                                )
                             else:
                                 raise Exception("not accounted for yet")
                                 value = flow_answer.value
 
                     # based on a question aggregate
                     else:
-                        questions = [question_aggregate_question.question for question_aggregate_question in
-                                     graph_question["question_aggregate"]["aggregate_questions"]]
+                        questions = [
+                            question_aggregate_question.question
+                            for question_aggregate_question in graph_question[
+                                "question_aggregate"
+                            ]["aggregate_questions"]
+                        ]
 
                         value = aggregate_answers_horizontally(
-                            category_attribute["question_aggregate"].question_aggregate_typ.question_aggregate_typ,
+                            category_attribute[
+                                "question_aggregate"
+                            ].question_aggregate_typ.question_aggregate_typ,
                             response,
-                            questions)
+                            questions,
+                        )
 
                         raise Exception("not accounted for yet")
 
@@ -1503,7 +1866,9 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
     return data
 
 
-def is_question_condition_passed(question_condition_typ: str, answer_value, match_value=None):
+def is_question_condition_passed(
+    question_condition_typ: str, answer_value, match_value=None
+):
     match question_condition_typ:
         case "equal":
             return answer_value == match_value
@@ -1524,7 +1889,6 @@ def is_question_condition_passed(question_condition_typ: str, answer_value, matc
 def aggregate_answers_horizontally(question_aggregate, response: Response, questions):
     response_question_answers = get_responses_question_answers([response], questions)
 
-
     return aggregate_answers(question_aggregate, response_question_answers)
 
 
@@ -1541,44 +1905,41 @@ def get_responses_question_answers(responses, questions):
         for question in questions:
             try:
                 answer = Answer.objects.get(
-                    Q(response=response) &
-                    Q(question_id=question["id"]) &
-                    Q(void_ind="n"))
+                    Q(response=response)
+                    & Q(question_id=question["id"])
+                    & Q(void_ind="n")
+                )
 
-                question_answers.append({
-                    "value": answer.value,
-                    "question": question
-                })
+                question_answers.append({"value": answer.value, "question": question})
             except Answer.DoesNotExist:
                 pass
 
             # check flow answers, they need combined as they span the whole response
             flow_answers = FlowAnswer.objects.filter(
-                Q(question_id=question["id"]) & Q(void_ind="n") & Q(
-                    answer__response=response)).order_by("value_time")
-            question_answers.append({
-                "flow_answers": flow_answers,
-                "question": question
-            })
-        response_question_answers.append({
-            "response_id": response.response_id,
-            "question_answers": question_answers
-        })
+                Q(question_id=question["id"])
+                & Q(void_ind="n")
+                & Q(answer__response=response)
+            ).order_by("value_time")
+            question_answers.append(
+                {"flow_answers": flow_answers, "question": question}
+            )
+        response_question_answers.append(
+            {"response_id": response.response_id, "question_answers": question_answers}
+        )
     return response_question_answers
-
 
 
 def aggregate_answers(question_aggregate, response_question_answers):
     values = []
 
-    #go horizontal then vertical
+    # go horizontal then vertical
     responses_values = []
     for response in response_question_answers:
         response_values = []
-        #print(response["response_id"])
+        # print(response["response_id"])
 
         for question_answer in response["question_answers"]:
-            #print(question_answer["question"])
+            # print(question_answer["question"])
 
             if question_answer.get("value", None) is not None:
                 value = int(question_answer["value"])
@@ -1607,13 +1968,17 @@ def aggregate_answers(question_aggregate, response_question_answers):
         case "avg":
             if len(responses_values) == 0:
                 raise Exception("No division by 0 for aggregating averages")
-            return sum([sum(values) for values in responses_values])/len(responses_values)
+            return sum([sum(values) for values in responses_values]) / len(
+                responses_values
+            )
         case "logical":
             return median(values)
         case "median":
             return median([median(values) for values in responses_values])
         case "stdev":
-            return statistics.stdev([statistics.stdev(values) for values in responses_values])
+            return statistics.stdev(
+                [statistics.stdev(values) for values in responses_values]
+            )
         case _:
             raise Exception("no type")
 
@@ -1650,9 +2015,9 @@ def compute_quartiles(data):
         i = int(index)
         decimal_part = index - i
 
-        if i < 0: #Handles edge cases where n is small.
+        if i < 0:  # Handles edge cases where n is small.
             return sorted_data[0]
-        elif i >= n -1:
+        elif i >= n - 1:
             return sorted_data[-1]
 
         return sorted_data[i] + (sorted_data[i + 1] - sorted_data[i]) * decimal_part
