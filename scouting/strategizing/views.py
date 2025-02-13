@@ -7,12 +7,22 @@ from django.db import transaction
 import form.util
 from general.security import ret_message, has_access
 import scouting.strategizing
-from scouting.serializers import MatchStrategySerializer, TeamNoteSerializer, AllianceSelectionSerializer, \
-    SaveMatchStrategySerializer
+from scouting.serializers import (
+    MatchStrategySerializer,
+    TeamNoteSerializer,
+    AllianceSelectionSerializer,
+    SaveMatchStrategySerializer,
+)
 import scouting.strategizing.util
 import scouting.util
-from scouting.strategizing.serializers import HistogramSerializer, HistogramBinSerializer, PlotSerializer, \
-    BoxAndWhiskerPlotSerializer, DashboardSerializer
+from scouting.strategizing.serializers import (
+    DashboardViewTypeSerializer,
+    HistogramSerializer,
+    HistogramBinSerializer,
+    PlotSerializer,
+    BoxAndWhiskerPlotSerializer,
+    DashboardSerializer,
+)
 
 auth_obj = "matchplanning"
 auth_view_obj_scout_field = "scoutFieldResults"
@@ -33,7 +43,7 @@ class TeamNoteView(APIView):
             ):
                 req = scouting.strategizing.util.get_team_notes(
                     request.query_params.get("team_no", None),
-                    scouting.util.get_current_event()
+                    scouting.util.get_current_event(),
                 )
                 serializer = TeamNoteSerializer(req, many=True)
                 return Response(serializer.data)
@@ -135,7 +145,9 @@ class MatchStrategyView(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 with transaction.atomic():
-                    scouting.strategizing.util.save_match_strategy(serializer.data, request.data.get("img", None))
+                    scouting.strategizing.util.save_match_strategy(
+                        serializer.data, request.data.get("img", None)
+                    )
                 return ret_message("Strategy saved successfully")
             except Exception as e:
                 return ret_message(
@@ -225,7 +237,11 @@ class GraphTeamView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                data = scouting.strategizing.util.serialize_graph_team(request.query_params["graph_id"], request.query_params.getlist("team_ids", []),request.query_params.get("reference_team_id", None))
+                data = scouting.strategizing.util.serialize_graph_team(
+                    request.query_params["graph_id"],
+                    request.query_params.getlist("team_ids", []),
+                    request.query_params.get("reference_team_id", None),
+                )
                 return Response(data)
             else:
                 return ret_message(
@@ -248,10 +264,10 @@ class DashboardView(APIView):
     """
     API endpoint to manage dashboards
     """
+
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "dashboard/"
-
 
     def get(self, request, format=None):
         try:
@@ -275,7 +291,6 @@ class DashboardView(APIView):
                 e,
             )
 
-
     def post(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
@@ -289,7 +304,9 @@ class DashboardView(APIView):
                         error_message=serializer.errors,
                     )
 
-                scouting.strategizing.util.save_dashboard(serializer.validated_data, request.user.id)
+                scouting.strategizing.util.save_dashboard(
+                    serializer.validated_data, request.user.id
+                )
 
                 return ret_message("Saved dashboard successfully.")
             else:
@@ -305,5 +322,37 @@ class DashboardView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
+                e,
+            )
+
+
+class DashboardViewTypeView(APIView):
+    """
+    API endpoint to manage dashboard view types
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "dashboard-view-types/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                ret = scouting.strategizing.util.get_dashboard_view_types()
+                serializer = DashboardViewTypeSerializer(ret, many=True)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting the dashboard view types.",
+                True,
+                app_url + self.endpoint,
+                -1,
                 e,
             )

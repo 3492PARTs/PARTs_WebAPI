@@ -115,7 +115,9 @@ class Match(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.match_key} : {self.match_number} : {self.comp_level} : {self.event}"
+        return (
+            f"{self.match_key} : {self.match_number} : {self.comp_level} : {self.event}"
+        )
 
 
 class FieldForm(models.Model):
@@ -335,13 +337,19 @@ class AllianceSelection(models.Model):
         return f"{self.id} : {self.order} : {self.team}"
 
 
+class DashboardViewType(models.Model):
+    dash_view_typ = models.CharField(primary_key=True, max_length=10)
+    dash_view_nm = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.dash_view_typ} : {self.dash_view_nm}"
+
 
 class Dashboard(models.Model):
     id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
-    teams = models.ManyToManyField(Team)
-    reference_team = models.ForeignKey(Team, models.PROTECT, related_name="reference_team", null=True)
+    default_dash_view_typ = models.ForeignKey(DashboardViewType, models.PROTECT)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -349,9 +357,26 @@ class Dashboard(models.Model):
         return f"{self.id} : {self.user}"
 
 
+class DashboardView(models.Model):
+    id = models.AutoField(primary_key=True)
+    dash_view_typ = models.ForeignKey(DashboardViewType, models.PROTECT)
+    dashboard = models.ForeignKey(Dashboard, models.PROTECT)
+    teams = models.ManyToManyField(Team)
+    reference_team = models.ForeignKey(
+        Team, models.PROTECT, related_name="reference_team", null=True
+    )
+    name = models.CharField(max_length=1000)
+    order = models.IntegerField()
+    active = models.CharField(max_length=1, default="y")
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.dashboard}"
+
+
 class DashboardGraph(models.Model):
     id = models.AutoField(primary_key=True)
-    dashboard = models.ForeignKey(Dashboard, models.PROTECT)
+    dashboard_view = models.ForeignKey(DashboardView, models.PROTECT)
     graph = models.ForeignKey(form.models.Graph, models.PROTECT)
     order = models.IntegerField()
     active = models.CharField(max_length=1, default="y")
@@ -359,5 +384,3 @@ class DashboardGraph(models.Model):
 
     def __str__(self):
         return f"{self.id} : {self.dashboard} : {self.graph}"
-
-

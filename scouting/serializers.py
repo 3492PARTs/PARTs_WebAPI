@@ -15,7 +15,7 @@ class TeamSerializer(serializers.Serializer):
     team_nm = serializers.CharField()
 
     checked = serializers.BooleanField(required=False)
-    pit_result = serializers.IntegerField(required=False)
+    pit_result = serializers.IntegerField(required=False, allow_null=True)
     rank = serializers.IntegerField(required=False, allow_null=True)
 
 
