@@ -397,7 +397,7 @@ def save_dashboard(data, user_id):
             )
 
             for dashboard_graph_data in dashboard_view_data.get("dashboard_graphs", []):
-                if dashboard_view_data.get("id", None) is None:
+                if dashboard_graph_data.get("id", None) is None:
                     try:
                         dashboard_graph = DashboardGraph.objects.get(
                             Q(dashboard_view=dashboard_view)
