@@ -33,15 +33,15 @@ class BoxAndWhiskerPlotSerializer(serializers.Serializer):
     max = serializers.FloatField()
 
 
-class HeatMapPointSerializer(serializers.Serializer):
+class TouchMapPointSerializer(serializers.Serializer):
     x = serializers.IntegerField()
     y = serializers.IntegerField()
 
 
-class HeatmapSerializer(serializers.Serializer):
+class TouchMapSerializer(serializers.Serializer):
     label = serializers.CharField()
     question = QuestionSerializer()
-    points = HeatMapPointSerializer(many=True)
+    points = TouchMapPointSerializer(many=True)
 
 
 class DashboardGraphSerializer(serializers.Serializer):
