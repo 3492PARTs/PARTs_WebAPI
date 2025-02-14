@@ -17,14 +17,18 @@ def get_responses(team=None):
     if team is not None:
         teamCondition = Q(team_no=team)
 
-    teams = Team.objects.filter(teamCondition & Q(event=current_event)).order_by(
-        "team_no"
+    teams = (
+        Team.objects.prefetch_related("eventteaminfo_set")
+        .filter(teamCondition & Q(event=current_event))
+        .order_by("team_no")
     )
+
+    questions = form.util.get_questions("pit")
 
     results = []
     for team in teams:
         try:
-            pit_response = PitResponse.objects.get(
+            pit_response = PitResponse.objects.prefetch_related("pitimage_set").get(
                 Q(team=team)
                 & Q(event=current_event)
                 & Q(void_ind="n")
@@ -33,44 +37,42 @@ def get_responses(team=None):
         except PitResponse.DoesNotExist as e:
             pit_response = None
 
-        pit_images = PitImage.objects.filter(
-            Q(void_ind="n") & Q(pit_response=pit_response)
-        ).order_by("id")
-
-        pics = []
-        for pit_image in pit_images:
-            pics.append(
-                {
-                    "id": pit_image.id,
-                    "img_url": general.cloudinary.build_image_url(
-                        pit_image.img_id, pit_image.img_ver
-                    ),
-                    "img_title": pit_image.img_title,
-                    "default": pit_image.default,
-                    "pit_image_typ": pit_image.pit_image_typ
-                }
-            )
-
-        team_response = {
-            "team_no": team.team_no,
-            "team_nm": team.team_nm,
-            "pics": pics,
-            "id": pit_response.id if pit_response is not None else None,
-        }
-
-        tmp_responses = []
-
-        try:
-            eti = EventTeamInfo.objects.get(
-                Q(event=current_event) & Q(team=team) & Q(void_ind="n")
-            )
-            tmp_responses.append({"question": "Rank", "answer": eti.rank})
-        except EventTeamInfo.DoesNotExist:
-            pass
-
-        questions = form.util.get_questions("pit")
-
         if pit_response is not None:
+            pit_images = pit_response.pitimage_set.filter(Q(void_ind="n")).order_by(
+                "id"
+            )
+
+            pics = []
+            for pit_image in pit_images:
+                pics.append(
+                    {
+                        "id": pit_image.id,
+                        "img_url": general.cloudinary.build_image_url(
+                            pit_image.img_id, pit_image.img_ver
+                        ),
+                        "img_title": pit_image.img_title,
+                        "default": pit_image.default,
+                        "pit_image_typ": pit_image.pit_image_typ,
+                    }
+                )
+
+            team_response = {
+                "team_no": team.team_no,
+                "team_nm": team.team_nm,
+                "pics": pics,
+                "id": pit_response.id if pit_response is not None else None,
+            }
+
+            tmp_responses = []
+
+            try:
+                eti = team.eventteaminfo_set.get(
+                    Q(event=current_event) & Q(team=team) & Q(void_ind="n")
+                )
+                tmp_responses.append({"question": "Rank", "answer": eti.rank})
+            except EventTeamInfo.DoesNotExist:
+                pass
+
             for question in questions:
                 try:
                     answer = Answer.objects.get(
@@ -93,25 +95,8 @@ def get_responses(team=None):
                     }
                 )
 
-                """
-                for c in question.get("conditions", []):
-                    answer = Answer.objects.get(
-                        Q(response=pit_response.response)
-                        & Q(void_ind="n")
-                        & Q(question_id=c["question_to"]["question_id"])
-                    )
-                    tmp_responses.append(
-                        {
-                            "question": "C: "
-                            + c["condition"]
-                            + " "
-                            + c["question_to"]["question"],
-                            "answer": answer.value,
-                        }
-                    )
-                """
-        team_response["responses"] = tmp_responses
-        results.append(team_response)
+            team_response["responses"] = tmp_responses
+            results.append(team_response)
 
     return {
         "teams": results,
@@ -137,7 +122,7 @@ def save_robot_picture(file, team_no, pit_image_typ, img_title):
         pit_image_typ_id=pit_image_typ,
         img_id=response["public_id"],
         img_ver=str(response["version"]),
-        img_title=img_title
+        img_title=img_title,
     ).save()
 
     return ret_message("Saved pit image successfully.")
@@ -146,7 +131,9 @@ def save_robot_picture(file, team_no, pit_image_typ, img_title):
 def set_default_team_image(id):
     spi = PitImage.objects.get(Q(void_ind="n") & Q(id=id))
 
-    for pi in spi.pit_response.pitimage_set.filter(Q(void_ind="n") &Q(pit_image_typ=spi.pit_image_typ)):
+    for pi in spi.pit_response.pitimage_set.filter(
+        Q(void_ind="n") & Q(pit_image_typ=spi.pit_image_typ)
+    ):
         pi.default = False
         pi.save()
 
