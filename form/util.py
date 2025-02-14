@@ -1862,6 +1862,83 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                 maps.append(map_entry)
 
             data = maps
+        case "line":
+            plot = []
+            for graph_question in graph["graphquestion_set"]:
+                plot_entry = {
+                    "label": (
+                        graph_question["question"]["question"]
+                        if graph_question["question"] is not None
+                        else graph_question["question_aggregate"]["name"]
+                    ),
+                    "points": [],
+                }
+                plot.append(plot_entry)
+
+                # go response by response to get points
+                for response in responses:
+                    if graph_question["question"] is not None:
+                        question = graph_question["question"]
+                        # check regular question answers
+                        try:
+                            answer = Answer.objects.get(
+                                Q(response=response)
+                                & Q(void_ind="n")
+                                & Q(question_id=question["id"])
+                            ).order_by("response__time")
+
+                            value = int(answer.value)
+
+                            if answer.question.value_multiplier is not None:
+                                value *= int(answer.question.value_multiplier)
+
+                        except Answer.DoesNotExist:
+                            pass
+
+                        # check flow answers, they need combined as they span the whole match
+                        flow_answers = FlowAnswer.objects.filter(
+                            Q(question_id=question["id"])
+                            & Q(void_ind="n")
+                            & Q(answer__response=response)
+                        ).order_by("value_time")
+
+                        value = 0
+                        for flow_answer in flow_answers:
+
+                            if (
+                                flow_answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
+                                value += 1
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = flow_answer.value
+
+                            if flow_answer.question.value_multiplier is not None:
+                                value *= int(flow_answer.question.value_multiplier)
+                    # based on a question aggregate
+                    else:
+                        questions = [
+                            question_aggregate_question["question"]
+                            for question_aggregate_question in graph_question[
+                                "question_aggregate"
+                            ]["aggregate_questions"]
+                        ]
+                        value = aggregate_answers_horizontally(
+                            graph_question["question_aggregate"],
+                            response,
+                            questions,
+                        )
+
+                    plot_entry["points"].append(
+                        {
+                            "point": value,
+                            "time": response.time,
+                        }
+                    )
+                    previous = value
+
+            data = plot
     return data
 
 

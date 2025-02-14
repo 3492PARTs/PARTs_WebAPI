@@ -23,7 +23,6 @@ from scouting.strategizing.serializers import (
     HistogramSerializer,
     PlotSerializer,
     BoxAndWhiskerPlotSerializer,
-    HistogramBinSerializer,
     HeatmapSerializer,
 )
 from user.models import User
@@ -216,7 +215,7 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
             all_graphs = team_graph
         else:
             match graph.graph_typ.graph_typ:
-                case "histogram":
+                case "histogram" | "ctg-hstgrm":
                     for label in team_graph:
                         for g_bin in label["bins"]:
                             g_bin["bin"] = f"{team_id}: {g_bin['bin']}"
@@ -229,26 +228,7 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                     # merge graphs
                     if len(all_graphs) <= 0:
                         all_graphs = team_graph
-
-                case "ctg-hstgrm":
-                    for label in team_graph:
-                        for g_bin in label["bins"]:
-                            g_bin["bin"] = f"{team_id}: {g_bin['bin']}"
-
-                            # merge graphs
-                            if len(all_graphs) > 0:
-                                for all_label in all_graphs:
-                                    if all_label["label"] == label["label"]:
-                                        all_label["bins"].append(g_bin)
-                    # merge graphs
-                    if len(all_graphs) <= 0:
-                        all_graphs = team_graph
-                case "res-plot":
-                    for label in team_graph:
-                        label["label"] = f"{team_id}: {label['label']}"
-
-                        all_graphs.append(label)
-                case "diff-plot":
+                case "diff-plot" | "res-plot" | "line":
                     for label in team_graph:
                         label["label"] = f"{team_id}: {label['label']}"
 
@@ -274,13 +254,9 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
 
     serializer = None
     match graph.graph_typ.graph_typ:
-        case "histogram":
+        case "histogram" | "ctg-hstgrm":
             serializer = HistogramSerializer(data, many=True)
-        case "ctg-hstgrm":
-            serializer = HistogramSerializer(data, many=True)
-        case "res-plot":
-            serializer = PlotSerializer(data, many=True)
-        case "diff-plot":
+        case "res-plot" | "diff-plot" | "line":
             serializer = PlotSerializer(data, many=True)
         case "box-wskr":
             serializer = BoxAndWhiskerPlotSerializer(data, many=True)
