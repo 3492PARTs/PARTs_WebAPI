@@ -39,6 +39,7 @@ class HeatMapPointSerializer(serializers.Serializer):
 
 
 class HeatmapSerializer(serializers.Serializer):
+    label = serializers.CharField()
     question = QuestionSerializer()
     points = HeatMapPointSerializer(many=True)
 

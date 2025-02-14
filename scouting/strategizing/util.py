@@ -260,9 +260,7 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                         all_graphs.append(plot)
                 case "ht-map":
                     for heatmap in team_graph:
-                        heatmap["question"][
-                            "question"
-                        ] = f"{team_id}: {heatmap['question']['question']}"
+                        heatmap["label"] = f"{team_id}: {heatmap['label']}"
 
                         all_graphs.append(heatmap)
 
@@ -279,7 +277,6 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
         case "histogram":
             serializer = HistogramSerializer(data, many=True)
         case "ctg-hstgrm":
-            # TODO how to handle single
             serializer = HistogramSerializer(data, many=True)
         case "res-plot":
             serializer = PlotSerializer(data, many=True)

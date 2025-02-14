@@ -1793,6 +1793,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
             for graph_question in graph["graphquestion_set"]:
                 map_entry = {
+                    "label": graph_question["question"]["question"],
                     "question": graph_question["question"],
                     "points": [],
                 }

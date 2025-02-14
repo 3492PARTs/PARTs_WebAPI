@@ -4,7 +4,6 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db import transaction
 
-import form.util
 from general.security import ret_message, has_access
 import scouting.strategizing
 from scouting.serializers import (
@@ -17,10 +16,6 @@ import scouting.strategizing.util
 import scouting.util
 from scouting.strategizing.serializers import (
     DashboardViewTypeSerializer,
-    HistogramSerializer,
-    HistogramBinSerializer,
-    PlotSerializer,
-    BoxAndWhiskerPlotSerializer,
     DashboardSerializer,
 )
 
