@@ -23,7 +23,7 @@ from scouting.strategizing.serializers import (
     HistogramSerializer,
     PlotSerializer,
     BoxAndWhiskerPlotSerializer,
-    HeatmapSerializer,
+    TouchMapSerializer,
 )
 from user.models import User
 import form.util
@@ -238,7 +238,7 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
                         plot["label"] = f"{team_id}: {plot['label']}"
 
                         all_graphs.append(plot)
-                case "ht-map":
+                case "touch-map":
                     for heatmap in team_graph:
                         heatmap["label"] = f"{team_id}: {heatmap['label']}"
 
@@ -260,8 +260,8 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
             serializer = PlotSerializer(data, many=True)
         case "box-wskr":
             serializer = BoxAndWhiskerPlotSerializer(data, many=True)
-        case "ht-map":
-            serializer = HeatmapSerializer(data, many=True)
+        case "touch-map":
+            serializer = TouchMapSerializer(data, many=True)
 
     return serializer.data
 

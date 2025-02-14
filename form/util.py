@@ -1786,7 +1786,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     plot.append(plot_entry)
 
             data = plot
-        case "ht-map":
+        case "touch-map":
             maps = []
 
             for graph_question in graph["graphquestion_set"]:
