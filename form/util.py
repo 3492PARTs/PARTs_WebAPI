@@ -1684,15 +1684,13 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                     # based on a question aggregate
                     else:
                         questions = [
-                            question_aggregate_question.question
+                            question_aggregate_question["question"]
                             for question_aggregate_question in graph_question[
                                 "question_aggregate"
                             ]["aggregate_questions"]
                         ]
                         value = aggregate_answers_horizontally(
-                            category_attribute[
-                                "question_aggregate"
-                            ].question_aggregate_typ.question_aggregate_typ,
+                            graph_question["question_aggregate"],
                             response,
                             questions,
                         )
@@ -1931,23 +1929,46 @@ def get_responses_question_answers(responses, questions):
 
 
 def aggregate_answers(question_aggregate, response_question_answers):
-    values = []
-
-    # go horizontal then vertical
+    is_logical = (
+        question_aggregate["question_aggregate_typ"].question_aggregate_typ == "logical"
+    )
+    # build 2d array of horizontal aggs
     responses_values = []
     for response in response_question_answers:
         response_values = []
         # print(response["response_id"])
+        logical_value = True
 
         for question_answer in response["question_answers"]:
             # print(question_answer["question"])
+            q_agg_q = None
+            if is_logical:
+                try:
+                    q_agg_q = [
+                        q_agg_q
+                        for q_agg_q in question_aggregate["aggregate_questions"]
+                        if q_agg_q["question"]["id"]
+                        == question_answer["question"]["id"]
+                        and question_answer["question"]["active"] == "y"
+                    ][0]
+                except IndexError:
+                    q_agg_q = None
 
             if question_answer.get("value", None) is not None:
                 value = int(question_answer["value"])
 
                 if question_answer["question"].value_multiplier is not None:
                     value *= int(question_answer["question"].value_multiplier)
+
+                if is_logical and q_agg_q is not None:
+                    logical_value = logical_value and is_question_condition_passed(
+                        q_agg_q.question_condition_typ.question_condition_typ,
+                        value,
+                        q_agg_q.condition_value,
+                    )
+
                 response_values.append(value)
+
             elif question_answer.get("flow_answers", None) is not None:
                 flow_value = 0
                 for flow_answer in question_answer["flow_answers"]:
@@ -1960,8 +1981,20 @@ def aggregate_answers(question_aggregate, response_question_answers):
                     if flow_answer.question.value_multiplier is not None:
                         value *= int(flow_answer.question.value_multiplier)
                     flow_value += value
+
+                if is_logical and q_agg_q is not None:
+                    logical_value = logical_value and is_question_condition_passed(
+                        q_agg_q["question_condition_typ"].question_condition_typ,
+                        flow_value,
+                        q_agg_q["condition_value"],
+                    )
+
                 response_values.append(flow_value)
-        responses_values.append(response_values)
+
+        if is_logical:
+            responses_values.append(1 if logical_value else 0)
+        else:
+            responses_values.append(response_values)
 
     match question_aggregate["question_aggregate_typ"].question_aggregate_typ:
         case "sum":
@@ -1973,7 +2006,7 @@ def aggregate_answers(question_aggregate, response_question_answers):
                 responses_values
             )
         case "logical":
-            return median(values)
+            return sum(responses_values)
         case "median":
             return median([median(values) for values in responses_values])
         case "stdev":
