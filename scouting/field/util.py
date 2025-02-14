@@ -68,26 +68,31 @@ def build_table_columns():
 
         for flow in form_sub_type["flows"]:
             for question_flow in flow["flow_questions"]:
-                all_questions.append(question_flow["question"])
-                table_cols.append(
-                    {
-                        "PropertyName": "ans" + str(question_flow["question"]["id"]),
-                        "ColLabel": (
-                            ""
-                            if question_flow["question"].get("form_sub_typ", None)
-                            is None
-                            else question_flow["question"]
-                            .get("form_sub_typ")
-                            .form_sub_typ[0:1]
-                            .upper()
-                            + ": "
-                        )
-                        + " F: "
-                        + question_flow["question"]["question"],
-                        "Width": question_flow["question"]["table_col_width"],
-                        "order": question_flow["question"]["order"],
-                    }
-                )
+                property_name = f"ans{question_flow['question']['id']}"
+
+                try:
+                    [tc for tc in table_cols if tc["PropertyName"] == property_name][0]
+                except IndexError:
+                    all_questions.append(question_flow["question"])
+                    table_cols.append(
+                        {
+                            "PropertyName": property_name,
+                            "ColLabel": (
+                                ""
+                                if question_flow["question"].get("form_sub_typ", None)
+                                is None
+                                else question_flow["question"]
+                                .get("form_sub_typ")
+                                .form_sub_typ[0:1]
+                                .upper()
+                                + ": "
+                            )
+                            + " F: "
+                            + question_flow["question"]["question"],
+                            "Width": question_flow["question"]["table_col_width"],
+                            "order": question_flow["question"]["order"],
+                        }
+                    )
         """
         question_aggregates = QuestionAggregate.objects.filter(
             Q(void_ind="n")
