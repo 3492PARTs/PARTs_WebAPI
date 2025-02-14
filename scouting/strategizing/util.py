@@ -276,7 +276,9 @@ def get_dashboard(user_id, dash_view_typ_id=None):
         )
     except Dashboard.DoesNotExist:
         dashboard = Dashboard(
-            user_id=user_id, season=scouting.util.get_current_season()
+            user_id=user_id,
+            season=scouting.util.get_current_season(),
+            default_dash_view_typ_id="main",
         )
         dashboard.save()
 
