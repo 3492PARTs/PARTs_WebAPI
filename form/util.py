@@ -182,11 +182,11 @@ def parse_question(in_question: Question):
 
     # Flag if question is condition of another
     try:
-        conditional_on_question = in_question.condition_question_to.get(
+        conditional_on_questions = in_question.condition_question_to.filter(
             Q(void_ind="n") & Q(active="y")
         )
     except QuestionCondition.DoesNotExist:
-        conditional_on_question = None
+        conditional_on_questions = None
 
     flow_questions = in_question.flowquestion_set.filter(
         Q(active="y") & Q(void_ind="n")
@@ -216,21 +216,14 @@ def parse_question(in_question: Question):
         "short_display_value": f"{'' if in_question.active == 'y' else 'Deactivated: '} {in_question.form_sub_typ.form_sub_nm + ': ' if in_question.form_sub_typ is not None else ''}{in_question.question}",
         "display_value": f"{'' if in_question.active == 'y' else 'Deactivated: '} Order: {in_question.order}: {in_question.form_sub_typ.form_sub_nm + ': ' if in_question.form_sub_typ is not None else ''}{in_question.question}",
         "scout_question": scout_question,
-        "question_conditional_on": (
-            conditional_on_question.question_from.id
-            if conditional_on_question is not None
-            else None
-        ),
-        "question_condition_value": (
-            conditional_on_question.value
-            if conditional_on_question is not None
-            else None
-        ),
-        "question_condition_typ": (
-            conditional_on_question.question_condition_typ
-            if conditional_on_question is not None
-            else None
-        ),
+        "conditional_on_questions": [
+            {
+                "conditional_on": qc.question_from.id,
+                "condition_value": qc.value,
+                "question_condition_typ": qc.question_condition_typ,
+            }
+            for qc in conditional_on_questions
+        ],
         "conditional_question_id_set": set(
             cq.question_to.id for cq in conditional_questions
         ),
