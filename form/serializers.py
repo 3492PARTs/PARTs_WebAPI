@@ -41,7 +41,9 @@ class QuestionConditionTypeSerializer(serializers.Serializer):
 
 class ConditionalOnQuestionSerializer(serializers.Serializer):
     conditional_on = serializers.IntegerField()
-    condition_value = serializers.CharField()
+    condition_value = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
     question_condition_typ = QuestionConditionTypeSerializer()
 
 
