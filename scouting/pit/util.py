@@ -87,7 +87,7 @@ def get_responses(team=None):
                     {
                         "question": (
                             " C: "
-                            if question["question_conditional_on"] is not None
+                            if len(question["conditional_on_questions"]) > 0
                             else ""
                         )
                         + question["question"],

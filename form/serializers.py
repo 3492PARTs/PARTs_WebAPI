@@ -39,6 +39,12 @@ class QuestionConditionTypeSerializer(serializers.Serializer):
     question_condition_nm = serializers.CharField()
 
 
+class ConditionalOnQuestionSerializer(serializers.Serializer):
+    conditional_on = serializers.IntegerField()
+    condition_value = serializers.CharField()
+    question_condition_typ = QuestionConditionTypeSerializer()
+
+
 class QuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(read_only=True)
@@ -72,13 +78,7 @@ class QuestionSerializer(serializers.Serializer):
 
     scout_question = ScoutQuestionSerializer(required=False, allow_null=True)
 
-    question_conditional_on = serializers.IntegerField(allow_null=True)
-    question_condition_value = serializers.CharField(
-        required=False, allow_null=True, allow_blank=True
-    )
-    question_condition_typ = QuestionConditionTypeSerializer(
-        required=False, allow_null=True
-    )
+    conditional_on_questions = ConditionalOnQuestionSerializer(many=True)
     conditional_question_id_set = serializers.ListField()
 
 
@@ -97,7 +97,9 @@ class QuestionAggregateTypeSerializer(serializers.Serializer):
 
 class QuestionAggregateQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
-    question_condition_typ = QuestionConditionTypeSerializer(required=False, allow_null=True)
+    question_condition_typ = QuestionConditionTypeSerializer(
+        required=False, allow_null=True
+    )
     question = QuestionSerializer()
     condition_value = serializers.CharField(required=False, allow_null=True)
     active = serializers.CharField()
@@ -120,6 +122,7 @@ class QuestionConditionSerializer(serializers.Serializer):
     question_to = QuestionSerializer()
     active = serializers.CharField()
 
+
 class FlowQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     flow_id = serializers.IntegerField(required=False, allow_null=True)
@@ -138,7 +141,9 @@ class FlowSerializer(serializers.Serializer):
     void_ind = serializers.CharField()
 
     flow_conditional_on = serializers.IntegerField(allow_null=True)
-    has_conditions = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    has_conditions = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
 
 
 class FlowConditionSerializer(serializers.Serializer):
@@ -158,9 +163,7 @@ class AnswerSerializer(serializers.Serializer):
     question = QuestionSerializer(required=False, allow_null=True)
     flow = FlowSerializer(required=False, allow_null=True)
     value = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    flow_answers = FlowAnswerSerializer(
-        many=True, required=False, allow_null=True
-    )
+    flow_answers = FlowAnswerSerializer(many=True, required=False, allow_null=True)
 
 
 class ScoutFieldFormResponseSerializer(serializers.Serializer):
@@ -245,9 +248,9 @@ class GraphSerializer(serializers.Serializer):
     graphcategory_set = GraphCategorySerializer(many=True)
     graphquestion_set = GraphQuestionSerializer(many=True)
 
+
 class GraphEditorSerializer(serializers.Serializer):
     graph_types = GraphTypeSerializer(many=True)
     graph_question_types = GraphQuestionTypeSerializer(many=True)
     graphs = GraphSerializer(many=True)
     question_condition_types = QuestionConditionTypeSerializer(many=True)
-
