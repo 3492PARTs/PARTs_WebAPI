@@ -530,6 +530,7 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
                 "question_condition_typ": question_aggregate_question.question_condition_typ,
                 "question": parse_question(question_aggregate_question.question),
                 "condition_value": question_aggregate_question.condition_value,
+                "use_answer_time": question_aggregate_question.use_answer_time,
                 "active": question_aggregate_question.active,
             }
             for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(
@@ -583,6 +584,7 @@ def save_question_aggregate(data):
             qaq.condition_value = question_aggregate_question.get(
                 "condition_value", None
             )
+            qaq.use_answer_time = question_aggregate_question["use_answer_time"]
             qaq.active = question_aggregate_question["active"]
             qaq.save()
 

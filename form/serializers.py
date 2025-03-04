@@ -103,6 +103,7 @@ class QuestionAggregateQuestionSerializer(serializers.Serializer):
         required=False, allow_null=True
     )
     question = QuestionSerializer()
+    use_answer_time = serializers.BooleanField()
     condition_value = serializers.CharField(required=False, allow_null=True)
     active = serializers.CharField()
 
