@@ -2020,64 +2020,78 @@ def aggregate_answers(question_aggregate, response_question_answers):
         # print(response["response_id"])
         logical_value = True
 
+        if question_aggregate["use_answer_time"]:
+            response["question_answers"].sort(
+                key=lambda e: [
+                    qa["order"]
+                    for qa in question_aggregate["aggregate_questions"]
+                    if qa["question"]["id"] == e["question"]["id"]
+                ][0]
+            )
+
         for question_answer in response["question_answers"]:
-            # print(question_answer["question"])
-            q_agg_q = None
-            if is_logical:
-                try:
-                    q_agg_q = [
-                        q_agg_q
-                        for q_agg_q in question_aggregate["aggregate_questions"]
-                        if q_agg_q["question"]["id"]
-                        == question_answer["question"]["id"]
-                        and question_answer["question"]["active"] == "y"
-                    ][0]
-                except IndexError:
-                    q_agg_q = None
+            if question_answer.get("value", "") != "!EXIST":
+                # print(question_answer["question"])
+                q_agg_q = None
+                if is_logical:
+                    try:
+                        q_agg_q = [
+                            q_agg_q
+                            for q_agg_q in question_aggregate["aggregate_questions"]
+                            if q_agg_q["question"]["id"]
+                            == question_answer["question"]["id"]
+                            and question_answer["question"]["active"] == "y"
+                        ][0]
+                    except IndexError:
+                        q_agg_q = None
 
-            if question_answer.get("value", None) is not None:
-                value = int(question_answer["value"])
+                if question_answer.get("value", None) is not None:
+                    value = int(question_answer["value"])
 
-                if question_answer["question"].value_multiplier is not None:
-                    value *= int(question_answer["question"].value_multiplier)
-
-                if question_aggregate["use_answer_time"]:
-                    value = response.time
-
-                if is_logical and q_agg_q is not None:
-                    logical_value = logical_value and is_question_condition_passed(
-                        q_agg_q.question_condition_typ.question_condition_typ,
-                        value,
-                        q_agg_q.condition_value,
-                    )
-
-                response_values.append(value)
-
-            elif question_answer.get("flow_answers", None) is not None:
-                flow_value = 0
-                for flow_answer in question_answer["flow_answers"]:
-                    if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
-                        value = 1
-                    else:
-                        raise Exception("not accounted for yet")
-                        value = flow_answer.value
-
-                    if flow_answer.question.value_multiplier is not None:
-                        value *= int(flow_answer.question.value_multiplier)
+                    if question_answer["question"].value_multiplier is not None:
+                        value *= int(question_answer["question"].value_multiplier)
 
                     if question_aggregate["use_answer_time"]:
-                        value = flow_answer.value_time
+                        value = response.time
 
-                    flow_value += value
+                    if is_logical and q_agg_q is not None:
+                        logical_value = logical_value and is_question_condition_passed(
+                            q_agg_q.question_condition_typ.question_condition_typ,
+                            value,
+                            q_agg_q.condition_value,
+                        )
 
-                if is_logical and q_agg_q is not None:
-                    logical_value = logical_value and is_question_condition_passed(
-                        q_agg_q["question_condition_typ"].question_condition_typ,
-                        flow_value,
-                        q_agg_q["condition_value"],
-                    )
+                    response_values.append(value)
 
-                response_values.append(flow_value)
+                elif question_answer.get("flow_answers", None) is not None:
+                    flow_value = 0
+
+                    for flow_answer in question_answer["flow_answers"]:
+                        if (
+                            flow_answer.question.question_typ.question_typ
+                            == "mnt-psh-btn"
+                        ):
+                            value = 1
+                        else:
+                            raise Exception("not accounted for yet")
+                            value = flow_answer.value
+
+                        if flow_answer.question.value_multiplier is not None:
+                            value *= int(flow_answer.question.value_multiplier)
+
+                        if question_aggregate["use_answer_time"]:
+                            value = flow_answer.value_time
+
+                        flow_value += value
+
+                    if is_logical and q_agg_q is not None:
+                        logical_value = logical_value and is_question_condition_passed(
+                            q_agg_q["question_condition_typ"].question_condition_typ,
+                            flow_value,
+                            q_agg_q["condition_value"],
+                        )
+
+                    response_values.append(flow_value)
 
         if is_logical:
             responses_values.append(1 if logical_value else 0)
@@ -2112,7 +2126,7 @@ def aggregate_answers(question_aggregate, response_question_answers):
                     else:
                         diff - value
 
-                responses_values[i] = value
+                responses_values[i] = diff if diff is not None else 0
                 i += 1
             return sum(responses_values)
         case _:
