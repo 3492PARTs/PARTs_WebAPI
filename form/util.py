@@ -523,6 +523,7 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
         "id": question_aggregate.id,
         "name": question_aggregate.name,
         "horizontal": question_aggregate.horizontal,
+        "use_answer_time": question_aggregate.use_answer_time,
         "question_aggregate_typ": question_aggregate.question_aggregate_typ,
         "aggregate_questions": [
             {
@@ -530,7 +531,7 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
                 "question_condition_typ": question_aggregate_question.question_condition_typ,
                 "question": parse_question(question_aggregate_question.question),
                 "condition_value": question_aggregate_question.condition_value,
-                "use_answer_time": question_aggregate_question.use_answer_time,
+                "order": question_aggregate_question.order,
                 "active": question_aggregate_question.active,
             }
             for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(
@@ -557,6 +558,7 @@ def save_question_aggregate(data):
 
         qa.name = data["name"]
         qa.horizontal = data["horizontal"]
+        qa.use_answer_time = data["use_answer_time"]
         qa.active = data["active"]
         qa.question_aggregate_typ_id = data["question_aggregate_typ"][
             "question_aggregate_typ"
@@ -584,7 +586,7 @@ def save_question_aggregate(data):
             qaq.condition_value = question_aggregate_question.get(
                 "condition_value", None
             )
-            qaq.use_answer_time = question_aggregate_question["use_answer_time"]
+            qaq.order = question_aggregate_question.get("order", None)
             qaq.active = question_aggregate_question["active"]
             qaq.save()
 
@@ -2039,6 +2041,9 @@ def aggregate_answers(question_aggregate, response_question_answers):
                 if question_answer["question"].value_multiplier is not None:
                     value *= int(question_answer["question"].value_multiplier)
 
+                if question_aggregate["use_answer_time"]:
+                    value = response.time
+
                 if is_logical and q_agg_q is not None:
                     logical_value = logical_value and is_question_condition_passed(
                         q_agg_q.question_condition_typ.question_condition_typ,
@@ -2059,6 +2064,10 @@ def aggregate_answers(question_aggregate, response_question_answers):
 
                     if flow_answer.question.value_multiplier is not None:
                         value *= int(flow_answer.question.value_multiplier)
+
+                    if question_aggregate["use_answer_time"]:
+                        value = flow_answer.value_time
+
                     flow_value += value
 
                 if is_logical and q_agg_q is not None:

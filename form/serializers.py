@@ -103,7 +103,7 @@ class QuestionAggregateQuestionSerializer(serializers.Serializer):
         required=False, allow_null=True
     )
     question = QuestionSerializer()
-    use_answer_time = serializers.BooleanField()
+    order = serializers.IntegerField(required=False, allow_null=True)
     condition_value = serializers.CharField(required=False, allow_null=True)
     active = serializers.CharField()
 
@@ -112,6 +112,7 @@ class QuestionAggregateSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
     name = serializers.CharField()
     horizontal = serializers.BooleanField()
+    use_answer_time = serializers.BooleanField()
     question_aggregate_typ = QuestionAggregateTypeSerializer(required=False)
     aggregate_questions = QuestionAggregateQuestionSerializer(many=True)
     active = serializers.CharField()

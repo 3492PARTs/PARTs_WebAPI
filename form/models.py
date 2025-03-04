@@ -152,6 +152,7 @@ class QuestionAggregate(models.Model):
     question_aggregate_typ = models.ForeignKey(QuestionAggregateType, models.PROTECT)
     name = models.CharField(max_length=1000)
     horizontal = models.BooleanField(default=True)
+    use_answer_time = models.BooleanField(default=False)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -167,7 +168,7 @@ class QuestionAggregateQuestion(models.Model):
     )
     condition_value = models.CharField(max_length=1000, null=True)
     question = models.ForeignKey(Question, models.PROTECT)
-    use_answer_time = models.BooleanField(default=False)
+    order = models.IntegerField(null=True)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
