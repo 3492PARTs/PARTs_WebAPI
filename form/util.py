@@ -571,9 +571,14 @@ def save_question_aggregate(data):
                 )
 
             qaq.question_aggregate = qa
-            qaq.question_condition_typ_id = question_aggregate_question.get(
-                "question_condition_typ", {}
-            ).get("question_condition_typ", None)
+            question_condition_typ = question_aggregate_question.get(
+                "question_condition_typ", None
+            )
+            qaq.question_condition_typ_id = (
+                None
+                if question_condition_typ is None
+                else question_condition_typ["question_condition_typ"]
+            )
             qaq.question_id = question_aggregate_question["question"]["id"]
             qaq.condition_value = question_aggregate_question.get(
                 "condition_value", None
@@ -2085,6 +2090,20 @@ def aggregate_answers(question_aggregate, response_question_answers):
             return statistics.stdev(
                 [statistics.stdev(values) for values in responses_values]
             )
+        case "difference":
+            i = 0
+            for value_list in responses_values:
+                diff = None
+
+                for value in value_list:
+                    if diff is None:
+                        diff = value
+                    else:
+                        diff - value
+
+                responses_values[i] = value
+                i += 1
+            return sum(responses_values)
         case _:
             raise Exception("no type")
 
