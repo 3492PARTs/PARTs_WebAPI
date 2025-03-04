@@ -575,7 +575,9 @@ def save_question_aggregate(data):
                 "question_condition_typ", {}
             ).get("question_condition_typ", None)
             qaq.question_id = question_aggregate_question["question"]["id"]
-            qaq.condition_value = question_aggregate_question["condition_value"]
+            qaq.condition_value = question_aggregate_question.get(
+                "condition_value", None
+            )
             qaq.active = question_aggregate_question["active"]
             qaq.save()
 
