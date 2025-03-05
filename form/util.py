@@ -1,6 +1,8 @@
 import statistics
 from statistics import median
 
+from datetime import datetime, date
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Exists, OuterRef
@@ -1949,6 +1951,9 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 def is_question_condition_passed(
     question_condition_typ: str, answer_value, match_value=None
 ):
+    if answer_value is None:
+        return False
+
     match question_condition_typ:
         case "equal":
             return answer_value == match_value
@@ -2013,6 +2018,12 @@ def aggregate_answers(question_aggregate, response_question_answers):
     is_logical = (
         question_aggregate["question_aggregate_typ"].question_aggregate_typ == "logical"
     )
+
+    is_difference = (
+        question_aggregate["question_aggregate_typ"].question_aggregate_typ
+        == "difference"
+    )
+
     # build 2d array of horizontal aggs
     responses_values = []
     for response in response_question_answers:
@@ -2064,25 +2075,34 @@ def aggregate_answers(question_aggregate, response_question_answers):
                     response_values.append(value)
 
                 elif question_answer.get("flow_answers", None) is not None:
-                    flow_value = 0
+                    flow_value = None
 
                     for flow_answer in question_answer["flow_answers"]:
-                        if (
-                            flow_answer.question.question_typ.question_typ
-                            == "mnt-psh-btn"
-                        ):
-                            value = 1
-                        else:
-                            raise Exception("not accounted for yet")
-                            value = flow_answer.value
+                        if flow_answer.value != "!EXISTS":
+                            if (
+                                flow_answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
+                                value = 1
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = flow_answer.value
 
-                        if flow_answer.question.value_multiplier is not None:
-                            value *= int(flow_answer.question.value_multiplier)
+                            if flow_answer.question.value_multiplier is not None:
+                                value *= int(flow_answer.question.value_multiplier)
 
-                        if question_aggregate["use_answer_time"]:
-                            value = flow_answer.value_time
+                            if question_aggregate["use_answer_time"]:
+                                value = datetime.combine(
+                                    date.today(), flow_answer.value_time
+                                )
 
-                        flow_value += value
+                            if flow_value is None:
+                                flow_value = value
+                            else:
+                                if is_difference:
+                                    flow_value = flow_value - value
+                                else:
+                                    flow_value += value
 
                     if is_logical and q_agg_q is not None:
                         logical_value = logical_value and is_question_condition_passed(
@@ -2091,7 +2111,8 @@ def aggregate_answers(question_aggregate, response_question_answers):
                             q_agg_q["condition_value"],
                         )
 
-                    response_values.append(flow_value)
+                    if flow_value is not None:
+                        response_values.append(flow_value)
 
         if is_logical:
             responses_values.append(1 if logical_value else 0)
@@ -2128,7 +2149,15 @@ def aggregate_answers(question_aggregate, response_question_answers):
 
                 responses_values[i] = diff if diff is not None else 0
                 i += 1
-            return sum(responses_values)
+
+            diff = None
+            for value in responses_values:
+                if diff is None:
+                    diff = value
+                else:
+                    diff - value
+
+            return diff
         case _:
             raise Exception("no type")
 
