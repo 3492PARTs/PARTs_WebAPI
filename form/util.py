@@ -1,7 +1,7 @@
 import statistics
 from statistics import median
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from django.conf import settings
 from django.db import transaction
@@ -2145,7 +2145,7 @@ def aggregate_answers(question_aggregate, response_question_answers):
                     if diff is None:
                         diff = value
                     else:
-                        diff - value
+                        diff = diff - value
 
                 responses_values[i] = diff if diff is not None else 0
                 i += 1
@@ -2156,6 +2156,20 @@ def aggregate_answers(question_aggregate, response_question_answers):
                     diff = value
                 else:
                     diff - value
+
+            if isinstance(diff, timedelta):
+                duration_in_s = diff.total_seconds()
+                days = divmod(duration_in_s, 86400)  # Get days (without [0]!)
+                hours = divmod(days[1], 3600)  # Use remainder of days to calc hours
+                minutes = divmod(hours[1], 60)  # Use remainder of hours to calc minutes
+                seconds = divmod(
+                    minutes[1], 1
+                )  # Use remainder of minutes to calc seconds
+                print(
+                    "Time between dates: %d days, %d hours, %d minutes and %d seconds"
+                    % (days[0], hours[0], minutes[0], seconds[0])
+                )
+                diff = f"{days[0]} days, {hours[0]} hours, {minutes[0]} minutes, {seconds[0]} seconds"
 
             return diff
         case _:
