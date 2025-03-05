@@ -6,8 +6,6 @@ import datetime
 from form.models import (
     QuestionAggregate,
     Answer,
-    FormSubType,
-    FlowAnswer,
     QuestionAggregateQuestion,
 )
 import form.urls
