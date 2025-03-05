@@ -2165,11 +2165,18 @@ def aggregate_answers(question_aggregate, response_question_answers):
                 seconds = divmod(
                     minutes[1], 1
                 )  # Use remainder of minutes to calc seconds
+                """
                 print(
                     "Time between dates: %d days, %d hours, %d minutes and %d seconds"
                     % (days[0], hours[0], minutes[0], seconds[0])
                 )
-                diff = f"{days[0]} days, {hours[0]} hours, {minutes[0]} minutes, {seconds[0]} seconds"
+                """
+                days = f"{days[0]} days, " if days[0] > 0 else ""
+                hours = f"{hours[0]} hours, " if hours[0] > 0 else ""
+                minutes = f"{minutes[0]} minutes, " if minutes[0] > 0 else ""
+                seconds = f"{seconds[0]} seconds" if seconds[0] > 0 else ""
+
+                diff = f"{days}{hours}{minutes}{seconds}"
 
             return diff
         case _:
