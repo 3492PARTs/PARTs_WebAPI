@@ -305,6 +305,8 @@ class UserInfo(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, models.PROTECT, related_name="scouting_user_info")
     under_review = models.BooleanField(default=False)
+    group_leader = models.BooleanField(default=False)
+    eliminate_results = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

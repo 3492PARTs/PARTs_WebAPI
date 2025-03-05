@@ -18,7 +18,6 @@ urlpatterns = [
     path("scouting-user-info/", ScoutingUserInfoView.as_view()),
     path("delete-field-result/", FieldResponseView.as_view()),
     path("delete-pit-result/", PitResponseView.as_view()),
-    path("toggle-scout-under-review/", ToggleScoutUnderReviewView.as_view()),
     path("mark-scout-present/", MarkScoutPresentView.as_view()),
     path("field-form/", FieldFormView.as_view()),
     path("scouting-report/", ScoutingReportView.as_view()),
