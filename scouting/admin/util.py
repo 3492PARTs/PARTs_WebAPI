@@ -383,30 +383,25 @@ def get_scouting_user_info():
         try:
             user_info = u.scouting_user_info.get(void_ind="n")
         except UserInfo.DoesNotExist:
-            user_info = {}
+            user_info = UserInfo(user=u)
+            user_info.save()
 
-        user_results.append(
-            {
-                "user": u,
-                "user_info": user_info,
-            }
-        )
+        user_results.append(user_info)
 
     return user_results
 
 
-def toggle_user_under_review(user_id):
-    try:
-        ui = UserInfo.objects.get(Q(user__id=user_id) & Q(void_ind="n"))
-    except UserInfo.DoesNotExist:
-        ui = UserInfo(
-            user=User.objects.get(id=user_id),
-            under_review=False,
-        )
+def save_scouting_user_info(data):
+    if data.get("id", None) is not None:
+        user_info = UserInfo.objects.get(id=data["id"])
+    else:
+        user_info = UserInfo(user_id=data["user"]["id"])
 
-    ui.under_review = not ui.under_review
+    user_info.group_leader = data["group_leader"]
+    user_info.under_review = data["under_review"]
+    user_info.eliminate_results = data["eliminate_results"]
 
-    ui.save()
+    user_info.save()
 
 
 def void_field_response(id):
@@ -460,6 +455,7 @@ def save_field_form(field_form):
 
     ff.save()
 
+
 def foo():
     team_3492 = Team.objects.get(team_no=3492)
 
@@ -474,7 +470,7 @@ def foo():
     for event in our_events:
         teams = event.teams.filter(~Q(team_no=3492))
         for team in teams:
-            #print(team)
+            # print(team)
 
             team_events = tba.util.get_events_for_team(team, current_season, event_cds)
 
@@ -483,11 +479,11 @@ def foo():
 
             for team_event in team_events:
                 if team_event["event_cd"] in event_cds:
-                    #print(f"same as us {team_event['event_cd']}")
+                    # print(f"same as us {team_event['event_cd']}")
                     sharing += f"{[event.event_nm for event in our_events if event.event_cd == team_event['event_cd']][0]}, "
                 else:
-                    #print(f"Different {team_event['event_nm']}")
+                    # print(f"Different {team_event['event_nm']}")
                     other += f"{team_event['event_nm']}, "
 
-            csv += f"{team.team_no},\"{sharing[:len(sharing) - 2]}\",\"{other[:len(other) - 2]}\"\n"
+            csv += f'{team.team_no},"{sharing[:len(sharing) - 2]}","{other[:len(other) - 2]}"\n'
     return csv

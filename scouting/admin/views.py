@@ -9,10 +9,6 @@ import scouting.admin.util
 import scouting.field.util
 
 from .serializers import *
-from scouting.models import (
-    Season,
-    Event,
-)
 from rest_framework.views import APIView
 from general.security import has_access, ret_message
 from rest_framework.response import Response
@@ -570,7 +566,7 @@ class ScoutingUserInfoView(APIView):
         try:
             if has_access(request.user.id, auth_obj):
                 req = scouting.admin.util.get_scouting_user_info()
-                serializer = UserScoutingUserInfoSerializer(req, many=True)
+                serializer = ScoutingUserInfoSerializer(req, many=True)
                 return Response(serializer.data)
             else:
                 return ret_message(
@@ -588,23 +584,23 @@ class ScoutingUserInfoView(APIView):
                 e,
             )
 
-
-class ToggleScoutUnderReviewView(APIView):
-    """
-    API endpoint to toggle a scout under review status
-    """
-
-    authentication_classes = (JWTAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    endpoint = "toggle-scout-under-review/"
-
-    def get(self, request, format=None):
+    def post(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj):
-                scouting.admin.util.toggle_user_under_review(
-                    request.query_params.get("user_id", None)
-                )
-                return ret_message("Successfully changed scout under review status")
+
+            if has_access(request.user.id, "admin"):
+                serializer = ScoutingUserInfoSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                scouting.admin.util.save_scouting_user_info(serializer.validated_data)
+
+                return ret_message("Saved scout user info successfully.")
             else:
                 return ret_message(
                     "You do not have access.",
@@ -614,7 +610,7 @@ class ToggleScoutUnderReviewView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while changing the scout" "s under review status.",
+                "An error occurred while saving the scout user info.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
@@ -726,6 +722,7 @@ class FieldFormView(APIView):
     """
     API endpoint to manage the field scouting form
     """
+
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "field-form/"
@@ -807,4 +804,3 @@ class ScoutingReportView(APIView):
                 request.user.id,
                 e,
             )
-

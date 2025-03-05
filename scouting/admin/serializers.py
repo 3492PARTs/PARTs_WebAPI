@@ -63,9 +63,7 @@ class EventToTeamsSerializer(serializers.Serializer):
 
 class ScoutingUserInfoSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
-    under_review = serializers.BooleanField(required=False)
-
-
-class UserScoutingUserInfoSerializer(serializers.Serializer):
     user = UserSerializer()
-    user_info = ScoutingUserInfoSerializer()
+    under_review = serializers.BooleanField(required=False)
+    group_leader = serializers.BooleanField(required=False)
+    eliminate_results = serializers.BooleanField(required=False)
