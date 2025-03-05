@@ -1,9 +1,17 @@
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef
 from django.conf import settings
 from django.utils import timezone
 import datetime
 
-from form.models import QuestionAggregate, Answer, FormSubType, FlowAnswer
+from form.models import (
+    QuestionAggregate,
+    Answer,
+    FormSubType,
+    FlowAnswer,
+    QuestionAggregateQuestion,
+)
+import form.urls
+import scouting.models
 import scouting.util
 import form
 from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule
@@ -11,13 +19,12 @@ import general.util
 import form.util
 
 
-def build_table_columns():
+def build_table_columns(question_aggregates):
     # sqsa = form.util.get_form_questions("field", "auto")
     # sqst = form.util.get_form_questions("field", "teleop")
     # sqso = form.util.get_form_questions("field", "post")
 
     form_questions = form.util.get_form_questions("field")
-    all_questions = []
 
     table_cols = [
         {
@@ -45,7 +52,6 @@ def build_table_columns():
 
     for form_sub_type in form_questions["form_sub_types"]:
         for question in form_sub_type["questions"]:
-            all_questions.append(question)
             table_cols.append(
                 {
                     "PropertyName": "ans" + str(question["id"]),
@@ -69,7 +75,6 @@ def build_table_columns():
                 try:
                     [tc for tc in table_cols if tc["PropertyName"] == property_name][0]
                 except IndexError:
-                    all_questions.append(question_flow["question"])
                     table_cols.append(
                         {
                             "PropertyName": property_name,
@@ -89,33 +94,20 @@ def build_table_columns():
                             "order": question_flow["question"]["order"],
                         }
                     )
-        """
-        question_aggregates = QuestionAggregate.objects.filter(
-            Q(void_ind="n")
-            & Q(active="y")
-            & Q(questions__id__in=set(q["id"] for q in all_questions))
-        ).distinct()
-        
-        question_aggregate_count = 1
-        for question_aggregate in question_aggregates:
-            table_cols.append(
-                {
-                    "PropertyName": "ans_sqa" + str(question_aggregate.question_aggregate_id),
-                    "ColLabel": (
-                        ""
-                        if sqs[0].get("form_sub_typ", None) is None
-                        else sqs[0]["form_sub_typ"][0:1].upper() + ": "
-                    )
-                    + "AGG: "
-                    + question_aggregate.field_name,
-                    "Width": "100px",
-                    "scorable": True,
-                    "order": sqs[len(sqs) - 1]["order"] + question_aggregate_count,
-                }
-            )
 
-            question_aggregate_count += 1
-    """
+    question_aggregate_count = 1
+    for question_aggregate in question_aggregates:
+        table_cols.append(
+            {
+                "PropertyName": f"ans_sqa{question_aggregate.id}",
+                "ColLabel": f"AGG: {question_aggregate.name}",
+                "Width": "100px",
+                "order": len(table_cols) + 1,
+            }
+        )
+
+        question_aggregate_count += 1
+
     table_cols.append(
         {
             "PropertyName": "user",
@@ -141,17 +133,60 @@ def build_table_columns():
 def get_responses(request, team=None, user=None, after_scout_field_id=None):
     loading_all = False
 
-    table_cols = build_table_columns()
-
-    field_scouting_responses = []
-
     current_season = scouting.util.get_current_season()
 
     current_event = scouting.util.get_current_event()
 
+    # get aggregates
+    question_aggregates = QuestionAggregate.objects.filter(
+        Q(void_ind="n")
+        & Q(active="y")
+        & Q(horizontal=True)
+        & Exists(
+            QuestionAggregateQuestion.objects.filter(
+                Q(question_aggregate_id=OuterRef("pk"))
+                & Q(active="y")
+                & Q(void_ind="n")
+                & Q(question__form_typ_id="field")
+                & Q(question__active="y")
+                & Q(question__void_ind="n")
+                & Exists(
+                    scouting.models.Question.objects.filter(
+                        Q(question_id=OuterRef("question_id"))
+                        & Q(season=current_season)
+                        & Q(void_ind="n")
+                    )
+                )
+            )
+        )
+    )
+
+    table_cols = build_table_columns(question_aggregates)
+
+    field_scouting_responses = []
+
     if current_event is None:
         return scouting.util.get_no_event_ret_message(
             "scouting.field.util.get_responses", request.user.id
+        )
+
+    parsed_question_aggregates = []
+    for question_aggregate in question_aggregates:
+        parsed_question_aggregates.append(
+            {
+                "parsed_question_aggregate": form.util.parse_question_aggregate(
+                    question_aggregate
+                ),
+                "questions": [
+                    form.util.parse_question(question_aggregate_question.question)
+                    for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(
+                        Q(void_ind="n")
+                        & Q(active="y")
+                        & Q(question__void_ind="n")
+                        & Q(question__active="y")
+                    )
+                ],
+            }
         )
 
     # Pull responses by what input
@@ -205,24 +240,14 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
                         f"ans{flow_answer.question.id}", 0
                     )
 
-        # get aggregates
-        """
-        question_aggregates = QuestionAggregate.objects.filter(
-            Q(void_ind="n") & Q(active="y") & Q(questions__form_typ="field")
-        ).distinct()
-
-        for question_aggregate in question_aggregates:
-            summation = 0
-            for question in question_aggregate.questions.filter(
-                Q(void_ind="n") & Q(active="y")
-            ):
-                for answer in question.answer_set.filter(
-                    Q(void_ind="n") & Q(response=scout_field.response)
-                ):
-                    if answer.value is not None and answer.value != "!EXIST":
-                        summation += int(answer.value)
-            response[f"ans_sqa{question_aggregate.id}"] = summation
-            """
+        for parsed_question_aggregate in parsed_question_aggregates:
+            response[
+                f"ans_sqa{parsed_question_aggregate['parsed_question_aggregate']['id']}"
+            ] = form.util.aggregate_answers_horizontally(
+                parsed_question_aggregate["parsed_question_aggregate"],
+                scout_field.response,
+                parsed_question_aggregate["questions"],
+            )
 
         response["match"] = (
             scout_field.match.match_number if scout_field.match else None

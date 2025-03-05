@@ -1,6 +1,8 @@
 import statistics
 from statistics import median
 
+from datetime import datetime, date, timedelta
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Exists, OuterRef
@@ -523,6 +525,7 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
         "id": question_aggregate.id,
         "name": question_aggregate.name,
         "horizontal": question_aggregate.horizontal,
+        "use_answer_time": question_aggregate.use_answer_time,
         "question_aggregate_typ": question_aggregate.question_aggregate_typ,
         "aggregate_questions": [
             {
@@ -530,6 +533,7 @@ def parse_question_aggregate(question_aggregate: QuestionAggregate):
                 "question_condition_typ": question_aggregate_question.question_condition_typ,
                 "question": parse_question(question_aggregate_question.question),
                 "condition_value": question_aggregate_question.condition_value,
+                "order": question_aggregate_question.order,
                 "active": question_aggregate_question.active,
             }
             for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(
@@ -556,6 +560,7 @@ def save_question_aggregate(data):
 
         qa.name = data["name"]
         qa.horizontal = data["horizontal"]
+        qa.use_answer_time = data["use_answer_time"]
         qa.active = data["active"]
         qa.question_aggregate_typ_id = data["question_aggregate_typ"][
             "question_aggregate_typ"
@@ -571,11 +576,19 @@ def save_question_aggregate(data):
                 )
 
             qaq.question_aggregate = qa
-            qaq.question_condition_typ_id = question_aggregate_question.get(
-                "question_condition_typ", {}
-            ).get("question_condition_typ", None)
+            question_condition_typ = question_aggregate_question.get(
+                "question_condition_typ", None
+            )
+            qaq.question_condition_typ_id = (
+                None
+                if question_condition_typ is None
+                else question_condition_typ["question_condition_typ"]
+            )
             qaq.question_id = question_aggregate_question["question"]["id"]
-            qaq.condition_value = question_aggregate_question["condition_value"]
+            qaq.condition_value = question_aggregate_question.get(
+                "condition_value", None
+            )
+            qaq.order = question_aggregate_question.get("order", None)
             qaq.active = question_aggregate_question["active"]
             qaq.save()
 
@@ -1938,6 +1951,9 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 def is_question_condition_passed(
     question_condition_typ: str, answer_value, match_value=None
 ):
+    if answer_value is None:
+        return False
+
     match question_condition_typ:
         case "equal":
             return answer_value == match_value
@@ -2002,6 +2018,12 @@ def aggregate_answers(question_aggregate, response_question_answers):
     is_logical = (
         question_aggregate["question_aggregate_typ"].question_aggregate_typ == "logical"
     )
+
+    is_difference = (
+        question_aggregate["question_aggregate_typ"].question_aggregate_typ
+        == "difference"
+    )
+
     # build 2d array of horizontal aggs
     responses_values = []
     for response in response_question_answers:
@@ -2009,57 +2031,88 @@ def aggregate_answers(question_aggregate, response_question_answers):
         # print(response["response_id"])
         logical_value = True
 
+        if question_aggregate["use_answer_time"]:
+            response["question_answers"].sort(
+                key=lambda e: [
+                    qa["order"]
+                    for qa in question_aggregate["aggregate_questions"]
+                    if qa["question"]["id"] == e["question"]["id"]
+                ][0]
+            )
+
         for question_answer in response["question_answers"]:
-            # print(question_answer["question"])
-            q_agg_q = None
-            if is_logical:
-                try:
-                    q_agg_q = [
-                        q_agg_q
-                        for q_agg_q in question_aggregate["aggregate_questions"]
-                        if q_agg_q["question"]["id"]
-                        == question_answer["question"]["id"]
-                        and question_answer["question"]["active"] == "y"
-                    ][0]
-                except IndexError:
-                    q_agg_q = None
+            if question_answer.get("value", "") != "!EXIST":
+                # print(question_answer["question"])
+                q_agg_q = None
+                if is_logical:
+                    try:
+                        q_agg_q = [
+                            q_agg_q
+                            for q_agg_q in question_aggregate["aggregate_questions"]
+                            if q_agg_q["question"]["id"]
+                            == question_answer["question"]["id"]
+                            and question_answer["question"]["active"] == "y"
+                        ][0]
+                    except IndexError:
+                        q_agg_q = None
 
-            if question_answer.get("value", None) is not None:
-                value = int(question_answer["value"])
+                if question_answer.get("value", None) is not None:
+                    value = int(question_answer["value"])
 
-                if question_answer["question"].value_multiplier is not None:
-                    value *= int(question_answer["question"].value_multiplier)
+                    if question_answer["question"].value_multiplier is not None:
+                        value *= int(question_answer["question"].value_multiplier)
 
-                if is_logical and q_agg_q is not None:
-                    logical_value = logical_value and is_question_condition_passed(
-                        q_agg_q.question_condition_typ.question_condition_typ,
-                        value,
-                        q_agg_q.condition_value,
-                    )
+                    if question_aggregate["use_answer_time"]:
+                        value = response.time
 
-                response_values.append(value)
+                    if is_logical and q_agg_q is not None:
+                        logical_value = logical_value and is_question_condition_passed(
+                            q_agg_q.question_condition_typ.question_condition_typ,
+                            value,
+                            q_agg_q.condition_value,
+                        )
 
-            elif question_answer.get("flow_answers", None) is not None:
-                flow_value = 0
-                for flow_answer in question_answer["flow_answers"]:
-                    if flow_answer.question.question_typ.question_typ == "mnt-psh-btn":
-                        value = 1
-                    else:
-                        raise Exception("not accounted for yet")
-                        value = flow_answer.value
+                    response_values.append(value)
 
-                    if flow_answer.question.value_multiplier is not None:
-                        value *= int(flow_answer.question.value_multiplier)
-                    flow_value += value
+                elif question_answer.get("flow_answers", None) is not None:
+                    flow_value = None
 
-                if is_logical and q_agg_q is not None:
-                    logical_value = logical_value and is_question_condition_passed(
-                        q_agg_q["question_condition_typ"].question_condition_typ,
-                        flow_value,
-                        q_agg_q["condition_value"],
-                    )
+                    for flow_answer in question_answer["flow_answers"]:
+                        if flow_answer.value != "!EXISTS":
+                            if (
+                                flow_answer.question.question_typ.question_typ
+                                == "mnt-psh-btn"
+                            ):
+                                value = 1
+                            else:
+                                raise Exception("not accounted for yet")
+                                value = flow_answer.value
 
-                response_values.append(flow_value)
+                            if flow_answer.question.value_multiplier is not None:
+                                value *= int(flow_answer.question.value_multiplier)
+
+                            if question_aggregate["use_answer_time"]:
+                                value = datetime.combine(
+                                    date.today(), flow_answer.value_time
+                                )
+
+                            if flow_value is None:
+                                flow_value = value
+                            else:
+                                if is_difference:
+                                    flow_value = flow_value - value
+                                else:
+                                    flow_value += value
+
+                    if is_logical and q_agg_q is not None:
+                        logical_value = logical_value and is_question_condition_passed(
+                            q_agg_q["question_condition_typ"].question_condition_typ,
+                            flow_value,
+                            q_agg_q["condition_value"],
+                        )
+
+                    if flow_value is not None:
+                        response_values.append(flow_value)
 
         if is_logical:
             responses_values.append(1 if logical_value else 0)
@@ -2083,6 +2136,49 @@ def aggregate_answers(question_aggregate, response_question_answers):
             return statistics.stdev(
                 [statistics.stdev(values) for values in responses_values]
             )
+        case "difference":
+            i = 0
+            for value_list in responses_values:
+                diff = None
+
+                for value in value_list:
+                    if diff is None:
+                        diff = value
+                    else:
+                        diff = diff - value
+
+                responses_values[i] = diff if diff is not None else 0
+                i += 1
+
+            diff = None
+            for value in responses_values:
+                if diff is None:
+                    diff = value
+                else:
+                    diff - value
+
+            if isinstance(diff, timedelta):
+                duration_in_s = diff.total_seconds()
+                days = divmod(duration_in_s, 86400)  # Get days (without [0]!)
+                hours = divmod(days[1], 3600)  # Use remainder of days to calc hours
+                minutes = divmod(hours[1], 60)  # Use remainder of hours to calc minutes
+                seconds = divmod(
+                    minutes[1], 1
+                )  # Use remainder of minutes to calc seconds
+                """
+                print(
+                    "Time between dates: %d days, %d hours, %d minutes and %d seconds"
+                    % (days[0], hours[0], minutes[0], seconds[0])
+                )
+                """
+                days = f"{days[0]} days, " if days[0] > 0 else ""
+                hours = f"{hours[0]} hours, " if hours[0] > 0 else ""
+                minutes = f"{minutes[0]} minutes, " if minutes[0] > 0 else ""
+                seconds = f"{seconds[0]} seconds" if seconds[0] > 0 else ""
+
+                diff = f"{days}{hours}{minutes}{seconds}"
+
+            return diff
         case _:
             raise Exception("no type")
 

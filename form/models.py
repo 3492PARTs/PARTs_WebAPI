@@ -118,9 +118,7 @@ class FlowCondition(models.Model):
     flow_from = models.ForeignKey(
         Flow, models.PROTECT, related_name="condition_flow_from"
     )
-    flow_to = models.ForeignKey(
-        Flow, models.PROTECT, related_name="condition_flow_to"
-    )
+    flow_to = models.ForeignKey(Flow, models.PROTECT, related_name="condition_flow_to")
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -130,12 +128,8 @@ class FlowCondition(models.Model):
 
 class FlowQuestion(models.Model):
     id = models.AutoField(primary_key=True)
-    flow = models.ForeignKey(
-        Flow, models.PROTECT
-    )
-    question = models.ForeignKey(
-        Question, models.PROTECT
-    )
+    flow = models.ForeignKey(Flow, models.PROTECT)
+    question = models.ForeignKey(Question, models.PROTECT)
     order = models.IntegerField()
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
@@ -158,6 +152,7 @@ class QuestionAggregate(models.Model):
     question_aggregate_typ = models.ForeignKey(QuestionAggregateType, models.PROTECT)
     name = models.CharField(max_length=1000)
     horizontal = models.BooleanField(default=True)
+    use_answer_time = models.BooleanField(default=False)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -168,9 +163,12 @@ class QuestionAggregate(models.Model):
 class QuestionAggregateQuestion(models.Model):
     id = models.AutoField(primary_key=True)
     question_aggregate = models.ForeignKey(QuestionAggregate, models.PROTECT)
-    question_condition_typ = models.ForeignKey(QuestionConditionType, models.PROTECT, null=True)
+    question_condition_typ = models.ForeignKey(
+        QuestionConditionType, models.PROTECT, null=True
+    )
     condition_value = models.CharField(max_length=1000, null=True)
     question = models.ForeignKey(Question, models.PROTECT)
+    order = models.IntegerField(null=True)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -277,7 +275,6 @@ class GraphCategory(models.Model):
         return f"{self.id} : {self.category} : {self.graph}"
 
 
-
 class GraphCategoryAttribute(models.Model):
     id = models.AutoField(primary_key=True)
     graph_category = models.ForeignKey(GraphCategory, models.PROTECT)
@@ -292,7 +289,6 @@ class GraphCategoryAttribute(models.Model):
         return f"{self.id} : {self.graph_category} : {self.value}"
 
 
-
 class GraphQuestion(models.Model):
     id = models.AutoField(primary_key=True)
     graph = models.ForeignKey(Graph, models.PROTECT)
@@ -304,4 +300,3 @@ class GraphQuestion(models.Model):
 
     def __str__(self):
         return f"{self.id} : {self.graph} : {self.question}"
-
