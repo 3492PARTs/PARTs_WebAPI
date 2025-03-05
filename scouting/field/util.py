@@ -6,15 +6,13 @@ import datetime
 from form.models import (
     QuestionAggregate,
     Answer,
-    FormSubType,
-    FlowAnswer,
     QuestionAggregateQuestion,
 )
 import form.urls
 import scouting.models
 import scouting.util
 import form
-from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule
+from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule, UserInfo
 import general.util
 import form.util
 
@@ -165,11 +163,6 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
 
     field_scouting_responses = []
 
-    if current_event is None:
-        return scouting.util.get_no_event_ret_message(
-            "scouting.field.util.get_responses", request.user.id
-        )
-
     parsed_question_aggregates = []
     for question_aggregate in question_aggregates:
         parsed_question_aggregates.append(
@@ -189,43 +182,44 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
             }
         )
 
+    q_team = Q()
+    q_user = Q()
+    q_after_scout_field_id = Q()
     # Pull responses by what input
     if team is not None:
         # get response for individual team
-        scout_fields = (
-            FieldResponse.objects.prefetch_related("team__eventteaminfo_set")
-            .filter(Q(event=current_event) & Q(team_no_id=team) & Q(void_ind="n"))
-            .order_by("-time", "-id")
-        )
+        q_team = Q(team_no_id=team)
     elif user is not None:
         # get response for individual scout
-        scout_fields = (
-            FieldResponse.objects.prefetch_related("team__eventteaminfo_set")
-            .filter(Q(event=current_event) & Q(user=user) & Q(void_ind="n"))
-            .order_by("-time", "-id")
-        )
+        q_user = Q(user=user)
     elif after_scout_field_id is not None:
         # get response for individual scout
-        scout_fields = (
-            FieldResponse.objects.prefetch_related("team__eventteaminfo_set")
-            .filter(
-                Q(event=current_event)
-                & Q(id__gt=after_scout_field_id)
-                & Q(void_ind="n")
-            )
-            .order_by("-time", "-id")
-        )
+        q_after_scout_field_id = Q(id__gt=after_scout_field_id)
     else:
         loading_all = True
         # get everything
-        scout_fields = (
-            FieldResponse.objects.prefetch_related("team__eventteaminfo_set")
-            .filter(Q(event=current_event) & Q(void_ind="n"))
-            .order_by("-time", "-id")
+
+    q_eliminate_results = Exists(
+        UserInfo.objects.filter(
+            Q(user_id=OuterRef("user_id")) & Q(eliminate_results=True) & Q(void_ind="n")
         )
+    )
+
+    scout_field_responses = (
+        FieldResponse.objects.prefetch_related("team__eventteaminfo_set")
+        .filter(
+            Q(event=current_event)
+            & Q(void_ind="n")
+            & q_team
+            & q_user
+            & q_after_scout_field_id
+            & ~q_eliminate_results
+        )
+        .order_by("-time", "-id")
+    )
 
     # Loop over all the responses selected and put in table
-    for scout_field in scout_fields:
+    for scout_field in scout_field_responses:
         answers = Answer.objects.filter(
             Q(response=scout_field.response) & Q(void_ind="n")
         )

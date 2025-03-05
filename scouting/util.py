@@ -13,7 +13,9 @@ from scouting.models import (
     Team,
     FieldForm,
     FieldResponse,
+    UserInfo,
 )
+from user.models import User
 
 
 def get_all_seasons():
@@ -181,7 +183,28 @@ def get_schedule_types():
     return ScheduleType.objects.all().order_by("sch_nm")
 
 
+def get_group_leader_user(user: User):
+    try:
+        u = user.scouting_user_info.get(Q(void_ind="n") & Q(group_leader=True))
+        return user
+    except UserInfo.DoesNotExist:
+        return None
+
+
 def parse_scout_field_schedule(s: FieldSchedule):
+
+    red_leader = get_group_leader_user(s.red_one)
+    if red_leader is None:
+        red_leader = get_group_leader_user(s.red_two)
+    if red_leader is None:
+        red_leader = get_group_leader_user(s.red_three)
+
+    blue_leader = get_group_leader_user(s.blue_one)
+    if blue_leader is None:
+        blue_leader = get_group_leader_user(s.blue_two)
+    if blue_leader is None:
+        blue_leader = get_group_leader_user(s.blue_three)
+
     return {
         "id": s.id,
         "event_id": s.event_id,
@@ -190,12 +213,14 @@ def parse_scout_field_schedule(s: FieldSchedule):
         "notification1": s.notification1,
         "notification2": s.notification2,
         "notification3": s.notification3,
+        "red_leader": red_leader,
         "red_one_id": s.red_one,
         "red_one_check_in": s.red_one_check_in,
         "red_two_id": s.red_two,
         "red_two_check_in": s.red_two_check_in,
         "red_three_id": s.red_three,
         "red_three_check_in": s.red_three_check_in,
+        "blue_leader": blue_leader,
         "blue_one_id": s.blue_one,
         "blue_one_check_in": s.blue_one_check_in,
         "blue_two_id": s.blue_two,

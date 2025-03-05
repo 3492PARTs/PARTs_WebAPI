@@ -107,6 +107,8 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
     notification2 = serializers.BooleanField()
     notification3 = serializers.BooleanField()
 
+    blue_leader = UserSerializer(required=False, allow_null=True)
+    red_leader = UserSerializer(required=False, allow_null=True)
     red_one_id = UserSerializer(required=False, allow_null=True)
     red_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
     red_two_id = UserSerializer(required=False, allow_null=True)
