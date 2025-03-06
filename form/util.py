@@ -2177,6 +2177,8 @@ def aggregate_answers(question_aggregate, response_question_answers):
                 seconds = f"{seconds[0]} seconds" if seconds[0] > 0 else ""
 
                 diff = f"{days}{hours}{minutes}{seconds}"
+            elif isinstance(diff, datetime):
+                diff = 0
 
             return diff
         case _:
