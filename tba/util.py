@@ -36,13 +36,28 @@ def get_events_for_team(team: Team, season: Season, event_cds_to_ignore=None):
     parsed = []
 
     for event_requested in request:
-        if event_cds_to_ignore is None or event_requested["key"] not in event_cds_to_ignore:
+        if (
+            event_cds_to_ignore is None
+            or event_requested["key"] not in event_cds_to_ignore
+        ):
             data = get_tba_event(event_requested["key"])
             parsed.append(data)
         else:
             parsed.append({"event_cd": event_requested["key"]})
 
     return parsed
+
+
+def get_matches_for_team_event(team_key, event_key):
+    request = requests.get(
+        f"{tba_url}/team/frc{team_key}/event/{event_key}/matches",
+        headers={"X-TBA-Auth-Key": settings.TBA_KEY},
+    )
+    matches = json.loads(request.text)
+    # for match in matches:
+    # print(match)
+
+    return matches
 
 
 def sync_season(season_id):
@@ -214,18 +229,30 @@ def get_tba_event_team_info(event_cd: str):
 
     ret = []
     for info in rankings.get("rankings", []):
-        ret.append({
-        "matches_played": info.get("matches_played", 0),
-        "qual_average": info.get("qual_average", 0),
-        "losses": (
-            info["record"].get("losses", 0) if info.get("record", 0) is not None else 0
-        ),
-        "wins": info["record"].get("wins", 0) if info.get("record", 0) is not None else 0,
-        "ties": info["record"].get("ties", 0) if info.get("record", 0) is not None else 0,
-        "rank": info.get("rank", 0),
-        "dq": info.get("dq", 0),
-        "team_id": info["team_key"].replace("frc", "")
-        })
+        ret.append(
+            {
+                "matches_played": info.get("matches_played", 0),
+                "qual_average": info.get("qual_average", 0),
+                "losses": (
+                    info["record"].get("losses", 0)
+                    if info.get("record", 0) is not None
+                    else 0
+                ),
+                "wins": (
+                    info["record"].get("wins", 0)
+                    if info.get("record", 0) is not None
+                    else 0
+                ),
+                "ties": (
+                    info["record"].get("ties", 0)
+                    if info.get("record", 0) is not None
+                    else 0
+                ),
+                "rank": info.get("rank", 0),
+                "dq": info.get("dq", 0),
+                "team_id": info["team_key"].replace("frc", ""),
+            }
+        )
 
     return ret
 
@@ -348,11 +375,13 @@ def save_tba_match(tba_match):
         match.save()
         messages += f"(ADD) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
 
-    return  messages
+    return messages
 
 
 def save_message(message):
-    msg = Message(message_type=message["message_type"], message_data=message["message_data"])
+    msg = Message(
+        message_type=message["message_type"], message_data=message["message_data"]
+    )
     msg.save()
     return msg
 
@@ -363,4 +392,3 @@ def verify_tba_webhook_call(request):
         settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
     ).hexdigest()
     return hmac_hex == request.META.get("HTTP_X_TBA_HMAC", None)
-
