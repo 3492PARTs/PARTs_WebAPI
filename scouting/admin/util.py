@@ -498,11 +498,11 @@ def foo():
 
                     for match in matches:
                         csv_match = ""
-                        csv_match += f"Match {match['match_number']}\n"
-                        csv_match += f"Teams,,,Score\n"
-                        csv_match += f"{match['alliances']['red']['team_keys'][0]},{match['alliances']['red']['team_keys'][1]},{match['alliances']['red']['team_keys'][2]},{match['alliances']['red']['score']}\n"
-                        csv_match += f"{match['alliances']['blue']['team_keys'][0]},{match['alliances']['blue']['team_keys'][1]},{match['alliances']['blue']['team_keys'][2]},{match['alliances']['blue']['score']}\n"
-                        csv_match += "Detailed Results\n"
+                        csv_match += f"Match {match['match_number']},,,,,,\n"
+                        csv_match += f"Teams,,,Score,,,\n"
+                        csv_match += f"{match['alliances']['red']['team_keys'][0]},{match['alliances']['red']['team_keys'][1]},{match['alliances']['red']['team_keys'][2]},{match['alliances']['red']['score']},,,\n"
+                        csv_match += f"{match['alliances']['blue']['team_keys'][0]},{match['alliances']['blue']['team_keys'][1]},{match['alliances']['blue']['team_keys'][2]},{match['alliances']['blue']['score']},,,\n"
+                        csv_match += "Detailed Results,,,,,,\n"
                         csv_match += f"{match['score_breakdown']['red']['autoLineRobot1']},{match['score_breakdown']['red']['autoLineRobot2']},{match['score_breakdown']['red']['autoLineRobot3']},Auto Leave,{match['score_breakdown']['blue']['autoLineRobot1']},{match['score_breakdown']['blue']['autoLineRobot2']},{match['score_breakdown']['blue']['autoLineRobot3']}\n"
 
                         # auto
@@ -549,7 +549,7 @@ def foo():
                             # Concatenate lines horizontally
                             csv_matches = "\n".join(
                                 [
-                                    " ".join(elem)
+                                    ",,".join(elem)
                                     for elem in zip(
                                         csv_matches.split("\n"), csv_match.split("\n")
                                     )
