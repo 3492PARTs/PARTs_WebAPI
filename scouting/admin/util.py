@@ -478,9 +478,11 @@ def foo():
 
             sharing = ""
             other = ""
-            matches = ""
 
             for team_event in team_events:
+                csv_matches = ""
+                first_run = True
+
                 if team_event["event_cd"] in event_cds:
                     # print(f"same as us {team_event['event_cd']}")
                     csv += f"Sharing: {[event.event_nm for event in our_events if event.event_cd == team_event['event_cd']][0]}\n"
@@ -493,7 +495,66 @@ def foo():
                     matches = tba.util.get_matches_for_team_event(
                         team.team_no, team_event["event_cd"]
                     )
-                    csv += f'"{matches}"\n'
 
-            # csv += f'{team.team_no},"{sharing[:len(sharing) - 2]}","{other[:len(other) - 2]}"\n'
+                    for match in matches:
+                        csv_match = ""
+                        csv_match += f"Match {match['match_number']}\n"
+                        csv_match += f"Teams,,,Score\n"
+                        csv_match += f"{match['alliances']['red']['team_keys'][0]},{match['alliances']['red']['team_keys'][1]},{match['alliances']['red']['team_keys'][2]},{match['alliances']['red']['score']}\n"
+                        csv_match += f"{match['alliances']['blue']['team_keys'][0]},{match['alliances']['blue']['team_keys'][1]},{match['alliances']['blue']['team_keys'][2]},{match['alliances']['blue']['score']}\n"
+                        csv_match += "Detailed Results\n"
+                        csv_match += f"{match['score_breakdown']['red']['autoLineRobot1']},{match['score_breakdown']['red']['autoLineRobot2']},{match['score_breakdown']['red']['autoLineRobot3']},Auto Leave,{match['score_breakdown']['blue']['autoLineRobot1']},{match['score_breakdown']['blue']['autoLineRobot2']},{match['score_breakdown']['blue']['autoLineRobot3']}\n"
+
+                        # auto
+                        csv_match += f"L4,{match['score_breakdown']['red']['autoReef']['tba_topRowCount']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['tba_topRowCount']},L4\n"
+                        csv_match += f"L3,{match['score_breakdown']['red']['autoReef']['tba_midRowCount']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['tba_midRowCount']},L3\n"
+                        csv_match += f"L2,{match['score_breakdown']['red']['autoReef']['tba_topRowCount']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['tba_topRowCount']},L2\n"
+                        csv_match += f"L1,{match['score_breakdown']['red']['autoReef']['trough']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['trough']},L1\n"
+                        csv_match += f",{match['score_breakdown']['red']['autoCoralPoints']},,Auto Coral Points,,{match['score_breakdown']['blue']['autoCoralPoints']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['autoPoints']},,Total Auto,,{match['score_breakdown']['blue']['autoPoints']},\n"
+
+                        # tele
+                        csv_match += f"L4,{match['score_breakdown']['red']['teleopReef']['tba_topRowCount']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['tba_topRowCount']},L4\n"
+                        csv_match += f"L3,{match['score_breakdown']['red']['teleopReef']['tba_midRowCount']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['tba_midRowCount']},L3\n"
+                        csv_match += f"L2,{match['score_breakdown']['red']['teleopReef']['tba_topRowCount']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['tba_topRowCount']},L2\n"
+                        csv_match += f"L1,{match['score_breakdown']['red']['teleopReef']['trough']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['trough']},L1\n"
+                        csv_match += f",{match['score_breakdown']['red']['teleopCoralPoints']},,Teleop Coral Points,,{match['score_breakdown']['blue']['teleopCoralPoints']},\n"
+
+                        csv_match += f",{match['score_breakdown']['red']['wallAlgaeCount']},,Processor Algae Count,,{match['score_breakdown']['blue']['wallAlgaeCount']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['netAlgaeCount']},,Net Algae Count,,{match['score_breakdown']['blue']['netAlgaeCount']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['algaePoints']},,Algae Points,,{match['score_breakdown']['blue']['algaePoints']},\n"
+
+                        # endgame
+                        csv_match += f"{match['alliances']['red']['team_keys'][0]},{match['score_breakdown']['red']['endGameRobot1']},,Robot 1 Endgame,,{match['score_breakdown']['blue']['endGameRobot1']},{match['alliances']['blue']['team_keys'][0]}\n"
+                        csv_match += f"{match['alliances']['red']['team_keys'][1]},{match['score_breakdown']['red']['endGameRobot2']},,Robot 2 Endgame,,{match['score_breakdown']['blue']['endGameRobot2']},{match['alliances']['blue']['team_keys'][1]}\n"
+                        csv_match += f"{match['alliances']['red']['team_keys'][2]},{match['score_breakdown']['red']['endGameRobot3']},,Robot 3 Endgame,,{match['score_breakdown']['blue']['endGameRobot3']},{match['alliances']['blue']['team_keys'][2]}\n"
+                        csv_match += f",{match['score_breakdown']['red']['endGameBargePoints']},,Barge Points,,{match['score_breakdown']['blue']['endGameBargePoints']},\n"
+
+                        csv_match += f",{match['score_breakdown']['red']['teleopPoints']},,Total Teleop,,{match['score_breakdown']['blue']['teleopPoints']},\n"
+
+                        csv_match += f",{match['score_breakdown']['red']['coopertitionCriteriaMet']},,Coopertition Criteria Met,,{match['score_breakdown']['blue']['coopertitionCriteriaMet']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['autoBonusAchieved']},,Auto Bonus,,{match['score_breakdown']['blue']['autoBonusAchieved']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['coralBonusAchieved']},,Coral Bonus,,{match['score_breakdown']['blue']['coralBonusAchieved']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['bargeBonusAchieved']},,Barge Bonus,,{match['score_breakdown']['blue']['bargeBonusAchieved']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['foulCount']}/{match['score_breakdown']['red']['techFoulCount']},,Fouls / Tech Fouls,,{match['score_breakdown']['blue']['foulCount']}/{match['score_breakdown']['red']['techFoulCount']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['foulPoints']},,Foul Points,,{match['score_breakdown']['blue']['foulPoints']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['adjustPoints']},,Adjustments,,{match['score_breakdown']['blue']['adjustPoints']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['totalPoints']},,Total Score,,{match['score_breakdown']['blue']['totalPoints']},\n"
+                        csv_match += f",{match['score_breakdown']['red']['rp']},,Ranking Points,,{match['score_breakdown']['blue']['rp']},\n"
+
+                        if first_run:
+                            csv_matches = csv_match
+                            first_run = False
+                        else:
+                            # Concatenate lines horizontally
+                            csv_matches = "\n".join(
+                                [
+                                    " ".join(elem)
+                                    for elem in zip(
+                                        csv_matches.split("\n"), csv_match.split("\n")
+                                    )
+                                ]
+                            )
+
+                    csv += f"{csv_matches}\n"
     return csv
