@@ -250,7 +250,7 @@ def get_tba_event_team_info(event_cd: str):
                 ),
                 "rank": info.get("rank", 0),
                 "dq": info.get("dq", 0),
-                "team_id": info["team_key"].replace("frc", ""),
+                "team_id": replace_frc_in_str(info["team_key"]),
             }
         )
 
@@ -301,27 +301,27 @@ def save_tba_match(tba_match):
     messages = ""
     match_number = tba_match.get("match_number", 0)
     red_one = Team.objects.get(
-        Q(team_no=tba_match["alliances"]["red"]["team_keys"][0].replace("frc", ""))
+        Q(team_no=replace_frc_in_str(tba_match["alliances"]["red"]["team_keys"][0]))
         & Q(void_ind="n")
     )
     red_two = Team.objects.get(
-        Q(team_no=tba_match["alliances"]["red"]["team_keys"][1].replace("frc", ""))
+        Q(team_no=replace_frc_in_str(tba_match["alliances"]["red"]["team_keys"][1]))
         & Q(void_ind="n")
     )
     red_three = Team.objects.get(
-        Q(team_no=tba_match["alliances"]["red"]["team_keys"][2].replace("frc", ""))
+        Q(team_no=replace_frc_in_str(tba_match["alliances"]["red"]["team_keys"][2]))
         & Q(void_ind="n")
     )
     blue_one = Team.objects.get(
-        Q(team_no=tba_match["alliances"]["blue"]["team_keys"][0].replace("frc", ""))
+        Q(team_no=replace_frc_in_str(tba_match["alliances"]["blue"]["team_keys"][0]))
         & Q(void_ind="n")
     )
     blue_two = Team.objects.get(
-        Q(team_no=tba_match["alliances"]["blue"]["team_keys"][1].replace("frc", ""))
+        Q(team_no=replace_frc_in_str(tba_match["alliances"]["blue"]["team_keys"][1]))
         & Q(void_ind="n")
     )
     blue_three = Team.objects.get(
-        Q(team_no=tba_match["alliances"]["blue"]["team_keys"][2].replace("frc", ""))
+        Q(team_no=replace_frc_in_str(tba_match["alliances"]["blue"]["team_keys"][2]))
         & Q(void_ind="n")
     )
     red_score = tba_match["alliances"]["red"].get("score", None)
@@ -392,3 +392,7 @@ def verify_tba_webhook_call(request):
         settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
     ).hexdigest()
     return hmac_hex == request.META.get("HTTP_X_TBA_HMAC", None)
+
+
+def replace_frc_in_str(s: str):
+    return s.replace("frc", "")
