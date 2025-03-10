@@ -9,14 +9,14 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 import form.util
 from form.serializers import (
     QuestionSerializer,
-    QuestionWithConditionsSerializer,
     SaveResponseSerializer,
-    SaveScoutSerializer,
-    QuestionInitializationSerializer,
+    ScoutFieldFormResponseSerializer,
+    FormInitializationSerializer,
     ResponseSerializer,
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
-    QuestionConditionSerializer,
+    QuestionConditionSerializer, FlowSerializer, QuestionConditionTypeSerializer,
+    FlowConditionSerializer, GraphEditorSerializer, GraphSerializer
 )
 from general.security import has_access, ret_message
 
@@ -32,11 +32,11 @@ class QuestionView(APIView):
 
     def get(self, request, format=None):
         try:
-            questions = form.util.get_questions_with_conditions(
+            questions = form.util.get_questions(
                 request.query_params["form_typ"],
                 active=request.query_params.get("active", ""),
             )
-            serializer = QuestionWithConditionsSerializer(questions, many=True)
+            serializer = QuestionSerializer(questions, many=True)
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -62,7 +62,7 @@ class QuestionView(APIView):
                         True,
                         app_url + self.endpoint,
                         request.user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
 
                 with transaction.atomic():
@@ -86,14 +86,14 @@ class QuestionView(APIView):
             )
 
 
-class FormInitView(APIView):
+class FormEditorView(APIView):
     """
     API endpoint to init form editor
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "form-init/"
+    endpoint = "form-editor/"
 
     def get(self, request, format=None):
         try:
@@ -106,11 +106,13 @@ class FormInitView(APIView):
                 form_sub_types = form.util.get_form_sub_types(
                     request.query_params["form_typ"]
                 )
-                serializer = QuestionInitializationSerializer(
+                flows = form.util.get_flows(None, request.query_params["form_typ"])
+                serializer = FormInitializationSerializer(
                     {
                         "questions": questions,
                         "question_types": question_types,
                         "form_sub_types": form_sub_types,
+                        "flows": flows
                     }
                 )
                 return Response(serializer.data)
@@ -124,7 +126,7 @@ class FormInitView(APIView):
                 )
         except Exception as e:
             return ret_message(
-                "An error occurred while initializing form.",
+                "An error occurred while initializing form editor.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
@@ -157,7 +159,7 @@ class SaveAnswersView(APIView):
                     form_typ == "field" and has_access(request.user.id, "scoutfield")
                 ) or (form_typ == "pit" and has_access(request.user.id, "scoutpit")):
                     # Try to deserialize as a field or pit answer
-                    serializer = SaveScoutSerializer(data=request.data)
+                    serializer = ScoutFieldFormResponseSerializer(data=request.data)
                     if serializer.is_valid():
                         if serializer.validated_data["form_typ"] == "field":
                             form.util.save_field_response(
@@ -249,7 +251,7 @@ class ResponseView(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):
@@ -375,7 +377,7 @@ class QuestionAggregateView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, "admin") or has_access(
@@ -467,7 +469,7 @@ class QuestionConditionView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    serializer.errors,
+                    error_message=serializer.errors,
                 )
 
             if has_access(request.user.id, "admin") or has_access(
@@ -491,3 +493,332 @@ class QuestionConditionView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class QuestionConditionTypesView(APIView):
+    """
+    API endpoint to manage the question condition typess
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "question-condition-types/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                qas = form.util.get_question_condition_types()
+                serializer = QuestionConditionTypeSerializer(qas, many=True)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question condition types.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class FlowView(APIView):
+    """
+    API endpoint to get question flows
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "flow/"
+
+    def get(self, request, format=None):
+        try:
+            fid = request.query_params.get("id", None)
+            questions = form.util.get_flows(
+                fid,
+                request.query_params.get("form_typ", None),
+                request.query_params.get("form_sub_typ", None)
+            )
+            if fid is None:
+                serializer = FlowSerializer(questions, many=True)
+            else:
+                serializer = FlowSerializer(questions[0])
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question flows.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = FlowSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                with transaction.atomic():
+                    form.util.save_flow(serializer.validated_data)
+
+                return ret_message("Saved flow successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the flow.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class QuestionFlowView(APIView):
+    """
+    API endpoint to get question flows
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "question-flow/"
+
+    def get(self, request, format=None):
+        try:
+            fid = request.query_params.get("id", None)
+            questions = form.util.get_flows(
+                fid,
+                request.query_params.get("form_typ", None),
+                request.query_params.get("form_sub_typ", None)
+            )
+            if fid is None:
+                serializer = FlowSerializer(questions, many=True)
+            else:
+                serializer = FlowSerializer(questions[0])
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting question flows.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = FlowSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                with transaction.atomic():
+                    form.util.save_flow(serializer.validated_data)
+
+                return ret_message("Saved question flow successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the question flow.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class FlowConditionView(APIView):
+    """
+    API endpoint to manage the question conditions
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "flow-condition/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                qas = form.util.get_flow_condition(request.query_params["form_typ"])
+                serializer = FlowConditionSerializer(qas, many=True)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting flow conditions.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+    def post(self, request, format=None):
+        try:
+            serializer = FlowConditionSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                with transaction.atomic():
+                    form.util.save_flow_condition(serializer.validated_data)
+                return ret_message("Saved flow condition successfully")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving the flow condition.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class GraphEditorView(APIView):
+    """
+    API endpoint to edit graphs
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "graph-editor/"
+
+    def get(self, request, format=None):
+        try:
+            graph_types = form.util.get_graph_types()
+            graph_question_types = form.util.get_graph_question_types()
+            graphs = form.util.get_graphs(True)
+            question_condition_types = form.util.get_question_condition_types()
+            serializer = GraphEditorSerializer({
+                "graph_types": graph_types,
+                "graph_question_types": graph_question_types,
+                "graphs": graphs,
+                'question_condition_types': question_condition_types
+            })
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting graph editor.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+
+class GraphView(APIView):
+    """
+    API endpoint to manage graphs
+    """
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "graph/"
+
+
+    def get(self, request, format=None):
+        try:
+            gid = request.query_params.get("graph_id", None)
+            graphs = form.util.get_graphs(gid is None, gid)
+            if gid is None:
+                serializer = GraphSerializer(graphs, many=True)
+            else:
+                serializer = GraphSerializer(graphs[0])
+            return Response(serializer.data)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting graphs.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+
+    def post(self, request, format=None):
+        try:
+            if has_access(request.user.id, "admin") or has_access(
+                request.user.id, "scoutadmin"
+            ):
+                serializer = GraphSerializer(data=request.data)
+                if not serializer.is_valid():
+                    return ret_message(
+                        "Invalid data",
+                        True,
+                        app_url + self.endpoint,
+                        request.user.id,
+                        error_message=serializer.errors,
+                    )
+
+                form.util.save_graph(serializer.validated_data, request.user.id, True)
+
+                return ret_message("Saved graph successfully.")
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while saving graph.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+

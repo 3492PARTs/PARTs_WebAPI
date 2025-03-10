@@ -2,10 +2,40 @@ from django.contrib.auth.models import Group, Permission
 from django.db.models import Q, Value, Count
 from django.db.models.functions import Lower, Concat
 
-import user
-from scouting.models import ScoutAuthGroups
+from scouting.models import ScoutAuthGroup
 from user.models import User, PhoneType, Link
+import general.cloudinary
+import general.security
 
+
+def get_user(user_id: int):
+    usr = User.objects.get(id=user_id)
+
+    permissions = general.security.get_user_permissions(user_id)
+
+    user_links = Link.objects.filter(
+        Q(permission__in=permissions)
+        | Q(permission_id__isnull=True)
+    ).order_by("order")
+
+    usr = {
+        "id": usr.id,
+        "username": usr.username,
+        "email": usr.email,
+        "name": usr.get_full_name(),
+        "first_name": usr.first_name,
+        "last_name": usr.last_name,
+        "is_active": usr.is_active,
+        "phone": usr.phone,
+        "groups": usr.groups,
+        "permissions": permissions,
+        "phone_type": usr.phone_type,
+        "phone_type_id": usr.phone_type_id,
+        "image": general.cloudinary.build_image_url(usr.img_id, usr.img_ver),
+        "links": user_links
+    }
+
+    return usr
 
 def get_users(active, admin):
     user_active = Q()
@@ -63,20 +93,12 @@ def get_user_groups(user_id: int):
     return user_groups
 
 
-"""
-def get_all_user_groups(user_id: int = None):
-    user_groups = Group.objects.all().order_by('name')
-
-    return user_groups
-"""
-
-
 def get_phone_types():
     return PhoneType.objects.all().order_by("carrier")
 
 
 def delete_phone_type(phone_type_id: int):
-    phone_type = PhoneType.objects.get(phone_type_id=phone_type_id)
+    phone_type = PhoneType.objects.get(id=phone_type_id)
 
     if phone_type.user_set.exists():
         raise ValueError("Can't delete, there are users tied to this phone type.")
@@ -127,8 +149,8 @@ def save_group(data):
 
 def delete_group(group_id):
     try:
-        ScoutAuthGroups.objects.get(auth_group_id_id=group_id).delete()
-    except ScoutAuthGroups.DoesNotExist as e:
+        ScoutAuthGroup.objects.get(group_id_id=group_id).delete()
+    except ScoutAuthGroup.DoesNotExist as e:
         pass
     Group.objects.get(id=group_id).delete()
 
@@ -171,10 +193,10 @@ def get_links():
 
 
 def save_link(data):
-    if data.get("link_id", None) is None:
+    if data.get("id", None) is None:
         link = Link()
     else:
-        link = Link.objects.get(link_id=data["link_id"])
+        link = Link.objects.get(id=data["id"])
 
     link.menu_name = data["menu_name"]
     link.permission_id = (
@@ -189,4 +211,4 @@ def save_link(data):
 
 
 def delete_link(link_id: int):
-    Link.objects.get(link_id=link_id).delete()
+    Link.objects.get(id=link_id).delete()

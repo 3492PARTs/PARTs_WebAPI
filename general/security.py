@@ -80,18 +80,20 @@ def ret_message(
                 message=message,
                 exception=exception,
                 traceback=tb,
+                error_message=error_message,
                 time=timezone.now(),
                 void_ind="n",
             ).save()
         except Exception as e:
             message += "\nCritical Error: please email the team admin at team3492@gmail.com\nSend them this message:\n"
-            message += e
+            message += str(e)
             try:
                 ErrorLog(
                     user=User.objects.get(id=-1),
                     path="general.security.ret_message",
                     message=message,
                     exception=e,
+                    error_message=error_message,
                     time=timezone.now(),
                     void_ind="n",
                 ).save()

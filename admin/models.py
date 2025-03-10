@@ -9,22 +9,9 @@ class ErrorLog(models.Model):
     message = models.CharField(max_length=1000, blank=True, null=True)
     exception = models.CharField(max_length=4000, blank=True, null=True)
     traceback = models.CharField(max_length=4000, blank=True, null=True)
+    error_message = models.CharField(max_length=4000, blank=True, null=True)
     time = models.DateTimeField()
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return (
-            str(self.error_log_id)
-            + " user: "
-            + self.user.first_name
-            + " "
-            + self.user.last_name
-            + " location: "
-            + self.path
-            + " msg: "
-            + self.message
-            + " exc: "
-            + self.exception
-            + " time: "
-            + self.time
-        )
+        return f"{self.error_log_id} user: {self.user.first_name} {self.user.last_name} location: {self.path} msg: {self.message} exc: {self.exception} time: {self.time}"

@@ -63,7 +63,7 @@ class DismissAlert(APIView):
     def get(self, request, format=None):
         try:
             dismiss_alert(
-                request.query_params.get("alert_channel_send_id", None), request.user.id
+                request.query_params.get("channel_send_id", None)
             )
             return ret_message("")
         except Exception as e:

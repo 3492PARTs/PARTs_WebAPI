@@ -5,14 +5,11 @@ from .views import *
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path("scout-auth-group/", ScoutAuthGroupsView.as_view()),
-    path("sync-season/", SyncSeasonView.as_view()),
-    path("sync-event/", SyncEventView.as_view()),
-    path("set-season-event/", SetSeasonEventView.as_view()),
-    path("sync-matches/", SyncMatchesView.as_view()),
-    path("sync-event-team-info/", SyncEventTeamInfoView.as_view()),
     path("season/", SeasonView.as_view()),
     path("event/", EventView.as_view()),
     path("team/", TeamView.as_view()),
+    path("match/", MatchView.as_view()),
+    path("set-season-event/", SetSeasonEventView.as_view()),
     path("team-to-event/", TeamToEventView.as_view()),
     path("remove-team-to-event/", RemoveTeamToEventView.as_view()),
     path("scout-field-schedule/", ScoutFieldScheduleView.as_view()),
@@ -21,6 +18,7 @@ urlpatterns = [
     path("scouting-user-info/", ScoutingUserInfoView.as_view()),
     path("delete-field-result/", FieldResponseView.as_view()),
     path("delete-pit-result/", PitResponseView.as_view()),
-    path("toggle-scout-under-review/", ToggleScoutUnderReviewView.as_view()),
     path("mark-scout-present/", MarkScoutPresentView.as_view()),
+    path("field-form/", FieldFormView.as_view()),
+    path("scouting-report/", ScoutingReportView.as_view()),
 ]

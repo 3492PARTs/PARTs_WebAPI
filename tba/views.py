@@ -1,62 +1,178 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from api.api.tba.serializers import EventUpdatedSerializer
+from django.conf import settings
 
-from api.auth.security import ret_message
+from scouting.models import Season
+from tba.serializers import EventUpdatedSerializer, VerificationMessageSerializer
 
-# Create your views here.
+from rest_framework.views import APIView
+
+import tba.util
+from general.security import has_access, ret_message
+
+auth_obj = "scoutadmin"
+app_url = "tba/"
 
 
-class EventScheduleUpdated(APIView):
-    """API endpoint to receive a TBA webhook for event updated"""
+class SyncSeasonView(APIView):
+    """
+    API endpoint to sync a season
+    """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
+    endpoint = "sync-season/"
 
-    def save_scout_schedule(self, serializer):
-        """
-        if serializer.validated_data['st_time'] <= timezone.now():
-            return ret_message('Start time can\'t be in the past.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry',
-                               self.request.user.id)
-        """
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = tba.util.sync_season(
+                    request.query_params.get("season_id", None)
+                )
+                return ret_message(req)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while syncing the season.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
 
-        if serializer.validated_data['end_time'] <= serializer.validated_data['st_time']:
-            return ret_message('End time can\'t come before start.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry',
-                               self.request.user.id)
 
-        if serializer.validated_data.get('scout_field_sch_id', None) is None:
-            serializer.save()
-            return ret_message('Saved schedule entry successfully')
-        else:
-            sfs = ScoutFieldSchedule.objects.get(
-                scout_field_sch_id=serializer.validated_data['scout_field_sch_id'])
-            sfs.red_one = serializer.validated_data.get('red_one', None)
-            sfs.red_two = serializer.validated_data.get('red_two', None)
-            sfs.red_three = serializer.validated_data.get('red_three', None)
-            sfs.blue_one = serializer.validated_data.get('blue_one', None)
-            sfs.blue_two = serializer.validated_data.get('blue_two', None)
-            sfs.blue_three = serializer.validated_data.get('blue_three', None)
-            sfs.st_time = serializer.validated_data['st_time']
-            sfs.end_time = serializer.validated_data['end_time']
-            sfs.notified = 'n'
-            sfs.void_ind = serializer.validated_data['void_ind']
-            sfs.save()
-            return ret_message('Updated schedule entry successfully')
+class SyncEventView(APIView):
+    """
+    API endpoint to sync an event
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "sync-event/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                return ret_message(
+                    tba.util.sync_event(Season.objects.get(id=request.query_params["season_id"]),
+                        request.query_params.get("event_cd", None)
+                    )
+                )
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while syncing the event.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class SyncMatchesView(APIView):
+    """
+    API endpoint to sync a match
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "sync-matches/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj):
+                req = tba.util.sync_matches()
+                return ret_message(req)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while syncing matches.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class SyncEventTeamInfoView(APIView):
+    """
+    API endpoint to sync the info for a teams at an event
+    """
+
+    # commented out so the server can call to update
+    # authentication_classes = (JWTAuthentication,)
+    # permission_classes = (IsAuthenticated,)
+    endpoint = "sync-event-team-info/"
+
+    def get(self, request, format=None):
+        try:
+            req = tba.util.sync_event_team_info(
+                int(request.query_params.get("force", "0"))
+            )
+            return ret_message(req)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while syncing event team info.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
+class Webhook(APIView):
+    """API endpoint to receive a TBA webhook"""
+
+    endpoint = "webhook/"
 
     def post(self, request, format=None):
-        serializer = EventUpdatedSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message('Invalid data', True, 'api/tba/EventScheduleUpdated', request.user.id,
-                               serializer.errors)
+        try:
+            if tba.util.verify_tba_webhook_call(request):
+                message = tba.util.save_message(request.data)
+                match request.data["message_type"]:
+                    case "verification":
+                        serializer = VerificationMessageSerializer(data=request.data)
+                        if serializer.is_valid():
+                            message.processed = "y"
+                            message.save()
+                            return Response(200)
+                        else:
+                            ret_message('Webhook Error - Verification', True, app_url + self.endpoint, error_message=serializer.errors)
+                            return Response(500)
+                    case "match_score":
+                        serializer = EventUpdatedSerializer(data=request.data)
+                        if serializer.is_valid():
+                            tba.util.save_tba_match(serializer.validated_data["message_data"]["match"])
+                            message.processed = "y"
+                            message.save()
+                            return Response(200)
+                        else:
+                            ret_message('Webhook Error - Match Score', True, app_url + self.endpoint, error_message=serializer.errors)
+                            return Response(500)
+                    case _:
+                        return Response(200)
+            else:
+                ret_message('Webhook Error', True, app_url + self.endpoint, error_message="Unauthenticated")
+        except Exception as e:
+            ret_message('Webhook Error', True, app_url + self.endpoint, exception=e)
 
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.save_scout_schedule(serializer)
-                return req
-            except Exception as e:
-                return ret_message('An error occurred while saving the schedule entry.', True,
-                                   'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', request.user.id, e)
-        else:
-            return ret_message('You do not have access.', True, 'api/scoutAdmin/PostSaveScoutFieldScheduleEntry', request.user.id)
+        return Response(500)

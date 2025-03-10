@@ -2,11 +2,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
-from django.db.models import Q, Case, When
 
 from general.security import has_access, ret_message
 import scouting
-from scouting.models import EventTeamInfo, Match, ScoutPit, Team
 import scouting.models
 from scouting.serializers import (
     AllScoutInfoSerializer,
@@ -16,9 +14,16 @@ from scouting.serializers import (
     ScheduleTypeSerializer,
     ScoutFieldScheduleSerializer,
     SeasonSerializer,
-    TeamSerializer,
+    TeamSerializer, FieldFormFormSerializer,
 )
 import scouting.util
+import scouting.strategizing.util
+import scouting.field.util
+
+
+import time
+
+
 
 auth_obj = "scouting"
 app_url = "scouting/"
@@ -268,15 +273,68 @@ class AllScoutingInfo(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
+                #start_time = time.time()
+
+                current_event = scouting.util.get_current_event()
+
+                #print("--- %s current_event seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
                 seasons = scouting.util.get_all_seasons()
+
+                #print("--- %s seasons seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
                 events = scouting.util.get_all_events()
+
+                #print("--- %s events seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
                 teams = scouting.util.get_teams(True)
-                matches = scouting.util.get_matches(scouting.util.get_current_event())
+
+                #print("--- %s teams seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
+                matches = scouting.util.get_matches(current_event)
+
+                #print("--- %s matches seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
                 schedules = scouting.util.get_current_schedule_parsed()
+
+                #print("--- %s schedules seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
                 scout_field_schedules = (
                     scouting.util.get_current_scout_field_schedule_parsed()
                 )
+
+                #print("--- %s scout_field_schedules seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
                 schedule_types = scouting.util.get_schedule_types()
+
+                #print("--- %s schedule_types seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
+                team_notes = scouting.strategizing.util.get_team_notes(event=current_event)
+
+                #print("--- %s team_notes seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
+                match_strategies = scouting.strategizing.util.get_match_strategies(event=current_event)
+
+                #print("--- %s match_strategies seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
+                field_form_form = scouting.field.util.get_field_form()
+
+                #print("--- %s field_form_form seconds ---" % (time.time() - start_time))
+                #start_time = time.time()
+
+                alliance_selections = scouting.strategizing.util.get_alliance_selections()
+
+                #print("--- %s alliance_selections seconds ---" % (time.time() - start_time))
 
                 serializer = AllScoutInfoSerializer(
                     {
@@ -287,6 +345,10 @@ class AllScoutingInfo(APIView):
                         "schedules": schedules,
                         "scout_field_schedules": scout_field_schedules,
                         "schedule_types": schedule_types,
+                        "team_notes": team_notes,
+                        "match_strategies": match_strategies,
+                        "field_form_form": field_form_form,
+                        "alliance_selections": alliance_selections,
                     }
                 )
 

@@ -39,6 +39,7 @@ from general.security import (
     ret_message,
     has_access,
 )
+import general.cloudinary
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -69,7 +70,11 @@ class TokenObtainPairView(APIView):
             serializer = TokenObtainPairSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
-                    "Invalid data", True, app_url + self.endpoint, -1, serializer.errors
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    -1,
+                    error_message=serializer.errors,
                 )
 
             """
@@ -104,7 +109,11 @@ class TokenRefreshView(APIView):
             serializer = TokenRefreshSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
-                    "Invalid data", True, app_url + self.endpoint, -1, serializer.errors
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    -1,
+                    error_message=serializer.errors,
                 )
 
             return Response(serializer.validated_data)
@@ -227,7 +236,7 @@ class UserProfile(APIView):
                     True,
                     app_url + self.endpoint,
                     -1,
-                    serialized._errors,
+                    error_message=error_list,
                 )
         except Exception as e:
             error_string = str(e)
@@ -341,13 +350,8 @@ class UserProfile(APIView):
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
                         if user.img_id:
-                            response = cloudinary.uploader.upload(
-                                serializer.validated_data["image"],
-                                public_id=user.img_id,
-                            )
-                        else:
-                            response = cloudinary.uploader.upload(
-                                serializer.validated_data["image"]
+                            response = general.cloudinary.upload_image(
+                                serializer.validated_data["image"], user.img_id
                             )
                         user.img_id = response["public_id"]
                         user.img_ver = str(response["version"])
@@ -368,7 +372,7 @@ class UserProfile(APIView):
                         True,
                         app_url + self.endpoint,
                         user.id,
-                        serializer.errors,
+                        error_message=serializer.errors,
                     )
             else:
                 return ret_message("Not authenticated.", True, app_url + self.endpoint)
@@ -686,31 +690,10 @@ class UserData(APIView):
     permission_classes = (IsAuthenticated,)
     endpoint = "user-data/"
 
-    def get_user(self):
-        user = User.objects.get(id=self.request.user.id)
-
-        user = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "name": user.first_name + " " + user.last_name,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "is_active": user.is_active,
-            "phone": user.phone,
-            "groups": user.groups,
-            "phone_type": user.phone_type,
-            "phone_type_id": user.phone_type_id,
-            "image": cloudinary.CloudinaryImage(
-                user.img_id, version=user.img_ver
-            ).build_url(secure=True),
-        }
-
-        return user
 
     def get(self, request, format=None):
         try:
-            req = self.get_user()
+            req = user.util.get_user(self.request.user.id)
             serializer = UserSerializer(req)
             return Response(serializer.data)
         except Exception as e:
@@ -736,7 +719,8 @@ class UserLinksView(APIView):
         permissions = get_user_permissions(self.request.user.id)
 
         user_Link = Link.objects.filter(
-            Q(permission__in=[per.id for per in permissions]) | Q(permission_id__isnull=True)
+            Q(permission__in=[per.id for per in permissions])
+            | Q(permission_id__isnull=True)
         ).order_by("order")
 
         return user_Link
@@ -791,7 +775,7 @@ class Groups(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):
@@ -849,8 +833,6 @@ class Permissions(APIView):
 
     def get(self, request, format=None):
         try:
-            serializer = PermissionSerializer(user.util.get_permissions(), many=True)
-
             user_id = request.query_params.get("user_id", None)
             if user_id is not None:
                 permissions = get_user_permissions(user_id)
@@ -875,7 +857,7 @@ class Permissions(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):
@@ -1024,7 +1006,7 @@ class SaveUser(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, auth_obj_save_user):
@@ -1079,6 +1061,7 @@ class SecurityAudit(APIView):
                 request.user.id,
             )
 
+
 class Links(APIView):
     """
     API endpoint to get groups and its permissions, either all or by user
@@ -1110,7 +1093,7 @@ class Links(APIView):
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                serializer.errors,
+                error_message=serializer.errors,
             )
 
         if has_access(request.user.id, "admin"):

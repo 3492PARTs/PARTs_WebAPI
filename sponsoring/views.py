@@ -55,7 +55,7 @@ class SaveSponsor(APIView):
         serializer = SponsorSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
-                               serializer.errors)
+                               error_message=serializer.errors)
 
         try:
             with transaction.atomic():
@@ -78,7 +78,7 @@ class SaveItem(APIView):
         serializer = SaveItemSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
-                               serializer.errors)
+                               error_message=serializer.errors)
 
         if has_access(request.user.id, auth_obj):
             try:
@@ -102,7 +102,7 @@ class SaveSponsorOrder(APIView):
         serializer = SaveSponsorOrderSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
-                               serializer.errors)
+                               error_message=serializer.errors)
 
         try:
             with transaction.atomic():
