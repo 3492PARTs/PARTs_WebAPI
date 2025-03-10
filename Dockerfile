@@ -35,11 +35,11 @@ RUN wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-RUN mkdir /code/
+RUN mkdir /code/ && mkdir /wsgi/
 WORKDIR /code/
 ADD ./ /code/
 
-RUN rm ./poetry.toml && touch ./api/wsgi.py
+RUN rm ./poetry.toml && touch ./api/wsgi.py && mv ./api/wsgi.py /wsgi/
 
 # Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
 # Correct the path to your production requirements file, if needed.
