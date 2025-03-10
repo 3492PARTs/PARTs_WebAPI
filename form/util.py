@@ -1703,7 +1703,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
 
                     plot_entry["points"].append(
                         {
-                            "point": previous - value if previous is not None else 0,
+                            "point": value - previous if previous is not None else 0,
                             "time": response.time,
                         }
                     )
