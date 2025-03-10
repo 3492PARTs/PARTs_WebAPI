@@ -185,6 +185,9 @@ def get_schedule_types():
 
 def get_group_leader_user(user: User):
     try:
+        if user is None:
+            return None
+
         u = user.scouting_user_info.get(Q(void_ind="n") & Q(group_leader=True))
         return user
     except UserInfo.DoesNotExist:

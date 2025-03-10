@@ -177,7 +177,7 @@ def sync_event(season: Season, event_cd: str):
     )
     for team in teams:
         team.event_set.remove(event)
-        messages += f"(REMOVE) Removed team: {team['team_no']} {team['team_nm']} from event: {data['event_cd']}\n"
+        messages += f"(REMOVE) Removed team: {team.team_no} {team.team_nm} from event: {data['event_cd']}\n"
 
     for team_ in data["teams"]:
         try:
