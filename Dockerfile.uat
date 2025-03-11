@@ -25,6 +25,10 @@ RUN poetry install --with uat --no-root && rm -rf $POETRY_CACHE_DIR
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim-buster as runtime
 
+# Create a group and user to run our app
+ARG APP_USER=appuser
+RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
+
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
     UWSGI_WSGI_FILE=/app/api/wsgi.py \
@@ -62,6 +66,9 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 COPY ./ /app
+
+# Change to a non-root user
+USER ${APP_USER}:${APP_USER}
 
 # Start uWSGI
 CMD ["uwsgi", "--show-config"]
