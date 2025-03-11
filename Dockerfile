@@ -55,5 +55,3 @@ RUN pip install pysftp \
 
 # Change to a non-root user
 USER ${APP_USER}:${APP_USER}
-
-RUN ls && cat ./requirements.txt

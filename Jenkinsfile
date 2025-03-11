@@ -22,10 +22,10 @@ node {
 
         stage('Build image') {  
             if (env.BRANCH_NAME == 'main') {
-                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile --target=runtime .")
+                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
             }
             else {
-                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat --target=runtime .")
+                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
             }
             
         }
@@ -50,7 +50,7 @@ node {
         }
 
         //parts-server vhost90-public.wvnet.edu
-/*
+
         stage('Deploy') {
             if (env.BRANCH_NAME == 'main') {
                 env.ENV_HOST = "vhost90-public.wvnet.edu"
@@ -84,7 +84,7 @@ node {
                 && TAG=$FORMATTED_BRANCH_NAME docker compose up -d --force-recreate"
                 '''
             } 
-        }*/
+        }
 
         env.RESULT = 'success'
     }
