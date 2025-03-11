@@ -25,14 +25,15 @@ RUN poetry install --with uat --no-root && rm -rf $POETRY_CACHE_DIR
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim-buster as runtime
 
+#WORKDIR /app
 # Create a group and user to run our app
 ARG APP_USER=appuser
-RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
+RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER} && ls
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
-    UWSGI_WSGI_FILE=/app/api/wsgi.py \
-    DJANGO_SETTINGS_MODULE=app.api.settings \
+    UWSGI_WSGI_FILE=api/wsgi.py \
+    DJANGO_SETTINGS_MODULE=api.settings \
     UWSGI_HTTP=:9090 \
     UWSGI_MASTER=1 \
     UWSGI_HTTP_AUTO_CHUNKED=1 \
