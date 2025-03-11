@@ -24,7 +24,6 @@ RUN poetry install --with uat --no-root && rm -rf $POETRY_CACHE_DIR
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim-buster as runtime
-
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
     DJANGO_SETTINGS_MODULE=api.settings \
@@ -37,8 +36,29 @@ ENV VIRTUAL_ENV=/app/.venv \
     UWSGI_WORKERS=2  \
     UWSGI_THREADS=4
 
+# uWSGI will listen on this port
+EXPOSE 9090
+
+# Install packages needed to run your application (not build deps):
+#   mime-support -- for mime types when serving static files
+#   postgresql-client -- for running database commands
+# We need to recreate the /usr/share/man/man{1..8} directories first because
+# they were clobbered by a parent image.
+RUN set -ex \
+    && RUN_DEPS=" \
+    libpcre3 \
+    mime-support \
+    postgresql-client \
+    " \
+    && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
+    && apt update && apt install -y --no-install-recommends $RUN_DEPS \
+    && rm -rf /var/lib/apt/lists/*
+
+
+
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
+# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 COPY ./ /app
 
 # Start uWSGI
