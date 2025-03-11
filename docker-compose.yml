@@ -26,8 +26,8 @@ services:
       DEBUG: ${DEBUG}
       ENVIRONMENT: ${TAG}
     volumes:
-      - ./keys:/code/keys
-      - ./dumps:/code/dumps
+      - ./keys:/app/keys
+      - ./dumps:/app/dumps
     ports:
       - "${API_PORT}:9090"
     restart: always
