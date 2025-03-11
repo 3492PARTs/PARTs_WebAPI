@@ -51,7 +51,8 @@ RUN pip install pysftp \
     && rm ./poetry.toml \
     && touch ./api/wsgi.py \
     && mkdir /wsgi \
-    && mv ./api/wsgi.py /wsgi/
+    && mv ./api/wsgi.py /wsgi/ \
+    && mkdir /home/${APP_USER}/.ssh
 
 # Change to a non-root user
 USER ${APP_USER}:${APP_USER}
