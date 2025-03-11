@@ -22,7 +22,7 @@ node {
 
         stage('Build image') {  
             if (env.BRANCH_NAME == 'main') {
-                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
+                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile --target=runtime .")
             }
             else {
                 app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat --target=runtime .")

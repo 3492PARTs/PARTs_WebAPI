@@ -1,61 +1,57 @@
-FROM ubuntu:22.04
+# The builder image, used to build the virtual environment
+FROM python:3.11.3-buster as builder
 
-RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
-
-RUN apt update && apt upgrade -y
-
-ENV POETRY_VERSION=1.8.3
-
-# Install packages needed to run your application (not build deps):
-#   mime-support -- for mime types when serving static files
-#   postgresql-client -- for running database commands
-# We need to recreate the /usr/share/man/man{1..8} directories first because
-# they were clobbered by a parent image.
-RUN set -ex \
-    && RUN_DEPS=" \
-    libpcre3 \
-    mime-support \
-    mysql-client \
-    postgresql-client \
-    python3.11 \
-    python3.11-dev \
-    python3-pip \
-    python3-dev \
-    openssh-client \
-    sshpass \
-    wget \
-    " \
-    && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
-    && apt install -y --no-install-recommends $RUN_DEPS \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir /scripts/
 WORKDIR /scripts/
-RUN wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
-    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
 
-# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-RUN mkdir /code/ && mkdir /wsgi/
-WORKDIR /code/
-ADD ./ /code/
-
-RUN rm ./poetry.toml && touch ./api/wsgi.py && mv ./api/wsgi.py /wsgi/
-
-# Install build deps, then run `pip install`, then remove unneeded build deps all in a single step.
-# Correct the path to your production requirements file, if needed.
-RUN set -ex \
+RUN pip install poetry==1.8.3 \
+    && pip install pipdeptree \
+    && set -ex \
     && BUILD_DEPS=" \
     build-essential \
     libpcre3-dev \
     libpq-dev \
     default-libmysqlclient-dev \
     pkg-config \
+    wget \
     " \
     && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
-    && python3.11 -m pip install "poetry==$POETRY_VERSION" \
-    && poetry config virtualenvs.create false \
-    && python3.11 -m pip install pipdeptree \
-    && poetry cache clear . --all \
-    && poetry install --with wvnet \
-    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt \
-    && python3.11 -m pip install pysftp \
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
+
+ENV POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_VIRTUALENVS_CREATE=1 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+
+WORKDIR /app
+
+COPY pyproject.toml poetry.lock ./
+RUN touch README.md
+
+RUN poetry install --with wvnet --no-root \
+    && rm -rf $POETRY_CACHE_DIR \
+    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt
+
+# The runtime image, used to just run the code provided its virtual environment
+FROM python:3.11-slim-buster as runtime
+
+WORKDIR /app
+
+# Create a group and user to run our app
+ARG APP_USER=appuser
+RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
+
+
+RUN pip install pysftp \
+    && rm ./poetry.toml \
+    && touch ./api/wsgi.py \
+    && mv ./api/wsgi.py /wsgi/
+
+# Copy virtual env from previous step
+COPY --from=builder /app/requirements.txt /app/
+
+# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
+COPY ./ /app
+
+# Change to a non-root user
+USER ${APP_USER}:${APP_USER}
