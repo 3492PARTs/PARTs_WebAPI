@@ -30,7 +30,8 @@ RUN touch README.md
 
 RUN poetry install --with wvnet --no-root \
     && rm -rf $POETRY_CACHE_DIR \
-    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt
+    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt \
+    && cat requirements.txt
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim-buster as runtime
@@ -45,6 +46,7 @@ RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USE
 RUN pip install pysftp \
     && rm ./poetry.toml \
     && touch ./api/wsgi.py \
+    && mkdir /wsgi \
     && mv ./api/wsgi.py /wsgi/
 
 # Copy virtual env from previous step
