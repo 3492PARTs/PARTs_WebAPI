@@ -78,26 +78,26 @@ def ret_message(
                 user=user,
                 path=path,
                 message=message,
-                exception=exception[:4000],
-                traceback=tb[:4000],
+                exception=str(exception)[:4000],
+                traceback=str(tb)[:4000],
                 error_message=error_message,
                 time=timezone.now(),
                 void_ind="n",
             ).save()
         except Exception as e:
-            message += "\nCritical Error: please email the team admin at team3492@gmail.com\nSend them this message:\n"
-            message += str(e)
             try:
                 ErrorLog(
                     user=User.objects.get(id=-1),
                     path="general.security.ret_message",
-                    message=message,
+                    message=f"Error logging error:\n{message}",
                     exception=e,
                     error_message=error_message,
                     time=timezone.now(),
                     void_ind="n",
                 ).save()
             except Exception as e:
+                message += "\nCritical Error: please email the team admin at team3492@gmail.com\nSend them this message:\n"
+                message += str(e)
                 print("The most fatal of errors nothing was logged in db")
                 print("Exception: ")
                 print(e)
