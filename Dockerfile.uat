@@ -34,7 +34,7 @@ RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USE
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
     UWSGI_WSGI_FILE=api/wsgi.py \
-    DJANGO_SETTINGS_MODULE=api.settings \
+#    DJANGO_SETTINGS_MODULE=api.settings \
     UWSGI_HTTP=:9090 \
     UWSGI_MASTER=1 \
     UWSGI_HTTP_AUTO_CHUNKED=1 \
