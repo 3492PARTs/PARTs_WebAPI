@@ -25,7 +25,7 @@ node {
                 app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile .")
             }
             else {
-                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat .")
+                app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat --target=runtime .")
             }
             
         }
