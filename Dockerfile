@@ -55,6 +55,7 @@ RUN set -ex \
     && python3.11 -m pip install "poetry==$POETRY_VERSION" \
     && poetry config virtualenvs.create false \
     && python3.11 -m pip install pipdeptree \
+    && poetry cache clear . --all \
     && poetry install --with wvnet \
     && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt \
     && python3.11 -m pip install pysftp \
