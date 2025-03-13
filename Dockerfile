@@ -48,13 +48,15 @@ USER ${APP_USER}:${APP_USER}
 WORKDIR /app
 
 # Copy virtual env from previous step
-COPY --from=builder /app/requirements.txt ./deploy
+COPY --from=builder /app/requirements.txt ./
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-COPY ./ ./deploy
+COPY ./ ./
 
 RUN rm ./poetry.toml \
-    && touch ./deploy/api/wsgi.py \
+    && touch ./api/wsgi.py \
+    && mkdir deploy
+    && mv ./* ./deploy
     && mkdir ./wsgi \
     && mv ./deploy/api/wsgi.py ./wsgi \
     && mkdir /home/${APP_USER} \
