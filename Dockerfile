@@ -33,18 +33,6 @@ RUN poetry install --with wvnet --no-root \
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim-buster as runtime
 
-# Create a group and user to run our app
-ARG APP_USER=appuser
-
-RUN groupadd -r ${APP_USER} \
-    && useradd --no-log-init -r -g ${APP_USER} ${APP_USER} \
-    && apt update \
-    && apt install wget -y \
-    && pip install pysftp 
-
-# Change to a non-root user
-USER ${APP_USER}:${APP_USER}
-
 WORKDIR /app
 
 # Copy virtual env from previous step
@@ -53,13 +41,12 @@ COPY --from=builder /app/requirements.txt ./
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 COPY ./ ./
 
-RUN rm ./poetry.toml \
+RUN apt update \
+    && apt install wget -y \
+    && pip install pysftp \
+    && rm ./poetry.toml \
     && touch ./api/wsgi.py \
-    && mkdir deploy \
-    && mv ./* ./deploy \
-    && mkdir ./wsgi \
-    && mv ./deploy/api/wsgi.py ./wsgi \
-    && mkdir /home/${APP_USER} \
-    && mkdir /home/${APP_USER}/.ssh \
+    && mkdir /wsgi \
+    && mv ./api/wsgi.py /wsgi \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
