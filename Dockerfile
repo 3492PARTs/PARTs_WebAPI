@@ -35,7 +35,15 @@ FROM python:3.11-slim-buster as runtime
 
 # Create a group and user to run our app
 ARG APP_USER=appuser
-RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
+
+RUN groupadd -r ${APP_USER} \
+    && useradd --no-log-init -r -g ${APP_USER} ${APP_USER} \
+    && apt update \
+    && apt install wget -y \
+    && pip install pysftp 
+
+# Change to a non-root user
+USER ${APP_USER}:${APP_USER}
 
 WORKDIR /app
 
@@ -44,13 +52,6 @@ COPY --from=builder /app/requirements.txt /app/
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 COPY ./ /app
-
-RUN apt update \
-    && apt install wget -y \
-    && pip install pysftp 
-
-# Change to a non-root user
-USER ${APP_USER}:${APP_USER}
 
 RUN rm ./poetry.toml \
     && touch ./api/wsgi.py \
