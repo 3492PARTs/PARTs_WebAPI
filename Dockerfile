@@ -48,15 +48,15 @@ USER ${APP_USER}:${APP_USER}
 WORKDIR /app
 
 # Copy virtual env from previous step
-COPY --from=builder /app/requirements.txt /app/
+COPY --from=builder /app/requirements.txt ./deploy
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-COPY ./ /app
+COPY ./ ./deploy
 
 RUN rm ./poetry.toml \
-    && touch ./api/wsgi.py \
-    && mkdir /wsgi \
-    && mv ./api/wsgi.py /wsgi/ \
+    && touch ./deploy/api/wsgi.py \
+    && mkdir ./wsgi \
+    && mv ./deploy/api/wsgi.py ./wsgi \
     && mkdir /home/${APP_USER} \
     && mkdir /home/${APP_USER}/.ssh \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
