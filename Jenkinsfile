@@ -65,11 +65,11 @@ node {
                         '''
 
                         sh '''
-                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /code/ /domains/api.parts3492.org/code
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /app/deploy/ /domains/api.parts3492.org/code
                         '''
 
                         sh '''
-                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /wsgi/ /domains/api.parts3492.org/code/api
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /app/wsgi/ /domains/api.parts3492.org/code/api
                         '''
                     }
                 }
