@@ -14,9 +14,7 @@ RUN pip install poetry==1.8.3 \
     pkg-config \
     wget \
     " \
-    && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
-    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
-    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
+    && apt update && apt install -y --no-install-recommends $BUILD_DEPS
 
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
@@ -53,7 +51,9 @@ RUN pip install pysftp \
     && mkdir /wsgi \
     && mv ./api/wsgi.py /wsgi/ \
     && mkdir /home/${APP_USER} \
-    && mkdir /home/${APP_USER}/.ssh
+    && mkdir /home/${APP_USER}/.ssh \
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
 
 # Change to a non-root user
 USER ${APP_USER}:${APP_USER}
