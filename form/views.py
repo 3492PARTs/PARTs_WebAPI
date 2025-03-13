@@ -15,8 +15,12 @@ from form.serializers import (
     ResponseSerializer,
     QuestionAggregateSerializer,
     QuestionAggregateTypeSerializer,
-    QuestionConditionSerializer, FlowSerializer, QuestionConditionTypeSerializer,
-    FlowConditionSerializer, GraphEditorSerializer, GraphSerializer
+    QuestionConditionSerializer,
+    FlowSerializer,
+    QuestionConditionTypeSerializer,
+    FlowConditionSerializer,
+    GraphEditorSerializer,
+    GraphSerializer,
 )
 from general.security import has_access, ret_message
 
@@ -112,7 +116,7 @@ class FormEditorView(APIView):
                         "questions": questions,
                         "question_types": question_types,
                         "form_sub_types": form_sub_types,
-                        "flows": flows
+                        "flows": flows,
                     }
                 )
                 return Response(serializer.data)
@@ -441,7 +445,9 @@ class QuestionConditionView(APIView):
             if has_access(request.user.id, "admin") or has_access(
                 request.user.id, "scoutadmin"
             ):
-                qas = form.util.get_question_condition(request.query_params["form_typ"])
+                qas = form.util.get_question_conditions(
+                    request.query_params["form_typ"]
+                )
                 serializer = QuestionConditionSerializer(qas, many=True)
                 return Response(serializer.data)
             else:
@@ -533,6 +539,7 @@ class FlowView(APIView):
     """
     API endpoint to get question flows
     """
+
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "flow/"
@@ -543,7 +550,7 @@ class FlowView(APIView):
             questions = form.util.get_flows(
                 fid,
                 request.query_params.get("form_typ", None),
-                request.query_params.get("form_sub_typ", None)
+                request.query_params.get("form_sub_typ", None),
             )
             if fid is None:
                 serializer = FlowSerializer(questions, many=True)
@@ -599,6 +606,7 @@ class QuestionFlowView(APIView):
     """
     API endpoint to get question flows
     """
+
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "question-flow/"
@@ -609,7 +617,7 @@ class QuestionFlowView(APIView):
             questions = form.util.get_flows(
                 fid,
                 request.query_params.get("form_typ", None),
-                request.query_params.get("form_sub_typ", None)
+                request.query_params.get("form_sub_typ", None),
             )
             if fid is None:
                 serializer = FlowSerializer(questions, many=True)
@@ -733,6 +741,7 @@ class GraphEditorView(APIView):
     """
     API endpoint to edit graphs
     """
+
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "graph-editor/"
@@ -743,12 +752,14 @@ class GraphEditorView(APIView):
             graph_question_types = form.util.get_graph_question_types()
             graphs = form.util.get_graphs(True)
             question_condition_types = form.util.get_question_condition_types()
-            serializer = GraphEditorSerializer({
-                "graph_types": graph_types,
-                "graph_question_types": graph_question_types,
-                "graphs": graphs,
-                'question_condition_types': question_condition_types
-            })
+            serializer = GraphEditorSerializer(
+                {
+                    "graph_types": graph_types,
+                    "graph_question_types": graph_question_types,
+                    "graphs": graphs,
+                    "question_condition_types": question_condition_types,
+                }
+            )
             return Response(serializer.data)
         except Exception as e:
             return ret_message(
@@ -764,10 +775,10 @@ class GraphView(APIView):
     """
     API endpoint to manage graphs
     """
+
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "graph/"
-
 
     def get(self, request, format=None):
         try:
@@ -786,7 +797,6 @@ class GraphView(APIView):
                 -1,
                 e,
             )
-
 
     def post(self, request, format=None):
         try:
@@ -821,4 +831,3 @@ class GraphView(APIView):
                 request.user.id,
                 e,
             )
-
