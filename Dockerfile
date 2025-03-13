@@ -45,7 +45,8 @@ COPY --from=builder /app/requirements.txt /app/
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 COPY ./ /app
 
-RUN pip install pysftp \
+RUN apt install wget \
+    && pip install pysftp \
     && rm ./poetry.toml \
     && touch ./api/wsgi.py \
     && mkdir /wsgi \
