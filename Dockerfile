@@ -55,8 +55,8 @@ COPY ./ ./
 
 RUN rm ./poetry.toml \
     && touch ./api/wsgi.py \
-    && mkdir deploy
-    && mv ./* ./deploy
+    && mkdir deploy \
+    && mv ./* ./deploy \
     && mkdir ./wsgi \
     && mv ./deploy/api/wsgi.py ./wsgi \
     && mkdir /home/${APP_USER} \
