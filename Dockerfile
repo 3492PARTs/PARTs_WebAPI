@@ -47,8 +47,12 @@ COPY ./ /app
 
 RUN apt update \
     && apt install wget -y \
-    && pip install pysftp \
-    && rm ./poetry.toml \
+    && pip install pysftp 
+
+# Change to a non-root user
+USER ${APP_USER}:${APP_USER}
+
+RUN rm ./poetry.toml \
     && touch ./api/wsgi.py \
     && mkdir /wsgi \
     && mv ./api/wsgi.py /wsgi/ \
@@ -56,6 +60,3 @@ RUN apt update \
     && mkdir /home/${APP_USER}/.ssh \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
-
-# Change to a non-root user
-USER ${APP_USER}:${APP_USER}
