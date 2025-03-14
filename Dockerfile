@@ -33,8 +33,7 @@ RUN poetry install --with wvnet --no-root \
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim-buster as runtime
 
-# Create a group and user to run our app
-ARG APP_USER=appuser
+RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
 
 WORKDIR /app
 
@@ -51,12 +50,9 @@ RUN apt update \
     && touch ./api/wsgi.py \
     && mkdir /wsgi \
     && mv ./api/wsgi.py /wsgi \
+    && mkdir /scripts \
+    && cd /scripts \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py \
-    && groupadd -r ${APP_USER} \
-    && useradd --no-log-init -r -g ${APP_USER} ${APP_USER} \
-    && mkdir /home/${APP_USER} \
-    && mkdir /home/${APP_USER}/.ssh
 
-# Change to a non-root user
-USER ${APP_USER}:${APP_USER}
+
