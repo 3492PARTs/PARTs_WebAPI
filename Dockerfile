@@ -44,7 +44,7 @@ COPY --from=builder /app/requirements.txt ./
 COPY ./ ./
 
 RUN apt update \
-    && apt install wget -y \
+    && apt install openssh-client wget -y \
     && pip install pysftp \
     && rm ./poetry.toml \
     && touch ./api/wsgi.py \
