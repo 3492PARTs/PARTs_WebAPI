@@ -8,7 +8,7 @@ from django.conf import settings
 from webpush import send_user_notification
 from pywebpush import WebPushException
 
-import general
+from general.security import ret_message
 
 
 def send_email(to_email: str, subject: str, template: str, cntx: dict):
@@ -66,7 +66,7 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
         send_user_notification(user=user, payload=payload, ttl=1000)
     except WebPushException as e:
         msg = "An error occurred while sending Webpush."
-        general.ret_message(
+        ret_message(
             msg,
             True,
             "send_webpush",
