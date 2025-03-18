@@ -274,7 +274,10 @@ def send_alerts():
 
     # Alert not send, dismissed, and been tried to send 3 or fewer times
     acss = ChannelSend.objects.filter(
-        Q(sent_time__isnull=True) & Q(dismissed_time__isnull=True) & Q(tries__lte=3) & Q(void_ind="n")
+        Q(sent_time__isnull=True)
+        & Q(dismissed_time__isnull=True)
+        & Q(tries__lte=3)
+        & Q(void_ind="n")
     )
     for acs in acss:
         success = True
@@ -292,13 +295,12 @@ def send_alerts():
                     # this is because I have not decided what to do yet
                     message += "message not configured"
                 case "notification":
-                    send_message.send_webpush(
+                    message += send_message.send_webpush(
                         acs.alert.user,
                         acs.alert.subject,
                         acs.alert.body,
                         acs.alert.id,
                     )
-                    message += "Webpush"
                 case "txt":
                     if (
                         acs.alert.user.phone is not None
@@ -320,9 +322,7 @@ def send_alerts():
                         if acs.alert.user.discord_user_id
                         else acs.alert.user.get_full_name()
                     )
-                    discord_message = (
-                        f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
-                    )
+                    discord_message = f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
                     send_message.send_discord_notification(discord_message)
                     message += "Discord"
 
@@ -338,7 +338,7 @@ def send_alerts():
             )
         except Exception as e:
             success = False
-            alert =  f"An error occurred while sending alert: {acs.alert.user.get_full_name()}  acs id: {acs.id}"
+            alert = f"An error occurred while sending alert: {acs.alert.user.get_full_name()}  acs id: {acs.id}"
             message += alert + "\n"
             return ret_message(alert, True, "alerts.util.send_alerts", 0, e)
         if not success:
@@ -393,7 +393,9 @@ def stage_alerts():
     return ret
 
 
-def send_alerts_to_role(subject: str, body: str, alert_role: str, channels: [], user_id: int=None):
+def send_alerts_to_role(
+    subject: str, body: str, alert_role: str, channels: [], user_id: int = None
+):
     alerts = []
     users = user.util.get_users_with_permission(alert_role)
     for u in users:
@@ -404,6 +406,4 @@ def send_alerts_to_role(subject: str, body: str, alert_role: str, channels: [], 
 
     for a in alerts:
         for acct in channels:
-            stage_channel_send_for_all_channels(
-                a, acct
-            )
+            stage_channel_send_for_all_channels(a, acct)
