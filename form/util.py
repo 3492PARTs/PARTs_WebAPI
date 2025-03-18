@@ -595,7 +595,7 @@ def save_question_aggregate(data):
     return qa
 
 
-def get_question_condition(form_typ: str):
+def get_question_conditions(form_typ: str):
     parsed_question_conditions = []
     season = Q()
 
@@ -608,6 +608,13 @@ def get_question_condition(form_typ: str):
 
     question_conditions = QuestionCondition.objects.filter(
         Q(void_ind="n") & Q(question_from__form_typ=form_typ) & season
+    ).order_by(
+        "question_from__form_sub_typ__order",
+        "question_from__order",
+        Lower("question_from__question"),
+        "question_to__form_sub_typ__order",
+        "question_to__order",
+        Lower("question_to__question"),
     )
 
     for qc in question_conditions:

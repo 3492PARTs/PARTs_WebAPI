@@ -65,7 +65,7 @@ node {
                         '''
 
                         sh '''
-                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /code/ /domains/api.parts3492.org/code
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /app/ /domains/api.parts3492.org/code
                         '''
 
                         sh '''
