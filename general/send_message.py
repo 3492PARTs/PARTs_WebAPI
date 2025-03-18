@@ -61,7 +61,7 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
         }
     }
 
-    msg = "Successfully Webpush."
+    msg = "Successfully sent Webpush."
     try:
         send_user_notification(user=user, payload=payload, ttl=1000)
     except WebPushException as e:

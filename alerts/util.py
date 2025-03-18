@@ -340,7 +340,7 @@ def send_alerts():
             success = False
             alert = f"An error occurred while sending alert: {acs.alert.user.get_full_name()}  acs id: {acs.id}"
             message += alert + "\n"
-            return ret_message(alert, True, "alerts.util.send_alerts", 0, e)
+            ret_message(alert, True, "alerts.util.send_alerts", 0, e)
         if not success:
             acs.tries = acs.tries + 1
             acs.save()
