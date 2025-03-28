@@ -357,7 +357,7 @@ def save_tba_match(tba_match):
         messages += f"(UPDATE) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
     except Match.DoesNotExist as odne:
         match = Match(
-            match_id=match_key,
+            match_key=match_key,
             match_number=match_number,
             event=event,
             red_one=red_one,
