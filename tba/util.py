@@ -380,7 +380,8 @@ def save_tba_match(tba_match):
 
 def save_message(message):
     msg = Message(
-        message_type=message["message_type"], message_data=message["message_data"]
+        message_type=message["message_type"],
+        message_data=message["message_data"][:4000],
     )
     msg.save()
     return msg
