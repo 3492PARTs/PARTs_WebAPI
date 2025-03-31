@@ -21,7 +21,10 @@ class FieldResponseAnswerSerializer(serializers.BaseSerializer):
 
 
 class FieldResponsesSerializer(serializers.Serializer):
-    scoutCols = ColSerializer(many=True)
+    count = serializers.IntegerField()
+    previous = serializers.IntegerField()
+    next = serializers.IntegerField()
+    # scoutCols = ColSerializer(many=True)
     scoutAnswers = FieldResponseAnswerSerializer(many=True)
     current_season = SeasonSerializer()
     current_event = EventSerializer()

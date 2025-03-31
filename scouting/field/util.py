@@ -1,7 +1,7 @@
 from django.db.models import Q, Exists, OuterRef
 from django.conf import settings
 from django.utils import timezone
-import datetime
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 from form.models import (
     QuestionAggregate,
@@ -12,12 +12,18 @@ import form.urls
 import scouting.models
 import scouting.util
 import form
-from scouting.models import EventTeamInfo, FieldResponse, FieldSchedule, UserInfo
+from scouting.models import (
+    EventTeamInfo,
+    FieldResponse,
+    FieldSchedule,
+    Season,
+    UserInfo,
+)
 import general.util
 import form.util
 
 
-def build_table_columns(question_aggregates):
+def get_table_columns(question_aggregates):
     # sqsa = form.util.get_form_questions("field", "auto")
     # sqst = form.util.get_form_questions("field", "teleop")
     # sqso = form.util.get_form_questions("field", "post")
@@ -128,59 +134,16 @@ def build_table_columns(question_aggregates):
     return table_cols
 
 
-def get_responses(request, team=None, user=None, after_scout_field_id=None):
+def get_responses(pg=1, team=None, user=None, after_scout_field_id=None):
     loading_all = False
 
     current_season = scouting.util.get_current_season()
 
     current_event = scouting.util.get_current_event()
 
-    # get aggregates
-    question_aggregates = QuestionAggregate.objects.filter(
-        Q(void_ind="n")
-        & Q(active="y")
-        & Q(horizontal=True)
-        & Exists(
-            QuestionAggregateQuestion.objects.filter(
-                Q(question_aggregate_id=OuterRef("pk"))
-                & Q(active="y")
-                & Q(void_ind="n")
-                & Q(question__form_typ_id="field")
-                & Q(question__active="y")
-                & Q(question__void_ind="n")
-                & Exists(
-                    scouting.models.Question.objects.filter(
-                        Q(question_id=OuterRef("question_id"))
-                        & Q(season=current_season)
-                        & Q(void_ind="n")
-                    )
-                )
-            )
-        )
-    )
-
-    table_cols = build_table_columns(question_aggregates)
-
     field_scouting_responses = []
 
-    parsed_question_aggregates = []
-    for question_aggregate in question_aggregates:
-        parsed_question_aggregates.append(
-            {
-                "parsed_question_aggregate": form.util.parse_question_aggregate(
-                    question_aggregate
-                ),
-                "questions": [
-                    form.util.parse_question(question_aggregate_question.question)
-                    for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(
-                        Q(void_ind="n")
-                        & Q(active="y")
-                        & Q(question__void_ind="n")
-                        & Q(question__active="y")
-                    )
-                ],
-            }
-        )
+    parsed_question_aggregates = get_parsed_field_question_aggregates(current_season)
 
     q_team = Q()
     q_user = Q()
@@ -216,6 +179,28 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
             & ~q_eliminate_results
         )
         .order_by("-time", "-id")
+    )
+
+    paginator = Paginator(scout_field_responses, 10)
+    try:
+        scout_field_responses = paginator.page(pg)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        scout_field_responses = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999),
+        # deliver last page of results.
+        scout_field_responses = paginator.page(paginator.num_pages)
+
+    previous_pg = (
+        None
+        if not scout_field_responses.has_previous()
+        else scout_field_responses.previous_page_number()
+    )
+    next_pg = (
+        None
+        if not scout_field_responses.has_next()
+        else scout_field_responses.next_page_number()
     )
 
     # Loop over all the responses selected and put in table
@@ -264,8 +249,11 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
 
         field_scouting_responses.append(response)
 
-    return {
-        "scoutCols": table_cols,
+    data = {
+        "count": paginator.num_pages,
+        "previous": previous_pg,
+        "next": next_pg,
+        "scout_field_responses": None,
         "scoutAnswers": field_scouting_responses,
         "current_season": current_season,
         "current_event": current_event,
@@ -276,6 +264,8 @@ def get_responses(request, team=None, user=None, after_scout_field_id=None):
             )
         ],
     }
+
+    return data
 
 
 def get_removed_responses(before_scout_field_id=None):
@@ -289,6 +279,58 @@ def get_removed_responses(before_scout_field_id=None):
     )
 
     return removed
+
+
+def get_field_question_aggregates(current_season: Season):
+    # get aggregates
+    question_aggregates = QuestionAggregate.objects.filter(
+        Q(void_ind="n")
+        & Q(active="y")
+        & Q(horizontal=True)
+        & Exists(
+            QuestionAggregateQuestion.objects.filter(
+                Q(question_aggregate_id=OuterRef("pk"))
+                & Q(active="y")
+                & Q(void_ind="n")
+                & Q(question__form_typ_id="field")
+                & Q(question__active="y")
+                & Q(question__void_ind="n")
+                & Exists(
+                    scouting.models.Question.objects.filter(
+                        Q(question_id=OuterRef("question_id"))
+                        & Q(season=current_season)
+                        & Q(void_ind="n")
+                    )
+                )
+            )
+        )
+    )
+
+    return question_aggregates
+
+
+def get_parsed_field_question_aggregates(current_season: Season):
+    question_aggregates = get_field_question_aggregates(current_season)
+    parsed_question_aggregates = []
+    for question_aggregate in question_aggregates:
+        parsed_question_aggregates.append(
+            {
+                "parsed_question_aggregate": form.util.parse_question_aggregate(
+                    question_aggregate
+                ),
+                "questions": [
+                    form.util.parse_question(question_aggregate_question.question)
+                    for question_aggregate_question in question_aggregate.questionaggregatequestion_set.filter(
+                        Q(void_ind="n")
+                        & Q(active="y")
+                        & Q(question__void_ind="n")
+                        & Q(question__active="y")
+                    )
+                ],
+            }
+        )
+
+    return parsed_question_aggregates
 
 
 def check_in_scout(sfs: FieldSchedule, user_id: int):
