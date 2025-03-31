@@ -181,7 +181,7 @@ def get_responses(pg=1, team=None, user=None, after_scout_field_id=None):
         .order_by("-time", "-id")
     )
 
-    paginator = Paginator(scout_field_responses, 10)
+    paginator = Paginator(scout_field_responses, 20)
     try:
         scout_field_responses = paginator.page(pg)
     except PageNotAnInteger:
