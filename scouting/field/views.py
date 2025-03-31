@@ -11,7 +11,11 @@ from rest_framework.response import Response
 
 from ..serializers import FieldFormFormSerializer
 
-from .serializers import FieldResponseSerializer, FieldResponsesSerializer
+from .serializers import (
+    ColSerializer,
+    FieldResponseSerializer,
+    FieldResponsesSerializer,
+)
 
 auth_obj = "scoutfield"
 auth_view_obj = "scoutFieldResults"
@@ -54,6 +58,45 @@ class FormView(APIView):
             )
 
 
+class ResponseColumnsView(APIView):
+    """
+    API endpoint to get the result columns of field scouting
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "response-columns/"
+
+    def get(self, request, format=None):
+        try:
+            if has_access(request.user.id, auth_obj) or has_access(
+                request.user.id, auth_view_obj
+            ):
+                req = scouting.field.util.get_table_columns(
+                    scouting.field.util.get_field_question_aggregates(
+                        scouting.util.get_current_season()
+                    )
+                )
+
+                serializer = ColSerializer(req, many=True)
+                return Response(serializer.data)
+            else:
+                return ret_message(
+                    "You do not have access.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                )
+        except Exception as e:
+            return ret_message(
+                "An error occurred while getting response columns.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                e,
+            )
+
+
 class ResponsesView(APIView):
     """
     API endpoint to get the results of field scouting
@@ -69,7 +112,7 @@ class ResponsesView(APIView):
                 request.user.id, auth_view_obj
             ):
                 req = scouting.field.util.get_responses(
-                    self.request,
+                    request.query_params.get("pg_num", 1),
                     team=request.query_params.get("team", None),
                     after_scout_field_id=request.query_params.get(
                         "after_scout_field_id", None
