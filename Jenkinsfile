@@ -21,7 +21,7 @@ node {
         }
 
         stage('Build image') {  
-            if (true || env.BRANCH_NAME == 'main') {
+            if (env.BRANCH_NAME == 'main') {
                 app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile --target=runtime .")
             }
             else {
@@ -41,7 +41,7 @@ node {
         */
 
         stage('Push image') {
-            if (false && env.BRANCH_NAME != 'main') {
+            if (env.BRANCH_NAME != 'main') {
                 docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
                     app.push("${env.FORMATTED_BRANCH_NAME}")
                     //app.push("latest")
@@ -52,7 +52,7 @@ node {
         //parts-server vhost90-public.wvnet.edu
 
         stage('Deploy') {
-            if (true || env.BRANCH_NAME == 'main') {
+            if (env.BRANCH_NAME == 'main') {
                 env.ENV_HOST = "vhost90-public.wvnet.edu"
                 withCredentials([usernamePassword(credentialsId: 'parts-server', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     app.inside {
