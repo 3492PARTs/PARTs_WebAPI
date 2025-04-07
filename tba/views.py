@@ -184,7 +184,7 @@ class Webhook(APIView):
                                 error_message=serializer.errors,
                             )
                             return Response(500)
-                    case "starting_comp_level":
+                    case "schedule_updated":
                         serializer = ScheduleUpdatedSerializer(data=request.data)
                         if serializer.is_valid():
                             event_key = serializer.validated_data["message_data"][
