@@ -43,7 +43,7 @@ class EventUpdatedSerializer(serializers.Serializer):
 class ScheduleUpdatedMessageSerializer(serializers.Serializer):
     event_key = serializers.CharField()
     event_name = serializers.CharField()
-    first_match_time = serializers.IntegerField()
+    # first_match_time = serializers.IntegerField()
 
 
 class ScheduleUpdatedSerializer(serializers.Serializer):
