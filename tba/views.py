@@ -188,7 +188,13 @@ class Webhook(APIView):
                         serializer = ScheduleUpdatedSerializer(data=request.data)
                         if serializer.is_valid():
                             event_key = serializer["message_data"]["event_key"]
-                            season = scouting.util.get_season(event_key[0:4])
+                            ret_message(
+                                "Webhook Error - Schedule Updated",
+                                True,
+                                app_url + self.endpoint,
+                                error_message=event_key,
+                            )
+                            season = scouting.util.get_season(event_key[:4])
                             tba.util.sync_event(season, event_key)
                             event = scouting.util.get_event(event_key)
                             tba.util.sync_matches(event)
