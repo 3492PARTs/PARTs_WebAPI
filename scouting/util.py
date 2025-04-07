@@ -22,6 +22,10 @@ def get_all_seasons():
     return Season.objects.all().order_by("season")
 
 
+def get_season(year: str):
+    return Season.objects.get(season=year)
+
+
 def get_current_season():
     try:
         current_season = Season.objects.get(current="y")
@@ -40,6 +44,12 @@ def get_current_event():
         return event
     except Event.DoesNotExist as e:
         raise Exception("No event set, see an admin.")
+
+
+def get_event(event_cd: str):
+    event = Event.objects.get(event_cd=event_cd)
+
+    return event
 
 
 def get_events(season: Season):

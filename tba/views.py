@@ -4,11 +4,16 @@ from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 
 from scouting.models import Season
-from tba.serializers import EventUpdatedSerializer, VerificationMessageSerializer
+from tba.serializers import (
+    EventUpdatedSerializer,
+    ScheduleUpdatedSerializer,
+    VerificationMessageSerializer,
+)
 
 from rest_framework.views import APIView
 
 import tba.util
+import scouting.util
 from general.security import has_access, ret_message
 
 auth_obj = "scoutadmin"
@@ -27,9 +32,7 @@ class SyncSeasonView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                req = tba.util.sync_season(
-                    request.query_params.get("season_id", None)
-                )
+                req = tba.util.sync_season(request.query_params.get("season_id", None))
                 return ret_message(req)
             else:
                 return ret_message(
@@ -61,8 +64,9 @@ class SyncEventView(APIView):
         try:
             if has_access(request.user.id, auth_obj):
                 return ret_message(
-                    tba.util.sync_event(Season.objects.get(id=request.query_params["season_id"]),
-                        request.query_params.get("event_cd", None)
+                    tba.util.sync_event(
+                        Season.objects.get(id=request.query_params["season_id"]),
+                        request.query_params.get("event_cd", None),
                     )
                 )
             else:
@@ -94,7 +98,7 @@ class SyncMatchesView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                req = tba.util.sync_matches()
+                req = tba.util.sync_matches(scouting.util.get_current_event())
                 return ret_message(req)
             else:
                 return ret_message(
@@ -156,23 +160,59 @@ class Webhook(APIView):
                             message.save()
                             return Response(200)
                         else:
-                            ret_message('Webhook Error - Verification', True, app_url + self.endpoint, error_message=serializer.errors)
+                            ret_message(
+                                "Webhook Error - Verification",
+                                True,
+                                app_url + self.endpoint,
+                                error_message=serializer.errors,
+                            )
                             return Response(500)
                     case "match_score":
                         serializer = EventUpdatedSerializer(data=request.data)
                         if serializer.is_valid():
-                            tba.util.save_tba_match(serializer.validated_data["message_data"]["match"])
+                            tba.util.save_tba_match(
+                                serializer.validated_data["message_data"]["match"]
+                            )
                             message.processed = "y"
                             message.save()
                             return Response(200)
                         else:
-                            ret_message('Webhook Error - Match Score', True, app_url + self.endpoint, error_message=serializer.errors)
+                            ret_message(
+                                "Webhook Error - Match Score",
+                                True,
+                                app_url + self.endpoint,
+                                error_message=serializer.errors,
+                            )
+                            return Response(500)
+                    case "schedule_updated":
+                        serializer = ScheduleUpdatedSerializer(data=request.data)
+                        if serializer.is_valid():
+                            event_key = serializer["message_data"]["event_key"]
+                            season = scouting.util.get_season(event_key[0:4])
+                            tba.util.sync_event(season, event_key)
+                            event = scouting.util.get_event(event_key)
+                            tba.util.sync_matches(event)
+                            message.processed = "y"
+                            message.save()
+                            return Response(200)
+                        else:
+                            ret_message(
+                                "Webhook Error - Schedule Updated",
+                                True,
+                                app_url + self.endpoint,
+                                error_message=serializer.errors,
+                            )
                             return Response(500)
                     case _:
                         return Response(200)
             else:
-                ret_message('Webhook Error', True, app_url + self.endpoint, error_message="Unauthenticated")
+                ret_message(
+                    "Webhook Error",
+                    True,
+                    app_url + self.endpoint,
+                    error_message="Unauthenticated",
+                )
         except Exception as e:
-            ret_message('Webhook Error', True, app_url + self.endpoint, exception=e)
+            ret_message("Webhook Error", True, app_url + self.endpoint, exception=e)
 
         return Response(500)

@@ -24,7 +24,7 @@ class TBAMatchSerializer(serializers.Serializer):
     match_number = serializers.CharField()
     videos = MatchVideoSerializer(many=True)
     time = serializers.IntegerField()
-    #score_breakdown = serializers.CharField()
+    # score_breakdown = serializers.CharField()
     alliances = AlliancesSerializer()
 
 
@@ -37,6 +37,17 @@ class EventUpdatedMessageSerializer(serializers.Serializer):
 
 class EventUpdatedSerializer(serializers.Serializer):
     message_data = EventUpdatedMessageSerializer()
+    message_type = serializers.CharField()
+
+
+class ScheduleUpdatedMessageSerializer(serializers.Serializer):
+    event_key = serializers.CharField()
+    event_name = serializers.CharField()
+    first_match_time = serializers.IntegerField()
+
+
+class ScheduleUpdatedSerializer(serializers.Serializer):
+    message_data = ScheduleUpdatedMessageSerializer()
     message_type = serializers.CharField()
 
 

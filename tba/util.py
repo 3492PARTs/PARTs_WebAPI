@@ -201,9 +201,7 @@ def sync_event(season: Season, event_cd: str):
     return messages
 
 
-def sync_matches():
-    event = scouting.util.get_current_event()
-
+def sync_matches(event: Event):
     messages = ""
     request = requests.get(
         f"{tba_url}/event/{event.event_cd}/matches",
