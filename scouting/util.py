@@ -26,6 +26,16 @@ def get_season(year: str):
     return Season.objects.get(season=year)
 
 
+def get_or_create_season(year: str):
+    try:
+        season = Season.objects.get(season=year)
+    except Season.DoesNotExist:
+        season = Season(season=year, current="n")
+        season.save()
+
+    return season
+
+
 def get_current_season():
     try:
         current_season = Season.objects.get(current="y")

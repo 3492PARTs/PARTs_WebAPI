@@ -190,7 +190,7 @@ class Webhook(APIView):
                             event_key = serializer.validated_data["message_data"][
                                 "event_key"
                             ]
-                            season = scouting.util.get_season(event_key[:4])
+                            season = scouting.util.get_or_create_season(event_key[:4])
                             tba.util.sync_event(season, event_key)
                             event = scouting.util.get_event(event_key)
                             tba.util.sync_matches(event)
