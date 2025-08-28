@@ -52,8 +52,8 @@ ENV VIRTUAL_ENV=/app/.venv \
 EXPOSE 9090
 
 # Copy virtual env from previous step
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV} \
-     --from=builder /app/${LIB_SSL} ./
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV} 
+COPY --from=builder /app/${LIB_SSL} ./
 
 # Install packages needed to run your application (not build deps):
 #   mime-support -- for mime types when serving static files
