@@ -59,8 +59,11 @@ RUN set -ex \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
-    && rm -rf /var/lib/apt/lists/*
-
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "deb http://security.ubuntu.com/ubuntu focal-security main" | tee /etc/apt/sources.list.d/focal-security.list \
+    && apt update \
+    && apt install libssl1.1   
+# libssl1.1 still needed by uwsgi
 # Copy virtual env from previous step
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
