@@ -54,8 +54,6 @@ EXPOSE 9090
 # they were clobbered by a parent image.
 RUN set -ex \
     && RUN_DEPS=" \
-    libpcre3 \
-    media-types \
     postgresql-client \
     libxml2 \
     " \
