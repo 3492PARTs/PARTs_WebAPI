@@ -1,5 +1,5 @@
 # The builder image, used to build the virtual environment
-FROM python:3.11.3-buster as builder
+FROM python:3.11.3 as builder
 
 WORKDIR /scripts/
 
