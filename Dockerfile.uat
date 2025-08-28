@@ -56,6 +56,7 @@ RUN set -ex \
     && RUN_DEPS=" \
     postgresql-client \
     libxml2 \
+    libssl1.1 \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
