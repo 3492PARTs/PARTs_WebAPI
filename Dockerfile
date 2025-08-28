@@ -1,9 +1,9 @@
 # The builder image, used to build the virtual environment
-FROM python:3.11.3 as builder
+FROM python:3.11.3 AS builder
 
 WORKDIR /scripts/
 
-RUN pip install poetry==1.8.3 \
+RUN pip install poetry==2.1.4 \
     && pip install pipdeptree \
     && set -ex \
     && BUILD_DEPS=" \
@@ -31,7 +31,7 @@ RUN poetry install --with wvnet --no-root \
     && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt
 
 # The runtime image, used to just run the code provided its virtual environment
-FROM python:3.11-slim-buster as runtime
+FROM python:3.11-slim AS runtime
 
 RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
 

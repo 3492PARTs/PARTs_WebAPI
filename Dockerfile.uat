@@ -1,7 +1,7 @@
 # The builder image, used to build the virtual environment
 FROM python:3.11.3 AS builder
 
-RUN pip install poetry==1.8.3 \
+RUN pip install poetry==2.1.4 \
     && set -ex \
     && BUILD_DEPS=" \
     build-essential \
@@ -56,7 +56,6 @@ RUN set -ex \
     && RUN_DEPS=" \
     postgresql-client \
     libxml2 \
-    libssl1.1 \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update && apt install -y --no-install-recommends $RUN_DEPS \
