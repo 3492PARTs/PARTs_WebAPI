@@ -37,11 +37,11 @@ RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
 
 WORKDIR /app
 
-# Copy virtual env from previous step
-COPY --from=builder /app/requirements.txt ./
-
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 COPY ./ ./
+
+# Copy virtual env from previous step
+COPY --from=builder /app/requirements.txt ./
 
 RUN apt update \
     && apt install openssh-client wget -y \
