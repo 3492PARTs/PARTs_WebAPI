@@ -1,8 +1,6 @@
 # The builder image, used to build the virtual environment
 FROM python:3.11.3 AS builder
 
-WORKDIR /scripts/
-
 RUN pip install poetry==2.1.4 \
     && pip install pipdeptree \
     && set -ex \
@@ -20,7 +18,7 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
     POETRY_CACHE_DIR=/tmp/poetry_cache \
-    PATH="/scripts/.venv/bin:$PATH" 
+    PATH="/app/.venv/bin:$PATH" 
 
 WORKDIR /app
 
