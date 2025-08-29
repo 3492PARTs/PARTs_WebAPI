@@ -17,8 +17,7 @@ RUN pip install poetry==2.1.4 \
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    PATH="/app/.venv/bin:$PATH" 
+    POETRY_CACHE_DIR=/tmp/poetry_cache 
 
 WORKDIR /app
 
@@ -26,8 +25,11 @@ COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
 RUN poetry install --with wvnet --no-root \
-    && rm -rf $POETRY_CACHE_DIR \
-    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt 
+    && rm -rf $POETRY_CACHE_DIR 
+
+ENV PATH="/app/.venv/bin:$PATH" 
+
+RUN pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt 
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
