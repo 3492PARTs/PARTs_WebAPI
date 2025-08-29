@@ -1,6 +1,8 @@
 # The builder image, used to build the virtual environment
 FROM python:3.11.3 AS builder
 
+WORKDIR /scripts/
+
 RUN pip install poetry==2.1.4 \
     && pip install pipdeptree \
     && set -ex \
@@ -17,7 +19,7 @@ RUN pip install poetry==2.1.4 \
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache 
+    POETRY_CACHE_DIR=/tmp/poetry_cache
 
 WORKDIR /app
 
@@ -25,11 +27,8 @@ COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
 RUN poetry install --with wvnet --no-root \
-    && rm -rf $POETRY_CACHE_DIR 
-
-ENV PATH="/app/.venv/bin:$PATH" 
-
-RUN pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt 
+    && rm -rf $POETRY_CACHE_DIR \
+    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
@@ -38,15 +37,15 @@ RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
 
 WORKDIR /app
 
+
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
 COPY ./ ./
 
 # Copy virtual env from previous step
-COPY --from=builder /app/requirements.txt ./requirements.txt
+COPY --from=builder /app/requirements.txt ./
 
 RUN apt update \
     && apt install openssh-client wget -y \
-    && pip install paramiko==3.5.1 \
     && pip install pysftp \
     && rm ./poetry.toml \
     && touch ./api/wsgi.py \
