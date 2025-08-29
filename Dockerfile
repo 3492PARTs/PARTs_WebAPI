@@ -45,6 +45,7 @@ COPY ./ ./
 
 RUN apt update \
     && apt install openssh-client wget -y \
+    && pip install paramiko==3.5.1 \
     && pip install pysftp \
     && rm ./poetry.toml \
     && touch ./api/wsgi.py \
