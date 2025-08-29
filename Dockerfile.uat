@@ -1,21 +1,6 @@
 # The builder image, used to build the virtual environment
 FROM python:3.11.3 AS builder
 
-WORKDIR /scripts/
-
-RUN pip install poetry==2.1.4 \
-    && pip install pipdeptree \
-    && set -ex \
-    && BUILD_DEPS=" \
-    build-essential \
-    libpcre3-dev \
-    libpq-dev \
-    default-libmysqlclient-dev \
-    pkg-config \
-    wget \
-    " \
-    && apt update && apt install -y --no-install-recommends $BUILD_DEPS
-
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
@@ -24,9 +9,74 @@ ENV POETRY_NO_INTERACTION=1 \
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
-RUN touch README.md
 
-RUN poetry install --with wvnet --no-root \
-    && rm -rf $POETRY_CACHE_DIR \
-    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt
+RUN pip install poetry==2.1.4 \
+    && set -ex \
+    && BUILD_DEPS=" \
+    build-essential \
+    libpcre3-dev \
+    libpq-dev \
+    wget \
+    " \
+    && apt update \
+    && apt install -y --no-install-recommends $BUILD_DEPS \
+    && wget https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb \
+    && touch README.md \
+    && poetry install --with uat --no-root \
+    && rm -rf $POETRY_CACHE_DIR
 
+# The runtime image, used to just run the code provided its virtual environment
+FROM python:3.11-slim AS runtime
+
+WORKDIR /app
+
+# Create a group and user to run our app
+ARG APP_USER=appuser
+RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
+
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH" \
+    UWSGI_WSGI_FILE=api/wsgi.py \
+#    DJANGO_SETTINGS_MODULE=api.settings \
+    UWSGI_HTTP=:9090 \
+    UWSGI_MASTER=1 \
+    UWSGI_HTTP_AUTO_CHUNKED=1 \
+    UWSGI_HTTP_KEEPALIVE=1 \
+    UWSGI_LAZY_APPS=1 \
+    UWSGI_WSGI_ENV_BEHAVIOR=holy \
+    UWSGI_WORKERS=2  \
+    UWSGI_THREADS=4 \
+    LIB_SSL=libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+
+# uWSGI will listen on this port
+EXPOSE 9090
+
+# Copy virtual env from previous step
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV} 
+COPY --from=builder /app/${LIB_SSL} ./
+
+# Install packages needed to run your application (not build deps):
+#   mime-support -- for mime types when serving static files
+#   postgresql-client -- for running database commands
+# We need to recreate the /usr/share/man/man{1..8} directories first because
+# they were clobbered by a parent image.
+RUN set -ex \
+    && RUN_DEPS=" \
+    postgresql-client \
+    libxml2 \
+    " \
+    && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
+    && apt update && apt install -y --no-install-recommends $RUN_DEPS \
+    && rm -rf /var/lib/apt/lists/* \
+    && dpkg -i ${LIB_SSL} \
+    && rm ${LIB_SSL}
+# libssl1.1 still needed by uwsgi
+
+# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
+COPY ./ /app
+
+# Change to a non-root user
+USER ${APP_USER}:${APP_USER}
+
+# Start uWSGI
+CMD ["uwsgi", "--show-config"]
