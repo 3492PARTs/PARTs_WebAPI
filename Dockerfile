@@ -19,7 +19,8 @@ RUN pip install poetry==2.1.4 \
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
+    PATH="/scripts/.venv/bin:$PATH" 
 
 WORKDIR /app
 
@@ -28,7 +29,7 @@ RUN touch README.md
 
 RUN poetry install --with wvnet --no-root \
     && rm -rf $POETRY_CACHE_DIR \
-    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt
+    && pipdeptree -fl --exclude poetry --exclude pipdeptree > requirements.txt 
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
@@ -41,7 +42,7 @@ WORKDIR /app
 COPY ./ ./
 
 # Copy virtual env from previous step
-COPY --from=builder /app/requirements.txt ./
+COPY --from=builder /app/requirements.txt ./requirements.txt
 
 RUN apt update \
     && apt install openssh-client wget -y \
@@ -54,6 +55,4 @@ RUN apt update \
     && mkdir /scripts \
     && cd /scripts \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
-    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py \
-
-
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py 
