@@ -30,8 +30,6 @@ RUN pip install poetry==2.1.4 \
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
 
-RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
-
 WORKDIR /app
 
 # Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
@@ -40,7 +38,8 @@ COPY ./ ./
 # Copy virtual env from previous step
 COPY --from=builder /app/requirements.txt ./
 
-RUN apt update \
+RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
+    && apt update \
     && apt install openssh-client wget -y \
     && pip install paramiko==3.5.1 \
     && pip install pysftp \

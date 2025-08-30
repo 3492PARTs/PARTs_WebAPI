@@ -32,7 +32,6 @@ WORKDIR /app
 
 # Create a group and user to run our app
 ARG APP_USER=appuser
-RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER}
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
@@ -48,35 +47,38 @@ ENV VIRTUAL_ENV=/app/.venv \
     UWSGI_THREADS=4 \
     LIB_SSL=libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
 
-# uWSGI will listen on this port
-EXPOSE 9090
-
 # Copy virtual env from previous step
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV} 
 COPY --from=builder /app/${LIB_SSL} ./
+
+# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
+COPY ./ /app
 
 # Install packages needed to run your application (not build deps):
 #   mime-support -- for mime types when serving static files
 #   postgresql-client -- for running database commands
 # We need to recreate the /usr/share/man/man{1..8} directories first because
 # they were clobbered by a parent image.
-RUN set -ex \
+RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER} \
+    && set -ex \
     && RUN_DEPS=" \
     postgresql-client \
     libxml2 \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
-    && apt update && apt install -y --no-install-recommends $RUN_DEPS \
+    && apt update \
+    && apt upgrade -y \
+    && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/* \
     && dpkg -i ${LIB_SSL} \
     && rm ${LIB_SSL}
 # libssl1.1 still needed by uwsgi
 
-# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-COPY ./ /app
-
 # Change to a non-root user
 USER ${APP_USER}:${APP_USER}
+
+# uWSGI will listen on this port
+EXPOSE 9090
 
 # Start uWSGI
 CMD ["uwsgi", "--show-config"]
