@@ -19,6 +19,7 @@ RUN pip install poetry==2.1.4 \
     wget \
     " \
     && apt update \
+    && apt upgrade -y \
     && apt install -y --no-install-recommends $BUILD_DEPS \
     && wget https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb \
     && touch README.md \
