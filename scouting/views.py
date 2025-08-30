@@ -14,7 +14,8 @@ from scouting.serializers import (
     ScheduleTypeSerializer,
     ScoutFieldScheduleSerializer,
     SeasonSerializer,
-    TeamSerializer, FieldFormFormSerializer,
+    TeamSerializer,
+    FieldFormFormSerializer,
 )
 import scouting.util
 import scouting.strategizing.util
@@ -22,7 +23,6 @@ import scouting.field.util
 
 
 import time
-
 
 
 auth_obj = "scouting"
@@ -41,9 +41,13 @@ class SeasonView(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                seasons = scouting.util.get_all_seasons()
+                if request.query_params.get("current", False):
+                    serializer = SeasonSerializer(scouting.util.get_current_season())
+                else:
+                    serializer = SeasonSerializer(
+                        scouting.util.get_all_seasons(), many=True
+                    )
 
-                serializer = SeasonSerializer(seasons, many=True)
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
@@ -273,68 +277,74 @@ class AllScoutingInfo(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                #start_time = time.time()
+                # start_time = time.time()
 
                 current_event = scouting.util.get_current_event()
 
-                #print("--- %s current_event seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s current_event seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 seasons = scouting.util.get_all_seasons()
 
-                #print("--- %s seasons seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s seasons seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 events = scouting.util.get_all_events()
 
-                #print("--- %s events seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s events seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 teams = scouting.util.get_teams(True)
 
-                #print("--- %s teams seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s teams seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 matches = scouting.util.get_matches(current_event)
 
-                #print("--- %s matches seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s matches seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 schedules = scouting.util.get_current_schedule_parsed()
 
-                #print("--- %s schedules seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s schedules seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 scout_field_schedules = (
                     scouting.util.get_current_scout_field_schedule_parsed()
                 )
 
-                #print("--- %s scout_field_schedules seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s scout_field_schedules seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 schedule_types = scouting.util.get_schedule_types()
 
-                #print("--- %s schedule_types seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s schedule_types seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
-                team_notes = scouting.strategizing.util.get_team_notes(event=current_event)
+                team_notes = scouting.strategizing.util.get_team_notes(
+                    event=current_event
+                )
 
-                #print("--- %s team_notes seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s team_notes seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
-                match_strategies = scouting.strategizing.util.get_match_strategies(event=current_event)
+                match_strategies = scouting.strategizing.util.get_match_strategies(
+                    event=current_event
+                )
 
-                #print("--- %s match_strategies seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s match_strategies seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
                 field_form_form = scouting.field.util.get_field_form()
 
-                #print("--- %s field_form_form seconds ---" % (time.time() - start_time))
-                #start_time = time.time()
+                # print("--- %s field_form_form seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
 
-                alliance_selections = scouting.strategizing.util.get_alliance_selections()
+                alliance_selections = (
+                    scouting.strategizing.util.get_alliance_selections()
+                )
 
-                #print("--- %s alliance_selections seconds ---" % (time.time() - start_time))
+                # print("--- %s alliance_selections seconds ---" % (time.time() - start_time))
 
                 serializer = AllScoutInfoSerializer(
                     {

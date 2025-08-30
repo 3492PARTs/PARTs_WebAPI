@@ -107,10 +107,8 @@ class SeasonView(APIView):
                         request.user.id,
                         error_message=serializer.errors,
                     )
-                req = scouting.admin.util.add_season(
-                    serializer.validated_data["season"]
-                )
-                return ret_message("Successfully added season: " + req.season)
+                req = scouting.admin.util.save_season(serializer.validated_data)
+                return ret_message("Successfully saved season: " + req.season)
             else:
                 return ret_message(
                     "You do not have access.",
