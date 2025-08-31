@@ -18,6 +18,8 @@ class Season(models.Model):
     id = models.AutoField(primary_key=True)
     season = models.CharField(max_length=45)
     current = models.CharField(max_length=1, default="n")
+    game = models.CharField(max_length=255)
+    manual = models.CharField(max_length=2000)
 
     def __str__(self):
         return f"{self.id} : {self.season}"

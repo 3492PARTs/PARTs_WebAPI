@@ -117,23 +117,15 @@ def get_scout_auth_groups():
     return groups
 
 
-def add_season(year: str):
-    try:
-        season = Season.objects.get(season=year)
-        raise Exception("Season already exists.")
-    except Season.DoesNotExist as e:
-        season = Season(season=year, current="n")
-        season.save()
-
-    return season
-
-
 def save_season(data):
-    if data.get("season_id", None) is not None:
-        season = Season.objects.get(season_id=data["season_id"])
+    if data.get("id", None) is not None:
+        season = Season.objects.get(id=data["id"])
     else:
-        season = Season(season=data["season"], current=data["current"]).save()
+        season = Season(season=data["season"], current=data["current"])
 
+    season.game = data["game"]
+    season.manual = data["manual"]
+    season.save()
     return season
 
 

@@ -5,9 +5,11 @@ from user.serializers import UserSerializer
 
 
 class SeasonSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
+    id = serializers.IntegerField(required=False, allow_null=True)
     season = serializers.CharField()
     current = serializers.CharField()
+    game = serializers.CharField()
+    manual = serializers.CharField()
 
 
 class TeamSerializer(serializers.Serializer):

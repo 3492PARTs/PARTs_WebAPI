@@ -21,7 +21,9 @@ RUN pip install poetry==2.1.4 \
     pkg-config \
     wget \
     " \
-    && apt update && apt install -y --no-install-recommends $BUILD_DEPS \
+    && apt update \
+    && apt upgrade -y \
+    && apt install -y --no-install-recommends $BUILD_DEPS \
     && touch README.md \
     && poetry install --with wvnet --no-root \
     && rm -rf $POETRY_CACHE_DIR \
@@ -29,8 +31,6 @@ RUN pip install poetry==2.1.4 \
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
-
-RUN  useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu
 
 WORKDIR /app
 
@@ -40,10 +40,11 @@ COPY ./ ./
 # Copy virtual env from previous step
 COPY --from=builder /app/requirements.txt ./
 
-RUN apt update \
+RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
+    && apt update \
+    && apt upgrade -y \
     && apt install openssh-client wget -y \
-    && pip install paramiko==3.5.1 \
-    && pip install pysftp \
+    && pip install paramiko==3.5.1  pysftp \
     && rm ./poetry.toml \
     && touch ./api/wsgi.py \
     && mkdir /wsgi \
