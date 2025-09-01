@@ -423,7 +423,7 @@ def save_question_flow_answer(data, answer: Answer):
 
 
 def get_response(response_id: int):
-    res = Response.objects.get(Q(response_id=response_id) & Q(void_ind="n"))
+    res = Response.objects.get(Q(id=response_id) & Q(void_ind="n"))
     questions = get_questions(res.form_typ, "y")
 
     for question in questions:
@@ -469,7 +469,7 @@ def get_responses(form_typ: int, archive_ind: str):
 
         responses.append(
             {
-                "response_id": res.response_id,
+                "response_id": res.id,
                 "form_typ": res.form_typ.form_typ,
                 "time": res.time,
                 "archive_ind": res.archive_ind,

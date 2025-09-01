@@ -44,7 +44,10 @@ def stage_error_alerts():
         message = "No notifications"
     else:
         send_alerts_to_role(
-            alert_typ.subject, message, "error_alert", ["email", "notification"]
+            alert_typ.subject,
+            f"{alert_typ.body}\n{message}",
+            "error_alert",
+            ["email", "notification"],
         )
 
     alert_typ.last_run = timezone.now()
@@ -64,7 +67,7 @@ def stage_form_alerts(form_type: str):
     )
 
     for response in responses:
-        url = f'{settings.FRONTEND_ADDRESS}{"contact" if form_type.form_typ == "team-cntct" else "join/team-application"}?response_id={response.response_id}'
+        url = f'{settings.FRONTEND_ADDRESS}{"contact" if form_type.form_typ == "team-cntct" else "join/team-application"}?response_id={response.id}'
         message += f"{alert_typ.subject} ID: {response.id}\n"
         send_alerts_to_role(
             alert_typ.subject,
@@ -76,6 +79,9 @@ def stage_form_alerts(form_type: str):
 
     if message == "":
         message = "No notifications"
+
+    alert_typ.last_run = timezone.now()
+    alert_typ.save()
 
     return message
 

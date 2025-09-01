@@ -85,7 +85,7 @@ class QuestionSerializer(serializers.Serializer):
 
 
 class ResponseSerializer(serializers.Serializer):
-    response_id = serializers.IntegerField()
+    id = serializers.IntegerField()
     form_typ = serializers.CharField()
     time = serializers.DateTimeField()
     questionanswer_set = QuestionSerializer(many=True)

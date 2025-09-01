@@ -42,12 +42,13 @@ def send_alerts():
         try:
             match acs.comm_typ.comm_typ:
                 case "email":
+                    url = f"\n{acs.alert.url}" if acs.alert.url is not None else ""
                     send_message.send_email(
                         acs.alert.user.email,
                         acs.alert.subject,
                         "generic_email",
                         {
-                            "message": acs.alert.body,
+                            "message": f"{acs.alert.body}{url}",
                             "user": acs.alert.user,
                         },
                     )
@@ -128,6 +129,7 @@ def get_user_alerts(user_id: str, comm_typ_cd: str):
                 "channel_send_id": a.id,
                 "subject": a.alert.subject,
                 "body": a.alert.body,
+                "url": a.alert.url,
                 "staged_time": a.alert.staged_time,
             }
         )

@@ -177,7 +177,7 @@ class QuestionAggregateQuestion(models.Model):
 
 
 class Response(models.Model):
-    response_id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     time = models.DateTimeField(default=django.utils.timezone.now)
     archive_ind = models.CharField(max_length=1, default="n")
@@ -185,7 +185,7 @@ class Response(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"{self.response_id} : {self.form_typ}"
+        return f"{self.id} : {self.form_typ}"
 
 
 class Answer(models.Model):
