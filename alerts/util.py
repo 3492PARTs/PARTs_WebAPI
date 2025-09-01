@@ -59,7 +59,7 @@ def send_alerts():
                     message += send_message.send_webpush(
                         acs.alert.user,
                         acs.alert.subject,
-                        acs.alert.body[0:4000],
+                        acs.alert.body,
                         acs.alert.id,
                     )
                 case "txt":
