@@ -98,7 +98,6 @@ class UserUpdateSerializer(serializers.Serializer):
     image = serializers.ImageField(required=False)
 
 
-
 class RetMessageSerializer(serializers.Serializer):
     retMessage = serializers.CharField()
     error = serializers.BooleanField()
@@ -110,4 +109,5 @@ class GetAlertsSerializer(serializers.Serializer):
     channel_send_id = serializers.IntegerField()
     subject = serializers.CharField()
     body = serializers.CharField()
+    url = serializers.CharField()
     staged_time = serializers.DateTimeField()

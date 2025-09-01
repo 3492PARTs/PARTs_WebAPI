@@ -10,11 +10,9 @@ from django.db.models.functions import Lower
 
 import json
 
-import alerts.util
 import form.models
 import scouting.models
 import scouting.util
-import user.util
 from form.models import (
     FormType,
     Question,
@@ -40,7 +38,7 @@ from form.models import (
     GraphQuestionType,
     QuestionAggregateQuestion,
 )
-from scouting.models import Match, Season, FieldResponse, PitResponse, Event
+from scouting.models import Match, FieldResponse, PitResponse, Event
 
 
 def get_questions(
@@ -939,20 +937,6 @@ def save_answers(data):
         # Save the answers against the response object
         for d in data.get("question_answers", []):
             save_or_update_answer(d, response)
-
-    alert = []
-    users = user.util.get_users_with_permission("site_forms_notif")
-    for u in users:
-        alert.append(
-            alerts.util.stage_alert(
-                u,
-                form_type.form_nm,
-                f'<a href="{settings.FRONTEND_ADDRESS}{"contact" if form_type.form_typ == "team-cntct" else "join/team-application"}?response_id={response.response_id}">A new response has been logged.</a>',
-            )
-        )
-    for a in alert:
-        for acct in ["email", "notification"]:
-            alerts.util.stage_channel_send_for_all_channels(a, acct)
 
 
 def get_flows(fid=None, form_typ=None, form_sub_typ=None):
