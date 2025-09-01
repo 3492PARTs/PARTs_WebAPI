@@ -46,7 +46,10 @@ def send_alerts():
                         acs.alert.user.email,
                         acs.alert.subject,
                         "generic_email",
-                        {"message": acs.alert.body, "user": acs.alert.user},
+                        {
+                            "message": acs.alert.body,
+                            "user": acs.alert.user,
+                        },
                     )
                     message += "Email"
                 case "message":
@@ -56,7 +59,7 @@ def send_alerts():
                     message += send_message.send_webpush(
                         acs.alert.user,
                         acs.alert.subject,
-                        acs.alert.body,
+                        acs.alert.body[0:4000],
                         acs.alert.id,
                     )
                 case "txt":

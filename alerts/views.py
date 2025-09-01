@@ -60,7 +60,7 @@ class RunAlerts(APIView):
 
     def get(self, request, format=None):
         try:
-            ret = stage_alerts()
+            ret = alerts.util_alert_definitions.stage_alerts()
             ret += send_alerts()
             return ret_message(ret)
         except Exception as e:

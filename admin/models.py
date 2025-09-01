@@ -14,4 +14,9 @@ class ErrorLog(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.error_log_id} user: {self.user.first_name} {self.user.last_name} location: {self.path} msg: {self.message} exc: {self.exception} time: {self.time}"
+        return f"""ID: {self.error_log_id}
+        Time: {self.time}
+        User: {self.user.get_full_name()}
+        Location: {self.path}
+        Message: {self.message}
+        Exception: {self.exception}"""

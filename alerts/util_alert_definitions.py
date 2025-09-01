@@ -34,18 +34,21 @@ def stage_alerts():
 def stage_error_alerts():
     message = ""
 
-    alert_type = AlertType.objects.get(alert_type="error")
+    alert_typ = AlertType.objects.get(alert_typ="error")
 
-    errors = ErrorLog.objects.filter(Q(time__gte=alert_type.last_run) & Q(void_ind="n"))
+    errors = ErrorLog.objects.filter(Q(time__gte=alert_typ.last_run) & Q(void_ind="n"))
     for error in errors:
-        message += f"{error}\n"
+        message += f"{error}\n\n"
 
     if message == "":
         message = "No notifications"
     else:
         send_alerts_to_role(
-            alert_type.subject, message, "error_alerts", ["email", "notification"]
+            alert_typ.subject, message, "error_alert", ["email", "notification"]
         )
+
+    alert_typ.last_run = timezone.now()
+    alert_typ.save()
 
     return message
 
@@ -53,20 +56,20 @@ def stage_error_alerts():
 def stage_form_alerts(form_type: str):
     message = ""
 
+    alert_typ = AlertType.objects.get(alert_typ=form_type)
     form_type = FormType.objects.get(form_typ=form_type)
-    alert_type = AlertType.objects.get(alert_type=form_type)
 
-    responses = Response(
-        Q(form_typ=form_type) & Q(time__gte=alert_type.last_run) & Q(void_ind="n")
+    responses = Response.objects.filter(
+        Q(form_typ=form_type) & Q(time__gte=alert_typ.last_run) & Q(void_ind="n")
     )
 
     for response in responses:
         url = f'{settings.FRONTEND_ADDRESS}{"contact" if form_type.form_typ == "team-cntct" else "join/team-application"}?response_id={response.response_id}'
-        message += f"{alert_type.subject} ID: {response.id}\n"
+        message += f"{alert_typ.subject} ID: {response.id}\n"
         send_alerts_to_role(
-            alert_type.subject,
-            alert_type.body,
-            "form_alerts",
+            alert_typ.subject,
+            alert_typ.body,
+            "form_alert",
             ["email", "notification"],
             url=url,
         )
