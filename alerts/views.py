@@ -22,7 +22,7 @@ class StageAlerts(APIView):
 
         try:
             ret = "STAGE ALERTS: "
-            ret = alerts.util_alert_definitions.stage_alerts()
+            ret += alerts.util_alert_definitions.stage_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -61,7 +61,9 @@ class RunAlerts(APIView):
 
     def get(self, request, format=None):
         try:
-            ret = alerts.util_alert_definitions.stage_alerts()
+            ret = "STAGE ALERTS: "
+            ret += alerts.util_alert_definitions.stage_alerts()
+            ret += "SEND ALERTS: "
             ret += send_alerts()
             return ret_message(ret)
         except Exception as e:
