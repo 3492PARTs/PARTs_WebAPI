@@ -65,7 +65,7 @@ RUN RUN_DEPS=" \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/* \
-    && curl https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/${LIB_SSL} \
+    && curl https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/${LIB_SSL} --output ${LIB_SSL} \
     && dpkg -i ${LIB_SSL} \
     && rm ${LIB_SSL}
 # libssl1.1 still needed by uwsgi
