@@ -112,7 +112,7 @@ def send_alerts():
             acs.tries = acs.tries + 1
             acs.save()
     if message == "":
-        message = "No notifications"
+        message = "NONE TO SEND"
 
     return message
 

@@ -42,7 +42,7 @@ def stage_error_alerts():
         message += f"{error}\n\n"
 
     if message == "":
-        message = "No notifications"
+        message = "NONE TO STAGE"
     else:
         send_alerts_to_role(
             alert_typ.subject,
@@ -79,7 +79,7 @@ def stage_form_alerts(form_type: str):
         )
 
     if message == "":
-        message = "No notifications"
+        message = "NONE TO STAGE"
 
     alert_typ.last_run = timezone.now()
     alert_typ.save()
@@ -204,7 +204,7 @@ def stage_all_field_schedule_alerts():
                 stage_alert_channel_send(sa, acct)
     """
     if message == "":
-        message = "No notifications"
+        message = "NONE TO STAGE"
 
     return message
 
@@ -292,7 +292,7 @@ def stage_schedule_alerts():
         sch.save()
 
     if message == "":
-        message = "No notifications"
+        message = "NONE TO STAGE"
 
     return message
 
