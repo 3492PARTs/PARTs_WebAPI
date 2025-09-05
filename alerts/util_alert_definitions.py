@@ -45,7 +45,7 @@ def stage_error_alerts():
     else:
         send_alerts_to_role(
             alert_typ.subject,
-            f"{alert_typ.body}\n{message}",
+            f"{alert_typ.body}\n\n{message}",
             "error_alert",
             ["email", "notification"],
         )
