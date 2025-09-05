@@ -86,7 +86,7 @@ RUN mv ./crontab /etc/cron.d/myjob \
     && touch /var/log/cron.log \
     && chmod 666 /var/log/cron.log   # writable for any user (including appuser)
 
-# ── Health‑check (unchanged – still looks for the cron process) ───────────
+# ── Health‑check ───────────
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD sh -c '\
     pid_file="/var/run/crond.pid"; \
