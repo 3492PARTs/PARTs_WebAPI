@@ -1,4 +1,6 @@
-# The builder image, used to build the virtual environment
+# ------------------------------------------------------------
+# 1️⃣ Builder stage – unchanged (only builds the venv)
+# ------------------------------------------------------------
 FROM python:3.11.3 AS builder
 
 ENV POETRY_NO_INTERACTION=1 \
@@ -13,82 +15,87 @@ COPY pyproject.toml poetry.lock ./
 RUN pip install poetry==2.1.4 \
     && set -ex \
     && BUILD_DEPS=" \
-    build-essential \
-    libpcre3-dev \
-    libpq-dev \
-    wget \
-    " \
+        build-essential \
+        libpcre3-dev \
+        libpq-dev \
+        " \
     && apt update \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $BUILD_DEPS \
-    && wget https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb \
     && touch README.md \
     && poetry install --with uat --no-root \
     && rm -rf $POETRY_CACHE_DIR
 
-# The runtime image, used to just run the code provided its virtual environment
+# ------------------------------------------------------------
+# 2️⃣ Runtime stage – the only place we change anything
+# ------------------------------------------------------------
 FROM python:3.11-slim AS runtime
-ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
+# ── Expose the HTTP port that uWSGI will listen on ────────────────────────
+EXPOSE 9090
 
-ENV VIRTUAL_ENV=/app/.venv \
-    PATH="/app/.venv/bin:$PATH" \
+# ── Environment variables (unchanged, except formatting) ───────────────────
+ENV PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:${PATH}" \
     UWSGI_WSGI_FILE=api/wsgi.py \
-#    DJANGO_SETTINGS_MODULE=api.settings \
     UWSGI_HTTP=:9090 \
     UWSGI_MASTER=1 \
     UWSGI_HTTP_AUTO_CHUNKED=1 \
     UWSGI_HTTP_KEEPALIVE=1 \
     UWSGI_LAZY_APPS=1 \
     UWSGI_WSGI_ENV_BEHAVIOR=holy \
-    UWSGI_WORKERS=2  \
+    UWSGI_WORKERS=2 \
     UWSGI_THREADS=4 \
     LIB_SSL=libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
 
-# Copy virtual env from previous step
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV} 
-COPY --from=builder /app/${LIB_SSL} ./
-
-# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-COPY ./ /app
-
-# Install packages needed to run your application (not build deps):
-#   mime-support -- for mime types when serving static files
-#   postgresql-client -- for running database commands
-# We need to recreate the /usr/share/man/man{1..8} directories first because
-# they were clobbered by a parent image.
+# ── Runtime dependencies (no build‑deps) ─────────────────────────────────────
 RUN RUN_DEPS=" \
-    postgresql-client \
-    libxml2 \
-    cron \
-    curl \
+        postgresql-client \
+        libxml2 \
+        cron \
+        curl \
+        gosu \ 
     " \
-    && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
+    && mkdir -p /usr/share/man/man{1..8} \
     && apt update \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/${LIB_SSL} -o ${LIB_SSL} \
     && dpkg -i ${LIB_SSL} \
     && rm ${LIB_SSL}
-# libssl1.1 still needed by uwsgi
 
-# Set up the crontab (runs every minute)
-RUN mv ./crontab /etc/cron.d/myjob && \
-    chmod 0644 /etc/cron.d/myjob && \
-    crontab /etc/cron.d/myjob
+# ── Working directory ───────────────────────────────────────────────────────
+WORKDIR /app
 
-RUN touch /var/log/cron.log && chmod 666 /var/log/cron.log   # make log writable for any user
+# ── Pull the virtual‑env built in the previous stage ───────────────────────
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-RUN cron -f &
-RUN sleep 10
-# uWSGI will listen on this port
-EXPOSE 9090
+# ── Copy application source code ───────────────────────────────────────────
+COPY ./ /app
 
-# No USER switch – we stay as root
-# CMD ["cron", "-f"]
+# ── Create the non‑privileged user (UID/GID 1000) ────────────────────────
+RUN groupadd -g 1000 appuser && \
+    useradd -m -u 1000 -g appuser -s /bin/bash appuser
 
-# Start uWSGI
-# CMD ["uwsgi", "--show-config"]
+# ── Set up the crontab (runs as root) ─────────────────────────────────────
+RUN mv ./crontab /etc/cron.d/myjob \
+    && chmod 0644 /etc/cron.d/myjob \
+    && crontab /etc/cron.d/myjob \
+    && touch /var/log/cron.log \
+    && chmod 666 /var/log/cron.log   # writable for any user (including appuser)
 
-CMD ["sh", "-c", "cron -f & exec uwsgi --show-config"]
+# ── Health‑check ───────────
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD sh -c '\
+    pid_file="/var/run/crond.pid"; \
+    [ -f "$pid_file" ] && \
+    pid=$(cat "$pid_file") && \
+    [ -d "/proc/$pid" ] && exit 0; \
+    exit 1'
+
+# ── ENTRYPOINT / CMD ───────────────────────────────────────────────────────
+#   • `cron -f` stays in the foreground (runs as root)  
+#   • `gosu appuser uwsgi …` drops to the non‑privileged user **only** for uWSGI
+CMD ["sh", "-c", "cron -f & exec gosu appuser uwsgi --show-config"]

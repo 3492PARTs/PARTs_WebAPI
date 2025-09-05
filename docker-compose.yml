@@ -28,6 +28,7 @@ services:
     volumes:
       - ./keys:/app/keys
       - ./dumps:/app/dumps
+      - ./logs:/app/logs
     ports:
       - "${API_PORT}:9090"
     restart: always
