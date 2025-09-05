@@ -1,4 +1,5 @@
 import django
+from django.conf import settings
 
 from django.db import transaction
 from django.db.models import Q
@@ -40,6 +41,9 @@ def send_alerts():
     for acs in acss:
         success = True
         try:
+            if settings.ENVIRONMENT != "main":
+                acs.alert.subject = f"TEST ENVIRONMENT: {acs.alert.subject}"
+
             match acs.comm_typ.comm_typ:
                 case "email":
                     url = f"\n{acs.alert.url}" if acs.alert.url is not None else ""

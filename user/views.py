@@ -1,7 +1,6 @@
 import ast
 import datetime
 
-import cloudinary
 import webpush.views
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
@@ -689,7 +688,6 @@ class UserData(APIView):
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "user-data/"
-
 
     def get(self, request, format=None):
         try:
