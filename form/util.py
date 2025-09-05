@@ -302,7 +302,7 @@ def save_question(data):
                 )
                 questions_answered = Response.objects.filter(
                     Q(void_ind="n")
-                    & Q(response_id__in=set(pr.response_id for pr in pit_responses))
+                    & Q(id__in=set(pr.response_id for pr in pit_responses))
                 )
             case "field":
                 field_responses = FieldResponse.objects.filter(
@@ -315,7 +315,7 @@ def save_question(data):
                 )
                 questions_answered = Response.objects.filter(
                     Q(void_ind="n")
-                    & Q(response_id__in=set(fr.response_id for fr in field_responses))
+                    & Q(id__in=set(fr.response_id for fr in field_responses))
                 )
             case _:
                 questions_answered = Response.objects.filter(
