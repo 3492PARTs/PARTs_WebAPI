@@ -38,7 +38,7 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
     payload = {
         "notification": {
             "title": subject,
-            "body": body[0:4000],  # max length is 4096 bytes
+            "body": body[0:3500],  # max length is 4096 bytes
             "icon": "assets/icons/icon-128x128.png",
             "badge": "badge",
             "tag": alert_id,
