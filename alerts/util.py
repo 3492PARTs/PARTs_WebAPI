@@ -29,7 +29,7 @@ def create_channel_send_for_comm_typ(alert: Alert, alert_comm_typ: str):
 
 
 def send_alerts():
-    message = "send alerts\n"
+    message = ""
 
     # Alert not send, dismissed, and been tried to send 3 or fewer times
     acss = ChannelSend.objects.filter(
