@@ -50,11 +50,13 @@ ENV PYTHONUNBUFFERED=1\
 #   postgresql-client -- for running database commands
 # We need to recreate the /usr/share/man/man{1..8} directories first because
 # they were clobbered by a parent image.
+# procps  - used for pgrep in heath check
 RUN RUN_DEPS=" \
     postgresql-client \
     libxml2 \
     cron \
     curl \
+    procps \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update \
@@ -89,3 +91,6 @@ RUN mv ./crontab /etc/cron.d/myjob \
 # CMD ["uwsgi", "--show-config"]
 
 CMD ["sh", "-c", "cron -f & exec uwsgi --show-config"]
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD pgrep -x cron > /dev/null || exit 1
