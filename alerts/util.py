@@ -11,7 +11,7 @@ import user.util
 
 
 def create_alert(u: User, alert_subject: str, alert_body: str, alert_url: str = None):
-    alert = Alert(user=u, subject=alert_subject, body=alert_body, url=alert_url)
+    alert = Alert(user=u, subject=alert_subject, body=alert_body[:4000], url=alert_url)
     alert.save()
     return alert
 
