@@ -3,6 +3,7 @@ node {
 
     env.FORMATTED_BRANCH_NAME = env.BRANCH_NAME.replaceAll("/", "-")
 
+    
     try {
         def app
 
@@ -22,12 +23,29 @@ node {
 
         stage('Build image') {  
             if (env.BRANCH_NAME == 'main') {
+                env.DEPLOY_PATH = "\\/home\\/parts3492\\/domains\\/api.parts3492.org\\/code"
+                env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
+            }
+            else {
+                env.DEPLOY_PATH = "\\/app"
+                env.DEPLOY_URL = "https:\\/\\/partsuat.bduke.dev"
+            }
+
+            sh'''
+                sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/clear-logs.sh \
+                && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/notify-users.sh \
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/notify-users.sh \
+                && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/refresh-event-team-info.sh \
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/refresh-event-team-info.sh \
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab
+                '''
+            
+            if (env.BRANCH_NAME == 'main') {
                 app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile --target=runtime .")
             }
             else {
                 app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat --target=runtime .")
             }
-            
         }
 
         /*

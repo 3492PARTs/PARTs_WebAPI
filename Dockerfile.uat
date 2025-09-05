@@ -28,11 +28,9 @@ RUN pip install poetry==2.1.4 \
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
-
-# Create a group and user to run our app
-ARG APP_USER=appuser
 
 ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
@@ -60,11 +58,11 @@ COPY ./ /app
 #   postgresql-client -- for running database commands
 # We need to recreate the /usr/share/man/man{1..8} directories first because
 # they were clobbered by a parent image.
-RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USER} \
-    && set -ex \
-    && RUN_DEPS=" \
+RUN RUN_DEPS=" \
     postgresql-client \
     libxml2 \
+    cron \
+    curl \
     " \
     && seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} \
     && apt update \
@@ -75,11 +73,22 @@ RUN groupadd -r ${APP_USER} && useradd --no-log-init -r -g ${APP_USER} ${APP_USE
     && rm ${LIB_SSL}
 # libssl1.1 still needed by uwsgi
 
-# Change to a non-root user
-USER ${APP_USER}:${APP_USER}
+# Set up the crontab (runs every minute)
+RUN mv ./crontab /etc/cron.d/myjob && \
+    chmod 0644 /etc/cron.d/myjob && \
+    crontab /etc/cron.d/myjob
 
+RUN touch /var/log/cron.log && chmod 666 /var/log/cron.log   # make log writable for any user
+
+RUN cron -f &
+RUN sleep 10
 # uWSGI will listen on this port
 EXPOSE 9090
 
+# No USER switch – we stay as root
+# CMD ["cron", "-f"]
+
 # Start uWSGI
-CMD ["uwsgi", "--show-config"]
+# CMD ["uwsgi", "--show-config"]
+
+CMD ["sh", "-c", "cron -f & exec uwsgi --show-config"]
