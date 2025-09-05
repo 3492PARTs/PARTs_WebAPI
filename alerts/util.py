@@ -43,6 +43,7 @@ def send_alerts():
         try:
             if settings.ENVIRONMENT != "main":
                 acs.alert.subject = f"TEST ENVIRONMENT: {acs.alert.subject}"
+                acs.alert.save()
 
             match acs.comm_typ.comm_typ:
                 case "email":
