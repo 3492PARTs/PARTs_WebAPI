@@ -61,7 +61,8 @@ class RunAlerts(APIView):
 
     def get(self, request, format=None):
         try:
-            ret = "STAGE ALERTS: "
+            ret = "RUN ALERTS: "
+            ret += "STAGE ALERTS: "
             ret += alerts.util_alert_definitions.stage_alerts()
             ret += "SEND ALERTS: "
             ret += send_alerts()
