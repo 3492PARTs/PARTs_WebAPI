@@ -16,12 +16,10 @@ RUN pip install poetry==2.1.4 \
     build-essential \
     libpcre3-dev \
     libpq-dev \
-    wget \
     " \
     && apt update \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $BUILD_DEPS \
-    && wget https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb \
     && touch README.md \
     && poetry install --with uat --no-root \
     && rm -rf $POETRY_CACHE_DIR
@@ -46,8 +44,6 @@ ENV PYTHONUNBUFFERED=1\
     UWSGI_WORKERS=2  \
     UWSGI_THREADS=4 \
     LIB_SSL=libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
-
-#COPY --from=builder /app/${LIB_SSL} ./
 
 # Install packages needed to run your application (not build deps):
 #   mime-support -- for mime types when serving static files
