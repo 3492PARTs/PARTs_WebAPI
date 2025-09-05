@@ -2000,7 +2000,7 @@ def get_responses_question_answers(responses, questions):
                 {"flow_answers": flow_answers, "question": question}
             )
         response_question_answers.append(
-            {"response_id": response.response_id, "question_answers": question_answers}
+            {"response_id": response.id, "question_answers": question_answers}
         )
     return response_question_answers
 
