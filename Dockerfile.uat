@@ -88,7 +88,12 @@ RUN mv ./crontab /etc/cron.d/myjob \
 
 # ── Health‑check (unchanged – still looks for the cron process) ───────────
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD sh -c 'ls /proc/[0-9]*/comm 2>/dev/null | xargs -r cat | grep -qx cron || exit 1'
+  CMD sh -c '\
+    pid_file="/var/run/cron.pid"; \
+    [ -f "$pid_file" ] && \
+    pid=$(cat "$pid_file") && \
+    [ -d "/proc/$pid" ] && exit 0; \
+    exit 1'
 
 # ── ENTRYPOINT / CMD ───────────────────────────────────────────────────────
 #   • `cron -f` stays in the foreground (runs as root)  
