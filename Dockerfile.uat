@@ -89,7 +89,7 @@ RUN mv ./crontab /etc/cron.d/myjob \
 # ── Health‑check (unchanged – still looks for the cron process) ───────────
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD sh -c '\
-    pid_file="/var/run/cron.pid"; \
+    pid_file="/var/run/crond.pid"; \
     [ -f "$pid_file" ] && \
     pid=$(cat "$pid_file") && \
     [ -d "/proc/$pid" ] && exit 0; \
