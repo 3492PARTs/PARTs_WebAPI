@@ -28,11 +28,12 @@ RUN pip install poetry==2.1.4 \
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
-ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
+# uWSGI will listen on this port
+EXPOSE 9090
 
-ENV VIRTUAL_ENV=/app/.venv \
+ENV PYTHONUNBUFFERED=1\
+    VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH" \
     UWSGI_WSGI_FILE=api/wsgi.py \
 #    DJANGO_SETTINGS_MODULE=api.settings \
@@ -46,12 +47,7 @@ ENV VIRTUAL_ENV=/app/.venv \
     UWSGI_THREADS=4 \
     LIB_SSL=libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
 
-# Copy virtual env from previous step
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV} 
-COPY --from=builder /app/${LIB_SSL} ./
-
-# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
-COPY ./ /app
+#COPY --from=builder /app/${LIB_SSL} ./
 
 # Install packages needed to run your application (not build deps):
 #   mime-support -- for mime types when serving static files
@@ -69,21 +65,26 @@ RUN RUN_DEPS=" \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $RUN_DEPS \
     && rm -rf /var/lib/apt/lists/* \
+    && curl https://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/${LIB_SSL} \
     && dpkg -i ${LIB_SSL} \
     && rm ${LIB_SSL}
 # libssl1.1 still needed by uwsgi
 
-# Set up the crontab (runs every minute)
-RUN mv ./crontab /etc/cron.d/myjob && \
-    chmod 0644 /etc/cron.d/myjob && \
-    crontab /etc/cron.d/myjob
+WORKDIR /app
 
-RUN touch /var/log/cron.log && chmod 666 /var/log/cron.log   # make log writable for any user
+# Copy virtual env from previous step
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV} 
 
-RUN cron -f &
-RUN sleep 10
-# uWSGI will listen on this port
-EXPOSE 9090
+# Copy your application code to the container (make sure you create a .dockerignore file if any large files or directories should be excluded)
+COPY ./ /app
+
+# Set up the crontab
+RUN mv ./crontab /etc/cron.d/myjob \
+    && chmod 0644 /etc/cron.d/myjob \
+    && crontab /etc/cron.d/myjob \
+    && touch /var/log/cron.log \
+    && chmod 666 /var/log/cron.log   
+# make log writable for any user
 
 # No USER switch – we stay as root
 # CMD ["cron", "-f"]
