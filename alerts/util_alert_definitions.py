@@ -18,16 +18,17 @@ from scouting.models import FieldSchedule, Schedule
 
 
 def stage_alerts():
-    ret = "all field alerts\n"
+    ret = "all field alerts ["
     ret += stage_all_field_schedule_alerts()
-    ret += "schedule alerts\n"
+    ret += "] schedule alerts ["
     ret += stage_schedule_alerts()
-    ret += "Error alerts\n"
+    ret += "] Error alerts ["
     ret += stage_error_alerts()
-    ret += "Contact Form alerts\n"
+    ret += "] Contact Form alerts ["
     ret += stage_form_alerts("team-cntct")
-    ret += "Application Form alerts\n"
+    ret += "] Application Form alerts ["
     ret += stage_form_alerts("team-app")
+    ret += "]"
     return ret
 
 
