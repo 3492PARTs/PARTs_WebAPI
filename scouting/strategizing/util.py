@@ -146,7 +146,7 @@ def save_match_strategy(data, img=None):
     alerts.util.send_alerts_to_role(
         "Match Strategy Added",
         f"New match strategy from {match_strategy.user.get_full_name()} on match {match_strategy.match.match_number}",
-        "match_strat_added",
+        "match_strat_added_alert",
         ["notification", "txt"],
         match_strategy.user.id,
     )
