@@ -10,24 +10,27 @@ from alerts.util import (
     create_alert,
     create_channel_send_for_comm_typ,
     send_alerts_to_role,
+    get_alert_type,
 )
 import user
 from admin.models import ErrorLog
 from alerts.models import AlertType
-from scouting.models import FieldSchedule, Schedule
+from scouting.models import FieldSchedule, MatchStrategy, Schedule
 
 
 def stage_alerts():
-    ret = "all field alerts ["
+    ret = "Field Schedule ["
     ret += stage_all_field_schedule_alerts()
-    ret += "] schedule alerts ["
+    ret += "] Schedule ["
     ret += stage_schedule_alerts()
-    ret += "] Error alerts ["
+    ret += "] Error ["
     ret += stage_error_alerts()
-    ret += "] Contact Form alerts ["
+    ret += "] Contact Form ["
     ret += stage_form_alerts("team-cntct")
-    ret += "] Application Form alerts ["
+    ret += "] Application Form ["
     ret += stage_form_alerts("team-app")
+    ret += "] Match Strategy Added ["
+    ret += stage_match_strategy_added_alerts()
     ret += "]"
     return ret
 
@@ -35,7 +38,7 @@ def stage_alerts():
 def stage_error_alerts():
     message = ""
 
-    alert_typ = AlertType.objects.get(alert_typ="error")
+    alert_typ = get_alert_type("error")
 
     errors = ErrorLog.objects.filter(Q(time__gte=alert_typ.last_run) & Q(void_ind="n"))
     for error in errors:
@@ -60,7 +63,7 @@ def stage_error_alerts():
 def stage_form_alerts(form_type: str):
     message = ""
 
-    alert_typ = AlertType.objects.get(alert_typ=form_type)
+    alert_typ = get_alert_type(form_type)
     form_type = FormType.objects.get(form_typ=form_type)
 
     responses = Response.objects.filter(
@@ -323,3 +326,32 @@ def stage_scout_admin_alerts(subject: str, body: str):
         staged_alerts.append(create_alert(u, subject, body))
 
     return staged_alerts
+
+
+def stage_match_strategy_added_alerts():
+    message = ""
+
+    alert_typ = get_alert_type("match_strat_added")
+
+    strategies = MatchStrategy.objects.filter(
+        Q(time__gte=alert_typ.last_run) & Q(void_ind="n")
+    )
+
+    for strategy in strategies:
+        send_alerts_to_role(
+            alert_typ.subject,
+            alert_typ.body.format(
+                strategy.user.get_full_name(), strategy.match.match_number
+            ),
+            "match_strat_added_alert",
+            ["notification", "txt"],
+            strategy.user.id,
+        )
+
+    if message == "":
+        message = "NONE TO STAGE"
+
+    alert_typ.last_run = timezone.now()
+    alert_typ.save()
+
+    return message

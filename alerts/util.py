@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 
-from alerts.models import Alert, ChannelSend, CommunicationChannelType
+from alerts.models import Alert, AlertType, ChannelSend, CommunicationChannelType
 from general import send_message
 from general.security import ret_message
 from user.models import User
@@ -173,3 +173,7 @@ def send_alerts_to_role(
         for a in alerts:
             for acct in channels:
                 create_channel_send_for_comm_typ(a, acct)
+
+
+def get_alert_type(alert_typ: str):
+    return AlertType.objects.get(Q(alert_typ=alert_typ) & Q(void_ind="n"))
