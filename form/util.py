@@ -836,58 +836,6 @@ def save_field_response(data, user_id):
     for answer in data.get("answers", []):
         save_or_update_answer(answer, response)
 
-    # Check if previous match is missing any results
-    """
-    if (
-        m is not None
-        and m.match_number > 1
-        and len(m.scoutfield_set.filter(void_ind="n")) == 1
-    ):
-        prev_m = Match.objects.get(
-            Q(void_ind="n")
-            & Q(event=m.event)
-            & Q(comp_level=m.comp_level)
-            & Q(match_number=m.match_number - 1)
-        )
-
-        sfs = prev_m.scoutfield_set.filter(void_ind="n")
-
-        if len(set(sf.team_no for sf in sfs)) < 6:
-            users = ""
-            for sf in sfs:
-                users += sf.user.get_full_name() + ", "
-            users = users[0 : len(users) - 2]
-            alert = alerts.util.stage_scout_admin_alerts(
-                f"Match: {prev_m.match_number} is missing a result.",
-                f"We have results from: {users}",
-            )
-
-            for a in alert:
-                for acct in ["txt", "notification"]:
-                    alerts.util.stage_alert_channel_send(
-                        a, acct
-                    )
-
-    # Check if user is under review and notify lead scouts
-    try:
-        user_info = request.user.scouting_user_info.get(
-            void_ind="n"
-        )
-    except UserInfo.DoesNotExist:
-        user_info = {}
-
-    if user_info and user_info.under_review:
-        alert = alerts.util.stage_scout_admin_alerts(
-            f"Scout under review, {request.user.get_full_name()}, logged a new response.",
-            f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}\n@{sf.time.astimezone(pytz.timezone(sf.event.timezone)).strftime("%m/%d/%Y, %I:%M%p")}',
-        )
-
-        for a in alert:
-            for acct in ["txt", "notification"]:
-                alerts.util.stage_alert_channel_send(
-                    a, acct
-                )
-    """
     return field_response
 
 
