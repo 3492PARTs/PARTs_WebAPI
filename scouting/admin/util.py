@@ -354,7 +354,6 @@ def save_schedule(data):
 def notify_user(id):
     sch = Schedule.objects.get(id=id)
     message = alerts.util.stage_schedule_alert(sch)
-    alerts.util.send_alerts()
     sch.notified = True
     sch.save()
 
@@ -365,7 +364,6 @@ def notify_users(id):
     event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
     sfs = FieldSchedule.objects.get(id=id)
     message = alerts.util.stage_field_schedule_alerts(-1, [sfs], event)
-    alerts.util.send_alerts()
     return message
 
 

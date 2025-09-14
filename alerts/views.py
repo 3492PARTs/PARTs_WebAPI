@@ -2,11 +2,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+import alerts.util_alert_definitions
 from alerts.util import (
     send_alerts,
     dismiss_alert,
-    stage_alerts,
 )
+import alerts.util
 from general.security import ret_message
 
 app_url = "alerts/"
@@ -20,7 +21,8 @@ class StageAlerts(APIView):
     def get(self, request, format=None):
 
         try:
-            ret = stage_alerts()
+            ret = "STAGE ALERTS: "
+            ret += alerts.util_alert_definitions.stage_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -39,12 +41,35 @@ class SendAlerts(APIView):
 
     def get(self, request, format=None):
         try:
-            ret = "send alerts\n"
+            ret = "SEND ALERTS: "
             ret += send_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
                 "An error occurred while sending alerts.",
+                True,
+                app_url + self.endpoint,
+                -1,
+                e,
+            )
+
+
+class RunAlerts(APIView):
+    """API endpoint to stage and send"""
+
+    endpoint = "run/"
+
+    def get(self, request, format=None):
+        try:
+            ret = "RUN ALERTS: "
+            ret += "STAGE ALERTS: "
+            ret += alerts.util_alert_definitions.stage_alerts()
+            ret += "SEND ALERTS: "
+            ret += send_alerts()
+            return ret_message(ret)
+        except Exception as e:
+            return ret_message(
+                "An error occurred while running alerts.",
                 True,
                 app_url + self.endpoint,
                 -1,
@@ -62,33 +87,11 @@ class DismissAlert(APIView):
 
     def get(self, request, format=None):
         try:
-            dismiss_alert(
-                request.query_params.get("channel_send_id", None)
-            )
+            dismiss_alert(request.query_params.get("channel_send_id", None))
             return ret_message("")
         except Exception as e:
             return ret_message(
                 "An error occurred while dismissing alert.",
-                True,
-                app_url + self.endpoint,
-                -1,
-                e,
-            )
-
-
-class RunAlerts(APIView):
-    """API endpoint to run alerts"""
-
-    endpoint = "run/"
-
-    def get(self, request, format=None):
-        try:
-            ret = stage_alerts()
-            ret += send_alerts()
-            return ret_message(ret)
-        except Exception as e:
-            return ret_message(
-                "An error occurred while running alerts.",
                 True,
                 app_url + self.endpoint,
                 -1,

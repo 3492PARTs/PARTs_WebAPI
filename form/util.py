@@ -10,11 +10,9 @@ from django.db.models.functions import Lower
 
 import json
 
-import alerts.util
 import form.models
 import scouting.models
 import scouting.util
-import user.util
 from form.models import (
     FormType,
     Question,
@@ -40,7 +38,7 @@ from form.models import (
     GraphQuestionType,
     QuestionAggregateQuestion,
 )
-from scouting.models import Match, Season, FieldResponse, PitResponse, Event
+from scouting.models import Match, FieldResponse, PitResponse, Event
 
 
 def get_questions(
@@ -304,7 +302,7 @@ def save_question(data):
                 )
                 questions_answered = Response.objects.filter(
                     Q(void_ind="n")
-                    & Q(response_id__in=set(pr.response_id for pr in pit_responses))
+                    & Q(id__in=set(pr.response_id for pr in pit_responses))
                 )
             case "field":
                 field_responses = FieldResponse.objects.filter(
@@ -317,7 +315,7 @@ def save_question(data):
                 )
                 questions_answered = Response.objects.filter(
                     Q(void_ind="n")
-                    & Q(response_id__in=set(fr.response_id for fr in field_responses))
+                    & Q(id__in=set(fr.response_id for fr in field_responses))
                 )
             case _:
                 questions_answered = Response.objects.filter(
@@ -425,7 +423,7 @@ def save_question_flow_answer(data, answer: Answer):
 
 
 def get_response(response_id: int):
-    res = Response.objects.get(Q(response_id=response_id) & Q(void_ind="n"))
+    res = Response.objects.get(Q(id=response_id) & Q(void_ind="n"))
     questions = get_questions(res.form_typ, "y")
 
     for question in questions:
@@ -471,7 +469,7 @@ def get_responses(form_typ: int, archive_ind: str):
 
         responses.append(
             {
-                "response_id": res.response_id,
+                "response_id": res.id,
                 "form_typ": res.form_typ.form_typ,
                 "time": res.time,
                 "archive_ind": res.archive_ind,
@@ -838,58 +836,6 @@ def save_field_response(data, user_id):
     for answer in data.get("answers", []):
         save_or_update_answer(answer, response)
 
-    # Check if previous match is missing any results
-    """
-    if (
-        m is not None
-        and m.match_number > 1
-        and len(m.scoutfield_set.filter(void_ind="n")) == 1
-    ):
-        prev_m = Match.objects.get(
-            Q(void_ind="n")
-            & Q(event=m.event)
-            & Q(comp_level=m.comp_level)
-            & Q(match_number=m.match_number - 1)
-        )
-
-        sfs = prev_m.scoutfield_set.filter(void_ind="n")
-
-        if len(set(sf.team_no for sf in sfs)) < 6:
-            users = ""
-            for sf in sfs:
-                users += sf.user.get_full_name() + ", "
-            users = users[0 : len(users) - 2]
-            alert = alerts.util.stage_scout_admin_alerts(
-                f"Match: {prev_m.match_number} is missing a result.",
-                f"We have results from: {users}",
-            )
-
-            for a in alert:
-                for acct in ["txt", "notification"]:
-                    alerts.util.stage_alert_channel_send(
-                        a, acct
-                    )
-
-    # Check if user is under review and notify lead scouts
-    try:
-        user_info = request.user.scouting_user_info.get(
-            void_ind="n"
-        )
-    except UserInfo.DoesNotExist:
-        user_info = {}
-
-    if user_info and user_info.under_review:
-        alert = alerts.util.stage_scout_admin_alerts(
-            f"Scout under review, {request.user.get_full_name()}, logged a new response.",
-            f'Team: {sf.team_no.team_no} Match: {sf.match.match_number if sf.match else "No match"}\n@{sf.time.astimezone(pytz.timezone(sf.event.timezone)).strftime("%m/%d/%Y, %I:%M%p")}',
-        )
-
-        for a in alert:
-            for acct in ["txt", "notification"]:
-                alerts.util.stage_alert_channel_send(
-                    a, acct
-                )
-    """
     return field_response
 
 
@@ -939,20 +885,6 @@ def save_answers(data):
         # Save the answers against the response object
         for d in data.get("question_answers", []):
             save_or_update_answer(d, response)
-
-    alert = []
-    users = user.util.get_users_with_permission("site_forms_notif")
-    for u in users:
-        alert.append(
-            alerts.util.stage_alert(
-                u,
-                form_type.form_nm,
-                f'<a href="{settings.FRONTEND_ADDRESS}{"contact" if form_type.form_typ == "team-cntct" else "join/team-application"}?response_id={response.response_id}">A new response has been logged.</a>',
-            )
-        )
-    for a in alert:
-        for acct in ["email", "notification"]:
-            alerts.util.stage_channel_send_for_all_channels(a, acct)
 
 
 def get_flows(fid=None, form_typ=None, form_sub_typ=None):
@@ -2016,7 +1948,7 @@ def get_responses_question_answers(responses, questions):
                 {"flow_answers": flow_answers, "question": question}
             )
         response_question_answers.append(
-            {"response_id": response.response_id, "question_answers": question_answers}
+            {"response_id": response.id, "question_answers": question_answers}
         )
     return response_question_answers
 

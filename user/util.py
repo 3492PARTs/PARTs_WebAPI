@@ -14,8 +14,7 @@ def get_user(user_id: int):
     permissions = general.security.get_user_permissions(user_id)
 
     user_links = Link.objects.filter(
-        Q(permission__in=permissions)
-        | Q(permission_id__isnull=True)
+        Q(permission__in=permissions) | Q(permission_id__isnull=True)
     ).order_by("order")
 
     usr = {
@@ -32,10 +31,11 @@ def get_user(user_id: int):
         "phone_type": usr.phone_type,
         "phone_type_id": usr.phone_type_id,
         "image": general.cloudinary.build_image_url(usr.img_id, usr.img_ver),
-        "links": user_links
+        "links": user_links,
     }
 
     return usr
+
 
 def get_users(active, admin):
     user_active = Q()
@@ -113,9 +113,8 @@ def get_users_in_group(name: str):
 def get_users_with_permission(codename: str):
     users = []
     prmsn = Permission.objects.get(codename=codename)
-    users = get_users(1, 1).filter(
-        groups__name__in=set(g.name for g in prmsn.group_set.all())
-    )
+    groups = set(g.name for g in prmsn.group_set.all())
+    users = get_users(1, 1).filter(groups__name__in=groups).distinct()
 
     return users
 

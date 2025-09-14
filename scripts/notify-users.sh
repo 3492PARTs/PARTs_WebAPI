@@ -2,10 +2,10 @@
 
 newline=$'\n'
 timestamp=$(date)
-output=$(curl https://api.parts3492.org/alerts/run/)
+output=$(curl DEPLOY_URL/alerts/stage/)
 
-echo "$timestamp" "$output" "$newline" >> /home/parts3492/domains/api.parts3492.org/code/logs/log-notify-users.txt
+echo "$timestamp" "$output" "$newline" >> DEPLOY_PATH/logs/log-notify-users.txt
 
-output=$(curl https://api.parts3492.org/alerts/send/)
+output=$(curl DEPLOY_URL/alerts/send/)
 
-echo "$timestamp" "$output" "$newline" >> /home/parts3492/domains/api.parts3492.org/code/logs/log-notify-users.txt
+echo "$timestamp" "$output" "$newline" >> DEPLOY_PATH/logs/log-notify-users.txt
