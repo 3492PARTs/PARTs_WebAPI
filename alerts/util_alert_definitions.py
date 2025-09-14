@@ -338,7 +338,7 @@ def stage_match_strategy_added_alerts():
     )
 
     for strategy in strategies:
-        send_alerts_to_role(
+        sent = send_alerts_to_role(
             alert_typ.subject,
             alert_typ.body.format(
                 strategy.user.get_full_name(), strategy.match.match_number
@@ -347,6 +347,11 @@ def stage_match_strategy_added_alerts():
             ["notification", "txt"],
             strategy.user.id,
         )
+
+        for s in sent:
+            message += (
+                f"Match Strategy: {strategy} Notified: {s.user.get_full_name()}\n"
+            )
 
     if message == "":
         message = "NONE TO STAGE"

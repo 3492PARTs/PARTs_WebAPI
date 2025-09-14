@@ -174,6 +174,8 @@ def send_alerts_to_role(
             for acct in channels:
                 create_channel_send_for_comm_typ(a, acct)
 
+        return alerts
+
 
 def get_alert_type(alert_typ: str):
     return AlertType.objects.get(Q(alert_typ=alert_typ) & Q(void_ind="n"))
