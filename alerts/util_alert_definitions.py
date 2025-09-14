@@ -52,6 +52,7 @@ def stage_error_alerts():
             f"{alert_typ.body}\n\n{message}",
             "error_alert",
             ["email", "notification"],
+            alert_type=alert_typ,
         )
 
     alert_typ.last_run = timezone.now()
@@ -79,6 +80,7 @@ def stage_form_alerts(form_type: str):
             "form_alert",
             ["email", "notification"],
             url=url,
+            alert_type=alert_typ,
         )
 
     if message == "":
@@ -345,7 +347,8 @@ def stage_match_strategy_added_alerts():
             ),
             "match_strat_added_alert",
             ["notification", "txt"],
-            strategy.user.id,
+            ignore_user_id=strategy.user.id,
+            alert_type=alert_typ,
         )
 
         for s in sent:

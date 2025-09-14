@@ -11,8 +11,20 @@ from user.models import User
 import user.util
 
 
-def create_alert(u: User, alert_subject: str, alert_body: str, alert_url: str = None):
-    alert = Alert(user=u, subject=alert_subject, body=alert_body[:4000], url=alert_url)
+def create_alert(
+    u: User,
+    alert_subject: str,
+    alert_body: str,
+    alert_url: str = None,
+    alert_typ: AlertType = None,
+):
+    alert = Alert(
+        user=u,
+        subject=alert_subject,
+        body=alert_body[:4000],
+        url=alert_url,
+        alert_typ=alert_typ,
+    )
     alert.save()
     return alert
 
@@ -160,6 +172,7 @@ def send_alerts_to_role(
     channels: list[str],
     ignore_user_id: int = None,
     url: str = None,
+    alert_type: AlertType = None,
 ):
     with transaction.atomic():
         alerts = []
@@ -168,7 +181,9 @@ def send_alerts_to_role(
             if ignore_user_id is not None and u.id == ignore_user_id:
                 continue
             else:
-                alerts.append(create_alert(u, subject, body, url))
+                alerts.append(
+                    create_alert(u, subject, body, alert_url=url, alert_typ=alert_type)
+                )
 
         for a in alerts:
             for acct in channels:
