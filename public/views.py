@@ -12,4 +12,4 @@ class APIStatus(APIView):
     """
 
     def get(self, request, format=None):
-        return Response({"branch": settings.ENVIRONMENT})
+        return Response({"branch": settings.ENVIRONMENT, "version": settings.VERSION})
