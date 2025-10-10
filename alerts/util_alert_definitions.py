@@ -40,7 +40,13 @@ def stage_error_alerts():
 
     alert_typ = get_alert_type("error")
 
-    errors = ErrorLog.objects.filter(Q(time__gte=alert_typ.last_run) & Q(void_ind="n"))
+    ignored_exceptions = ["No active account found with the given credentials"]
+
+    errors = ErrorLog.objects.filter(
+        Q(time__gte=alert_typ.last_run)
+        & Q(void_ind="n")
+        & ~Q(exception__in=ignored_exceptions)
+    )
     for error in errors:
         message += f"{error}\n\n"
 
