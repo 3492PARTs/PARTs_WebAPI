@@ -469,7 +469,7 @@ def get_responses(form_typ: int, archive_ind: str):
 
         responses.append(
             {
-                "response_id": res.id,
+                "id": res.id,
                 "form_typ": res.form_typ.form_typ,
                 "time": res.time,
                 "archive_ind": res.archive_ind,
