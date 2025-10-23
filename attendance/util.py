@@ -18,7 +18,7 @@ def save_attendance(attendance):
         a.user.id = attendance["user"]["id"]
     else:
         a = Attendance(
-            time=attendance["time"], user__id=attendance["user"]["id"], void_ind="n"
+            time=attendance["time"], user_id=attendance["user"]["id"], void_ind="n"
         )
 
     a.save()
