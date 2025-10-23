@@ -1,6 +1,7 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.response import Response
 
 import attendance.util
 from general.security import ret_message, has_access
@@ -20,7 +21,9 @@ class Attendance(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                return AttendanceSerializer(attendance.util.get_attendance(), many=True)
+                att = attendance.util.get_attendance()
+                serializer = AttendanceSerializer(att, many=True)
+                return Response(serializer.data)
             except Exception as e:
                 return ret_message(
                     "An error occurred while attendance.",

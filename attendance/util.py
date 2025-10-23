@@ -8,7 +8,7 @@ from attendance.models import Attendance
 
 
 def get_attendance():
-    Attendance.objects.get()
+    return Attendance.objects.all()
 
 
 def save_attendance(attendance):
