@@ -40,12 +40,16 @@ def save_attendance(attendance):
         a = attendance.objects.get(id=attendance["id"])
         a.time_in = attendance["time_in"]
         a.time_out = attendance["time_out"]
+        a.absent = attendance["absent"]
+        a.bonus_approved = attendance["bonus_approved"]
         a.user.id = attendance["user"]["id"]
         a.meeting.id = attendance["meeting"]["id"]
     else:
         a = Attendance(
             time_in=attendance["time_in"],
             time_out=attendance["time_out"],
+            absent=attendance["absent"],
+            bonus_approved=attendance["bonus_approved"],
             user_id=attendance["user"]["id"],
             meeting_id=attendance["meeting"]["id"],
             void_ind="n",
