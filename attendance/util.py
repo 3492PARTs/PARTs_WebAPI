@@ -13,11 +13,19 @@ def get_meetings():
 
 def save_meeting(meeting):
     if meeting.get("id", None) is not None:
-        m = meeting.objects.get(id=meeting["id"])
+        m = Meeting.objects.get(id=meeting["id"])
+        m.title = meeting["title"]
+        m.description = meeting["description"]
         m.start = meeting["start"]
         m.end = meeting["end"]
     else:
-        m = Meeting(start=meeting["start"], end=meeting["end"], void_ind="n")
+        m = Meeting(
+            start=meeting["start"],
+            end=meeting["end"],
+            title=meeting["title"],
+            description=meeting["description"],
+            void_ind="n",
+        )
 
     m.save()
     return m

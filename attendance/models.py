@@ -14,6 +14,8 @@ from user.models import User
 
 class Meeting(models.Model):
     id = models.AutoField(primary_key=True)
+    title = models.CharField(2000)
+    description = models.CharField(4000)
     start = models.DateTimeField(default=django.utils.timezone.now)
     end = models.DateTimeField(null=True)
     void_ind = models.CharField(max_length=1, default="n")
