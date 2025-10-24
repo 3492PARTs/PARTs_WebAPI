@@ -4,7 +4,23 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 
-from attendance.models import Attendance
+from attendance.models import Attendance, Meeting
+
+
+def get_meetings():
+    return Meeting.objects.all()
+
+
+def save_meeting(meeting):
+    if meeting.get("id", None) is not None:
+        m = meeting.objects.get(id=meeting["id"])
+        m.start = meeting["start"]
+        m.end = meeting["end"]
+    else:
+        m = Meeting(start=meeting["start"], end=meeting["end"], void_ind="n")
+
+    m.save()
+    return m
 
 
 def get_attendance():
@@ -14,11 +30,17 @@ def get_attendance():
 def save_attendance(attendance):
     if attendance.get("id", None) is not None:
         a = attendance.objects.get(id=attendance["id"])
-        a.time = attendance["time"]
+        a.time_in = attendance["time_in"]
+        a.time_out = attendance["time_out"]
         a.user.id = attendance["user"]["id"]
+        a.meeting.id = attendance["meeting"]["id"]
     else:
         a = Attendance(
-            time=attendance["time"], user_id=attendance["user"]["id"], void_ind="n"
+            time_in=attendance["time_in"],
+            time_out=attendance["time_out"],
+            user_id=attendance["user"]["id"],
+            meeting_id=attendance["meeting"]["id"],
+            void_ind="n",
         )
 
     a.save()

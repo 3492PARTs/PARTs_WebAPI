@@ -5,13 +5,13 @@ from rest_framework.response import Response
 
 import attendance.util
 from general.security import ret_message, has_access
-from attendance.serializers import AttendanceSerializer
+from attendance.serializers import AttendanceSerializer, MeetingSerializer
 
 app_url = "attendance/"
 auth_obj = "attendance"
 
 
-class Attendance(APIView):
+class AttendanceView(APIView):
     """API endpoint to take attendance"""
 
     authentication_classes = (JWTAuthentication,)
@@ -26,7 +26,7 @@ class Attendance(APIView):
                 return Response(serializer.data)
             except Exception as e:
                 return ret_message(
-                    "An error occurred while attendance.",
+                    "An error occurred while getting attendance.",
                     True,
                     app_url + self.endpoint,
                     -1,
@@ -58,6 +58,67 @@ class Attendance(APIView):
             except Exception as e:
                 return ret_message(
                     "An error occurred while saving attendance entry.",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class MeetingsView(APIView):
+    """API endpoint to manage meetings"""
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "meetings/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                mtgs = attendance.util.get_meetings()
+                serializer = MeetingSerializer(mtgs, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting meetings.",
+                    True,
+                    app_url + self.endpoint,
+                    -1,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+    def post(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            serializer = MeetingSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            try:
+                attendance.util.save_meeting(serializer.validated_data)
+                return ret_message("Saved meeting entry.")
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while saving meeting entry.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
