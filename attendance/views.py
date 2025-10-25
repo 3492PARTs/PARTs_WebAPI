@@ -23,7 +23,8 @@ class AttendanceView(APIView):
         if has_access(request.user.id, auth_obj):
             try:
                 att = attendance.util.get_attendance(
-                    request.query_params.get("user_id", None)
+                    request.query_params.get("user_id", None),
+                    request.query_params.get("meeting_id", None),
                 )
                 serializer = AttendanceSerializer(att, many=True)
                 return Response(serializer.data)
