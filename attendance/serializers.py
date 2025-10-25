@@ -14,7 +14,9 @@ class MeetingSerializer(serializers.Serializer):
 class AttendanceSerializer(serializers.Serializer):
     id = serializers.IntegerField(allow_null=True)
     user = UserSerializer()
+    meeting = MeetingSerializer(allow_null=True, required=False)
     time_in = serializers.DateTimeField()
-    time_out = serializers.DateTimeField()
+    time_out = serializers.DateTimeField(allow_null=True, required=False)
     absent = serializers.BooleanField()
     bonus_approved = serializers.BooleanField()
+    void_ind = serializers.CharField()

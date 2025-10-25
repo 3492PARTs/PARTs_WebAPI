@@ -10,10 +10,12 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from user.models import User
+from scouting.models import Season
 
 
 class Meeting(models.Model):
     id = models.AutoField(primary_key=True)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
     title = models.CharField(2000)
     description = models.CharField(4000)
     start = models.DateTimeField(default=django.utils.timezone.now)

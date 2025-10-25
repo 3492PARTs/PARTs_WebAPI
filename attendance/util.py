@@ -1,14 +1,16 @@
-import django
 from django.conf import settings
 
 from django.db import transaction
 from django.db.models import Q
 
 from attendance.models import Attendance, Meeting
+import scouting.util
 
 
 def get_meetings():
-    return Meeting.objects.all()
+    return Meeting.objects.filter(
+        Q(season=scouting.util.get_current_season()) & Q(void_ind="n")
+    )
 
 
 def save_meeting(meeting):
@@ -32,26 +34,32 @@ def save_meeting(meeting):
 
 
 def get_attendance():
-    return Attendance.objects.all()
+    return Attendance.objects.filter(Q(void_ind="n"))
 
 
 def save_attendance(attendance):
+    meeting = attendance.get("meeting", None)
+    if meeting is not None:
+        meeting = meeting["id"]
+
     if attendance.get("id", None) is not None:
-        a = attendance.objects.get(id=attendance["id"])
+        a = Attendance.objects.get(id=attendance["id"])
         a.time_in = attendance["time_in"]
-        a.time_out = attendance["time_out"]
+        a.time_out = attendance.get("time_out", None)
         a.absent = attendance["absent"]
         a.bonus_approved = attendance["bonus_approved"]
         a.user.id = attendance["user"]["id"]
-        a.meeting.id = attendance["meeting"]["id"]
+        if meeting is not None:
+            a.meeting.id = meeting
+        a.void_ind = attendance["void_ind"]
     else:
         a = Attendance(
             time_in=attendance["time_in"],
-            time_out=attendance["time_out"],
+            time_out=attendance.get("time_out", None),
             absent=attendance["absent"],
             bonus_approved=attendance["bonus_approved"],
             user_id=attendance["user"]["id"],
-            meeting_id=attendance["meeting"]["id"],
+            meeting_id=meeting,
             void_ind="n",
         )
 
