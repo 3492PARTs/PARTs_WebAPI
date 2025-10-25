@@ -445,7 +445,7 @@ def send_meeting_alert_to_team_discord(start_or_end=True):
         meeting_time
         & Q(void_ind="n")
         & ~Q(
-            id__in=AlertedResource.objects.get(
+            id__in=AlertedResource.objects.filter(
                 Q(alert_typ=alert_typ) & Q(void_ind="n")
             ).values_list("id", flat=True)
         )

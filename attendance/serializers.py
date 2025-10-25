@@ -9,6 +9,7 @@ class MeetingSerializer(serializers.Serializer):
     description = serializers.CharField(allow_null=True, allow_blank=True)
     start = serializers.DateTimeField()
     end = serializers.DateTimeField()
+    void_ind = serializers.CharField()
 
 
 class AttendanceSerializer(serializers.Serializer):
