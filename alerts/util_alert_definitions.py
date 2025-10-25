@@ -14,8 +14,10 @@ from alerts.util import (
 )
 import user
 from admin.models import ErrorLog
-from alerts.models import AlertType
 from scouting.models import FieldSchedule, MatchStrategy, Schedule
+from attendance.models import Meeting
+
+from general import send_message
 
 
 def stage_alerts():
@@ -31,6 +33,10 @@ def stage_alerts():
     ret += stage_form_alerts("team-app")
     ret += "] Match Strategy Added ["
     ret += stage_match_strategy_added_alerts()
+    ret += "] Meeting Start Alert ["
+    ret += send_meeting_alert_to_team_discord(True)
+    ret += "] Meeting End Alert ["
+    ret += send_meeting_alert_to_team_discord(True)
     ret += "]"
     return ret
 
@@ -422,3 +428,24 @@ def stage_match_strategy_added_alerts():
                     a, acct
                 )
     """
+
+
+def send_meeting_alert_to_team_discord(start_or_end=True):
+    message = ""
+
+    alert_typ = get_alert_type("meeting")
+
+    meeting_time = Q(start__lte=alert_typ.last_run)
+
+    if not start_or_end:
+        meeting_time = Q(end__lte=alert_typ.last_run)
+
+    meetings = Meeting.objects.filter(meeting_time & Q(void_ind="n"))
+    for meeting in meetings:
+        message += f"Alerted Meeting: {meeting.id} : {meeting.title}\n"
+        send_message.send_discord_notification(alert_typ.body)
+
+    alert_typ.last_run = timezone.now()
+    alert_typ.save()
+
+    return message
