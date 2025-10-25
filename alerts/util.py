@@ -101,6 +101,11 @@ def send_alerts():
                         if acs.alert.user.discord_user_id
                         else acs.alert.user.get_full_name()
                     )
+
+                    # this is the system user id
+                    if acs.alert.user.id == -1:
+                        u = ""
+
                     discord_message = f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
                     send_message.send_discord_notification(discord_message)
                     message += "Discord"
