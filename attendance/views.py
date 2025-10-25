@@ -21,7 +21,9 @@ class AttendanceView(APIView):
     def get(self, request, format=None):
         if has_access(request.user.id, auth_obj):
             try:
-                att = attendance.util.get_attendance()
+                att = attendance.util.get_attendance(
+                    request.query_params.get("user_id", None)
+                )
                 serializer = AttendanceSerializer(att, many=True)
                 return Response(serializer.data)
             except Exception as e:

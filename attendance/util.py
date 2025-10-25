@@ -29,9 +29,12 @@ def save_meeting(meeting):
     return m
 
 
-def get_attendance():
+def get_attendance(user_id=None):
+    user = Q()
+    if user_id is not None:
+        user = Q(user__id=user_id)
     return Attendance.objects.filter(
-        Q(void_ind="n") & (Q(meeting__isnull=True) | Q(meeting__void_ind="n"))
+        Q(user) & Q(void_ind="n") & (Q(meeting__isnull=True) | Q(meeting__void_ind="n"))
     )
 
 
