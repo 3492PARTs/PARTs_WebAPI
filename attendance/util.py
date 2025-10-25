@@ -52,6 +52,7 @@ def save_attendance(attendance):
     a.time_out = attendance.get("time_out", None)
     a.absent = attendance["absent"]
     a.bonus_approved = attendance["bonus_approved"]
+    a.approved = attendance["approved"]
     a.user = User.objects.get(id=attendance["user"]["id"])
     if meeting is not None:
         a.meeting = meeting

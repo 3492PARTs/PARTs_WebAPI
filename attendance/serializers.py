@@ -20,4 +20,5 @@ class AttendanceSerializer(serializers.Serializer):
     time_out = serializers.DateTimeField(allow_null=True, required=False)
     absent = serializers.BooleanField()
     bonus_approved = serializers.BooleanField()
+    approved = serializers.BooleanField()
     void_ind = serializers.CharField()

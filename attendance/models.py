@@ -35,6 +35,7 @@ class Attendance(models.Model):
     time_out = models.DateTimeField(null=True)
     absent = models.BooleanField(default=False)
     bonus_approved = models.BooleanField(default=False)
+    approved = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 

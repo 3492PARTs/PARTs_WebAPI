@@ -9,6 +9,7 @@ from attendance.serializers import AttendanceSerializer, MeetingSerializer
 
 app_url = "attendance/"
 auth_obj = "attendance"
+auth_obj_meeting = "meetings"
 
 
 class AttendanceView(APIView):
@@ -82,7 +83,9 @@ class MeetingsView(APIView):
     endpoint = "meetings/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, auth_obj) or has_access(
+            request.user.id, auth_obj_meeting
+        ):
             try:
                 mtgs = attendance.util.get_meetings()
                 serializer = MeetingSerializer(mtgs, many=True)
@@ -104,7 +107,7 @@ class MeetingsView(APIView):
             )
 
     def post(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        if has_access(request.user.id, auth_obj_meeting):
             serializer = MeetingSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
