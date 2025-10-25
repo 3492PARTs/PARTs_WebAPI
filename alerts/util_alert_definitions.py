@@ -16,6 +16,7 @@ import user
 from admin.models import ErrorLog
 from scouting.models import FieldSchedule, MatchStrategy, Schedule
 from attendance.models import Meeting
+from alerts.models import AlertedResource
 
 from general import send_message
 
@@ -440,10 +441,20 @@ def send_meeting_alert_to_team_discord(start_or_end=True):
     if not start_or_end:
         meeting_time = Q(end__lte=alert_typ.last_run)
 
-    meetings = Meeting.objects.filter(meeting_time & Q(void_ind="n"))
+    meetings = Meeting.objects.filter(
+        meeting_time
+        & Q(void_ind="n")
+        & ~Q(
+            id__in=AlertedResource.objects.get(
+                Q(alert_typ=alert_typ) & Q(void_ind="n")
+            ).values_list("id", flat=True)
+        )
+    )
+
     for meeting in meetings:
         message += f"Alerted Meeting: {meeting.id} : {meeting.title}\n"
         send_message.send_discord_notification(alert_typ.body)
+        AlertedResource(foreign_id=meeting.id, alert_typ=alert_typ).save()
 
     alert_typ.last_run = timezone.now()
     alert_typ.save()

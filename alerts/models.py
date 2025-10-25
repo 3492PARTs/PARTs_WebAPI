@@ -57,3 +57,14 @@ class ChannelSend(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class AlertedResource(models.Model):
+    id = models.AutoField(primary_key=True)
+    alert_typ = models.ForeignKey(AlertType, on_delete=models.PROTECT, null=True)
+    foreign_id = models.CharField(2000)
+    time = models.DateTimeField(default=django.utils.timezone.now)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.subject}"
