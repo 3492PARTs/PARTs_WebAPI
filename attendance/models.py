@@ -31,6 +31,7 @@ class Attendance(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     meeting = models.ForeignKey(Meeting, on_delete=models.PROTECT, null=True)
+    season = models.ForeignKey(Season, on_delete=models.PROTECT)
     time_in = models.DateTimeField(default=django.utils.timezone.now)
     time_out = models.DateTimeField(null=True)
     absent = models.BooleanField(default=False)

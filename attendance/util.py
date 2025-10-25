@@ -41,8 +41,10 @@ def get_attendance(user_id=None, meeting_id=None):
     return Attendance.objects.filter(
         user
         & meeting
-        & (Q(meeting__isnull=True) | Q(meeting__void_ind="n") & Q(void_ind="n"))
-    )
+        & Q(season=scouting.util.get_current_season())
+        & (Q(meeting__isnull=True) | Q(meeting__void_ind="n"))
+        & Q(void_ind="n")
+    ).order_by("time_in")
 
 
 def save_attendance(attendance):
@@ -63,6 +65,9 @@ def save_attendance(attendance):
     a.user = User.objects.get(id=attendance["user"]["id"])
     if meeting is not None:
         a.meeting = meeting
+
+    if a.season is None:
+        a.season = scouting.util.get_current_season()
     a.void_ind = attendance["void_ind"]
 
     a.save()
