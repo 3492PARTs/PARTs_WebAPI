@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 
 from django.db.models import Q
 
@@ -44,7 +45,7 @@ def get_attendance(user_id=None, meeting_id=None):
         & Q(season=scouting.util.get_current_season())
         & (Q(meeting__isnull=True) | Q(meeting__void_ind="n"))
         & Q(void_ind="n")
-    ).order_by("time_in")
+    ).order_by("-time_in", "user__first_name", "user__last_name")
 
 
 def get_attendance_report(user_id=None, meeting_id=None):
@@ -52,7 +53,7 @@ def get_attendance_report(user_id=None, meeting_id=None):
     if user_id is not None:
         users = User.objects.filter(id=user_id)
     else:
-        users = User.objects.filter(is_active=True)
+        users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
 
     ret = []
 
@@ -61,7 +62,7 @@ def get_attendance_report(user_id=None, meeting_id=None):
         time = 0
 
         for att in attendance:
-            if att.approved:
+            if att.approved and not att.absent:
                 time += (att.time_out - att.time_in).total_seconds() / 3600
 
         ret.append({"user": user, "time": round(time, 2)})
@@ -87,8 +88,11 @@ def save_attendance(attendance):
     if meeting is not None:
         a.meeting = meeting
 
-    if a.season is None:
+    try:
+        a.season
+    except ObjectDoesNotExist:
         a.season = scouting.util.get_current_season()
+
     a.void_ind = attendance["void_ind"]
 
     if a.approved and a.time_out is None:
