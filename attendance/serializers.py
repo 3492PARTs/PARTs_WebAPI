@@ -27,3 +27,4 @@ class AttendanceSerializer(serializers.Serializer):
 class AttendanceReportSerializer(serializers.Serializer):
     user = UserSerializer()
     time = serializers.FloatField()
+    percentage = serializers.FloatField()
