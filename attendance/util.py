@@ -47,6 +47,28 @@ def get_attendance(user_id=None, meeting_id=None):
     ).order_by("time_in")
 
 
+def get_attendance_report(user_id=None, meeting_id=None):
+    users = None
+    if user_id is not None:
+        users = User.objects.filter(id=user_id)
+    else:
+        users = User.objects.filter(is_active=True)
+
+    ret = []
+
+    for user in users:
+        attendance = get_attendance(user.id, meeting_id)
+        time = 0
+
+        for att in attendance:
+            if att.approved:
+                time += (att.time_out - att.time_in).total_seconds() / 3600
+
+        ret.append({"user": user, "time": round(time, 2)})
+
+    return ret
+
+
 def save_attendance(attendance):
     meeting = attendance.get("meeting", None)
     if meeting is not None:
@@ -60,7 +82,6 @@ def save_attendance(attendance):
     a.time_in = attendance["time_in"]
     a.time_out = attendance.get("time_out", None)
     a.absent = attendance["absent"]
-    a.bonus_approved = attendance["bonus_approved"]
     a.approved = attendance["approved"]
     a.user = User.objects.get(id=attendance["user"]["id"])
     if meeting is not None:
@@ -69,6 +90,9 @@ def save_attendance(attendance):
     if a.season is None:
         a.season = scouting.util.get_current_season()
     a.void_ind = attendance["void_ind"]
+
+    if a.approved and a.time_out is None:
+        raise Exception("Cannot approve if no time out.")
 
     a.save()
     return a

@@ -5,7 +5,11 @@ from rest_framework.response import Response
 
 import attendance.util
 from general.security import ret_message, has_access
-from attendance.serializers import AttendanceSerializer, MeetingSerializer
+from attendance.serializers import (
+    AttendanceSerializer,
+    MeetingSerializer,
+    AttendanceReportSerializer,
+)
 
 app_url = "attendance/"
 auth_obj = "attendance"
@@ -128,6 +132,39 @@ class MeetingsView(APIView):
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class AttendanceReportView(APIView):
+    """API endpoint to take attendance"""
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "attendance-report/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                att = attendance.util.get_attendance_report(
+                    request.query_params.get("user_id", None),
+                    request.query_params.get("meeting_id", None),
+                )
+                serializer = AttendanceReportSerializer(att, many=True)
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting the attendance report.",
+                    True,
+                    app_url + self.endpoint,
+                    -1,
                     e,
                 )
         else:
