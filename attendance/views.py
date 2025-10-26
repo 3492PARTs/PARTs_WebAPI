@@ -9,6 +9,7 @@ from attendance.serializers import (
     AttendanceSerializer,
     MeetingSerializer,
     AttendanceReportSerializer,
+    MeetingHoursSerializer,
 )
 
 app_url = "attendance/"
@@ -144,7 +145,7 @@ class MeetingsView(APIView):
 
 
 class AttendanceReportView(APIView):
-    """API endpoint to take attendance"""
+    """API endpoint to get the attendance report"""
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -162,6 +163,35 @@ class AttendanceReportView(APIView):
             except Exception as e:
                 return ret_message(
                     "An error occurred while getting the attendance report.",
+                    True,
+                    app_url + self.endpoint,
+                    -1,
+                    e,
+                )
+        else:
+            return ret_message(
+                "You do not have access.",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+            )
+
+
+class MeetingHoursView(APIView):
+    """API endpoint to get total number of meetings"""
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "meeting-hours/"
+
+    def get(self, request, format=None):
+        if has_access(request.user.id, auth_obj):
+            try:
+                serializer = MeetingHoursSerializer(attendance.util.get_meeting_hours())
+                return Response(serializer.data)
+            except Exception as e:
+                return ret_message(
+                    "An error occurred while getting the total meeting hours.",
                     True,
                     app_url + self.endpoint,
                     -1,
