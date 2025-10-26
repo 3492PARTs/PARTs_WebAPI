@@ -24,6 +24,12 @@ def save_meeting(meeting):
     m.description = meeting["description"]
     m.start = meeting["start"]
     m.end = meeting["end"]
+
+    try:
+        m.season
+    except ObjectDoesNotExist:
+        m.season = scouting.util.get_current_season()
+
     m.void_ind = meeting["void_ind"]
 
     m.save()
