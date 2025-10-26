@@ -13,9 +13,13 @@ from alerts.util import (
     get_alert_type,
 )
 import user
+from user.models import User
 from admin.models import ErrorLog
-from alerts.models import AlertType
 from scouting.models import FieldSchedule, MatchStrategy, Schedule
+from attendance.models import Meeting
+from alerts.models import AlertedResource
+
+from general import send_message
 
 
 def stage_alerts():
@@ -31,6 +35,10 @@ def stage_alerts():
     ret += stage_form_alerts("team-app")
     ret += "] Match Strategy Added ["
     ret += stage_match_strategy_added_alerts()
+    ret += "] Meeting Start Alert ["
+    ret += stage_meeting_alert(True)
+    ret += "] Meeting End Alert ["
+    ret += stage_meeting_alert(True)
     ret += "]"
     return ret
 
@@ -422,3 +430,38 @@ def stage_match_strategy_added_alerts():
                     a, acct
                 )
     """
+
+
+def stage_meeting_alert(start_or_end=True):
+    message = ""
+
+    alert_typ = get_alert_type("meeting")
+
+    meeting_time = Q(start__lte=alert_typ.last_run)
+
+    if not start_or_end:
+        meeting_time = Q(end__lte=alert_typ.last_run)
+
+    meetings = Meeting.objects.filter(
+        meeting_time
+        & Q(void_ind="n")
+        & ~Q(
+            id__in=AlertedResource.objects.filter(
+                Q(alert_typ=alert_typ) & Q(void_ind="n")
+            ).values_list("id", flat=True)
+        )
+    )
+
+    for meeting in meetings:
+        message += f"Alerted Meeting: {meeting.id} : {meeting.title}\n"
+        user = User.objects.get(id=-1)
+        create_channel_send_for_comm_typ(
+            create_alert(user, alert_typ.subject, alert_typ.body, None, alert_typ),
+            "discord",
+        )
+        AlertedResource(foreign_id=meeting.id, alert_typ=alert_typ).save()
+
+    alert_typ.last_run = timezone.now()
+    alert_typ.save()
+
+    return message
