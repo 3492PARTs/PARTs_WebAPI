@@ -464,7 +464,10 @@ def stage_meeting_alert(start_or_end=True):
                 alert_typ.subject,
                 alert_typ.body
                 + (f"\n{meeting.title}" if meeting.title else "")
-                + (f"\n{meeting.description}" if meeting.description else ""),
+                + (f"\n{meeting.description}" if meeting.description else "")
+                + "\nTHIS MEETING DOES "
+                + ("" if not meeting.bonus else "NOT ")
+                + "COUNT TOWARDS ATTENDANCE",
                 None,
                 alert_typ,
             ),
