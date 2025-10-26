@@ -37,7 +37,8 @@ node {
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/notify-users.sh \
                 && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/refresh-event-team-info.sh \
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/refresh-event-team-info.sh \
-                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab \
+                && sed -i "s/BUILD/$SHA/g" api/settings.py
                 '''
             
             if (env.BRANCH_NAME == 'main') {
