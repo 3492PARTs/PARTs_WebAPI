@@ -28,3 +28,8 @@ class AttendanceReportSerializer(serializers.Serializer):
     user = UserSerializer()
     time = serializers.FloatField()
     percentage = serializers.FloatField()
+
+
+class MeetingHoursSerializer(serializers.Serializer):
+    hours = serializers.FloatField()
+    bonus_hours = serializers.FloatField()

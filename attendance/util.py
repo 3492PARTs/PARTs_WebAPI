@@ -62,16 +62,7 @@ def get_attendance_report(user_id=None, meeting_id=None):
     else:
         users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
 
-    meetings = get_meetings()
-    total = 0
-    for meeting in meetings:
-        if meeting.end is None:
-            raise Exception("There is a meeting without an end time")
-        total += (
-            (meeting.end - meeting.start).total_seconds() / 3600
-            if not meeting.bonus
-            else 0
-        )
+    total = get_meeting_hours()["hours"]
 
     ret = []
 
@@ -92,6 +83,23 @@ def get_attendance_report(user_id=None, meeting_id=None):
         )
 
     return ret
+
+
+def get_meeting_hours():
+    meetings = get_meetings()
+    total = 0
+    bonus = 0
+    for meeting in meetings:
+        if meeting.end is None:
+            raise Exception("There is a meeting without an end time")
+
+        diff = (meeting.end - meeting.start).total_seconds() / 3600
+        if meeting.bonus:
+            bonus += diff
+        else:
+            total += diff
+
+    return {"hours": round(total, 2), "bonus_hours": round(bonus, 2)}
 
 
 def save_attendance(attendance):
