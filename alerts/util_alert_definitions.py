@@ -1,8 +1,9 @@
 import datetime
 import pytz
-from django.db.models import Q, ExpressionWrapper, DurationField, F
+from django.db.models import Q, ExpressionWrapper, DurationField, F, CharField
 from django.utils import timezone
 from django.conf import settings
+from django.db.models.functions import Cast
 
 from form.models import FormType, Response
 import scouting.util
@@ -442,11 +443,13 @@ def stage_meeting_alert(start_or_end=True):
     if not start_or_end:
         meeting_time = Q(end__lte=alert_typ.last_run)
 
-    meetings = Meeting.objects.filter(
+    meetings = Meeting.objects.annotate(
+        id_string=Cast("id", output_field=CharField())
+    ).filter(
         meeting_time
         & Q(void_ind="n")
         & ~Q(
-            id__in=AlertedResource.objects.filter(
+            id_string__in=AlertedResource.objects.filter(
                 Q(alert_typ=alert_typ) & Q(void_ind="n")
             ).values_list("foreign_id", flat=True)
         )
