@@ -459,7 +459,18 @@ def stage_meeting_alert(start_or_end=True):
         message += f"Alerted Meeting: {meeting.id} : {meeting.title}\n"
         user = User.objects.get(id=-1)
         create_channel_send_for_comm_typ(
-            create_alert(user, alert_typ.subject, alert_typ.body, None, alert_typ),
+            create_alert(
+                user,
+                alert_typ.subject,
+                alert_typ.body
+                + (f"\n{meeting.title}" if meeting.title else "")
+                + (f"\n{meeting.description}" if meeting.description else "")
+                + "\nTHIS MEETING "
+                + ("COUNTS" if not meeting.bonus else "DOES NOT COUNT")
+                + " TOWARDS ATTENDANCE",
+                None,
+                alert_typ,
+            ),
             "discord",
         )
         AlertedResource(foreign_id=meeting.id, alert_typ=alert_typ).save()

@@ -24,6 +24,7 @@ def save_meeting(meeting):
     m.description = meeting["description"]
     m.start = meeting["start"]
     m.end = meeting["end"]
+    m.bonus = meeting["bonus"]
 
     try:
         m.season
@@ -61,6 +62,17 @@ def get_attendance_report(user_id=None, meeting_id=None):
     else:
         users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
 
+    meetings = get_meetings()
+    total = 0
+    for meeting in meetings:
+        if meeting.end is None:
+            raise Exception("There is a meeting without an end time")
+        total += (
+            (meeting.end - meeting.start).total_seconds() / 3600
+            if not meeting.bonus
+            else 0
+        )
+
     ret = []
 
     for user in users:
@@ -71,7 +83,13 @@ def get_attendance_report(user_id=None, meeting_id=None):
             if att.approved and not att.absent:
                 time += (att.time_out - att.time_in).total_seconds() / 3600
 
-        ret.append({"user": user, "time": round(time, 2)})
+        ret.append(
+            {
+                "user": user,
+                "time": round(time, 2),
+                "percentage": round(time / total, 2) * 100,
+            }
+        )
 
     return ret
 

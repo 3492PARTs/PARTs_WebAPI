@@ -9,6 +9,7 @@ class MeetingSerializer(serializers.Serializer):
     description = serializers.CharField(allow_null=True, allow_blank=True)
     start = serializers.DateTimeField()
     end = serializers.DateTimeField()
+    bonus = serializers.BooleanField()
     void_ind = serializers.CharField()
 
 
@@ -26,3 +27,4 @@ class AttendanceSerializer(serializers.Serializer):
 class AttendanceReportSerializer(serializers.Serializer):
     user = UserSerializer()
     time = serializers.FloatField()
+    percentage = serializers.FloatField()
