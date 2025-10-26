@@ -448,7 +448,7 @@ def stage_meeting_alert(start_or_end=True):
         & ~Q(
             id__in=AlertedResource.objects.filter(
                 Q(alert_typ=alert_typ) & Q(void_ind="n")
-            ).values_list("id", flat=True)
+            ).values_list("foreign_id", flat=True)
         )
     )
 
