@@ -1,4 +1,5 @@
-import django
+from django.db.models import Value
+from django.db.models.functions import Concat
 from django.db import models
 from django.contrib.auth.models import (
     Permission,
@@ -71,6 +72,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     # extra info
     first_name = models.CharField(max_length=50, null=False)
     last_name = models.CharField(max_length=50, null=False)
+    name = models.GeneratedField(
+        expression=Concat(
+            "first_name",
+            Value(" "),
+            "last_name",
+        ),
+        output_field=models.CharField(max_length=100),
+        db_persist=True,
+        verbose_name="Name",
+    )
     phone = models.CharField(max_length=10, blank=True, null=True)
     phone_type = models.ForeignKey(PhoneType, models.PROTECT, blank=True, null=True)
     discord_user_id = models.CharField(max_length=1000, blank=True, null=True)
@@ -99,3 +110,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}"
+
+    def save(self, *args, **kwargs):
+        # Force Django to recompute the generated field
+        # (only needed when we know the dependent fields changed)
+        self.name = None  # clear cached value
+        super().save(*args, **kwargs)
