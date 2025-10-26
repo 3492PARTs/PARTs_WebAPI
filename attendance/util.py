@@ -24,6 +24,7 @@ def save_meeting(meeting):
     m.description = meeting["description"]
     m.start = meeting["start"]
     m.end = meeting["end"]
+    m.bonus = meeting["bonus"]
 
     try:
         m.season

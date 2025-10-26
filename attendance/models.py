@@ -20,6 +20,7 @@ class Meeting(models.Model):
     description = models.CharField(4000)
     start = models.DateTimeField(default=django.utils.timezone.now)
     end = models.DateTimeField(null=True)
+    bonus = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 
