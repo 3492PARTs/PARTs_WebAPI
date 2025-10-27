@@ -1,4 +1,4 @@
-import datetime
+from datetime import timedelta
 import pytz
 from django.db.models import Q, ExpressionWrapper, DurationField, F, CharField
 from django.utils import timezone
@@ -118,7 +118,7 @@ def stage_all_field_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lte=datetime.timedelta(minutes=15.5))
+        .filter(diff__lte=timedelta(minutes=15.5))
         .filter(Q(event=event) & Q(notification1=False) & Q(void_ind="n"))
     )
 
@@ -128,7 +128,7 @@ def stage_all_field_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lte=datetime.timedelta(minutes=5.5))
+        .filter(diff__lte=timedelta(minutes=5.5))
         .filter(Q(event=event) & Q(notification2=False) & Q(void_ind="n"))
     )
 
@@ -138,7 +138,7 @@ def stage_all_field_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lt=datetime.timedelta(minutes=0.5))
+        .filter(diff__lt=timedelta(minutes=0.5))
         .filter(Q(event=event) & Q(notification3=False) & Q(void_ind="n"))
     )
 
@@ -149,7 +149,7 @@ def stage_all_field_schedule_alerts():
     """
     sfss_missing_scouts = ScoutFieldSchedule.objects \
         .annotate(diff=ExpressionWrapper(curr_time - F('st_time'), output_field=DurationField())) \
-        .filter(diff__gte=datetime.timedelta(minutes=4.5)) \
+        .filter(diff__gte=timedelta(minutes=4.5)) \
         .filter(Q(event=event) & Q(void_ind='n')) \
         .filter(Q(red_one_check_in__isnull=True) | Q(red_two_check_in__isnull=True) |
                 Q(red_three_check_in__isnull=True) | Q(blue_one_check_in__isnull=True) |
@@ -301,7 +301,7 @@ def stage_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lte=datetime.timedelta(minutes=6))
+        .filter(diff__lte=timedelta(minutes=6))
         .filter(Q(event=event) & Q(notified=False) & Q(void_ind="n"))
         .order_by("sch_typ__sch_typ", "st_time")
     )
@@ -438,7 +438,8 @@ def stage_meeting_alert(start_or_end=True):
 
     alert_typ = get_alert_type("meeting")
 
-    meeting_time = Q(start__lte=alert_typ.last_run)
+    # Alert 20 mins before meeting
+    meeting_time = Q(start__lte=timezone.now() + timedelta(minutes=20))
 
     if not start_or_end:
         meeting_time = Q(end__lte=alert_typ.last_run)
