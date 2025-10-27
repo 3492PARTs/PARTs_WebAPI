@@ -11,7 +11,7 @@ import scouting.util
 def get_meetings():
     return Meeting.objects.filter(
         Q(season=scouting.util.get_current_season()) & Q(void_ind="n")
-    )
+    ).order_by("start", "title")
 
 
 def save_meeting(meeting):
@@ -37,22 +37,21 @@ def save_meeting(meeting):
     return m
 
 
-def get_attendance(user_id=None, meeting_id=None):
-    user = Q()
-    if user_id is not None:
-        user = Q(user__id=user_id)
+def get_meeting_hours():
+    meetings = get_meetings()
+    total = 0
+    bonus = 0
+    for meeting in meetings:
+        if meeting.end is None:
+            raise Exception("There is a meeting without an end time")
 
-    meeting = Q()
-    if meeting_id is not None:
-        meeting = Q(meeting__id=meeting_id)
+        diff = (meeting.end - meeting.start).total_seconds() / 3600
+        if meeting.bonus:
+            bonus += diff
+        else:
+            total += diff
 
-    return Attendance.objects.filter(
-        user
-        & meeting
-        & Q(season=scouting.util.get_current_season())
-        & (Q(meeting__isnull=True) | Q(meeting__void_ind="n"))
-        & Q(void_ind="n")
-    ).order_by("-time_in", "user__first_name", "user__last_name")
+    return {"hours": round(total, 2), "bonus_hours": round(bonus, 2)}
 
 
 def get_attendance_report(user_id=None, meeting_id=None):
@@ -85,21 +84,22 @@ def get_attendance_report(user_id=None, meeting_id=None):
     return ret
 
 
-def get_meeting_hours():
-    meetings = get_meetings()
-    total = 0
-    bonus = 0
-    for meeting in meetings:
-        if meeting.end is None:
-            raise Exception("There is a meeting without an end time")
+def get_attendance(user_id=None, meeting_id=None):
+    user = Q()
+    if user_id is not None:
+        user = Q(user__id=user_id)
 
-        diff = (meeting.end - meeting.start).total_seconds() / 3600
-        if meeting.bonus:
-            bonus += diff
-        else:
-            total += diff
+    meeting = Q()
+    if meeting_id is not None:
+        meeting = Q(meeting__id=meeting_id)
 
-    return {"hours": round(total, 2), "bonus_hours": round(bonus, 2)}
+    return Attendance.objects.filter(
+        user
+        & meeting
+        & Q(season=scouting.util.get_current_season())
+        & (Q(meeting__isnull=True) | Q(meeting__void_ind="n"))
+        & Q(void_ind="n")
+    ).order_by("-time_in", "user__first_name", "user__last_name")
 
 
 def save_attendance(attendance):
@@ -117,6 +117,10 @@ def save_attendance(attendance):
     a.absent = attendance["absent"]
     a.approved = attendance["approved"]
     a.user = User.objects.get(id=attendance["user"]["id"])
+
+    if a.absent:
+        a.approved = True
+
     if meeting is not None:
         a.meeting = meeting
 
@@ -127,7 +131,7 @@ def save_attendance(attendance):
 
     a.void_ind = attendance["void_ind"]
 
-    if a.approved and a.time_out is None:
+    if not a.absent and a.approved and a.time_out is None:
         raise Exception("Cannot approve if no time out.")
 
     a.save()
