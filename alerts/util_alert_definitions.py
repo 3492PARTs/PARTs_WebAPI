@@ -459,12 +459,20 @@ def stage_meeting_alert(start_or_end=True):
     for meeting in meetings:
         message += f"Alerted Meeting: {meeting.id} : {meeting.title}\n"
         user = User.objects.get(id=-1)
+
+        date_start_local = meeting.start.astimezone(pytz.timezone("America/New_York"))
+        date_st_str = date_start_local.strftime("%m/%d/%Y, %I:%M%p")
+
+        date_end_local = meeting.end.astimezone(pytz.timezone("America/New_York"))
+        date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
+
         create_channel_send_for_comm_typ(
             create_alert(
                 user,
                 alert_typ.subject,
                 alert_typ.body
-                + (f"\n{meeting.title}" if meeting.title else "")
+                + (f"\n{meeting.title}")
+                + (f"\nFrom: {date_st_str} - {date_end_str}")
                 + (f"\n{meeting.description}" if meeting.description else "")
                 + "\nTHIS MEETING "
                 + ("COUNTS" if not meeting.bonus else "DOES NOT COUNT")
