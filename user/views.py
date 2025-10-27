@@ -52,6 +52,7 @@ from django.contrib.auth.password_validation import (
 )
 from django.core.exceptions import ValidationError
 from rest_framework.response import Response
+from general import send_message
 
 auth_obj_save_user = "save_user"
 app_url = "user/"
@@ -211,6 +212,7 @@ class UserProfile(APIView):
                     ),
                 }
 
+                """
                 send_mail(
                     subject="Activate your PARTs account.",
                     message=render_to_string(
@@ -221,6 +223,11 @@ class UserProfile(APIView):
                     ).strip(),
                     from_email="team3492@gmail.com",
                     recipient_list=[user.email],
+                )
+                """
+
+                send_message.send_email(
+                    user.email, "Activate your PARTs account", "acc_active_email", cntx
                 )
 
                 return ret_message("User created")
@@ -290,6 +297,7 @@ class UserProfile(APIView):
                             "account by requesting a password reset as soon as possible.",
                         }
 
+                        """
                         send_mail(
                             subject="Password Change",
                             message=render_to_string(
@@ -300,6 +308,11 @@ class UserProfile(APIView):
                             ).strip(),
                             from_email="team3492@gmail.com",
                             recipient_list=[user.email],
+                        )
+                        """
+
+                        send_message.send_email(
+                            user.email, "Password Change", "generic_email", cntx
                         )
                     if (
                         "email" in serializer.validated_data
@@ -315,6 +328,7 @@ class UserProfile(APIView):
                                 user.email
                             ),
                         }
+                        """
                         send_mail(
                             subject="Email Updated",
                             message=render_to_string(
@@ -326,12 +340,22 @@ class UserProfile(APIView):
                             from_email="team3492@gmail.com",
                             recipient_list=[user.email, old_email],
                         )
+                        """
+
+                        send_message.send_email(
+                            [user.email, old_email],
+                            "Email Updated",
+                            "generic_email",
+                            cntx,
+                        )
+
                         if password_changed:
                             cntx = {
                                 "user": user,
                                 "message": "Your password has been updated. If you did not do this, please secure "
                                 "your account by requesting a password reset as soon as possible.",
                             }
+                            """
                             send_mail(
                                 subject="Password Changed",
                                 message=render_to_string(
@@ -342,6 +366,11 @@ class UserProfile(APIView):
                                 ).strip(),
                                 from_email="team3492@gmail.com",
                                 recipient_list=[user.email],
+                            )
+                            """
+
+                            send_message.send_email(
+                                user.email, "Password Changed", "generic_email", cntx
                             )
                     if "first_name" in serializer.validated_data:
                         user.first_name = serializer.validated_data["first_name"]
@@ -501,6 +530,7 @@ class UserEmailResendConfirmation(APIView):
             ),
         }
 
+        """
         send_mail(
             subject="Activate your PARTs account.",
             message=render_to_string(
@@ -512,6 +542,12 @@ class UserEmailResendConfirmation(APIView):
             from_email="team3492@gmail.com",
             recipient_list=[user.email],
         )
+        """
+
+        send_message.send_email(
+            user.email, "Activate your PARTs account", "acc_active_email", cntx
+        )
+
         return ret_message(
             "If a matching user was found you will receive an email shortly."
         )
@@ -550,6 +586,7 @@ class UserRequestPasswordReset(APIView):
                     ),
                 }
 
+            """
             send_mail(
                 subject="Password Reset Requested",
                 message=render_to_string(
@@ -560,6 +597,11 @@ class UserRequestPasswordReset(APIView):
                 ).strip(),
                 from_email="team3492@gmail.com",
                 recipient_list=[user.email],
+            )
+            """
+
+            send_message.send_email(
+                user.email, "Password Reset Requested", "password_reset_email", cntx
             )
         except Exception as e:
             ret_message(
@@ -656,6 +698,7 @@ class UserRequestUsername(APIView):
 
                 cntx = {"user": user}
 
+            """
             send_mail(
                 subject="Username Requested",
                 message=render_to_string(
@@ -666,6 +709,11 @@ class UserRequestUsername(APIView):
                 ).strip(),
                 from_email="team3492@gmail.com",
                 recipient_list=[user.email],
+            )
+            """
+
+            send_message.send_email(
+                user.email, "Username Requested", "forgot_username", cntx
             )
         except Exception as e:
             ret_message(
