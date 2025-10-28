@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 
 from user.models import User
-from attendance.models import Attendance, Meeting
+from attendance.models import Attendance, Meeting, AttendanceApprovalType
 import scouting.util
 
 
@@ -70,7 +70,7 @@ def get_attendance_report(user_id=None, meeting_id=None):
         time = 0
 
         for att in attendance:
-            if att.approved and not att.absent:
+            if att.is_approved() and not att.absent:
                 time += (att.time_out - att.time_in).total_seconds() / 3600
 
         ret.append(
@@ -115,11 +115,18 @@ def save_attendance(attendance):
     a.time_in = attendance["time_in"]
     a.time_out = attendance.get("time_out", None)
     a.absent = attendance["absent"]
-    a.approved = attendance["approved"]
+
+    if attendance.get("approval_typ", None) is not None:
+        a.approval_typ = AttendanceApprovalType.objects.get(
+            approval_typ=attendance["approval_typ"]["approval_typ"]
+        )
+    else:
+        a.approval_typ = AttendanceApprovalType.objects.get(approval_typ="unapp")
+
     a.user = User.objects.get(id=attendance["user"]["id"])
 
     if a.absent:
-        a.approved = True
+        a.approval_typ = AttendanceApprovalType.objects.get(approval_typ="app")
 
     if meeting is not None:
         a.meeting = meeting
@@ -131,7 +138,7 @@ def save_attendance(attendance):
 
     a.void_ind = attendance["void_ind"]
 
-    if not a.absent and a.approved and a.time_out is None:
+    if a.void_ind != "y" and not a.absent and a.is_approved() and a.time_out is None:
         raise Exception("Cannot approve if no time out.")
 
     a.save()
