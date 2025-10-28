@@ -99,7 +99,7 @@ def send_alerts():
 
                     # this is the system user id
                     if acs.alert.user.id == -1:
-                        u = ""
+                        u = "@everyone"
 
                     discord_message = f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
                     send_message.send_discord_notification(discord_message)

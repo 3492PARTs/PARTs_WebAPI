@@ -21,6 +21,27 @@ def has_access(user_id, sec_permission):
     return access
 
 
+def access_response(endpoint, user_id, sec_permission, error_message, fun):
+    if has_access(user_id, sec_permission):
+        try:
+            return fun()
+        except Exception as e:
+            return ret_message(
+                error_message,
+                True,
+                endpoint,
+                -1,
+                e,
+            )
+    else:
+        return ret_message(
+            "You do not have access.",
+            True,
+            endpoint,
+            user_id,
+        )
+
+
 def get_user_permissions(user_id):
     user = User.objects.get(id=user_id)
     user_groups = user.groups.all()
