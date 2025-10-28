@@ -1,5 +1,7 @@
 import datetime
 
+from json import dumps
+
 import pytz
 import requests
 from django.core.mail import EmailMultiAlternatives
@@ -75,7 +77,11 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
     try:
         send_user_notification(user=user, payload=payload, ttl=1000)
     except WebPushException as e:
-        msg = "An error occurred while sending Webpush."
+        json_string = dumps(payload)
+        json_bytes = json_string.encode("utf-8")
+        payload_bytes = len(json_bytes)
+
+        msg = f"An error occurred while sending Webpush.\nBytes: {payload_bytes}\nPayload:\n{json_string}"
         ret_message(
             msg,
             True,
