@@ -77,7 +77,7 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
     try:
         send_user_notification(user=user, payload=payload, ttl=1000)
     except WebPushException as e:
-        json_string = dumps(python_dict)
+        json_string = dumps(payload)
         json_bytes = json_string.encode("utf-8")
         payload_bytes = len(json_bytes)
 
