@@ -6,6 +6,7 @@ from django.db.models import Q
 from user.models import User
 from attendance.models import Attendance, Meeting, AttendanceApprovalType
 import scouting.util
+import user.util
 
 
 def get_meetings():
@@ -59,14 +60,14 @@ def get_attendance_report(user_id=None, meeting_id=None):
     if user_id is not None:
         users = User.objects.filter(id=user_id)
     else:
-        users = User.objects.filter(is_active=True).order_by("first_name", "last_name")
+        users = user.util.get_users(1, 0 if settings.ENVIRONMENT == "main" else 1)
 
     total = get_meeting_hours()["hours"]
 
     ret = []
 
-    for user in users:
-        attendance = get_attendance(user.id, meeting_id)
+    for u in users:
+        attendance = get_attendance(u.id, meeting_id)
         time = 0
 
         for att in attendance:
@@ -75,7 +76,7 @@ def get_attendance_report(user_id=None, meeting_id=None):
 
         ret.append(
             {
-                "user": user,
+                "user": u,
                 "time": round(time, 2),
                 "percentage": round(time / total * 100, 0) if total != 0 else 0,
             }
