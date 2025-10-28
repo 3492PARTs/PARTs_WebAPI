@@ -126,7 +126,7 @@ def save_group(data):
     if data.get("id", None) is None:
         group = Group(name=data.get("name"))
     else:
-        group = Group.objects.get(id=data.get("id", None))
+        group = Group.objects.get(id=data["id"])
         group.name = data.get("name")
 
     group.save()
@@ -147,7 +147,7 @@ def save_group(data):
 
 def delete_group(group_id):
     try:
-        ScoutAuthGroup.objects.get(group_id_id=group_id).delete()
+        ScoutAuthGroup.objects.get(group__id=group_id).delete()
     except ScoutAuthGroup.DoesNotExist as e:
         pass
     Group.objects.get(id=group_id).delete()
