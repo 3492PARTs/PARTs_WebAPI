@@ -436,7 +436,7 @@ def stage_match_strategy_added_alerts():
 def stage_meeting_alert(start_or_end=True):
     message = ""
 
-    alert_typ = get_alert_type("meeting")
+    alert_typ = get_alert_type("meeting_start" if start_or_end else "meeting_end")
 
     # Alert 20 mins before meeting
     meeting_time = Q(start__lte=timezone.now() + timedelta(minutes=20))
@@ -473,7 +473,7 @@ def stage_meeting_alert(start_or_end=True):
         create_channel_send_for_comm_typ(
             create_alert(
                 user,
-                alert_typ.subject.format("start" if start_or_end else "end"),
+                alert_typ.subject,
                 alert_typ.body
                 + (f"\n{meeting.title}")
                 + (f"\nFrom: {date_st_str} - {date_end_str}")
