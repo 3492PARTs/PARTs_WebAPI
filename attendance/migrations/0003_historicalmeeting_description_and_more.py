@@ -13,25 +13,25 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="historicalmeeting",
             name="description",
-            field=models.CharField(default="", verbose_name=4000),
+            field=models.CharField(default="", max_length=4000),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="historicalmeeting",
             name="title",
-            field=models.CharField(default="", verbose_name=2000),
+            field=models.CharField(default="", max_length=2000),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="meeting",
             name="description",
-            field=models.CharField(default="", verbose_name=4000),
+            field=models.CharField(default="", max_length=4000),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="meeting",
             name="title",
-            field=models.CharField(default="", verbose_name=2000),
+            field=models.CharField(default="", max_length=2000),
             preserve_default=False,
         ),
     ]

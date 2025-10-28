@@ -8,18 +8,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('alerts', '0008_alter_alerttype_body_alter_alerttype_subject'),
+        ("alerts", "0008_alter_alerttype_body_alter_alerttype_subject"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AlertedResource',
+            name="AlertedResource",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('foreign_id', models.CharField(verbose_name=2000)),
-                ('time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('void_ind', models.CharField(default='n', max_length=1)),
-                ('alert_typ', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, to='alerts.alerttype')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("foreign_id", models.CharField(max_length=2000)),
+                ("time", models.DateTimeField(default=django.utils.timezone.now)),
+                ("void_ind", models.CharField(default="n", max_length=1)),
+                (
+                    "alert_typ",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="alerts.alerttype",
+                    ),
+                ),
             ],
         ),
     ]
