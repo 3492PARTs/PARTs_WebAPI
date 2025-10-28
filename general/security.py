@@ -101,7 +101,9 @@ def ret_message(
                 message=message[:1000],
                 exception=str(exception)[:4000],
                 traceback=str(tb)[:4000],
-                error_message=error_message[:4000],
+                error_message=(
+                    error_message[:4000] if error_message is not None else None
+                ),
                 time=timezone.now(),
                 void_ind="n",
             ).save()
