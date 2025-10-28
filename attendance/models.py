@@ -16,8 +16,8 @@ from scouting.models import Season
 class Meeting(models.Model):
     id = models.AutoField(primary_key=True)
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
-    title = models.CharField(2000)
-    description = models.CharField(4000)
+    title = models.CharField(max_length=2000)
+    description = models.CharField(max_length=4000)
     start = models.DateTimeField(default=django.utils.timezone.now)
     end = models.DateTimeField(null=True)
     bonus = models.BooleanField(default=False)
