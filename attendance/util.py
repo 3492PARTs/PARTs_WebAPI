@@ -121,12 +121,12 @@ def save_attendance(attendance):
             approval_typ=attendance["approval_typ"]["approval_typ"]
         )
     else:
-        a.approval_typ = AttendanceApprovalType.objects.get("unapp")
+        a.approval_typ = AttendanceApprovalType.objects.get(approval_typ="unapp")
 
     a.user = User.objects.get(id=attendance["user"]["id"])
 
     if a.absent:
-        a.approval_typ = AttendanceApprovalType.objects.get("app")
+        a.approval_typ = AttendanceApprovalType.objects.get(approval_typ="app")
 
     if meeting is not None:
         a.meeting = meeting
@@ -138,7 +138,7 @@ def save_attendance(attendance):
 
     a.void_ind = attendance["void_ind"]
 
-    if not a.absent and a.is_approved() and a.time_out is None:
+    if a.void_ind != "y" and not a.absent and a.is_approved() and a.time_out is None:
         raise Exception("Cannot approve if no time out.")
 
     a.save()
