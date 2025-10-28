@@ -1,8 +1,9 @@
-import datetime
+from datetime import timedelta
 import pytz
-from django.db.models import Q, ExpressionWrapper, DurationField, F
+from django.db.models import Q, ExpressionWrapper, DurationField, F, CharField
 from django.utils import timezone
 from django.conf import settings
+from django.db.models.functions import Cast
 
 from form.models import FormType, Response
 import scouting.util
@@ -13,9 +14,13 @@ from alerts.util import (
     get_alert_type,
 )
 import user
+from user.models import User
 from admin.models import ErrorLog
-from alerts.models import AlertType
 from scouting.models import FieldSchedule, MatchStrategy, Schedule
+from attendance.models import Meeting
+from alerts.models import AlertedResource
+
+from general import send_message
 
 
 def stage_alerts():
@@ -31,6 +36,10 @@ def stage_alerts():
     ret += stage_form_alerts("team-app")
     ret += "] Match Strategy Added ["
     ret += stage_match_strategy_added_alerts()
+    ret += "] Meeting Start Alert ["
+    ret += stage_meeting_alert(True)
+    ret += "] Meeting End Alert ["
+    ret += stage_meeting_alert(False)
     ret += "]"
     return ret
 
@@ -109,7 +118,7 @@ def stage_all_field_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lte=datetime.timedelta(minutes=15.5))
+        .filter(diff__lte=timedelta(minutes=15.5))
         .filter(Q(event=event) & Q(notification1=False) & Q(void_ind="n"))
     )
 
@@ -119,7 +128,7 @@ def stage_all_field_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lte=datetime.timedelta(minutes=5.5))
+        .filter(diff__lte=timedelta(minutes=5.5))
         .filter(Q(event=event) & Q(notification2=False) & Q(void_ind="n"))
     )
 
@@ -129,7 +138,7 @@ def stage_all_field_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lt=datetime.timedelta(minutes=0.5))
+        .filter(diff__lt=timedelta(minutes=0.5))
         .filter(Q(event=event) & Q(notification3=False) & Q(void_ind="n"))
     )
 
@@ -140,7 +149,7 @@ def stage_all_field_schedule_alerts():
     """
     sfss_missing_scouts = ScoutFieldSchedule.objects \
         .annotate(diff=ExpressionWrapper(curr_time - F('st_time'), output_field=DurationField())) \
-        .filter(diff__gte=datetime.timedelta(minutes=4.5)) \
+        .filter(diff__gte=timedelta(minutes=4.5)) \
         .filter(Q(event=event) & Q(void_ind='n')) \
         .filter(Q(red_one_check_in__isnull=True) | Q(red_two_check_in__isnull=True) |
                 Q(red_three_check_in__isnull=True) | Q(blue_one_check_in__isnull=True) |
@@ -292,7 +301,7 @@ def stage_schedule_alerts():
                 F("st_time") - curr_time, output_field=DurationField()
             )
         )
-        .filter(diff__lte=datetime.timedelta(minutes=6))
+        .filter(diff__lte=timedelta(minutes=6))
         .filter(Q(event=event) & Q(notified=False) & Q(void_ind="n"))
         .order_by("sch_typ__sch_typ", "st_time")
     )
@@ -422,3 +431,67 @@ def stage_match_strategy_added_alerts():
                     a, acct
                 )
     """
+
+
+def stage_meeting_alert(start_or_end=True):
+    message = ""
+
+    alert_typ = get_alert_type("meeting_start" if start_or_end else "meeting_end")
+
+    # Alert 20 mins before meeting
+    meeting_time = Q(start__lte=timezone.now() + timedelta(minutes=20))
+
+    if not start_or_end:
+        meeting_time = Q(end__lte=timezone.now())
+
+    meetings = Meeting.objects.annotate(
+        id_string=Cast("id", output_field=CharField())
+    ).filter(
+        meeting_time
+        & Q(void_ind="n")
+        & ~Q(
+            id_string__in=AlertedResource.objects.filter(
+                Q(alert_typ=alert_typ) & Q(void_ind="n")
+            ).values_list("foreign_id", flat=True)
+        )
+    )
+
+    for meeting in meetings:
+        message += (
+            f"Alerted Meeting: {meeting.id} : {meeting.title} "
+            + ("start" if start_or_end else "end")
+            + "\n"
+        )
+        user = User.objects.get(id=-1)
+
+        date_start_local = meeting.start.astimezone(pytz.timezone("America/New_York"))
+        date_st_str = date_start_local.strftime("%m/%d/%Y, %I:%M%p")
+
+        date_end_local = meeting.end.astimezone(pytz.timezone("America/New_York"))
+        date_end_str = date_end_local.strftime("%m/%d/%Y, %I:%M%p")
+
+        create_channel_send_for_comm_typ(
+            create_alert(
+                user,
+                alert_typ.subject,
+                alert_typ.body
+                + (f"\n{meeting.title}")
+                + (f"\nFrom: {date_st_str} - {date_end_str}")
+                + (f"\n{meeting.description}" if meeting.description else "")
+                + "\nThis meeting "
+                + ("COUNTS" if not meeting.bonus else "DOES NOT COUNT")
+                + " towards attendance",
+                None,
+                alert_typ,
+            ),
+            "discord",
+        )
+        AlertedResource(foreign_id=meeting.id, alert_typ=alert_typ).save()
+
+    alert_typ.last_run = timezone.now()
+    alert_typ.save()
+
+    if message == "":
+        message = "NONE TO STAGE"
+
+    return message

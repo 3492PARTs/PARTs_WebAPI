@@ -7,7 +7,6 @@ from alerts.util import (
     send_alerts,
     dismiss_alert,
 )
-import alerts.util
 from general.security import ret_message
 
 app_url = "alerts/"

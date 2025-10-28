@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "sponsoring.apps.SponsoringConfig",
     "tba.apps.TbaConfig",
     "user.apps.UserConfig",
+    "attendance.apps.AttendanceConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "corsheaders",

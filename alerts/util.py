@@ -1,5 +1,4 @@
 import django
-from django.conf import settings
 
 from django.db import transaction
 from django.db.models import Q
@@ -53,10 +52,6 @@ def send_alerts():
     for acs in acss:
         success = True
         try:
-            if settings.ENVIRONMENT != "main":
-                acs.alert.subject = f"TEST ENVIRONMENT: {acs.alert.subject}"
-                acs.alert.save()
-
             match acs.comm_typ.comm_typ:
                 case "email":
                     url = f"\n{acs.alert.url}" if acs.alert.url is not None else ""
@@ -101,6 +96,11 @@ def send_alerts():
                         if acs.alert.user.discord_user_id
                         else acs.alert.user.get_full_name()
                     )
+
+                    # this is the system user id
+                    if acs.alert.user.id == -1:
+                        u = "@everyone"
+
                     discord_message = f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
                     send_message.send_discord_notification(discord_message)
                     message += "Discord"
