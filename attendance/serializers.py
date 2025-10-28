@@ -13,6 +13,11 @@ class MeetingSerializer(serializers.Serializer):
     void_ind = serializers.CharField()
 
 
+class AttendanceApprovalSerializer(serializers.Serializer):
+    approval_typ = serializers.CharField()
+    approval_nm = serializers.CharField()
+
+
 class AttendanceSerializer(serializers.Serializer):
     id = serializers.IntegerField(allow_null=True)
     user = UserSerializer()
@@ -20,7 +25,7 @@ class AttendanceSerializer(serializers.Serializer):
     time_in = serializers.DateTimeField()
     time_out = serializers.DateTimeField(allow_null=True, required=False)
     absent = serializers.BooleanField()
-    approved = serializers.BooleanField()
+    approval_typ = AttendanceApprovalSerializer()
     void_ind = serializers.CharField()
 
 

@@ -28,6 +28,15 @@ class Meeting(models.Model):
         return f"{self.id} : {self.user} : {self.time}"
 
 
+class AttendanceApprovalType(models.Model):
+    approval_typ = models.CharField(primary_key=True, max_length=50)
+    approval_nm = models.CharField(max_length=255)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.approval_typ} : {self.approval_nm}"
+
+
 class Attendance(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -36,9 +45,18 @@ class Attendance(models.Model):
     time_in = models.DateTimeField(default=django.utils.timezone.now)
     time_out = models.DateTimeField(null=True)
     absent = models.BooleanField(default=False)
-    approved = models.BooleanField(default=False)
+    approval_typ = models.ForeignKey(AttendanceApprovalType, on_delete=models.PROTECT)
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.id} : {self.user} : {self.time}"
+
+    def is_unapproved(self):
+        return self.approval_typ.approval_typ == "unapp"
+
+    def is_approved(self):
+        return self.approval_typ.approval_typ == "app"
+
+    def is_rejected(self):
+        return self.approval_typ.approval_typ == "rej"
