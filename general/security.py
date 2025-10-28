@@ -98,10 +98,10 @@ def ret_message(
             ErrorLog(
                 user=user,
                 path=path,
-                message=message,
+                message=message[:1000],
                 exception=str(exception)[:4000],
                 traceback=str(tb)[:4000],
-                error_message=error_message,
+                error_message=error_message[:4000],
                 time=timezone.now(),
                 void_ind="n",
             ).save()
@@ -111,8 +111,7 @@ def ret_message(
                     user=User.objects.get(id=-1),
                     path="general.security.ret_message",
                     message=f"Error logging error:\n{message}",
-                    exception=e,
-                    error_message=error_message,
+                    exception=str(e)[:4000],
                     time=timezone.now(),
                     void_ind="n",
                 ).save()

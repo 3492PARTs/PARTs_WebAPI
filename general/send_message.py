@@ -81,14 +81,8 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
         json_bytes = json_string.encode("utf-8")
         payload_bytes = len(json_bytes)
 
-        msg = f"An error occurred while sending Webpush.\nBytes: {payload_bytes}\nPayload:\n{json_string}"
-        ret_message(
-            msg,
-            True,
-            "send_webpush",
-            -1,
-            e,
-        )
+        msg = f"An error occurred while sending Webpush.\nBytes: {payload_bytes}"
+        ret_message(msg, True, "send_webpush", -1, e, f"Payload:\n{json_string}")
 
     return msg
 
