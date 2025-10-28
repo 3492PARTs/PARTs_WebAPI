@@ -77,7 +77,7 @@ def get_attendance_report(user_id=None, meeting_id=None):
             {
                 "user": user,
                 "time": round(time, 2),
-                "percentage": round(time / total, 2) * 100,
+                "percentage": round(time / total * 100, 2),
             }
         )
 
