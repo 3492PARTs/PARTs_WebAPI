@@ -39,7 +39,7 @@ def stage_alerts():
     ret += "] Meeting Start Alert ["
     ret += stage_meeting_alert(True)
     ret += "] Meeting End Alert ["
-    ret += stage_meeting_alert(True)
+    ret += stage_meeting_alert(False)
     ret += "]"
     return ret
 
