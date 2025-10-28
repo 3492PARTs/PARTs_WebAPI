@@ -1,6 +1,6 @@
 from datetime import timedelta
 import pytz
-from django.db.models import Q, ExpressionWrapper, DurationField, F, CharField
+from django.db.models import Q, ExpressionWrapper, DurationField, F, IntegerField
 from django.utils import timezone
 from django.conf import settings
 from django.db.models.functions import Cast
@@ -444,16 +444,14 @@ def stage_meeting_alert(start_or_end=True):
     if not start_or_end:
         meeting_time = Q(end__lte=timezone.now())
 
-    meetings = Meeting.objects.annotate(
-        id_string=Cast("id", output_field=CharField())
-    ).filter(
-        meeting_time
-        & Q(void_ind="n")
-        & ~Q(
-            id_string__in=AlertedResource.objects.filter(
-                Q(alert_typ=alert_typ) & Q(void_ind="n")
-            ).values_list("foreign_id", flat=True)
-        )
+    excluded_ids = (
+        AlertedResource.objects.filter(Q(alert_typ=alert_typ) & Q(void_ind="n"))
+        .annotate(foreign_id_int=Cast("foreign_id", output_field=IntegerField()))
+        .values_list("foreign_id_int", flat=True)
+    )
+
+    meetings = Meeting.objects.filter(
+        meeting_time & Q(void_ind="n") & ~Q(id__in=excluded_ids)
     )
 
     for meeting in meetings:

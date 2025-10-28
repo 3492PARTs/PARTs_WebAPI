@@ -148,11 +148,6 @@ DATABASES = {
     }
 }
 
-if os.getenv("DB_NAME") == "django.db.backends.mysql":
-    DATABASES["default"]["OPTIONS"] = {
-        "charset": "utf8mb4",  # Ensure this is set
-    }
-
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
