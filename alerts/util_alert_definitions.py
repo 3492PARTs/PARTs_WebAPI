@@ -442,7 +442,7 @@ def stage_meeting_alert(start_or_end=True):
     meeting_time = Q(start__lte=timezone.now() + timedelta(minutes=20))
 
     if not start_or_end:
-        meeting_time = Q(end__lte=alert_typ.last_run)
+        meeting_time = Q(end__lte=timezone.now())
 
     meetings = Meeting.objects.annotate(
         id_string=Cast("id", output_field=CharField())
@@ -457,7 +457,11 @@ def stage_meeting_alert(start_or_end=True):
     )
 
     for meeting in meetings:
-        message += f"Alerted Meeting: {meeting.id} : {meeting.title}\n"
+        message += (
+            f"Alerted Meeting: {meeting.id} : {meeting.title} "
+            + ("start" if start_or_end else "end")
+            + "\n"
+        )
         user = User.objects.get(id=-1)
 
         date_start_local = meeting.start.astimezone(pytz.timezone("America/New_York"))
@@ -469,7 +473,7 @@ def stage_meeting_alert(start_or_end=True):
         create_channel_send_for_comm_typ(
             create_alert(
                 user,
-                alert_typ.subject,
+                alert_typ.subject.format("start" if start_or_end else "end"),
                 alert_typ.body
                 + (f"\n{meeting.title}")
                 + (f"\nFrom: {date_st_str} - {date_end_str}")
@@ -486,5 +490,8 @@ def stage_meeting_alert(start_or_end=True):
 
     alert_typ.last_run = timezone.now()
     alert_typ.save()
+
+    if message == "":
+        message = "NONE TO STAGE"
 
     return message

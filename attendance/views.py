@@ -4,7 +4,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 
 import attendance.util
-from general.security import ret_message, has_access
+from general.security import ret_message, has_access, access_response
 from attendance.serializers import (
     AttendanceSerializer,
     MeetingSerializer,
@@ -185,6 +185,17 @@ class MeetingHoursView(APIView):
     endpoint = "meeting-hours/"
 
     def get(self, request, format=None):
+        def fun():
+            serializer = MeetingHoursSerializer(attendance.util.get_meeting_hours())
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting the total meeting hours.",
+            fun,
+        )
         if has_access(request.user.id, auth_obj):
             try:
                 serializer = MeetingHoursSerializer(attendance.util.get_meeting_hours())
