@@ -36,6 +36,7 @@ from general.security import (
     get_user_groups,
     get_user_permissions,
     ret_message,
+    access_response,
     has_access,
 )
 import general.cloudinary
@@ -824,48 +825,32 @@ class Groups(APIView):
                 error_message=serializer.errors,
             )
 
-        if has_access(request.user.id, "admin"):
-            try:
-                with transaction.atomic():
-                    user.util.save_group(serializer.validated_data)
-                    return ret_message("Saved group successfully")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving the group.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            with transaction.atomic():
+                user.util.save_group(serializer.validated_data)
+                return ret_message("Saved group successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while saving the group.",
+            fun,
+        )
 
     def delete(self, request, format=None):
-        if has_access(request.user.id, "admin"):
-            try:
-                with transaction.atomic():
-                    user.util.delete_group(request.query_params.get("group_id", None))
-                    return ret_message("Deleted group successfully")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while deleting the group.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            with transaction.atomic():
+                user.util.delete_group(request.query_params.get("group_id", None))
+                return ret_message("Deleted group successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while deleting the group.",
+            fun,
+        )
 
 
 class Permissions(APIView):
@@ -906,50 +891,34 @@ class Permissions(APIView):
                 error_message=serializer.errors,
             )
 
-        if has_access(request.user.id, "admin"):
-            try:
-                with transaction.atomic():
-                    user.util.save_permission(serializer.validated_data)
-                    return ret_message("Saved permission successfully")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving the permission.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            with transaction.atomic():
+                user.util.save_permission(serializer.validated_data)
+                return ret_message("Saved permission successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while saving the permission.",
+            fun,
+        )
 
     def delete(self, request, format=None):
-        if has_access(request.user.id, "admin"):
-            try:
-                with transaction.atomic():
-                    user.util.delete_permission(
-                        request.query_params.get("prmsn_id", None)
-                    )
-                    return ret_message("Deleted permission successfully")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while deleting the permission.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
+        def fun():
+            with transaction.atomic():
+                user.util.delete_permission(
+                    request.query_params.get("prmsn_id", None)
                 )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+                return ret_message("Deleted permission successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while deleting the permission.",
+            fun,
+        )
 
 
 class Alerts(APIView):
@@ -1055,26 +1024,18 @@ class SaveUser(APIView):
                 error_message=serializer.errors,
             )
 
-        if has_access(request.user.id, auth_obj_save_user):
-            try:
-                with transaction.atomic():
-                    user.util.save_user(serializer.validated_data)
-                    return ret_message("Saved user successfully")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving the user.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            with transaction.atomic():
+                user.util.save_user(serializer.validated_data)
+                return ret_message("Saved user successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj_save_user,
+            "An error occurred while saving the user.",
+            fun,
+        )
 
 
 class SecurityAudit(APIView):
@@ -1087,25 +1048,17 @@ class SecurityAudit(APIView):
     endpoint = "security-audit/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, "admin"):
-            try:
-                serializer = UserSerializer(user.util.run_security_audit(), many=True)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while running security audit.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            serializer = UserSerializer(user.util.run_security_audit(), many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while running security audit.",
+            fun,
+        )
 
 
 class Links(APIView):
@@ -1142,45 +1095,29 @@ class Links(APIView):
                 error_message=serializer.errors,
             )
 
-        if has_access(request.user.id, "admin"):
-            try:
-                with transaction.atomic():
-                    user.util.save_link(serializer.validated_data)
-                    return ret_message("Saved link successfully")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving the link.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            with transaction.atomic():
+                user.util.save_link(serializer.validated_data)
+                return ret_message("Saved link successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while saving the link.",
+            fun,
+        )
 
     def delete(self, request, format=None):
-        if has_access(request.user.id, "admin"):
-            try:
-                with transaction.atomic():
-                    user.util.delete_link(request.query_params.get("link_id", None))
-                    return ret_message("Deleted link successfully")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while deleting the link.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            with transaction.atomic():
+                user.util.delete_link(request.query_params.get("link_id", None))
+                return ret_message("Deleted link successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while deleting the link.",
+            fun,
+        )
