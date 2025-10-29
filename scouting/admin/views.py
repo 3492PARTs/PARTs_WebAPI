@@ -150,7 +150,7 @@ class EventView(APIView):
     endpoint = "event/"
 
     def post(self, request, format=None):
-        try:
+        def fun():
             serializer = EventSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
@@ -160,48 +160,31 @@ class EventView(APIView):
                     request.user.id,
                     error_message=serializer.errors,
                 )
+            scouting.admin.util.save_event(serializer.validated_data)
+            return ret_message("Successfully added the event.")
 
-            if has_access(request.user.id, auth_obj):
-                scouting.admin.util.save_event(serializer.validated_data)
-                return ret_message("Successfully added the event.")
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while saving the event.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving the event.",
+            fun,
+        )
 
     def delete(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.delete_event(
-                    request.query_params.get("event_id", None)
-                )
-                return req
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while deleting the event.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
+        def fun():
+            req = scouting.admin.util.delete_event(
+                request.query_params.get("event_id", None)
             )
+            return req
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while deleting the event.",
+            fun,
+        )
 
 
 class TeamView(APIView):
@@ -214,7 +197,7 @@ class TeamView(APIView):
     endpoint = "team/"
 
     def post(self, request, format=None):
-        try:
+        def fun():
             serializer = TeamCreateSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
@@ -224,25 +207,16 @@ class TeamView(APIView):
                     request.user.id,
                     error_message=serializer.errors,
                 )
+            serializer.save()
+            return ret_message("Successfully added the team.")
 
-            if has_access(request.user.id, auth_obj):
-                serializer.save()
-                return ret_message("Successfully added the team.")
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while saving the team.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving the team.",
+            fun,
+        )
 
 
 class TeamToEventView(APIView):
