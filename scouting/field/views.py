@@ -6,7 +6,7 @@ import scouting.field.util
 import scouting.util
 import scouting.models
 from rest_framework.views import APIView
-from general.security import ret_message, has_access
+from general.security import ret_message, access_response, has_access
 from rest_framework.response import Response
 
 from ..serializers import FieldFormFormSerializer
@@ -32,29 +32,32 @@ class FormView(APIView):
     endpoint = "form/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+        if has_access(request.user.id, auth_obj) or has_access(
+            request.user.id, auth_view_obj
+        ):
+            def fun():
                 serializer = FieldFormFormSerializer(
                     scouting.field.util.get_field_form()
                 )
                 return Response(serializer.data)
 
-            else:
+            try:
+                return fun()
+            except Exception as e:
                 return ret_message(
-                    "You do not have access.",
+                    "An error occurred while getting field form.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    e,
                 )
-        except Exception as e:
+
+        else:
             return ret_message(
-                "An error occurred while getting field form.",
+                "You do not have access.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                e,
             )
 
 
@@ -68,10 +71,10 @@ class ResponseColumnsView(APIView):
     endpoint = "response-columns/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+        if has_access(request.user.id, auth_obj) or has_access(
+            request.user.id, auth_view_obj
+        ):
+            def fun():
                 req = scouting.field.util.get_table_columns(
                     scouting.field.util.get_field_question_aggregates(
                         scouting.util.get_current_season()
@@ -80,20 +83,23 @@ class ResponseColumnsView(APIView):
 
                 serializer = ColSerializer(req, many=True)
                 return Response(serializer.data)
-            else:
+
+            try:
+                return fun()
+            except Exception as e:
                 return ret_message(
-                    "You do not have access.",
+                    "An error occurred while getting response columns.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    e,
                 )
-        except Exception as e:
+        else:
             return ret_message(
-                "An error occurred while getting response columns.",
+                "You do not have access.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                e,
             )
 
 
@@ -107,10 +113,10 @@ class ResponsesView(APIView):
     endpoint = "responses/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+        if has_access(request.user.id, auth_obj) or has_access(
+            request.user.id, auth_view_obj
+        ):
+            def fun():
                 req = scouting.field.util.get_responses(
                     request.query_params.get("pg_num", 1),
                     team=request.query_params.get("team", None),
@@ -124,20 +130,23 @@ class ResponsesView(APIView):
 
                 serializer = FieldResponsesSerializer(req)
                 return Response(serializer.data)
-            else:
+
+            try:
+                return fun()
+            except Exception as e:
                 return ret_message(
-                    "You do not have access.",
+                    "An error occurred while getting responses.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    e,
                 )
-        except Exception as e:
+        else:
             return ret_message(
-                "An error occurred while getting responses.",
+                "You do not have access.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                e,
             )
 
 
@@ -151,30 +160,21 @@ class CheckInView(APIView):
     endpoint = "check-in/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                sfs = scouting.util.get_scout_field_schedule(
-                    id=request.query_params.get("scout_field_sch_id", None)
-                )
-                return ret_message(
-                    scouting.field.util.check_in_scout(sfs, request.user.id)
-                )
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-
-        except Exception as e:
-            return ret_message(
-                "An error occurred while checking in the scout for their shift.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
+        def fun():
+            sfs = scouting.util.get_scout_field_schedule(
+                id=request.query_params.get("scout_field_sch_id", None)
             )
+            return ret_message(
+                scouting.field.util.check_in_scout(sfs, request.user.id)
+            )
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while checking in the scout for their shift.",
+            fun,
+        )
 
 
 class ScoutingResponsesView(APIView):
@@ -187,10 +187,10 @@ class ScoutingResponsesView(APIView):
     endpoint = "scouting-responses/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+        if has_access(request.user.id, auth_obj) or has_access(
+            request.user.id, auth_view_obj
+        ):
+            def fun():
                 req = scouting.field.util.get_scouting_responses()
 
                 if type(req) == Response:
@@ -198,18 +198,21 @@ class ScoutingResponsesView(APIView):
 
                 serializer = FieldResponseSerializer(req, many=True)
                 return Response(serializer.data)
-            else:
+
+            try:
+                return fun()
+            except Exception as e:
                 return ret_message(
-                    "You do not have access.",
+                    "An error occurred while getting responses.",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    e,
                 )
-        except Exception as e:
+        else:
             return ret_message(
-                "An error occurred while getting responses.",
+                "You do not have access.",
                 True,
                 app_url + self.endpoint,
                 request.user.id,
-                e,
             )
