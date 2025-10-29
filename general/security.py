@@ -5,23 +5,24 @@ import json
 from admin.models import ErrorLog
 from user.serializers import RetMessageSerializer
 from rest_framework.response import Response
-from user.models import User
+from user.models import User, Permission
 
 
-def has_access(user_id, sec_permission):
+def has_access(user_id, sec_permission: str | list[str]):
     # how to use has_access(self.request.user.id, 36)
-    prmsns = get_user_permissions(user_id)
+    prmsns = get_user_permissions(user_id, False)
 
-    access = False
-    for prmsn in prmsns:
-        if prmsn.codename == sec_permission:
-            access = True
-            break
+    if not isinstance(sec_permission, list):
+        sec_permission = [sec_permission]
 
-    return access
+    prmsn = prmsns.filter(codename__in=sec_permission)
+
+    return len(prmsn) > 0
 
 
-def access_response(endpoint, user_id, sec_permission, error_message, fun):
+def access_response(
+    endpoint, user_id, sec_permission: str | list[str], error_message, fun
+):
     if has_access(user_id, sec_permission):
         try:
             return fun()
@@ -42,16 +43,18 @@ def access_response(endpoint, user_id, sec_permission, error_message, fun):
         )
 
 
-def get_user_permissions(user_id):
-    user = User.objects.get(id=user_id)
-    user_groups = user.groups.all()
+def get_user_permissions(user_id, as_list=True):
+    permissions_queryset = Permission.objects.filter(
+        group__user=User.objects.get(id=user_id)
+    ).distinct()
 
-    prmsns = []
-    for grp in user_groups:
-        for prmsn in grp.permissions.all():
+    if not as_list:
+        return permissions_queryset
+    else:
+        prmsns = []
+        for prmsn in permissions_queryset:
             prmsns.append(prmsn)
-
-    return prmsns
+        return prmsns
 
 
 def get_user_groups(user_id):
