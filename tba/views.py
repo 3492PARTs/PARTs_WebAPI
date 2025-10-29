@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 import tba.util
 import scouting.util
-from general.security import has_access, ret_message
+from general.security import ret_message, access_response
 
 auth_obj = "scoutadmin"
 app_url = "tba/"
@@ -30,25 +30,17 @@ class SyncSeasonView(APIView):
     endpoint = "sync-season/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                req = tba.util.sync_season(request.query_params.get("season_id", None))
-                return ret_message(req)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while syncing the season.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+        def fun():
+            req = tba.util.sync_season(request.query_params.get("season_id", None))
+            return ret_message(req)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while syncing the season.",
+            fun,
+        )
 
 
 class SyncEventView(APIView):
@@ -61,29 +53,21 @@ class SyncEventView(APIView):
     endpoint = "sync-event/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                return ret_message(
-                    tba.util.sync_event(
-                        Season.objects.get(id=request.query_params["season_id"]),
-                        request.query_params.get("event_cd", None),
-                    )
-                )
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
+        def fun():
             return ret_message(
-                "An error occurred while syncing the event.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
+                tba.util.sync_event(
+                    Season.objects.get(id=request.query_params["season_id"]),
+                    request.query_params.get("event_cd", None),
+                )
             )
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while syncing the event.",
+            fun,
+        )
 
 
 class SyncMatchesView(APIView):
@@ -96,25 +80,17 @@ class SyncMatchesView(APIView):
     endpoint = "sync-matches/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                req = tba.util.sync_matches(scouting.util.get_current_event())
-                return ret_message(req)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while syncing matches.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+        def fun():
+            req = tba.util.sync_matches(scouting.util.get_current_event())
+            return ret_message(req)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while syncing matches.",
+            fun,
+        )
 
 
 class SyncEventTeamInfoView(APIView):

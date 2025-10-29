@@ -10,7 +10,7 @@ import scouting.field.util
 
 from .serializers import *
 from rest_framework.views import APIView
-from general.security import has_access, ret_message
+from general.security import ret_message, access_response
 from rest_framework.response import Response
 
 from ..serializers import FieldFormSerializer, MatchSerializer
@@ -29,26 +29,18 @@ class ScoutAuthGroupsView(APIView):
     endpoint = "scout-auth-group/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                groups = scouting.admin.util.get_scout_auth_groups()
-                serializer = GroupSerializer(groups, many=True)
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while initializing.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+        def fun():
+            groups = scouting.admin.util.get_scout_auth_groups()
+            serializer = GroupSerializer(groups, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while initializing.",
+            fun,
+        )
 
 
 class SetSeasonEventView(APIView):
@@ -61,29 +53,21 @@ class SetSeasonEventView(APIView):
     endpoint = "set-season-event/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = scouting.admin.util.set_current_season_event(
-                    request.query_params.get("season_id", None),
-                    request.query_params.get("event_id", None),
-                    request.query_params.get("competition_page_active", "n"),
-                )
-                return ret_message(req)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while setting the season.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
+        def fun():
+            req = scouting.admin.util.set_current_season_event(
+                request.query_params.get("season_id", None),
+                request.query_params.get("event_id", None),
+                request.query_params.get("competition_page_active", "n"),
             )
+            return ret_message(req)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while setting the season.",
+            fun,
+        )
 
 
 class SeasonView(APIView):
@@ -96,88 +80,64 @@ class SeasonView(APIView):
     endpoint = "season/"
 
     def post(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                serializer = SeasonSerializer(data=request.data)
-                if not serializer.is_valid():
-                    return ret_message(
-                        "Invalid data",
-                        True,
-                        app_url + self.endpoint,
-                        request.user.id,
-                        error_message=serializer.errors,
-                    )
-                req = scouting.admin.util.save_season(serializer.validated_data)
-                return ret_message("Successfully saved season: " + req.season)
-            else:
+        def fun():
+            serializer = SeasonSerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "You do not have access.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    error_message=serializer.errors,
                 )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while adding the season.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+            req = scouting.admin.util.save_season(serializer.validated_data)
+            return ret_message("Successfully saved season: " + req.season)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while adding the season.",
+            fun,
+        )
 
     def put(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                serializer = SeasonSerializer(data=request.data)
-                if not serializer.is_valid():
-                    return ret_message(
-                        "Invalid data",
-                        True,
-                        app_url + self.endpoint,
-                        request.user.id,
-                        error_message=serializer.errors,
-                    )
-                req = scouting.admin.util.save_season(serializer.validated_data)
-                ret_message("Successfully saved season")
-                return req
-            else:
+        def fun():
+            serializer = SeasonSerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "You do not have access.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    error_message=serializer.errors,
                 )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while saving the season.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+            req = scouting.admin.util.save_season(serializer.validated_data)
+            ret_message("Successfully saved season")
+            return req
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving the season.",
+            fun,
+        )
 
     def delete(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = scouting.admin.util.delete_season(
-                    request.query_params.get("season_id", None)
-                )
-                return req
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while deleting the season.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
+        def fun():
+            req = scouting.admin.util.delete_season(
+                request.query_params.get("season_id", None)
             )
+            return req
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while deleting the season.",
+            fun,
+        )
 
 
 class EventView(APIView):

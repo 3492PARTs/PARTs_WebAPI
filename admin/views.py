@@ -14,7 +14,7 @@ from .serializers import (
 )
 from .models import ErrorLog
 from rest_framework.views import APIView
-from general.security import has_access, ret_message
+from general.security import ret_message, access_response
 from rest_framework.response import Response
 
 auth_obj = "admin"
@@ -57,25 +57,17 @@ class ErrorLogView(APIView):
         return data
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = self.get_errors(request.query_params.get("pg_num", 1))
-                return Response(req)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting errors.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            req = self.get_errors(request.query_params.get("pg_num", 1))
+            return Response(req)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting errors.",
+            fun,
+        )
 
 
 class ScoutAuthGroupsView(APIView):
@@ -106,48 +98,39 @@ class ScoutAuthGroupsView(APIView):
             )
 
     def post(self, request, format=None):
-        serializer = GroupSerializer(data=request.data, many=True)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                error_message=serializer.errors,
-            )
-
-        if has_access(request.user.id, "admin"):
-            try:
-                with transaction.atomic():
-                    keep = []
-                    for s in serializer.validated_data:
-                        keep.append(s["id"])
-                        try:
-                            ScoutAuthGroup.objects.get(group_id=s["id"])
-                        except ScoutAuthGroup.DoesNotExist:
-                            sag = ScoutAuthGroup(group_id=s["id"])
-                            sag.save()
-
-                    sags = ScoutAuthGroup.objects.filter(~Q(group_id__in=keep))
-                    for s in sags:
-                        s.delete()
-
-                    return ret_message("Saved scout auth groups successfully")
-            except Exception as e:
+        def fun():
+            serializer = GroupSerializer(data=request.data, many=True)
+            if not serializer.is_valid():
                 return ret_message(
-                    "An error occurred while saving the scout auth groups.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
+                    error_message=serializer.errors,
                 )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+            with transaction.atomic():
+                keep = []
+                for s in serializer.validated_data:
+                    keep.append(s["id"])
+                    try:
+                        ScoutAuthGroup.objects.get(group_id=s["id"])
+                    except ScoutAuthGroup.DoesNotExist:
+                        sag = ScoutAuthGroup(group_id=s["id"])
+                        sag.save()
+
+                sags = ScoutAuthGroup.objects.filter(~Q(group_id__in=keep))
+                for s in sags:
+                    s.delete()
+
+                return ret_message("Saved scout auth groups successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while saving the scout auth groups.",
+            fun,
+        )
 
 
 class PhoneTypeView(APIView):
@@ -160,88 +143,72 @@ class PhoneTypeView(APIView):
     endpoint = "phone-type/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj) or has_access(
-            request.user.id, "scoutadmin"
-        ):
-            try:
-                phone_types = user.util.get_phone_types()
-                serializer = PhoneTypeSerializer(phone_types, many=True)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting the phone types.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
+        def fun():
+            phone_types = user.util.get_phone_types()
+            serializer = PhoneTypeSerializer(phone_types, many=True)
+            return Response(serializer.data)
+
+        # Try first permission
+        result = access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting the phone types.",
+            fun,
+        )
+        # If access denied, try second permission
+        if result.data.get("error") and "do not have access" in result.data.get("retMessage", ""):
+            return access_response(
                 app_url + self.endpoint,
                 request.user.id,
+                "scoutadmin",
+                "An error occurred while getting the phone types.",
+                fun,
             )
+        return result
 
     def post(self, request, format=None):
-        serializer = PhoneTypeSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                error_message=serializer.errors,
-            )
-
-        if has_access(request.user.id, auth_obj):
-            try:
-                data = serializer.validated_data
-                if data.get("id", None) is not None:
-                    pt = user.models.PhoneType.objects.get(id=data["id"])
-                    pt.phone_type = data["phone_type"]
-                    pt.carrier = data["carrier"]
-                    pt.save()
-                else:
-                    user.models.PhoneType(
-                        phone_type=data["phone_type"], carrier=data["carrier"]
-                    ).save()
-
-                return ret_message("Successfully saved the phone type.")
-            except Exception as e:
+        def fun():
+            serializer = PhoneTypeSerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "An error occurred while saving the phone type.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
+                    error_message=serializer.errors,
                 )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+            data = serializer.validated_data
+            if data.get("id", None) is not None:
+                pt = user.models.PhoneType.objects.get(id=data["id"])
+                pt.phone_type = data["phone_type"]
+                pt.carrier = data["carrier"]
+                pt.save()
+            else:
+                user.models.PhoneType(
+                    phone_type=data["phone_type"], carrier=data["carrier"]
+                ).save()
+
+            return ret_message("Successfully saved the phone type.")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving the phone type.",
+            fun,
+        )
 
     def delete(self, request, format=None):
-        try:
-            if has_access(request.user.id, "admin"):
-                user.util.delete_phone_type(request.query_params["phone_type_id"])
-                return ret_message("Successfully deleted the phone type.")
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred deleting the phone type.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
-            )
+        def fun():
+            user.util.delete_phone_type(request.query_params["phone_type_id"])
+            return ret_message("Successfully deleted the phone type.")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred deleting the phone type.",
+            fun,
+        )
 
