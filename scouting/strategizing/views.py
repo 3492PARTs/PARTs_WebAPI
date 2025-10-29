@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db import transaction
 
-from general.security import ret_message, has_access
+from general.security import ret_message, access_response, has_access
 import scouting.strategizing
 from scouting.serializers import (
     MatchStrategySerializer,
