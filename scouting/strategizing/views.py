@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db import transaction
 
-from general.security import ret_message, has_access
+from general.security import ret_message, access_response
 import scouting.strategizing
 from scouting.serializers import (
     MatchStrategySerializer,
@@ -32,64 +32,56 @@ class TeamNoteView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj_scout_field
-            ):
-                req = scouting.strategizing.util.get_team_notes(
-                    request.query_params.get("team_no", None),
-                    scouting.util.get_current_event(),
-                )
-                serializer = TeamNoteSerializer(req, many=True)
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting team notes.",
-                True,
-                app_url + self.endpoint,
-                exception=e,
+        def fun():
+            req = scouting.strategizing.util.get_team_notes(
+                request.query_params.get("team_no", None),
+                scouting.util.get_current_event(),
             )
+            serializer = TeamNoteSerializer(req, many=True)
+            return Response(serializer.data)
+
+        # Try first permission
+        result = access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting team notes.",
+            fun,
+        )
+        # If access denied, try second permission
+        if result.data.get("error") and "do not have access" in result.data.get("retMessage", ""):
+            return access_response(
+                app_url + self.endpoint,
+                request.user.id,
+                auth_view_obj_scout_field,
+                "An error occurred while getting team notes.",
+                fun,
+            )
+        return result
 
     def post(self, request, format=None):
-        serializer = TeamNoteSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                error_message=serializer.errors,
-            )
-
-        if has_access(request.user.id, auth_obj):
-            try:
-                req = scouting.strategizing.util.save_note(
-                    serializer.data, request.user
-                )
-                return req
-            except Exception as e:
+        def fun():
+            serializer = TeamNoteSerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "An error occurred while saving note.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
+                    error_message=serializer.errors,
                 )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
+            req = scouting.strategizing.util.save_note(
+                serializer.data, request.user
             )
+            return req
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving note.",
+            fun,
+        )
 
 
 class MatchStrategyView(APIView):
@@ -100,65 +92,48 @@ class MatchStrategyView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                req = scouting.strategizing.util.get_match_strategies(
-                    request.query_params.get("match_id", None)
-                )
-                if request.query_params.get("match_id", None) is not None:
-                    serializer = MatchStrategySerializer(req)
-                else:
-                    serializer = MatchStrategySerializer(req, many=True)
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting match strategy.",
-                True,
-                app_url + self.endpoint,
-                exception=e,
+        def fun():
+            req = scouting.strategizing.util.get_match_strategies(
+                request.query_params.get("match_id", None)
             )
+            if request.query_params.get("match_id", None) is not None:
+                serializer = MatchStrategySerializer(req)
+            else:
+                serializer = MatchStrategySerializer(req, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting match strategy.",
+            fun,
+        )
 
     def post(self, request, format=None):
-        serializer = SaveMatchStrategySerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                error_message=serializer.errors,
-            )
-
-        if has_access(request.user.id, auth_obj):
-            try:
-                with transaction.atomic():
-                    scouting.strategizing.util.save_match_strategy(
-                        serializer.data, request.data.get("img", None)
-                    )
-                return ret_message("Strategy saved successfully")
-            except Exception as e:
+        def fun():
+            serializer = SaveMatchStrategySerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "An error occurred while saving match strategy.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
+                    error_message=serializer.errors,
                 )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+            with transaction.atomic():
+                scouting.strategizing.util.save_match_strategy(
+                    serializer.data, request.data.get("img", None)
+                )
+            return ret_message("Strategy saved successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving match strategy.",
+            fun,
+        )
 
 
 class AllianceSelectionView(APIView):
@@ -169,57 +144,40 @@ class AllianceSelectionView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                req = scouting.strategizing.util.get_alliance_selections()
-                serializer = AllianceSelectionSerializer(req, many=True)
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
+        def fun():
+            req = scouting.strategizing.util.get_alliance_selections()
+            serializer = AllianceSelectionSerializer(req, many=True)
+            return Response(serializer.data)
 
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting alliance selections.",
-                True,
-                app_url + self.endpoint,
-                exception=e,
-            )
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting alliance selections.",
+            fun,
+        )
 
     def post(self, request, format=None):
-        serializer = AllianceSelectionSerializer(data=request.data, many=True)
-        if not serializer.is_valid():
-            return ret_message(
-                "Invalid data",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                error_message=serializer.errors,
-            )
-
-        if has_access(request.user.id, auth_obj):
-            try:
-                scouting.strategizing.util.save_alliance_selections(serializer.data)
-                return ret_message("Alliance selection successfully")
-            except Exception as e:
+        def fun():
+            serializer = AllianceSelectionSerializer(data=request.data, many=True)
+            if not serializer.is_valid():
                 return ret_message(
-                    "An error occurred while saving alliance selections.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
-                    e,
+                    error_message=serializer.errors,
                 )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+            scouting.strategizing.util.save_alliance_selections(serializer.data)
+            return ret_message("Alliance selection successfully")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving alliance selections.",
+            fun,
+        )
 
 
 class GraphTeamView(APIView):
@@ -230,29 +188,21 @@ class GraphTeamView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                data = scouting.strategizing.util.serialize_graph_team(
-                    request.query_params["graph_id"],
-                    request.query_params.getlist("team_ids", []),
-                    request.query_params.get("reference_team_id", None),
-                )
-                return Response(data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-
-        except Exception as e:
-            return ret_message(
-                "An error occurred while graphing.",
-                True,
-                app_url + self.endpoint,
-                exception=e,
+        def fun():
+            data = scouting.strategizing.util.serialize_graph_team(
+                request.query_params["graph_id"],
+                request.query_params.getlist("team_ids", []),
+                request.query_params.get("reference_team_id", None),
             )
+            return Response(data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while graphing.",
+            fun,
+        )
 
 
 class DashboardView(APIView):
@@ -265,62 +215,45 @@ class DashboardView(APIView):
     endpoint = "dashboard/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                dashboard = scouting.strategizing.util.get_dashboard(
-                    request.user.id, request.query_params.get("dash_view_typ_id", None)
-                )
-                serializer = DashboardSerializer(dashboard)
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting the dashboard.",
-                True,
-                app_url + self.endpoint,
-                -1,
-                e,
+        def fun():
+            dashboard = scouting.strategizing.util.get_dashboard(
+                request.user.id, request.query_params.get("dash_view_typ_id", None)
             )
+            serializer = DashboardSerializer(dashboard)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting the dashboard.",
+            fun,
+        )
 
     def post(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                serializer = DashboardSerializer(data=request.data)
-                if not serializer.is_valid():
-                    return ret_message(
-                        "Invalid data",
-                        True,
-                        app_url + self.endpoint,
-                        request.user.id,
-                        error_message=serializer.errors,
-                    )
-
-                scouting.strategizing.util.save_dashboard(
-                    serializer.validated_data, request.user.id
-                )
-
-                return ret_message("Saved dashboard successfully.")
-            else:
+        def fun():
+            serializer = DashboardSerializer(data=request.data)
+            if not serializer.is_valid():
                 return ret_message(
-                    "You do not have access.",
+                    "Invalid data",
                     True,
                     app_url + self.endpoint,
                     request.user.id,
+                    error_message=serializer.errors,
                 )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while saving dashboard.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
+
+            scouting.strategizing.util.save_dashboard(
+                serializer.validated_data, request.user.id
             )
+            return ret_message("Saved dashboard successfully.")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving dashboard.",
+            fun,
+        )
 
 
 class DashboardViewTypeView(APIView):
@@ -333,23 +266,15 @@ class DashboardViewTypeView(APIView):
     endpoint = "dashboard-view-types/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                ret = scouting.strategizing.util.get_dashboard_view_types()
-                serializer = DashboardViewTypeSerializer(ret, many=True)
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting the dashboard view types.",
-                True,
-                app_url + self.endpoint,
-                -1,
-                e,
-            )
+        def fun():
+            ret = scouting.strategizing.util.get_dashboard_view_types()
+            serializer = DashboardViewTypeSerializer(ret, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting the dashboard view types.",
+            fun,
+        )
