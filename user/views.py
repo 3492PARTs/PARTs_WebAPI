@@ -952,7 +952,7 @@ class Permissions(APIView):
             )
 
 
-class Alerts(APIView):
+class AlertsView(APIView):
     """
     API endpoint to get a user's notifications
     """
@@ -978,7 +978,7 @@ class Alerts(APIView):
             )
 
 
-class SaveWebPushInfo(APIView):
+class SaveWebPushInfoView(APIView):
     """
     API endpoint to save a user push notification subscription object
     """
@@ -1010,7 +1010,7 @@ class SaveWebPushInfo(APIView):
             )
 
 
-class Users(APIView):
+class UsersView(APIView):
     """
     API endpoint to get users
     """
@@ -1037,7 +1037,7 @@ class Users(APIView):
             )
 
 
-class SaveUser(APIView):
+class SaveUserView(APIView):
     """API endpoint to save user data"""
 
     authentication_classes = (JWTAuthentication,)
@@ -1077,7 +1077,7 @@ class SaveUser(APIView):
             )
 
 
-class SecurityAudit(APIView):
+class SecurityAuditView(APIView):
     """
     API endpoint to get all users with security
     """
@@ -1184,3 +1184,11 @@ class Links(APIView):
                 app_url + self.endpoint,
                 request.user.id,
             )
+
+
+# Backward compatibility aliases (can be removed in future versions)
+Alerts = AlertsView
+SaveWebPushInfo = SaveWebPushInfoView
+Users = UsersView
+SaveUser = SaveUserView
+SecurityAudit = SecurityAuditView

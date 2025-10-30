@@ -2,7 +2,7 @@ import webpush.views
 from django.urls import path, include
 from .views import UserData, UserLinksView, Groups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, \
     UserRequestPasswordReset, UserPasswordReset, UserRequestUsername, \
-    SaveWebPushInfo, TokenObtainPairView, TokenRefreshView, Alerts, Users, SaveUser, Permissions, SecurityAudit, Links
+    SaveWebPushInfoView, TokenObtainPairView, TokenRefreshView, AlertsView, UsersView, SaveUserView, Permissions, SecurityAuditView, Links
 from rest_framework_simplejwt import views as jwt_views
 
 # Wire up our API using atomic URL routing.
@@ -22,10 +22,10 @@ urlpatterns = [
     path('request-reset-password/', UserRequestPasswordReset.as_view()),
     path('reset-password/', UserPasswordReset.as_view()),
     path('request-username/', UserRequestUsername.as_view()),
-    path('alerts/', Alerts.as_view()),
-    path('webpush-save/', SaveWebPushInfo.as_view()),
-    path('users/', Users.as_view()),
-    path('save/', SaveUser.as_view()),
-    path('security-audit/', SecurityAudit.as_view()),
+    path('alerts/', AlertsView.as_view()),
+    path('webpush-save/', SaveWebPushInfoView.as_view()),
+    path('users/', UsersView.as_view()),
+    path('save/', SaveUserView.as_view()),
+    path('security-audit/', SecurityAuditView.as_view()),
     path('links/', Links.as_view()),
 ]

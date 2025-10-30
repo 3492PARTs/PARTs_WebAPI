@@ -8,5 +8,5 @@ urlpatterns = [
     path("sync-event/", SyncEventView.as_view()),
     path("sync-matches/", SyncMatchesView.as_view()),
     path("sync-event-team-info/", SyncEventTeamInfoView.as_view()),
-    path("webhook/", Webhook.as_view()),
+    path("webhook/", WebhookView.as_view()),
 ]

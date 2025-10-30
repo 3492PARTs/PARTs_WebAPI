@@ -10,7 +10,7 @@ urlpatterns = [
     path("schedule/", views.ScheduleView.as_view()),
     path("scout-field-schedule/", views.ScoutFieldScheduleView.as_view()),
     path("schedule-type/", views.ScheduleTypeView.as_view()),
-    path("all-scouting-info/", views.AllScoutingInfo.as_view()),
+    path("all-scouting-info/", views.AllScoutingInfoView.as_view()),
     path("portal/", include("scouting.portal.urls")),
     path("pit/", include("scouting.pit.urls")),
     path("field/", include("scouting.field.urls")),

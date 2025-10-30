@@ -12,7 +12,7 @@ from general.security import ret_message
 app_url = "alerts/"
 
 
-class StageAlerts(APIView):
+class StageAlertsView(APIView):
     """API endpoint to stage user alerts"""
 
     endpoint = "stage/"
@@ -33,7 +33,7 @@ class StageAlerts(APIView):
             )
 
 
-class SendAlerts(APIView):
+class SendAlertsView(APIView):
     """API endpoint to notify users"""
 
     endpoint = "send/"
@@ -53,7 +53,7 @@ class SendAlerts(APIView):
             )
 
 
-class RunAlerts(APIView):
+class RunAlertsView(APIView):
     """API endpoint to stage and send"""
 
     endpoint = "run/"
@@ -76,7 +76,7 @@ class RunAlerts(APIView):
             )
 
 
-class DismissAlert(APIView):
+class DismissAlertView(APIView):
     """API endpoint to dismiss an alert"""
 
     authentication_classes = (JWTAuthentication,)
@@ -96,3 +96,10 @@ class DismissAlert(APIView):
                 -1,
                 e,
             )
+
+
+# Backward compatibility aliases (can be removed in future versions)
+StageAlerts = StageAlertsView
+SendAlerts = SendAlertsView
+RunAlerts = RunAlertsView
+DismissAlert = DismissAlertView
