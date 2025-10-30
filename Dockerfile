@@ -25,9 +25,18 @@ RUN pip install poetry==2.1.4 \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $BUILD_DEPS \
     && touch README.md \
-    && poetry install --with wvnet --no-root \
+    && poetry install --with wvnet,dev --no-root \
     && rm -rf $POETRY_CACHE_DIR \
     && pipdeptree -fl --exclude poetry --exclude pipdeptree --python /app/.venv/bin/python > requirements.txt
+
+# Test stage - run tests to validate the build
+FROM builder AS test
+
+COPY ./ ./
+
+RUN echo "Running test suite..." \
+    && poetry run pytest --cov=. --cov-report=term-missing --cov-fail-under=50 -v \
+    && echo "All tests passed!"
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
