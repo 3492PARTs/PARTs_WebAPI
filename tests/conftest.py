@@ -1,17 +1,93 @@
 import pytest
 from rest_framework.test import APIClient, APIRequestFactory
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
+from unittest.mock import MagicMock, Mock
 
 @pytest.fixture
 def api_client():
+    """Returns a DRF API client for making test requests."""
     return APIClient()
 
 @pytest.fixture
 def api_rf():
+    """Returns a DRF API request factory."""
     return APIRequestFactory()
 
 @pytest.fixture
+def request_factory():
+    """Returns a Django request factory."""
+    return RequestFactory()
+
+@pytest.fixture
 def test_user(db):
+    """Creates and returns a basic test user."""
     User = get_user_model()
-    user = User.objects.create_user(username="testuser", email="test@example.com", password="password")
+    user = User.objects.create_user(
+        username="testuser",
+        email="test@example.com",
+        password="password"
+    )
     return user
+
+@pytest.fixture
+def default_user(db):
+    """Creates and returns a default user with id=-1 for error handling."""
+    User = get_user_model()
+    # Create user first, then update ID via SQL
+    user = User.objects.create_user(
+        username="default_system",
+        first_name="Default",
+        last_name="System",
+        email="default@example.com",
+        password="password"
+    )
+    # Update to id=-1 using raw SQL since Django doesn't allow setting pk directly
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute(f"UPDATE user_user SET id=-1 WHERE id={user.id}")
+    # Refresh from DB
+    user.id = -1
+    user.save(update_fields=[])
+    return user
+
+@pytest.fixture
+def authenticated_api_client(api_client, test_user):
+    """Returns an authenticated API client."""
+    api_client.force_authenticate(user=test_user)
+    return api_client
+
+@pytest.fixture
+def admin_user(db):
+    """Creates and returns an admin test user."""
+    User = get_user_model()
+    user = User.objects.create_superuser(
+        username="admin",
+        first_name="Admin",
+        last_name="User",
+        email="admin@example.com",
+        password="adminpass"
+    )
+    return user
+
+
+@pytest.fixture
+def mock_cloudinary():
+    """Returns a mock cloudinary module for testing."""
+    mock = MagicMock()
+    mock.uploader.upload.return_value = {
+        "public_id": "test_image_id",
+        "version": "1234567890"
+    }
+    mock.CloudinaryImage.return_value.build_url.return_value = "https://res.cloudinary.com/test/image/upload/v1234567890/test_image_id.jpg"
+    return mock
+
+@pytest.fixture
+def mock_has_access():
+    """Returns a mock for has_access function that returns True."""
+    return Mock(return_value=True)
+
+@pytest.fixture
+def mock_has_access_false():
+    """Returns a mock for has_access function that returns False."""
+    return Mock(return_value=False)
