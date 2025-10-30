@@ -25,12 +25,15 @@ RUN pip install poetry==2.1.4 \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $BUILD_DEPS \
     && touch README.md \
-    && poetry install --with wvnet,dev --no-root \
+    && poetry install --with wvnet --no-root \
     && rm -rf $POETRY_CACHE_DIR \
     && pipdeptree -fl --exclude poetry --exclude pipdeptree --python /app/.venv/bin/python > requirements.txt
 
 # Test stage - run tests to validate the build
 FROM builder AS test
+
+# Install dev dependencies for testing
+RUN poetry install --with dev --no-root
 
 COPY ./ ./
 
