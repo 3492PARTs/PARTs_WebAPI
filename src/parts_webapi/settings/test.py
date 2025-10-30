@@ -12,8 +12,8 @@ os.environ.setdefault("DEBUG", "True")
 os.environ.setdefault("FRONTEND_ADDRESS", "http://localhost:3000")
 os.environ.setdefault("ENVIRONMENT", "test")
 
-# Build paths
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Build paths - BASE_DIR points to repository root
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 # Basic Django settings
 SECRET_KEY = "test-secret-key-for-testing-only-12345"
@@ -59,12 +59,12 @@ CORS_ORIGIN_WHITELIST = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-ROOT_URLCONF = "api.urls"
+ROOT_URLCONF = "parts_webapi.urls"
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -76,7 +76,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "api.wsgi.application"
+WSGI_APPLICATION = "parts_webapi.wsgi.application"
 
 # Database - use in-memory SQLite for tests
 DATABASES = {
@@ -111,7 +111,7 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = BASE_DIR / "static"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -168,6 +168,8 @@ WEBPUSH_SETTINGS = {
 
 # TBA settings
 TBA_KEY = "test-tba-key"
+TBA_WEBHOOK_SECRET = "test-webhook-secret"
+DISCORD_NOTIFICATION_WEBHOOK = ""
 
 # Logging
 LOGGING = {
@@ -183,4 +185,3 @@ LOGGING = {
         'level': 'WARNING',
     },
 }
-
