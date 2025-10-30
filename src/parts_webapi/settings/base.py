@@ -20,7 +20,7 @@ if env_file.exists():
     load_dotenv(env_file)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-dev-key-change-in-production-12345678901234567890")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
@@ -81,12 +81,14 @@ WSGI_APPLICATION = "parts_webapi.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+db_engine = os.getenv("DB_ENGINE", "django.db.backends.sqlite3")
+
 DATABASES = {
     "default": {
-        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+        "ENGINE": db_engine,
         "NAME": (
-            os.getenv("DB_NAME")
-            if os.getenv("DB_ENGINE") != "django.db.backends.sqlite3"
+            os.getenv("DB_NAME", "")
+            if db_engine != "django.db.backends.sqlite3"
             else str(BASE_DIR / "db.sqlite3")
         ),
         "USER": os.getenv("DB_USER", ""),
@@ -125,9 +127,27 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
-    "ALGORITHM": "RS512",
-    "SIGNING_KEY": open(BASE_DIR / "keys/jwt-key").read(),
-    "VERIFYING_KEY": open(BASE_DIR / "keys/jwt-key.pub").read(),
+}
+
+# Try to load RSA keys if they exist, otherwise use HS256 for development
+jwt_key_path = BASE_DIR / "keys/jwt-key"
+jwt_pub_key_path = BASE_DIR / "keys/jwt-key.pub"
+
+if jwt_key_path.exists() and jwt_pub_key_path.exists():
+    SIMPLE_JWT.update({
+        "ALGORITHM": "RS512",
+        "SIGNING_KEY": open(jwt_key_path).read(),
+        "VERIFYING_KEY": open(jwt_pub_key_path).read(),
+    })
+else:
+    # Fallback to symmetric key for development
+    SIMPLE_JWT.update({
+        "ALGORITHM": "HS256",
+        "SIGNING_KEY": SECRET_KEY,
+        "VERIFYING_KEY": None,
+    })
+
+SIMPLE_JWT.update({
     "AUDIENCE": None,
     "ISSUER": None,
     "AUTH_HEADER_TYPES": ("Bearer",),
@@ -139,7 +159,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-}
+})
 
 AUTH_USER_MODEL = "user.User"
 

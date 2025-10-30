@@ -4,10 +4,8 @@ Development settings for PARTs WebAPI project.
 
 from .base import *
 
-# DEBUG is already set from environment in base.py
-# For development, we typically want DEBUG = True
-if not DEBUG:
-    print("WARNING: DEBUG is False in development settings")
+# Enable debug mode in development
+DEBUG = True
 
 # ALLOWED_HOSTS for development
 ALLOWED_HOSTS = [
