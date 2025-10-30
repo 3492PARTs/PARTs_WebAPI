@@ -8,6 +8,7 @@
 
 import django
 from django.db import models
+from django.utils.timezone import now
 from simple_history.models import HistoricalRecords
 
 
