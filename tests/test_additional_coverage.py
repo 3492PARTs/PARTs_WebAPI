@@ -48,9 +48,9 @@ class TestAllSerializers:
 
     def test_form_serializers_exist(self):
         """Test form serializers."""
-        from form.serializers import QuestionSerializer, FormSerializer
+        from form.serializers import QuestionSerializer, FormTypeSerializer
         assert QuestionSerializer is not None
-        assert FormSerializer is not None
+        assert FormTypeSerializer is not None
 
 
 @pytest.mark.django_db
@@ -62,19 +62,23 @@ class TestAllModels:
         from admin.models import ErrorLog
         assert ErrorLog._meta.verbose_name is not None
 
-    def test_attendance_meeting_str(self):
-        """Test Meeting __str__ method."""
+    def test_attendance_meeting_creation(self):
+        """Test Meeting model creation."""
         from attendance.models import Meeting
+        from scouting.models import Season
         
-        meeting = Meeting(
-            meeting_nm="Test Meeting",
-            meeting_desc="Description",
-            meeting_time=timezone.now(),
-            season_id=2024,
+        # Create a season first
+        season = Season.objects.create(season="2024", current="y")
+        
+        meeting = Meeting.objects.create(
+            season=season,
+            title="Test Meeting",
+            description="Description",
+            start=timezone.now(),
             void_ind="n"
         )
-        str_repr = str(meeting)
-        assert str_repr is not None
+        assert meeting.id is not None
+        assert meeting.title == "Test Meeting"
 
     def test_sponsoring_sponsor_str(self):
         """Test Sponsor __str__ method."""
@@ -107,7 +111,7 @@ class TestAllModels:
         """Test Season __str__ method."""
         from scouting.models import Season
         
-        season = Season(season=2024, current="y", void_ind="n")
+        season = Season(season="2024", current="y")
         str_repr = str(season)
         assert str_repr is not None
 
