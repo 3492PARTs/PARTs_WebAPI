@@ -37,8 +37,9 @@ RUN poetry install --with dev --no-root
 
 COPY ./ ./
 
+# pytest.ini is already configured with pythonpath = src
 RUN echo "Running test suite..." \
-    && poetry run pytest --cov=. --cov-report=term-missing --cov-fail-under=50 -v \
+    && poetry run pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v \
     && echo "All tests passed!"
 
 # The runtime image, used to just run the code provided its virtual environment
@@ -58,10 +59,9 @@ RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
     && apt install openssh-client wget -y \
     && pip install paramiko==3.5.1  pysftp \
     && rm ./poetry.toml \
-    && touch ./api/wsgi.py \
     && mkdir /wsgi \
-    && mv ./api/wsgi.py /wsgi \
+    && cp ./src/parts_webapi/wsgi.py /wsgi/wsgi.py \
     && mkdir /scripts \
     && cd /scripts \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
-    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py \
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py

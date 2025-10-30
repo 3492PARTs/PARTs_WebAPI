@@ -38,7 +38,7 @@ node {
                 && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/refresh-event-team-info.sh \
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/refresh-event-team-info.sh \
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab \
-                && sed -i "s/BUILD/$SHA/g" api/settings.py
+                && sed -i "s/BUILD/$SHA/g" src/parts_webapi/settings/base.py
                 '''
             
             if (env.BRANCH_NAME == 'main') {
@@ -82,7 +82,7 @@ node {
                         '''
 
                         sh '''
-                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /wsgi/ /domains/api.parts3492.org/code/api
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /wsgi/ /domains/api.parts3492.org/code/src/parts_webapi
                         '''
                     }
                 }

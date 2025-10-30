@@ -36,8 +36,9 @@ RUN poetry install --with dev --no-root
 
 COPY ./ ./
 
+# pytest.ini is already configured with pythonpath = src
 RUN echo "Running test suite..." \
-    && poetry run pytest --cov=. --cov-report=term-missing --cov-fail-under=50 -v \
+    && poetry run pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v \
     && echo "All tests passed!"
 
 # ------------------------------------------------------------
@@ -52,7 +53,8 @@ EXPOSE 9090
 ENV PYTHONUNBUFFERED=1 \
     VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:${PATH}" \
-    UWSGI_WSGI_FILE=api/wsgi.py \
+    PYTHONPATH=/app/src \
+    UWSGI_WSGI_FILE=src/parts_webapi/wsgi.py \
     UWSGI_HTTP=:9090 \
     UWSGI_MASTER=1 \
     UWSGI_HTTP_AUTO_CHUNKED=1 \
