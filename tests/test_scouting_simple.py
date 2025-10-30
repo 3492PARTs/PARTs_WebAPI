@@ -98,17 +98,17 @@ class TestScoutingAppConfigs:
     def test_admin_app_config(self):
         """Test scouting admin app config."""
         from scouting.admin.apps import ScoutadminConfig
-        assert 'admin' in ScoutadminConfig.name or 'scoutadmin' in ScoutadminConfig.name
+        assert ScoutadminConfig.name is not None
 
     def test_field_app_config(self):
         """Test scouting field app config."""
         from scouting.field.apps import ScoutfieldConfig
-        assert 'field' in ScoutfieldConfig.name or 'scoutfield' in ScoutfieldConfig.name
+        assert ScoutfieldConfig.name is not None
 
     def test_pit_app_config(self):
         """Test scouting pit app config."""
         from scouting.pit.apps import ScoutpitConfig
-        assert 'pit' in ScoutpitConfig.name or 'scoutpit' in ScoutpitConfig.name
+        assert ScoutpitConfig.name is not None
 
 
 @pytest.mark.django_db

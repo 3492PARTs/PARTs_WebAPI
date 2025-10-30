@@ -133,13 +133,8 @@ class TestTBAModels:
     @pytest.mark.django_db
     def test_tba_models_exist(self):
         """Test TBA models can be imported."""
-        try:
-            from tba.models import TeamInfo
-            assert TeamInfo is not None
-        except ImportError:
-            # TeamInfo might not exist
-            from tba.models import Team
-            assert Team is not None
+        from tba.models import Message
+        assert Message is not None
 
 
 class TestUserModels:

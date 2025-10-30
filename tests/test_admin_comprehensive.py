@@ -59,10 +59,7 @@ class TestAdminViews:
         """Test ScoutAuthGroupsView POST method."""
         from admin.views import ScoutAuthGroupsView
         
-        with patch('admin.views.has_access', return_value=True), \
-             patch('admin.views.user.util.save_scouting_auth_group') as mock_save:
-            mock_save.return_value = {"id": 1}
-            
+        with patch('admin.views.has_access', return_value=True):
             request = api_rf.post('/admin/scout-auth-groups/', {"name": "Test"})
             force_authenticate(request, user=test_user)
             view = ScoutAuthGroupsView.as_view()
@@ -89,10 +86,7 @@ class TestAdminViews:
         """Test PhoneTypeView POST method."""
         from admin.views import PhoneTypeView
         
-        with patch('admin.views.has_access', return_value=True), \
-             patch('admin.views.user.util.save_phone_type') as mock_save:
-            mock_save.return_value = {"id": 1}
-            
+        with patch('admin.views.has_access', return_value=True):
             request = api_rf.post('/admin/phone-types/', {"phone_type": "mobile"})
             force_authenticate(request, user=test_user)
             view = PhoneTypeView.as_view()
