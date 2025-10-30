@@ -8,7 +8,6 @@
 
 import django
 from django.db import models
-from pytz import utc
 from simple_history.models import HistoricalRecords
 
 
@@ -17,7 +16,7 @@ class Item(models.Model):
     item_nm = models.CharField(max_length=255)
     item_desc = models.TextField()
     quantity = models.IntegerField()
-    reset_date = models.DateField(default=django.utils.timezone.now)
+    reset_date = models.DateField(default=now)
     active = models.CharField(max_length=1, default="y")
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
@@ -46,7 +45,7 @@ class ItemSponsor(models.Model):
     item_id = models.ForeignKey(Item, models.PROTECT)
     sponsor_id = models.ForeignKey(Sponsor, models.PROTECT)
     quantity = models.IntegerField()
-    time = models.DateTimeField(default=django.utils.timezone.now)
+    time = models.DateTimeField(default=now)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

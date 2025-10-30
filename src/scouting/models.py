@@ -6,8 +6,8 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 
-import django
 from django.db import models
+from django.utils.timezone import now
 from django.contrib.auth.models import Group
 
 import form.models
@@ -143,7 +143,7 @@ class FieldResponse(models.Model):
     event = models.ForeignKey(Event, models.PROTECT)
     team = models.ForeignKey(Team, models.PROTECT)
     user = models.ForeignKey(User, models.PROTECT)
-    time = models.DateTimeField(default=django.utils.timezone.now)
+    time = models.DateTimeField(default=now)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 
@@ -260,7 +260,7 @@ class TeamNote(models.Model):
     match = models.ForeignKey(Match, models.PROTECT, null=True)
     user = models.ForeignKey(User, models.PROTECT)
     note = models.TextField()
-    time = models.DateTimeField(default=django.utils.timezone.now)
+    time = models.DateTimeField(default=now)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
@@ -322,7 +322,7 @@ class MatchStrategy(models.Model):
     strategy = models.TextField()
     img_id = models.CharField(max_length=500, blank=True, null=True)
     img_ver = models.CharField(max_length=500, blank=True, null=True)
-    time = models.DateTimeField(default=django.utils.timezone.now)
+    time = models.DateTimeField(default=now)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

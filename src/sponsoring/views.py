@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -7,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import sponsoring.util
 from general.security import ret_message, access_response
-from sponsoring.serializers import ItemSerializer, SponsorSerializer, ItemSponsorSerializer, SaveItemSerializer, \
+from sponsoring.serializers import ItemSerializer, SponsorSerializer, SaveItemSerializer, \
     SaveSponsorOrderSerializer
 
 auth_obj = 'scoutadmin'

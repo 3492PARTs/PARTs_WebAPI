@@ -5,8 +5,8 @@
 #   * Make sure each ForeignKey has `on_delete` set to the desired behavior.
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
-import django
 from django.db import models
+from django.utils.timezone import now
 
 from user.models import User
 
@@ -39,7 +39,7 @@ class Alert(models.Model):
     subject = models.CharField(max_length=255)
     body = models.CharField(max_length=4000)
     url = models.CharField(max_length=4000, null=True)
-    staged_time = models.DateTimeField(default=django.utils.timezone.now)
+    staged_time = models.DateTimeField(default=now)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
@@ -63,7 +63,7 @@ class AlertedResource(models.Model):
     id = models.AutoField(primary_key=True)
     alert_typ = models.ForeignKey(AlertType, on_delete=models.PROTECT, null=True)
     foreign_id = models.CharField(max_length=2000)
-    time = models.DateTimeField(default=django.utils.timezone.now)
+    time = models.DateTimeField(default=now)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):

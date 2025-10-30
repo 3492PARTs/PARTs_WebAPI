@@ -1,6 +1,6 @@
 import requests
 import datetime
-import json
+from json import loads
 from hashlib import sha256
 import hmac
 from django.conf import settings
@@ -9,7 +9,6 @@ from django.db.models import Q
 import pytz
 from django.utils import timezone
 
-import scouting
 from scouting.models import (
     CompetitionLevel,
     Event,
@@ -19,7 +18,6 @@ from scouting.models import (
     Match,
 )
 import scouting.util
-import scouting.models
 from tba.models import Message
 
 tba_url = "https://www.thebluealliance.com/api/v3"
@@ -31,7 +29,7 @@ def get_events_for_team(team: Team, season: Season, event_cds_to_ignore=None):
         f"{tba_url}/team/frc{team.team_no}/events/{season.season}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    request = json.loads(request.text)
+    request = loads(request.text)
 
     parsed = []
 
@@ -53,7 +51,7 @@ def get_matches_for_team_event(team_key, event_key):
         f"{tba_url}/team/frc{team_key}/event/{event_key}/matches",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    matches = json.loads(request.text)
+    matches = loads(request.text)
     # for match in matches:
     # print(match)
 
@@ -67,7 +65,7 @@ def sync_season(season_id):
         f"{tba_url}/team/frc3492/events/{season.season}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    request = json.loads(request.text)
+    request = loads(request.text)
 
     messages = ""
     for event in request:
@@ -82,7 +80,7 @@ def get_tba_event(event_cd: str):
         f"{tba_url}/event/{event_cd}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    tba_event = json.loads(request.text)
+    tba_event = loads(request.text)
 
     if tba_event.get("Error", None) is not None:
         raise Exception(tba_event["Error"])
@@ -123,7 +121,7 @@ def get_tba_event_teams(event_cd: str):
         f"{tba_url}/event/{event_cd}/teams",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    tba_teams = json.loads(request.text)
+    tba_teams = loads(request.text)
 
     parsed = []
 
@@ -145,7 +143,7 @@ def sync_event(season: Season, event_cd: str):
         event.date_end = data["date_end"]
 
         messages += "(NO ADD) Already have event: " + data["event_cd"] + "\n"
-    except Event.DoesNotExist as e:
+    except Event.DoesNotExist:
         event = Event(
             season=season,
             event_cd=data["event_cd"],
@@ -207,7 +205,7 @@ def sync_matches(event: Event):
         f"{tba_url}/event/{event.event_cd}/matches",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    matches = json.loads(request.text)
+    matches = loads(request.text)
     match_number = ""
     try:
         for match in matches:
@@ -223,7 +221,7 @@ def get_tba_event_team_info(event_cd: str):
         f"{tba_url}/event/{event_cd}/rankings",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    rankings = json.loads(request.text)
+    rankings = loads(request.text)
 
     ret = []
     for info in rankings.get("rankings", []):
@@ -273,7 +271,7 @@ def sync_event_team_info(force: int):
                     Q(event=event) & Q(team_id=info["team_id"]) & Q(void_ind="n")
                 )
                 messages += f"(UPDATE) {event.event_nm} {eti.team.team_no}\n"
-            except EventTeamInfo.DoesNotExist as odne:
+            except EventTeamInfo.DoesNotExist:
                 eti = EventTeamInfo(
                     event=event,
                     team_id=info["team_id"],
@@ -353,7 +351,7 @@ def save_tba_match(tba_match):
 
         match.save()
         messages += f"(UPDATE) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
-    except Match.DoesNotExist as odne:
+    except Match.DoesNotExist:
         match = Match(
             match_key=match_key,
             match_number=match_number,
