@@ -87,8 +87,12 @@ class TestTBAViews:
         """Test SyncSeasonView."""
         from tba.views import SyncSeasonView
         
-        with patch('tba.views.has_access', return_value=True), \
+        with patch('tba.views.access_response') as mock_access, \
              patch('tba.views.tba.util.sync_season') as mock_sync:
+            # Make access_response execute the function
+            def execute_fun(endpoint, user_id, permissions, error_msg, fun):
+                return fun()
+            mock_access.side_effect = execute_fun
             mock_sync.return_value = None
             
             request = api_rf.post('/tba/sync-season/', {"season": 2024})
@@ -102,8 +106,12 @@ class TestTBAViews:
         """Test SyncEventView."""
         from tba.views import SyncEventView
         
-        with patch('tba.views.has_access', return_value=True), \
+        with patch('tba.views.access_response') as mock_access, \
              patch('tba.views.tba.util.get_tba_event') as mock_get:
+            # Make access_response execute the function
+            def execute_fun(endpoint, user_id, permissions, error_msg, fun):
+                return fun()
+            mock_access.side_effect = execute_fun
             mock_get.return_value = {}
             
             request = api_rf.post('/tba/sync-event/', {"event_code": "test"})
