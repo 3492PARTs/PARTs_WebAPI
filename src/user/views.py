@@ -420,7 +420,7 @@ class UserProfile(APIView):
 
     """
     # there should be no path to this, but leave it here just in case
-    
+
     def partial_update(self, request, pk=None):
         message = ResponseMessage("Not implemented", rep_status.success)
         return Response(data=message.jsonify(), status=status.HTTP_200_OK)
@@ -635,7 +635,7 @@ class UserPasswordReset(APIView):
             user_id = urlsafe_base64_decode(uuid)
 
             user = User.objects.get(id=user_id)
-            if token == None or uuid == None:  # prevents
+            if token is None or uuid is None:  # prevents
                 return ret_message(
                     "Reset token required.",
                     True,

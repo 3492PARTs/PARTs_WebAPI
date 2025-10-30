@@ -1,7 +1,6 @@
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from django.conf import settings
 
 from scouting.models import Season
 from tba.serializers import (
