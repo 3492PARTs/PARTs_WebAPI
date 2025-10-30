@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 # Load environment variables from .env file if it exists
-env_file = BASE_DIR / "src/parts_webapi/settings/.env"
+env_file = BASE_DIR / ".env"
 if env_file.exists():
     load_dotenv(env_file)
 
