@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 
 from json import dumps
 
@@ -57,11 +57,11 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
             "requireInteraction": True,
             "silent": False,
             "vibrate": [200, 100, 200],
-            "timestamp": datetime.datetime.utcnow()
+            "timestamp": datetime.now(timezone.utc)
             .replace(tzinfo=pytz.utc)
             .isoformat(),
             "data": {  # i believe this can be anything
-                "dateOfArrival": datetime.datetime.utcnow()
+                "dateOfArrival": datetime.now(timezone.utc)
                 .replace(tzinfo=pytz.utc)
                 .isoformat(),
                 "primaryKey": 1,

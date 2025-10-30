@@ -1,6 +1,6 @@
 import requests
 import datetime
-import json
+from json import loads
 from hashlib import sha256
 import hmac
 from django.conf import settings
@@ -29,7 +29,7 @@ def get_events_for_team(team: Team, season: Season, event_cds_to_ignore=None):
         f"{tba_url}/team/frc{team.team_no}/events/{season.season}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    request = json.loads(request.text)
+    request = loads(request.text)
 
     parsed = []
 
@@ -51,7 +51,7 @@ def get_matches_for_team_event(team_key, event_key):
         f"{tba_url}/team/frc{team_key}/event/{event_key}/matches",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    matches = json.loads(request.text)
+    matches = loads(request.text)
     # for match in matches:
     # print(match)
 
@@ -65,7 +65,7 @@ def sync_season(season_id):
         f"{tba_url}/team/frc3492/events/{season.season}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    request = json.loads(request.text)
+    request = loads(request.text)
 
     messages = ""
     for event in request:
@@ -80,7 +80,7 @@ def get_tba_event(event_cd: str):
         f"{tba_url}/event/{event_cd}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    tba_event = json.loads(request.text)
+    tba_event = loads(request.text)
 
     if tba_event.get("Error", None) is not None:
         raise Exception(tba_event["Error"])
@@ -121,7 +121,7 @@ def get_tba_event_teams(event_cd: str):
         f"{tba_url}/event/{event_cd}/teams",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    tba_teams = json.loads(request.text)
+    tba_teams = loads(request.text)
 
     parsed = []
 
@@ -205,7 +205,7 @@ def sync_matches(event: Event):
         f"{tba_url}/event/{event.event_cd}/matches",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    matches = json.loads(request.text)
+    matches = loads(request.text)
     match_number = ""
     try:
         for match in matches:
@@ -221,7 +221,7 @@ def get_tba_event_team_info(event_cd: str):
         f"{tba_url}/event/{event_cd}/rankings",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
     )
-    rankings = json.loads(request.text)
+    rankings = loads(request.text)
 
     ret = []
     for info in rankings.get("rankings", []):

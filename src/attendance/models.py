@@ -5,8 +5,8 @@
 #   * Make sure each ForeignKey has `on_delete` set to the desired behavior.
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
-import django
 from django.db import models
+from django.utils.timezone import now
 from simple_history.models import HistoricalRecords
 
 from user.models import User
@@ -18,7 +18,7 @@ class Meeting(models.Model):
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
     title = models.CharField(max_length=2000)
     description = models.CharField(max_length=4000)
-    start = models.DateTimeField(default=django.utils.timezone.now)
+    start = models.DateTimeField(default=now)
     end = models.DateTimeField(null=True)
     bonus = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
@@ -42,7 +42,7 @@ class Attendance(models.Model):
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     meeting = models.ForeignKey(Meeting, on_delete=models.PROTECT, null=True)
     season = models.ForeignKey(Season, on_delete=models.PROTECT)
-    time_in = models.DateTimeField(default=django.utils.timezone.now)
+    time_in = models.DateTimeField(default=now)
     time_out = models.DateTimeField(null=True)
     absent = models.BooleanField(default=False)
     approval_typ = models.ForeignKey(AttendanceApprovalType, on_delete=models.PROTECT)

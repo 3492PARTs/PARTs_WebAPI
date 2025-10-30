@@ -1,4 +1,4 @@
-import cloudinary
+from cloudinary import uploader, CloudinaryImage
 
 def upload_image(file, img_id: int=None):
     """Returns whether a file id and version id for an uploaded file.
@@ -9,7 +9,7 @@ def upload_image(file, img_id: int=None):
     if not allowed_file(file.content_type):
         raise Exception("Invalid file type.")
 
-    response = cloudinary.uploader.upload(file, public_id=img_id)
+    response = uploader.upload(file, public_id=img_id)
     """
     img_id=response["public_id"],
     img_ver=str(response["version"]),
@@ -19,7 +19,7 @@ def upload_image(file, img_id: int=None):
 
 
 def build_image_url(img_id, img_ver):
-    url = cloudinary.CloudinaryImage(img_id, version=img_ver).build_url(secure=True)
+    url = CloudinaryImage(img_id, version=img_ver).build_url(secure=True)
     return url
 
 

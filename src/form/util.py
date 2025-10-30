@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import Q, Exists, OuterRef
 from django.db.models.functions import Lower
 
-import json
+from json import loads
 
 import form.models
 import scouting.models
@@ -1756,7 +1756,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 answer.question.question_typ.question_typ
                                 == "mnt-psh-btn"
                             ):
-                                map_entry["points"].append(json.loads(answer.value))
+                                map_entry["points"].append(loads(answer.value))
                             else:
                                 raise Exception("not accounted for yet")
                                 value = answer.value
@@ -1778,7 +1778,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 == "mnt-psh-btn"
                             ):
                                 map_entry["points"].append(
-                                    json.loads(flow_answer.value)
+                                    loads(flow_answer.value)
                                 )
                             else:
                                 raise Exception("not accounted for yet")

@@ -1,6 +1,4 @@
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+from cloudinary import uploader, CloudinaryImage
 from django.db.models import Q, Sum
 from django.db.models.functions import Lower
 
@@ -23,7 +21,7 @@ def get_items():
             'sponsor_quantity': purchased,
             'reset_date': i.reset_date,
             'active': i.active,
-            'img_url': cloudinary.CloudinaryImage(i.img_id, version=i.img_ver).build_url(secure=True)
+            'img_url': CloudinaryImage(i.img_id, version=i.img_ver).build_url(secure=True)
         })
 
     return ret
@@ -62,9 +60,9 @@ def save_item(item):
 
     if item.get('img', None) is not None:
         if i.img_id:
-            response = cloudinary.uploader.upload(item['img'], public_id=i.img_id)
+            response = uploader.upload(item['img'], public_id=i.img_id)
         else:
-            response = cloudinary.uploader.upload(item['img'])
+            response = uploader.upload(item['img'])
 
         i.img_id = response['public_id']
         i.img_ver = str(response['version'])
