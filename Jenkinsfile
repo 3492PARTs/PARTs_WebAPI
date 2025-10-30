@@ -49,15 +49,15 @@ node {
             }
         }
 
-        /*
-        stage('Test image') {
-
-
+        stage('Run Tests') {
             app.inside {
-                sh 'echo "Tests passed"'
+                sh '''
+                    echo "Running test suite..."
+                    poetry run pytest --cov=. --cov-report=term-missing --cov-fail-under=50 -v || exit 1
+                    echo "All tests passed!"
+                '''
             }
         }
-        */
 
         stage('Push image') {
             if (env.BRANCH_NAME != 'main') {
