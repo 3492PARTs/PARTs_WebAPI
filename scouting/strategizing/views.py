@@ -33,9 +33,7 @@ class TeamNoteView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj_scout_field
-            ):
+            if has_access(request.user.id, [auth_obj, auth_view_obj_scout_field]):
                 req = scouting.strategizing.util.get_team_notes(
                     request.query_params.get("team_no", None),
                     scouting.util.get_current_event(),

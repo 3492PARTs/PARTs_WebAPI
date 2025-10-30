@@ -89,9 +89,7 @@ class MeetingsView(APIView):
     endpoint = "meetings/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj) or has_access(
-            request.user.id, auth_obj_meeting
-        ):
+        if has_access(request.user.id, [auth_obj, auth_obj_meeting]):
             try:
                 mtgs = attendance.util.get_meetings()
                 serializer = MeetingSerializer(mtgs, many=True)
