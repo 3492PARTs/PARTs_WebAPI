@@ -9,6 +9,7 @@ ENV POETRY_NO_INTERACTION=1 \
 WORKDIR /app 
 
 COPY pyproject.toml poetry.lock ./
+COPY ./ ./
 
 RUN pip install poetry==2.1.4 \
     && pip install pipdeptree \
@@ -25,7 +26,8 @@ RUN pip install poetry==2.1.4 \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $BUILD_DEPS \
     && touch README.md \
-    && poetry install --with wvnet --no-root \
+    && poetry install --with wvnet,dev --no-root \
+    && poetry run pytest --cov=. --cov-report=term-missing --cov-fail-under=50 -v \
     && rm -rf $POETRY_CACHE_DIR \
     && pipdeptree -fl --exclude poetry --exclude pipdeptree --python /app/.venv/bin/python > requirements.txt
 

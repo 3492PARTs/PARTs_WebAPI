@@ -11,6 +11,7 @@ ENV POETRY_NO_INTERACTION=1 \
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
+COPY ./ ./
 
 RUN pip install poetry==2.1.4 \
     && set -ex \
@@ -23,7 +24,8 @@ RUN pip install poetry==2.1.4 \
     && apt upgrade -y \
     && apt install -y --no-install-recommends $BUILD_DEPS \
     && touch README.md \
-    && poetry install --with uat --no-root \
+    && poetry install --with uat,dev --no-root \
+    && poetry run pytest --cov=. --cov-report=term-missing --cov-fail-under=50 -v \
     && rm -rf $POETRY_CACHE_DIR
 
 # ------------------------------------------------------------
