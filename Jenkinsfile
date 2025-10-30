@@ -42,20 +42,14 @@ node {
                 '''
             
             if (env.BRANCH_NAME == 'main') {
+                // Build test stage first to run tests, then build runtime stage
+                docker.build("bduke97/parts_webapi", "-f ./Dockerfile --target=test .")
                 app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile --target=runtime .")
             }
             else {
+                // Build test stage first to run tests, then build runtime stage
+                docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat --target=test .")
                 app = docker.build("bduke97/parts_webapi", "-f ./Dockerfile.uat --target=runtime .")
-            }
-        }
-
-        stage('Run Tests') {
-            app.inside {
-                sh '''
-                    echo "Running test suite..."
-                    poetry run pytest --cov=. --cov-report=term-missing --cov-fail-under=50 -v || exit 1
-                    echo "All tests passed!"
-                '''
             }
         }
 
