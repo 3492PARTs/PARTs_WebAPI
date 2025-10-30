@@ -31,14 +31,24 @@ def test_user(db):
     return user
 
 @pytest.fixture
-def admin_user(db):
-    """Creates and returns an admin test user."""
+def default_user(db):
+    """Creates and returns a default user with id=-1 for error handling."""
     User = get_user_model()
-    user = User.objects.create_superuser(
-        username="admin",
-        email="admin@example.com",
-        password="adminpass"
+    # Create user first, then update ID via SQL
+    user = User.objects.create_user(
+        username="default_system",
+        first_name="Default",
+        last_name="System",
+        email="default@example.com",
+        password="password"
     )
+    # Update to id=-1 using raw SQL since Django doesn't allow setting pk directly
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute(f"UPDATE user_user SET id=-1 WHERE id={user.id}")
+    # Refresh from DB
+    user.id = -1
+    user.save(update_fields=[])
     return user
 
 @pytest.fixture
@@ -46,6 +56,20 @@ def authenticated_api_client(api_client, test_user):
     """Returns an authenticated API client."""
     api_client.force_authenticate(user=test_user)
     return api_client
+
+@pytest.fixture
+def admin_user(db):
+    """Creates and returns an admin test user."""
+    User = get_user_model()
+    user = User.objects.create_superuser(
+        username="admin",
+        first_name="Admin",
+        last_name="User",
+        email="admin@example.com",
+        password="adminpass"
+    )
+    return user
+
 
 @pytest.fixture
 def mock_cloudinary():
