@@ -56,6 +56,11 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 pipdeptree = "^2.23.4"
+pytest = "^8.4.2"
+pytest-cov = "^7.0.0"
+pytest-django = "^4.11.1"
+pytest-mock = "^3.15.1"
+faker = "^37.12.0"
 
 
 [tool.poetry.group.wvnet]
