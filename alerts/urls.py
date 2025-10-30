@@ -1,10 +1,10 @@
 from django.urls import path
 
-from alerts.views import RunAlerts, StageAlerts, SendAlerts, DismissAlert
+from alerts.views import RunAlertsView, StageAlertsView, SendAlertsView, DismissAlertView
 
 urlpatterns = [
-    path("run/", RunAlerts.as_view()),
-    path("stage/", StageAlerts.as_view()),
-    path("send/", SendAlerts.as_view()),
-    path("dismiss/", DismissAlert.as_view()),
+    path("run/", RunAlertsView.as_view()),
+    path("stage/", StageAlertsView.as_view()),
+    path("send/", SendAlertsView.as_view()),
+    path("dismiss/", DismissAlertView.as_view()),
 ]

@@ -143,7 +143,7 @@ class SyncEventTeamInfoView(APIView):
             )
 
 
-class Webhook(APIView):
+class WebhookView(APIView):
     """API endpoint to receive a TBA webhook"""
 
     endpoint = "webhook/"
@@ -218,3 +218,7 @@ class Webhook(APIView):
             ret_message("Webhook Error", True, app_url + self.endpoint, exception=e)
 
         return Response(500)
+
+
+# Backward compatibility aliases (can be removed in future versions)
+Webhook = WebhookView

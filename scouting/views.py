@@ -265,7 +265,7 @@ class ScheduleTypeView(APIView):
             )
 
 
-class AllScoutingInfo(APIView):
+class AllScoutingInfoView(APIView):
     """
     API endpoint to get the list info needed to populate the scouting app under one call
     """
@@ -381,3 +381,7 @@ class AllScoutingInfo(APIView):
                 app_url + self.endpoint,
                 request.user.id,
             )
+
+
+# Backward compatibility aliases (can be removed in future versions)
+AllScoutingInfo = AllScoutingInfoView

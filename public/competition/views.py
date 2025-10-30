@@ -10,7 +10,7 @@ import public.competition.util
 app_url = "public/competition/"
 
 
-class Init(APIView):
+class InitView(APIView):
     """API endpoint to tell the frontend if the competition page is active and its information"""
 
     endpoint = "init/"
@@ -30,3 +30,7 @@ class Init(APIView):
                 app_url + self.endpoint,
                 exception=e,
             )
+
+
+# Backward compatibility aliases (can be removed in future versions)
+Init = InitView

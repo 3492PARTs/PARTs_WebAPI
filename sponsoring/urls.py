@@ -1,11 +1,11 @@
 from django.urls import path
 
-from sponsoring.views import GetItems, GetSponsors, SaveSponsor, SaveItem, SaveSponsorOrder
+from sponsoring.views import GetItemsView, GetSponsorsView, SaveSponsorView, SaveItemView, SaveSponsorOrderView
 
 urlpatterns = [
-    path('get-items/', GetItems.as_view()),
-    path('get-sponsors/', GetSponsors.as_view()),
-    path('save-sponsor/', SaveSponsor.as_view()),
-    path('save-item/', SaveItem.as_view()),
-    path('save-sponsor-order/', SaveSponsorOrder.as_view()),
+    path('get-items/', GetItemsView.as_view()),
+    path('get-sponsors/', GetSponsorsView.as_view()),
+    path('save-sponsor/', SaveSponsorView.as_view()),
+    path('save-item/', SaveItemView.as_view()),
+    path('save-sponsor-order/', SaveSponsorOrderView.as_view()),
 ]

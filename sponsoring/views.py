@@ -14,7 +14,7 @@ auth_obj = 'scoutadmin'
 app_url = 'sponsoring/'
 
 
-class GetItems(APIView):
+class GetItemsView(APIView):
     """
     API endpoint to items
     """
@@ -30,7 +30,7 @@ class GetItems(APIView):
                                request.user.id, e)
 
 
-class GetSponsors(APIView):
+class GetSponsorsView(APIView):
     """
     API endpoint to get sponsors
     """
@@ -46,7 +46,7 @@ class GetSponsors(APIView):
                                request.user.id, e)
 
 
-class SaveSponsor(APIView):
+class SaveSponsorView(APIView):
     """API endpoint to save a sponsor"""
 
     endpoint = 'save-sponsor/'
@@ -66,7 +66,7 @@ class SaveSponsor(APIView):
                                app_url + self.endpoint, request.user.id, e)
 
 
-class SaveItem(APIView):
+class SaveItemView(APIView):
     """
     API endpoint to save an item
     """
@@ -92,7 +92,7 @@ class SaveItem(APIView):
             return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
 
 
-class SaveSponsorOrder(APIView):
+class SaveSponsorOrderView(APIView):
     """
     API endpoint to save a sponsor's order
     """
@@ -111,3 +111,11 @@ class SaveSponsorOrder(APIView):
         except Exception as e:
             return ret_message('An error occurred while saving data.', True,
                                app_url + self.endpoint, request.user.id, e)
+
+
+# Backward compatibility aliases (can be removed in future versions)
+GetItems = GetItemsView
+GetSponsors = GetSponsorsView
+SaveSponsor = SaveSponsorView
+SaveItem = SaveItemView
+SaveSponsorOrder = SaveSponsorOrderView
