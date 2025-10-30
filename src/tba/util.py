@@ -9,7 +9,6 @@ from django.db.models import Q
 import pytz
 from django.utils import timezone
 
-import scouting
 from scouting.models import (
     CompetitionLevel,
     Event,
@@ -19,7 +18,6 @@ from scouting.models import (
     Match,
 )
 import scouting.util
-import scouting.models
 from tba.models import Message
 
 tba_url = "https://www.thebluealliance.com/api/v3"
@@ -145,7 +143,7 @@ def sync_event(season: Season, event_cd: str):
         event.date_end = data["date_end"]
 
         messages += "(NO ADD) Already have event: " + data["event_cd"] + "\n"
-    except Event.DoesNotExist as e:
+    except Event.DoesNotExist:
         event = Event(
             season=season,
             event_cd=data["event_cd"],
@@ -273,7 +271,7 @@ def sync_event_team_info(force: int):
                     Q(event=event) & Q(team_id=info["team_id"]) & Q(void_ind="n")
                 )
                 messages += f"(UPDATE) {event.event_nm} {eti.team.team_no}\n"
-            except EventTeamInfo.DoesNotExist as odne:
+            except EventTeamInfo.DoesNotExist:
                 eti = EventTeamInfo(
                     event=event,
                     team_id=info["team_id"],
@@ -353,7 +351,7 @@ def save_tba_match(tba_match):
 
         match.save()
         messages += f"(UPDATE) {event.event_nm} {comp_level.comp_lvl_typ_nm} {match_number} {match_key}\n"
-    except Match.DoesNotExist as odne:
+    except Match.DoesNotExist:
         match = Match(
             match_key=match_key,
             match_number=match_number,

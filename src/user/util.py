@@ -1,6 +1,6 @@
 from django.contrib.auth.models import Group, Permission
-from django.db.models import Q, Value, Count
-from django.db.models.functions import Lower, Concat
+from django.db.models import Q
+from django.db.models.functions import Lower
 
 from scouting.models import ScoutAuthGroup
 from user.models import User, PhoneType, Link
@@ -148,7 +148,7 @@ def save_group(data):
 def delete_group(group_id):
     try:
         ScoutAuthGroup.objects.get(group__id=group_id).delete()
-    except ScoutAuthGroup.DoesNotExist as e:
+    except ScoutAuthGroup.DoesNotExist:
         pass
     Group.objects.get(id=group_id).delete()
 

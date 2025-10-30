@@ -8,7 +8,6 @@
 
 import django
 from django.db import models
-from pytz import utc
 from simple_history.models import HistoricalRecords
 
 

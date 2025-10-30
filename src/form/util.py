@@ -1,5 +1,4 @@
-import statistics
-from statistics import median
+from statistics import median, stdev
 
 from datetime import datetime, date, timedelta
 
@@ -2072,8 +2071,8 @@ def aggregate_answers(question_aggregate, response_question_answers):
         case "median":
             return median([median(values) for values in responses_values])
         case "stdev":
-            return statistics.stdev(
-                [statistics.stdev(values) for values in responses_values]
+            return stdev(
+                [stdev(values) for values in responses_values]
             )
         case "difference":
             i = 0

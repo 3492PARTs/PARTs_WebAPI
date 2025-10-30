@@ -1,9 +1,6 @@
-from datetime import datetime
-
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-import pytz
 from django.db.models import Q, Sum
 from django.db.models.functions import Lower
 

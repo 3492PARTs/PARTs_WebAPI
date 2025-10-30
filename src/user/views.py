@@ -117,7 +117,7 @@ class TokenRefreshView(APIView):
                 )
 
             return Response(serializer.validated_data)
-        except Exception as e:
+        except Exception:
             return Response(
                 RetMessageSerializer(
                     {
@@ -182,8 +182,8 @@ class UserProfile(APIView):
                         -1,
                         user_data.get("email").lower(),
                     )
-                except ObjectDoesNotExist as odne:
-                    x = 0
+                except ObjectDoesNotExist:
+                    pass
 
                 user = User(
                     username=user_data.get("username").lower(),

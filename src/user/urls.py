@@ -1,9 +1,7 @@
-import webpush.views
-from django.urls import path, include
-from .views import UserData, UserLinksView, Groups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, \
+from django.urls import path
+from .views import UserData, Groups, UserProfile, UserEmailConfirmation, UserEmailResendConfirmation, \
     UserRequestPasswordReset, UserPasswordReset, UserRequestUsername, \
     SaveWebPushInfoView, TokenObtainPairView, TokenRefreshView, AlertsView, UsersView, SaveUserView, Permissions, SecurityAuditView, Links
-from rest_framework_simplejwt import views as jwt_views
 
 # Wire up our API using atomic URL routing.
 # Additionally, we include login URLs for the browsable API.
