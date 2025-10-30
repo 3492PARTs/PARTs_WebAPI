@@ -34,8 +34,12 @@ class TestAttendanceViews:
         """Test AttendanceView GET."""
         from attendance.views import AttendanceView
         
-        with patch('attendance.views.has_access', return_value=True), \
+        with patch('attendance.views.access_response') as mock_access, \
              patch('attendance.views.attendance.util.get_attendance') as mock_get:
+            # Make access_response execute the function
+            def execute_fun(endpoint, user_id, permissions, error_msg, fun):
+                return fun()
+            mock_access.side_effect = execute_fun
             mock_get.return_value = []
             
             request = api_rf.get('/attendance/')
@@ -49,8 +53,12 @@ class TestAttendanceViews:
         """Test MeetingsView GET."""
         from attendance.views import MeetingsView
         
-        with patch('attendance.views.has_access', return_value=True), \
+        with patch('attendance.views.access_response') as mock_access, \
              patch('attendance.views.attendance.util.get_meetings') as mock_get:
+            # Make access_response execute the function
+            def execute_fun(endpoint, user_id, permissions, error_msg, fun):
+                return fun()
+            mock_access.side_effect = execute_fun
             mock_get.return_value = []
             
             request = api_rf.get('/attendance/meetings/')

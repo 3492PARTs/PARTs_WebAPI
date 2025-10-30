@@ -4,7 +4,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
 
 import attendance.util
-from general.security import ret_message, has_access, access_response
+from general.security import ret_message, access_response
 from attendance.serializers import (
     AttendanceSerializer,
     MeetingSerializer,
@@ -25,32 +25,24 @@ class AttendanceView(APIView):
     endpoint = "attendance/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                att = attendance.util.get_attendance(
-                    request.query_params.get("user_id", None),
-                    request.query_params.get("meeting_id", None),
-                )
-                serializer = AttendanceSerializer(att, many=True)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting attendance.",
-                    True,
-                    app_url + self.endpoint,
-                    -1,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
+        def fun():
+            att = attendance.util.get_attendance(
+                request.query_params.get("user_id", None),
+                request.query_params.get("meeting_id", None),
             )
+            serializer = AttendanceSerializer(att, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting attendance.",
+            fun,
+        )
 
     def post(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
+        def fun():
             serializer = AttendanceSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
@@ -61,24 +53,16 @@ class AttendanceView(APIView):
                     error_message=serializer.errors,
                 )
 
-            try:
-                attendance.util.save_attendance(serializer.validated_data)
-                return ret_message("Saved attendance entry.")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving attendance entry.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+            attendance.util.save_attendance(serializer.validated_data)
+            return ret_message("Saved attendance entry.")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving attendance entry.",
+            fun,
+        )
 
 
 class MeetingsView(APIView):
@@ -89,29 +73,21 @@ class MeetingsView(APIView):
     endpoint = "meetings/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, [auth_obj, auth_obj_meeting]):
-            try:
-                mtgs = attendance.util.get_meetings()
-                serializer = MeetingSerializer(mtgs, many=True)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting meetings.",
-                    True,
-                    app_url + self.endpoint,
-                    -1,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+        def fun():
+            mtgs = attendance.util.get_meetings()
+            serializer = MeetingSerializer(mtgs, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            [auth_obj, auth_obj_meeting],
+            "An error occurred while getting meetings.",
+            fun,
+        )
 
     def post(self, request, format=None):
-        if has_access(request.user.id, auth_obj_meeting):
+        def fun():
             serializer = MeetingSerializer(data=request.data)
             if not serializer.is_valid():
                 return ret_message(
@@ -122,24 +98,16 @@ class MeetingsView(APIView):
                     error_message=serializer.errors,
                 )
 
-            try:
-                attendance.util.save_meeting(serializer.validated_data)
-                return ret_message("Saved meeting entry.")
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while saving meeting entry.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
+            attendance.util.save_meeting(serializer.validated_data)
+            return ret_message("Saved meeting entry.")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj_meeting,
+            "An error occurred while saving meeting entry.",
+            fun,
+        )
 
 
 class AttendanceReportView(APIView):
@@ -150,29 +118,21 @@ class AttendanceReportView(APIView):
     endpoint = "attendance-report/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj):
-            try:
-                att = attendance.util.get_attendance_report(
-                    request.query_params.get("user_id", None),
-                    request.query_params.get("meeting_id", None),
-                )
-                serializer = AttendanceReportSerializer(att, many=True)
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting the attendance report.",
-                    True,
-                    app_url + self.endpoint,
-                    -1,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
+        def fun():
+            att = attendance.util.get_attendance_report(
+                request.query_params.get("user_id", None),
+                request.query_params.get("meeting_id", None),
             )
+            serializer = AttendanceReportSerializer(att, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting the attendance report.",
+            fun,
+        )
 
 
 class MeetingHoursView(APIView):
@@ -194,22 +154,3 @@ class MeetingHoursView(APIView):
             "An error occurred while getting the total meeting hours.",
             fun,
         )
-        if has_access(request.user.id, auth_obj):
-            try:
-                serializer = MeetingHoursSerializer(attendance.util.get_meeting_hours())
-                return Response(serializer.data)
-            except Exception as e:
-                return ret_message(
-                    "An error occurred while getting the total meeting hours.",
-                    True,
-                    app_url + self.endpoint,
-                    -1,
-                    e,
-                )
-        else:
-            return ret_message(
-                "You do not have access.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-            )
