@@ -56,9 +56,7 @@ class QuestionView(APIView):
             if request.user.id is None:
                 return HttpResponse("Unauthorized", status=401)
 
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 serializer = QuestionSerializer(data=request.data)
                 if not serializer.is_valid():
                     return ret_message(
@@ -101,9 +99,7 @@ class FormEditorView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
 
                 questions = form.util.get_questions(request.query_params["form_typ"])
                 question_types = form.util.get_question_types()
@@ -348,9 +344,7 @@ class QuestionAggregateView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 qas = form.util.get_question_aggregates(
                     request.query_params["form_typ"]
                 )
@@ -384,9 +378,7 @@ class QuestionAggregateView(APIView):
                     error_message=serializer.errors,
                 )
 
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 with transaction.atomic():
                     form.util.save_question_aggregate(serializer.validated_data)
                 return ret_message("Saved question aggregate successfully")
@@ -442,9 +434,7 @@ class QuestionConditionView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 qas = form.util.get_question_conditions(
                     request.query_params["form_typ"]
                 )
@@ -478,9 +468,7 @@ class QuestionConditionView(APIView):
                     error_message=serializer.errors,
                 )
 
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 with transaction.atomic():
                     form.util.save_question_condition(serializer.validated_data)
                 return ret_message("Saved question condition successfully")
@@ -512,9 +500,7 @@ class QuestionConditionTypesView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 qas = form.util.get_question_condition_types()
                 serializer = QuestionConditionTypeSerializer(qas, many=True)
                 return Response(serializer.data)
@@ -568,9 +554,7 @@ class FlowView(APIView):
 
     def post(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 serializer = FlowSerializer(data=request.data)
                 if not serializer.is_valid():
                     return ret_message(
@@ -635,9 +619,7 @@ class QuestionFlowView(APIView):
 
     def post(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 serializer = FlowSerializer(data=request.data)
                 if not serializer.is_valid():
                     return ret_message(
@@ -680,9 +662,7 @@ class FlowConditionView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 qas = form.util.get_flow_condition(request.query_params["form_typ"])
                 serializer = FlowConditionSerializer(qas, many=True)
                 return Response(serializer.data)
@@ -714,9 +694,7 @@ class FlowConditionView(APIView):
                     error_message=serializer.errors,
                 )
 
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 with transaction.atomic():
                     form.util.save_flow_condition(serializer.validated_data)
                 return ret_message("Saved flow condition successfully")
@@ -800,9 +778,7 @@ class GraphView(APIView):
 
     def post(self, request, format=None):
         try:
-            if has_access(request.user.id, "admin") or has_access(
-                request.user.id, "scoutadmin"
-            ):
+            if has_access(request.user.id, ["admin", "scoutadmin"]):
                 serializer = GraphSerializer(data=request.data)
                 if not serializer.is_valid():
                     return ret_message(

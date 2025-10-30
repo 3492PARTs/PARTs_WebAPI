@@ -160,9 +160,7 @@ class PhoneTypeView(APIView):
     endpoint = "phone-type/"
 
     def get(self, request, format=None):
-        if has_access(request.user.id, auth_obj) or has_access(
-            request.user.id, "scoutadmin"
-        ):
+        if has_access(request.user.id, [auth_obj, "scoutadmin"]):
             try:
                 phone_types = user.util.get_phone_types()
                 serializer = PhoneTypeSerializer(phone_types, many=True)

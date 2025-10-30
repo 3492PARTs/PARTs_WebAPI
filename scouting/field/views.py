@@ -33,9 +33,7 @@ class FormView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+            if has_access(request.user.id, [auth_obj, auth_view_obj]):
                 serializer = FieldFormFormSerializer(
                     scouting.field.util.get_field_form()
                 )
@@ -69,9 +67,7 @@ class ResponseColumnsView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+            if has_access(request.user.id, [auth_obj, auth_view_obj]):
                 req = scouting.field.util.get_table_columns(
                     scouting.field.util.get_field_question_aggregates(
                         scouting.util.get_current_season()
@@ -108,9 +104,7 @@ class ResponsesView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+            if has_access(request.user.id, [auth_obj, auth_view_obj]):
                 req = scouting.field.util.get_responses(
                     request.query_params.get("pg_num", 1),
                     team=request.query_params.get("team", None),
@@ -188,9 +182,7 @@ class ScoutingResponsesView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj) or has_access(
-                request.user.id, auth_view_obj
-            ):
+            if has_access(request.user.id, [auth_obj, auth_view_obj]):
                 req = scouting.field.util.get_scouting_responses()
 
                 if type(req) == Response:
