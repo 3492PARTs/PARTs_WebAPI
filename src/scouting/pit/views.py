@@ -63,11 +63,7 @@ class ResponsesView(APIView):
 
     def get(self, request, format=None):
         try:
-            if (
-                has_access(request.user.id, auth_obj)
-                or has_access(request.user.id, auth_view_obj)
-                or has_access(request.user.id, "scoutFieldResults")
-            ):
+            if has_access(request.user.id, [auth_obj, auth_view_obj, "scoutFieldResults"]):
                 ret = scouting.pit.util.get_responses(
                     request.query_params.get("team", None)
                 )
