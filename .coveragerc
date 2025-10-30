@@ -1,0 +1,32 @@
+[run]
+source = .
+omit =
+    */migrations/*
+    */tests/*
+    */test_*.py
+    manage.py
+    api/wsgi.py
+    api/asgi.py
+    */settings.py
+    */settings_dev.py
+    */__init__.py
+    */apps.py
+    */admin.py
+    .venv/*
+    venv/*
+    env/*
+    */site-packages/*
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml
