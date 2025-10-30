@@ -15,12 +15,14 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 # Load environment variables from .env file if it exists
-env_file = BASE_DIR / '.env'
+env_file = BASE_DIR / "src/parts_webapi/settings/.env"
 if env_file.exists():
     load_dotenv(env_file)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-dev-key-change-in-production-12345678901234567890")
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-dev-key-change-in-production-12345678901234567890"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
@@ -134,32 +136,38 @@ jwt_key_path = BASE_DIR / "keys/jwt-key"
 jwt_pub_key_path = BASE_DIR / "keys/jwt-key.pub"
 
 if jwt_key_path.exists() and jwt_pub_key_path.exists():
-    SIMPLE_JWT.update({
-        "ALGORITHM": "RS512",
-        "SIGNING_KEY": open(jwt_key_path).read(),
-        "VERIFYING_KEY": open(jwt_pub_key_path).read(),
-    })
+    SIMPLE_JWT.update(
+        {
+            "ALGORITHM": "RS512",
+            "SIGNING_KEY": open(jwt_key_path).read(),
+            "VERIFYING_KEY": open(jwt_pub_key_path).read(),
+        }
+    )
 else:
     # Fallback to symmetric key for development
-    SIMPLE_JWT.update({
-        "ALGORITHM": "HS256",
-        "SIGNING_KEY": SECRET_KEY,
-        "VERIFYING_KEY": None,
-    })
+    SIMPLE_JWT.update(
+        {
+            "ALGORITHM": "HS256",
+            "SIGNING_KEY": SECRET_KEY,
+            "VERIFYING_KEY": None,
+        }
+    )
 
-SIMPLE_JWT.update({
-    "AUDIENCE": None,
-    "ISSUER": None,
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "USER_ID_FIELD": "id",
-    "USER_ID_CLAIM": "user_id",
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "TOKEN_TYPE_CLAIM": "token_type",
-    "JTI_CLAIM": "jti",
-    "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-})
+SIMPLE_JWT.update(
+    {
+        "AUDIENCE": None,
+        "ISSUER": None,
+        "AUTH_HEADER_TYPES": ("Bearer",),
+        "USER_ID_FIELD": "id",
+        "USER_ID_CLAIM": "user_id",
+        "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+        "TOKEN_TYPE_CLAIM": "token_type",
+        "JTI_CLAIM": "jti",
+        "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
+        "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
+        "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+    }
+)
 
 AUTH_USER_MODEL = "user.User"
 
