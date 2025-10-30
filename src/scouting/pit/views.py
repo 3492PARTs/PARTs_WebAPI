@@ -10,7 +10,7 @@ from .serializers import (
     PitResponsesSerializer,
 )
 from rest_framework.views import APIView
-from general.security import ret_message, has_access
+from general.security import ret_message, access_response
 from rest_framework.response import Response
 
 auth_obj = "scoutpit"
@@ -28,28 +28,20 @@ class SavePictureView(APIView):
     endpoint = "save-picture/"
 
     def post(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                file_obj = request.FILES["file"]
-                ret = scouting.pit.util.save_robot_picture(
-                    file_obj, request.data.get("team_no", ""), request.data.get("pit_image_typ", ""), request.data.get("img_title", "")
-                )
-                return ret
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while saving robot picture.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
+        def fun():
+            file_obj = request.FILES["file"]
+            ret = scouting.pit.util.save_robot_picture(
+                file_obj, request.data.get("team_no", ""), request.data.get("pit_image_typ", ""), request.data.get("img_title", "")
             )
+            return ret
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving robot picture.",
+            fun,
+        )
 
 
 class ResponsesView(APIView):
@@ -62,36 +54,24 @@ class ResponsesView(APIView):
     endpoint = "responses/"
 
     def get(self, request, format=None):
-        try:
-            if (
-                has_access(request.user.id, auth_obj)
-                or has_access(request.user.id, auth_view_obj)
-                or has_access(request.user.id, "scoutFieldResults")
-            ):
-                ret = scouting.pit.util.get_responses(
-                    request.query_params.get("team", None)
-                )
-
-                if type(ret) == Response:
-                    return ret
-
-                serializer = PitResponsesSerializer(ret)
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting pit responses.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
+        def fun():
+            ret = scouting.pit.util.get_responses(
+                request.query_params.get("team", None)
             )
+
+            if type(ret) == Response:
+                return ret
+
+            serializer = PitResponsesSerializer(ret)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            [auth_obj, auth_view_obj, "scoutFieldResults"],
+            "An error occurred while getting pit responses.",
+            fun,
+        )
 
 
 class SetDefaultPitImageView(APIView):
@@ -104,27 +84,19 @@ class SetDefaultPitImageView(APIView):
     endpoint = "set-default-pit-image/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                scouting.pit.util.set_default_team_image(
-                    request.query_params.get("scout_pit_img_id", None)
-                )
-                return ret_message("Successfully set the default image.")
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting team data.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
+        def fun():
+            scouting.pit.util.set_default_team_image(
+                request.query_params.get("scout_pit_img_id", None)
             )
+            return ret_message("Successfully set the default image.")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting team data.",
+            fun,
+        )
 
 
 class TeamDataView(APIView):
@@ -138,26 +110,18 @@ class TeamDataView(APIView):
     endpoint = "team-data/"
 
     def get(self, request, format=None):
-        try:
-            if has_access(request.user.id, auth_obj):
-                serializer = PitTeamDataSerializer(
-                    scouting.pit.util.get_team_data(
-                        request.query_params.get("team_num", None)
-                    )
+        def fun():
+            serializer = PitTeamDataSerializer(
+                scouting.pit.util.get_team_data(
+                    request.query_params.get("team_num", None)
                 )
-                return Response(serializer.data)
-            else:
-                return ret_message(
-                    "You do not have access.",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                )
-        except Exception as e:
-            return ret_message(
-                "An error occurred while getting team data.",
-                True,
-                app_url + self.endpoint,
-                request.user.id,
-                e,
             )
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting team data.",
+            fun,
+        )

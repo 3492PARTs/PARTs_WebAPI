@@ -75,7 +75,11 @@ class TestScoutingPitViews:
         """Test pit scouting GET."""
         api_client.force_authenticate(user=test_user)
         
-        with patch('scouting.pit.views.has_access', return_value=True):
+        with patch('scouting.pit.views.access_response') as mock_access:
+            # Make access_response execute the function
+            def execute_fun(endpoint, user_id, permissions, error_msg, fun):
+                return fun()
+            mock_access.side_effect = execute_fun
             response = api_client.get('/scouting/pit/')
             
             assert response.status_code in [200, 403, 404]

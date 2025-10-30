@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import sponsoring.util
-from general.security import ret_message, has_access
+from general.security import ret_message, access_response
 from sponsoring.serializers import ItemSerializer, SponsorSerializer, ItemSponsorSerializer, SaveItemSerializer, \
     SaveSponsorOrderSerializer
 
@@ -75,21 +75,23 @@ class SaveItemView(APIView):
     endpoint = 'save-item/'
 
     def post(self, request, format=None):
-        serializer = SaveItemSerializer(data=request.data)
-        if not serializer.is_valid():
-            return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
-                               error_message=serializer.errors)
+        def fun():
+            serializer = SaveItemSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message('Invalid data', True, app_url + self.endpoint, request.user.id,
+                                   error_message=serializer.errors)
 
-        if has_access(request.user.id, auth_obj):
-            try:
-                with transaction.atomic():
-                    sponsoring.util.save_item(serializer.validated_data)
-                return ret_message('Saved item data successfully.')
-            except Exception as e:
-                return ret_message('An error occurred while saving item data.', True,
-                                   app_url + self.endpoint, request.user.id, e)
-        else:
-            return ret_message('You do not have access.', True, app_url + self.endpoint, request.user.id)
+            with transaction.atomic():
+                sponsoring.util.save_item(serializer.validated_data)
+            return ret_message('Saved item data successfully.')
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            'An error occurred while saving item data.',
+            fun,
+        )
 
 
 class SaveSponsorOrderView(APIView):
