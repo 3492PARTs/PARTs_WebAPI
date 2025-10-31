@@ -91,13 +91,20 @@ class MatchSerializer(serializers.Serializer):
 class ScheduleSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     sch_typ = serializers.CharField()
-    sch_nm = serializers.CharField()
+    sch_nm = serializers.SerializerMethodField()
     event_id = serializers.IntegerField()
     st_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
     notified = serializers.BooleanField()
     user = UserSerializer(required=False, allow_null=True)
     user_name = serializers.CharField(required=False, allow_null=True)
+    
+    def get_sch_nm(self, obj):
+        """Get schedule name from related ScheduleType"""
+        if hasattr(obj, 'sch_typ') and hasattr(obj.sch_typ, 'sch_nm'):
+            return obj.sch_typ.sch_nm
+        # Handle dict case (when obj is already serialized data)
+        return obj.get('sch_nm', '')
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):

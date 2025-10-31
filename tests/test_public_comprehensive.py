@@ -11,7 +11,9 @@ Tests cover:
 
 import pytest
 from unittest.mock import patch, Mock
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 from rest_framework.test import force_authenticate, APIRequestFactory
 from rest_framework import status
 
@@ -42,8 +44,7 @@ def season(db):
     """Create a test season"""
     return Season.objects.create(
         season=2024,
-        current="y",
-        void_ind="n"
+        current="y"
     )
 
 
@@ -70,13 +71,15 @@ def comp_level(db):
 @pytest.fixture
 def event(db, season):
     """Create a test event"""
+    from django.utils.timezone import now
     return Event.objects.create(
         season=season,
         event_nm="Test Competition",
         event_cd="TEST2024",
+        date_st=now(),
+        date_end=now(),
         current="y",
-        competition_page_active="y",
-        void_ind="n"
+        competition_page_active="y"
     )
 
 
@@ -185,6 +188,7 @@ class TestGetCompetitionInformation:
         """Test getting competition information with matches"""
         # Create some matches with team 3492
         match1 = Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
@@ -198,6 +202,7 @@ class TestGetCompetitionInformation:
         )
         
         match2 = Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}2",
             event=event,
             comp_level=comp_level,
             match_number=2,
@@ -228,6 +233,7 @@ class TestGetCompetitionInformation:
         
         for i, position in enumerate(positions):
             match_data = {
+                'match_key': f"{event.event_cd}_{comp_level.comp_lvl_typ}{i + 1}",
                 'event': event,
                 'comp_level': comp_level,
                 'match_number': i + 1,
@@ -253,6 +259,7 @@ class TestGetCompetitionInformation:
         """Test that void matches are excluded"""
         # Create valid match
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
@@ -267,6 +274,7 @@ class TestGetCompetitionInformation:
         
         # Create void match
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}2",
             event=event,
             comp_level=comp_level,
             match_number=2,
@@ -303,6 +311,7 @@ class TestGetCompetitionInformation:
         
         # Create matches out of order
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level_playoff.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level_playoff,
             match_number=1,
@@ -316,6 +325,7 @@ class TestGetCompetitionInformation:
         )
         
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level_qual.comp_lvl_typ}2",
             event=event,
             comp_level=comp_level_qual,
             match_number=2,
@@ -329,6 +339,7 @@ class TestGetCompetitionInformation:
         )
         
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level_qual.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level_qual,
             match_number=1,
@@ -360,35 +371,39 @@ class TestGetCompetitionInformation:
     
     def test_get_competition_information_no_current_event(self, db):
         """Test when no current event with competition page active exists"""
+        from django.utils.timezone import now
         # Create event but not current
-        season = Season.objects.create(season=2024, current="y", void_ind="n")
+        season = Season.objects.create(season=2024, current="y")
         Event.objects.create(
             season=season,
             event_nm="Past Event",
             event_cd="PAST2024",
+            date_st=now(),
+            date_end=now(),
             current="n",  # Not current
-            competition_page_active="y",
-            void_ind="n"
+            competition_page_active="y"
         )
         
-        Team.objects.create(team_no=3492, team_nm="PARTs", void_ind="n")
+        Team.objects.create(team_no=3492, team_nm="PARTs")
         
         with pytest.raises(Event.DoesNotExist):
             get_competition_information()
     
     def test_get_competition_information_competition_page_not_active(self, db):
         """Test when event exists but competition page is not active"""
-        season = Season.objects.create(season=2024, current="y", void_ind="n")
+        from django.utils.timezone import now
+        season = Season.objects.create(season=2024, current="y")
         Event.objects.create(
             season=season,
             event_nm="Test Event",
             event_cd="TEST2024",
+            date_st=now(),
+            date_end=now(),
             current="y",
-            competition_page_active="n",  # Not active
-            void_ind="n"
+            competition_page_active="n"  # Not active
         )
         
-        Team.objects.create(team_no=3492, team_nm="PARTs", void_ind="n")
+        Team.objects.create(team_no=3492, team_nm="PARTs")
         
         with pytest.raises(Event.DoesNotExist):
             get_competition_information()
@@ -406,6 +421,7 @@ class TestInitView:
         """Test successful competition init response"""
         # Create a match
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
@@ -473,6 +489,7 @@ class TestCompetitionInformationSerializer:
     def test_serializer_with_event_and_matches(self, event, team_3492, comp_level, other_team):
         """Test serializer with full competition information"""
         match = Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
@@ -485,22 +502,16 @@ class TestCompetitionInformationSerializer:
             void_ind="n"
         )
         
-        with patch('scouting.util.parse_match') as mock_parse:
-            mock_parse.return_value = {
-                'match_number': 1,
-                'comp_level': 'qm'
-            }
-            
-            data = {
-                'event': event,
-                'matches': [mock_parse(match)]
-            }
-            
-            serializer = CompetitionInformationSerializer(data)
-            
-            assert 'event' in serializer.data
-            assert 'matches' in serializer.data
-            assert len(serializer.data['matches']) == 1
+        data = {
+            'event': event,
+            'matches': [match]
+        }
+        
+        serializer = CompetitionInformationSerializer(data)
+        
+        assert 'event' in serializer.data
+        assert 'matches' in serializer.data
+        assert len(serializer.data['matches']) == 1
     
     def test_serializer_with_event_no_matches(self, event):
         """Test serializer with event but no matches"""

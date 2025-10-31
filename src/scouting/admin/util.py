@@ -55,7 +55,7 @@ def set_current_season_event(season_id, event_id, competition_page_active):
 
 
 def delete_event(event_id):
-    e = Event.objects.get(event_id=event_id)
+    e = Event.objects.get(id=event_id)
 
     if e.current == "y":
         raise Exception("Cannot delete current event.")
@@ -121,7 +121,7 @@ def save_season(data):
     if data.get("id", None) is not None:
         season = Season.objects.get(id=data["id"])
     else:
-        season = Season(season=data["season"], current=data["current"])
+        season = Season(season=data["season"], current=data.get("current", "n"))
 
     season.game = data["game"]
     season.manual = data["manual"]
@@ -130,7 +130,7 @@ def save_season(data):
 
 
 def delete_season(season_id):
-    season = Season.objects.get(season_id=season_id)
+    season = Season.objects.get(id=season_id)
 
     if season.current == "y":
         raise Exception("Cannot delete current season.")
@@ -160,44 +160,53 @@ def delete_season(season_id):
 
 
 def save_event(data):
-    if (data.get("event_id", None)) is not None:
-        event = Event.objects.get(event_id=data["event_id"])
-        event.season.id = data["season_id"]
+    # Handle both season_id and season.id formats
+    if "season_id" in data:
+        season_id = data["season_id"]
+    elif "season" in data and isinstance(data["season"], dict):
+        season_id = data["season"]["id"]
+    else:
+        raise ValueError("season_id or season.id required")
+    
+    if (data.get("event_id", None)) is not None or (data.get("id", None)) is not None:
+        event_id = data.get("event_id") or data.get("id")
+        event = Event.objects.get(id=event_id)
+        event.season = Season.objects.get(id=season_id)
         event.event_nm = data["event_nm"]
         event.date_st = data["date_st"]
         event.event_cd = data["event_cd"]
         event.event_url = data.get("event_url", None)
-        event.address = data["address"]
-        event.city = data["city"]
-        event.state_prov = data["state_prov"]
-        event.postal_code = data["postal_code"]
-        event.location_name = data["location_name"]
+        event.address = data.get("address", "")
+        event.city = data.get("city", "")
+        event.state_prov = data.get("state_prov", "")
+        event.postal_code = data.get("postal_code", "")
+        event.location_name = data.get("location_name", "")
         event.gmaps_url = data.get("gmaps_url", None)
         event.webcast_url = data.get("webcast_url", None)
         event.date_end = data["date_end"]
-        event.timezone = data["timezone"]
-        event.current = data["current"]
-        event.competition_page_active = data["competition_page_active"]
-        event.void_ind = data["void_ind"]
+        event.timezone = data.get("timezone", "")
+        event.current = data.get("current", "n")
+        event.competition_page_active = data.get("competition_page_active", "n")
+        event.void_ind = data.get("void_ind", "n")
     else:
         event = Event(
-            season_id=data["season_id"],
+            season=Season.objects.get(id=season_id),
             event_nm=data["event_nm"],
             date_st=data["date_st"],
             event_cd=data["event_cd"],
             event_url=data.get("event_url", None),
-            address=data["address"],
-            city=data["city"],
-            state_prov=data["state_prov"],
-            postal_code=data["postal_code"],
-            location_name=data["location_name"],
+            address=data.get("address", ""),
+            city=data.get("city", ""),
+            state_prov=data.get("state_prov", ""),
+            postal_code=data.get("postal_code", ""),
+            location_name=data.get("location_name", ""),
             gmaps_url=data.get("gmaps_url", None),
             webcast_url=data.get("webcast_url", None),
             date_end=data["date_end"],
-            timezone=data["timezone"],
-            current=data["current"],
-            competition_page_active=data["competition_page_active"],
-            void_ind=data["void_ind"],
+            timezone=data.get("timezone", ""),
+            current=data.get("current", "n"),
+            competition_page_active=data.get("competition_page_active", "n"),
+            void_ind=data.get("void_ind", "n"),
         )
 
     event.save()
@@ -214,13 +223,13 @@ def save_match(data):
         match.event_id = data["event"]["id"]
 
     match.match_number = data["match_number"]
-    match.red_one_id = data["red_one_id"]
-    match.red_two_id = data["red_two_id"]
-    match.red_three_id = data["red_three_id"]
-    match.blue_one_id = data["blue_one_id"]
-    match.blue_two_id = data["blue_two_id"]
-    match.blue_three_id = data["blue_three_id"]
-    match.time = data["time"]
+    match.red_one_id = data.get("red_one_id", None)
+    match.red_two_id = data.get("red_two_id", None)
+    match.red_three_id = data.get("red_three_id", None)
+    match.blue_one_id = data.get("blue_one_id", None)
+    match.blue_two_id = data.get("blue_two_id", None)
+    match.blue_three_id = data.get("blue_three_id", None)
+    match.time = data.get("time", None)
     match.comp_level_id = data["comp_level"]["comp_lvl_typ"]
 
     match.save()
@@ -393,6 +402,7 @@ def save_scouting_user_info(data):
     user_info.eliminate_results = data["eliminate_results"]
 
     user_info.save()
+    return user_info
 
 
 def void_field_response(id):
@@ -435,16 +445,29 @@ def save_field_form(field_form):
     if img is not None:
         ff.img_id = img["public_id"]
         ff.img_ver = img["version"]
+    elif field_form.get("img_id", None) is not None:
+        ff.img_id = field_form["img_id"]
+        if field_form.get("img_ver", None) is not None:
+            ff.img_ver = field_form["img_ver"]
 
     if inv_img is not None:
         ff.inv_img_id = inv_img["public_id"]
         ff.inv_img_ver = inv_img["version"]
+    elif field_form.get("inv_img_id", None) is not None:
+        ff.inv_img_id = field_form["inv_img_id"]
+        if field_form.get("inv_img_ver", None) is not None:
+            ff.inv_img_ver = field_form["inv_img_ver"]
 
     if full_img is not None:
         ff.full_img_id = full_img["public_id"]
         ff.full_img_ver = full_img["version"]
+    elif field_form.get("full_img_id", None) is not None:
+        ff.full_img_id = field_form["full_img_id"]
+        if field_form.get("full_img_ver", None) is not None:
+            ff.full_img_ver = field_form["full_img_ver"]
 
     ff.save()
+    return ff
 
 
 def foo():

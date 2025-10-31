@@ -25,7 +25,7 @@ class Meeting(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"{self.id} : {self.user} : {self.time}"
+        return f"{self.id} : {self.title} : {self.start}"
 
 
 class AttendanceApprovalType(models.Model):
@@ -50,7 +50,7 @@ class Attendance(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return f"{self.id} : {self.user} : {self.time}"
+        return f"{self.id} : {self.user} : {self.time_in}"
 
     def is_unapproved(self):
         return self.approval_typ.approval_typ == "unapp"

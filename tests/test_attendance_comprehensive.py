@@ -18,8 +18,7 @@ class TestAttendanceUtil:
         from scouting.models import Season
         return Season.objects.create(
             season=2024,
-            current="y",
-            void_ind="n"
+            current="y"
         )
 
     @pytest.fixture
@@ -517,8 +516,7 @@ class TestAttendanceViews:
         from scouting.models import Season
         return Season.objects.create(
             season=2024,
-            current="y",
-            void_ind="n"
+            current="y"
         )
 
     @pytest.fixture
@@ -726,8 +724,7 @@ class TestAttendanceModels:
         from scouting.models import Season
         return Season.objects.create(
             season=2024,
-            current="y",
-            void_ind="n"
+            current="y"
         )
 
     @pytest.fixture
