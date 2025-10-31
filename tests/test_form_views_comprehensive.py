@@ -4,7 +4,7 @@ Comprehensive tests for form/views.py covering all API endpoints and view classe
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIRequestFactory
+from rest_framework.test import APIRequestFactory, force_authenticate
 from django.test import RequestFactory
 
 
@@ -39,7 +39,7 @@ class TestQuestionView:
             
             assert response.status_code == 200
 
-    def test_get_questions_error_handling(self, api_rf):
+    def test_get_questions_error_handling(self, api_rf, system_user):
         """Test error handling in question retrieval."""
         from form.views import QuestionView
         
@@ -68,9 +68,9 @@ class TestQuestionView:
         """Test posting question without proper permissions."""
         from form.views import QuestionView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.post('/api/form/question/', {})
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = QuestionView.as_view()
             response = view(request)
             
@@ -86,9 +86,9 @@ class TestFormEditorView:
         """Test form editor without proper permissions."""
         from form.views import FormEditorView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.get('/api/form/form-editor/?form_typ=survey')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = FormEditorView.as_view()
             response = view(request)
             
@@ -99,14 +99,14 @@ class TestFormEditorView:
         """Test successful form editor initialization."""
         from form.views import FormEditorView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.get_questions', return_value=[]), \
              patch('form.util.get_question_types', return_value=[]), \
              patch('form.util.get_form_sub_types', return_value=[]), \
              patch('form.util.get_flows', return_value=[]):
             
             request = api_rf.get('/api/form/form-editor/?form_typ=survey')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = FormEditorView.as_view()
             response = view(request)
             
@@ -138,11 +138,11 @@ class TestSaveAnswersView:
         """Test saving field answers without proper permissions."""
         from form.views import SaveAnswersView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.post('/api/form/save-answers/', {
                 'form_typ': 'field'
             }, format='json')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = SaveAnswersView.as_view()
             response = view(request)
             
@@ -158,9 +158,9 @@ class TestResponseView:
         """Test getting response without admin access."""
         from form.views import ResponseView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.get('/api/form/response/?response_id=1')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = ResponseView.as_view()
             response = view(request)
             
@@ -171,11 +171,11 @@ class TestResponseView:
         """Test successful response retrieval."""
         from form.views import ResponseView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.get_response', return_value=[]):
             
             request = api_rf.get('/api/form/response/?response_id=1')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = ResponseView.as_view()
             response = view(request)
             
@@ -185,9 +185,9 @@ class TestResponseView:
         """Test deleting response without admin access."""
         from form.views import ResponseView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.delete('/api/form/response/?response_id=1')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = ResponseView.as_view()
             response = view(request)
             
@@ -198,11 +198,11 @@ class TestResponseView:
         """Test successful response deletion."""
         from form.views import ResponseView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.delete_response'):
             
             request = api_rf.delete('/api/form/response/?response_id=1')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = ResponseView.as_view()
             response = view(request)
             
@@ -217,9 +217,9 @@ class TestResponsesView:
         """Test getting responses without admin access."""
         from form.views import ResponsesView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.get('/api/form/responses/?form_typ=survey')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = ResponsesView.as_view()
             response = view(request)
             
@@ -230,11 +230,11 @@ class TestResponsesView:
         """Test successful responses retrieval."""
         from form.views import ResponsesView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.get_responses', return_value=[]):
             
             request = api_rf.get('/api/form/responses/?form_typ=survey')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = ResponsesView.as_view()
             response = view(request)
             
@@ -249,9 +249,9 @@ class TestQuestionAggregateView:
         """Test getting aggregates without proper permissions."""
         from form.views import QuestionAggregateView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.get('/api/form/question-aggregate/?form_typ=survey')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = QuestionAggregateView.as_view()
             response = view(request)
             
@@ -262,11 +262,11 @@ class TestQuestionAggregateView:
         """Test successful aggregates retrieval."""
         from form.views import QuestionAggregateView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.get_question_aggregates', return_value=[]):
             
             request = api_rf.get('/api/form/question-aggregate/?form_typ=survey')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = QuestionAggregateView.as_view()
             response = view(request)
             
@@ -283,7 +283,7 @@ class TestQuestionAggregateTypeView:
         
         with patch('form.util.get_question_aggregate_types', return_value=[]):
             request = api_rf.get('/api/form/question-aggregate-types/')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = QuestionAggregateTypeView.as_view()
             response = view(request)
             
@@ -298,9 +298,9 @@ class TestQuestionConditionView:
         """Test getting conditions without proper permissions."""
         from form.views import QuestionConditionView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.get('/api/form/question-condition/?form_typ=survey')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = QuestionConditionView.as_view()
             response = view(request)
             
@@ -311,11 +311,11 @@ class TestQuestionConditionView:
         """Test successful conditions retrieval."""
         from form.views import QuestionConditionView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.get_question_conditions', return_value=[]):
             
             request = api_rf.get('/api/form/question-condition/?form_typ=survey')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = QuestionConditionView.as_view()
             response = view(request)
             
@@ -332,20 +332,20 @@ class TestFlowView:
         
         with patch('form.util.get_flows', return_value=[]):
             request = api_rf.get('/api/form/flow/')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = FlowView.as_view()
             response = view(request)
             
             assert response.status_code == 200
 
-    def test_get_flow_by_id(self, api_rf, test_user):
+    def test_get_flow_by_id(self, api_rf, test_user, system_user):
         """Test getting specific flow by ID."""
         from form.views import FlowView
         
         mock_flow = Mock()
         with patch('form.util.get_flows', return_value=[mock_flow]):
             request = api_rf.get('/api/form/flow/?id=1')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = FlowView.as_view()
             response = view(request)
             
@@ -366,7 +366,7 @@ class TestGraphEditorView:
              patch('form.util.get_question_condition_types', return_value=[]):
             
             request = api_rf.get('/api/form/graph-editor/')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = GraphEditorView.as_view()
             response = view(request)
             
@@ -386,20 +386,20 @@ class TestGraphView:
         
         with patch('form.util.get_graphs', return_value=[]):
             request = api_rf.get('/api/form/graph/')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = GraphView.as_view()
             response = view(request)
             
             assert response.status_code == 200
 
-    def test_get_graph_by_id(self, api_rf, test_user):
+    def test_get_graph_by_id(self, api_rf, test_user, system_user):
         """Test getting specific graph by ID."""
         from form.views import GraphView
         
         mock_graph = Mock()
         with patch('form.util.get_graphs', return_value=[mock_graph]):
             request = api_rf.get('/api/form/graph/?graph_id=1')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = GraphView.as_view()
             response = view(request)
             
@@ -414,9 +414,9 @@ class TestFlowConditionView:
         """Test getting flow conditions without proper permissions."""
         from form.views import FlowConditionView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.get('/api/form/flow-condition/?form_typ=survey')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = FlowConditionView.as_view()
             response = view(request)
             
@@ -427,11 +427,11 @@ class TestFlowConditionView:
         """Test successful flow conditions retrieval."""
         from form.views import FlowConditionView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.get_flow_condition', return_value=[]):
             
             request = api_rf.get('/api/form/flow-condition/?form_typ=survey')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = FlowConditionView.as_view()
             response = view(request)
             
@@ -446,9 +446,9 @@ class TestQuestionConditionTypesView:
         """Test getting condition types without proper permissions."""
         from form.views import QuestionConditionTypesView
         
-        with patch('general.security.has_access', return_value=False):
+        with patch('form.views.has_access', return_value=False):
             request = api_rf.get('/api/form/question-condition-types/')
-            request.user = test_user
+            force_authenticate(request, user=test_user)
             view = QuestionConditionTypesView.as_view()
             response = view(request)
             
@@ -459,11 +459,11 @@ class TestQuestionConditionTypesView:
         """Test successful condition types retrieval."""
         from form.views import QuestionConditionTypesView
         
-        with patch('general.security.has_access', return_value=True), \
+        with patch('form.views.has_access', return_value=True), \
              patch('form.util.get_question_condition_types', return_value=[]):
             
             request = api_rf.get('/api/form/question-condition-types/')
-            request.user = admin_user
+            force_authenticate(request, user=admin_user)
             view = QuestionConditionTypesView.as_view()
             response = view(request)
             

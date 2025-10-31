@@ -69,10 +69,11 @@ def admin_user(db):
     user = User.objects.create_user(
         username='admin',
         password='admin123',
-        email='admin@example.com',
-        is_staff=True,
-        is_superuser=True
+        email='admin@example.com'
     )
+    user.is_superuser = True
+    user.is_active = True
+    user.save()
     return user
 
 
