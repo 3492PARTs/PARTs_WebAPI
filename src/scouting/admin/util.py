@@ -402,6 +402,7 @@ def save_scouting_user_info(data):
     user_info.eliminate_results = data["eliminate_results"]
 
     user_info.save()
+    return user_info
 
 
 def void_field_response(id):
