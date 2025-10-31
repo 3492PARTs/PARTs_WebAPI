@@ -454,6 +454,7 @@ def save_field_form(field_form):
         ff.full_img_ver = full_img["version"]
 
     ff.save()
+    return ff
 
 
 def foo():

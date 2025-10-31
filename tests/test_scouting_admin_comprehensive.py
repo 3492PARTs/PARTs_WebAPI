@@ -635,7 +635,7 @@ class TestSeasonView:
     
     def test_delete_season(self, api_rf, scout_user, season, system_user):
         """Test DELETE season."""
-        request = api_rf.delete(f'/scouting/admin/season/?id={season.id}')
+        request = api_rf.delete(f'/scouting/admin/season/?season_id={season.id}')
         force_authenticate(request, user=scout_user)
         
         with patch('scouting.admin.views.has_access', return_value=True):
