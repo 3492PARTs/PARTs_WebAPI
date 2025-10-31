@@ -209,16 +209,16 @@ class TestDeleteEvent:
     def test_delete_non_current_event(self, event, team):
         """Test deleting a non-current event."""
         event.teams.add(team)
-        event_id = event.event_cd
+        event_id = event.id
         
         admin_util.delete_event(event_id)
         
-        assert not Event.objects.filter(event_cd=event_id).exists()
+        assert not Event.objects.filter(id=event_id).exists()
     
     def test_cannot_delete_current_event(self, current_event):
         """Test that current event cannot be deleted."""
         with pytest.raises(Exception, match="Cannot delete current event"):
-            admin_util.delete_event(current_event.event_cd)
+            admin_util.delete_event(current_event.id)
         
         assert Event.objects.filter(id=current_event.id).exists()
     
@@ -227,7 +227,7 @@ class TestDeleteEvent:
         event.teams.add(team)
         assert team in event.teams.all()
         
-        admin_util.delete_event(event.event_cd)
+        admin_util.delete_event(event.id)
         
         # Team should still exist but not be linked to deleted event
         assert Team.objects.filter(team_no=team.team_no).exists()

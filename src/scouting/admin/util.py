@@ -121,7 +121,7 @@ def save_season(data):
     if data.get("id", None) is not None:
         season = Season.objects.get(id=data["id"])
     else:
-        season = Season(season=data["season"], current=data["current"])
+        season = Season(season=data["season"], current=data.get("current", "n"))
 
     season.game = data["game"]
     season.manual = data["manual"]
@@ -160,44 +160,53 @@ def delete_season(season_id):
 
 
 def save_event(data):
-    if (data.get("event_id", None)) is not None:
-        event = Event.objects.get(id=data["event_id"])
-        event.season = Season.objects.get(id=data["season_id"])
+    # Handle both season_id and season.id formats
+    if "season_id" in data:
+        season_id = data["season_id"]
+    elif "season" in data and isinstance(data["season"], dict):
+        season_id = data["season"]["id"]
+    else:
+        raise ValueError("season_id or season.id required")
+    
+    if (data.get("event_id", None)) is not None or (data.get("id", None)) is not None:
+        event_id = data.get("event_id") or data.get("id")
+        event = Event.objects.get(id=event_id)
+        event.season = Season.objects.get(id=season_id)
         event.event_nm = data["event_nm"]
         event.date_st = data["date_st"]
         event.event_cd = data["event_cd"]
         event.event_url = data.get("event_url", None)
-        event.address = data["address"]
-        event.city = data["city"]
-        event.state_prov = data["state_prov"]
-        event.postal_code = data["postal_code"]
-        event.location_name = data["location_name"]
+        event.address = data.get("address", "")
+        event.city = data.get("city", "")
+        event.state_prov = data.get("state_prov", "")
+        event.postal_code = data.get("postal_code", "")
+        event.location_name = data.get("location_name", "")
         event.gmaps_url = data.get("gmaps_url", None)
         event.webcast_url = data.get("webcast_url", None)
         event.date_end = data["date_end"]
-        event.timezone = data["timezone"]
-        event.current = data["current"]
-        event.competition_page_active = data["competition_page_active"]
-        event.void_ind = data["void_ind"]
+        event.timezone = data.get("timezone", "")
+        event.current = data.get("current", "n")
+        event.competition_page_active = data.get("competition_page_active", "n")
+        event.void_ind = data.get("void_ind", "n")
     else:
         event = Event(
-            season=Season.objects.get(id=data["season_id"]),
+            season=Season.objects.get(id=season_id),
             event_nm=data["event_nm"],
             date_st=data["date_st"],
             event_cd=data["event_cd"],
             event_url=data.get("event_url", None),
-            address=data["address"],
-            city=data["city"],
-            state_prov=data["state_prov"],
-            postal_code=data["postal_code"],
-            location_name=data["location_name"],
+            address=data.get("address", ""),
+            city=data.get("city", ""),
+            state_prov=data.get("state_prov", ""),
+            postal_code=data.get("postal_code", ""),
+            location_name=data.get("location_name", ""),
             gmaps_url=data.get("gmaps_url", None),
             webcast_url=data.get("webcast_url", None),
             date_end=data["date_end"],
-            timezone=data["timezone"],
-            current=data["current"],
-            competition_page_active=data["competition_page_active"],
-            void_ind=data["void_ind"],
+            timezone=data.get("timezone", ""),
+            current=data.get("current", "n"),
+            competition_page_active=data.get("competition_page_active", "n"),
+            void_ind=data.get("void_ind", "n"),
         )
 
     event.save()

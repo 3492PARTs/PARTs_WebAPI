@@ -186,6 +186,7 @@ class TestGetCompetitionInformation:
         """Test getting competition information with matches"""
         # Create some matches with team 3492
         match1 = Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
@@ -199,6 +200,7 @@ class TestGetCompetitionInformation:
         )
         
         match2 = Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}2",
             event=event,
             comp_level=comp_level,
             match_number=2,
@@ -229,6 +231,7 @@ class TestGetCompetitionInformation:
         
         for i, position in enumerate(positions):
             match_data = {
+                'match_key': f"{event.event_cd}_{comp_level.comp_lvl_typ}{i + 1}",
                 'event': event,
                 'comp_level': comp_level,
                 'match_number': i + 1,
@@ -254,6 +257,7 @@ class TestGetCompetitionInformation:
         """Test that void matches are excluded"""
         # Create valid match
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
@@ -268,6 +272,7 @@ class TestGetCompetitionInformation:
         
         # Create void match
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}2",
             event=event,
             comp_level=comp_level,
             match_number=2,
@@ -304,6 +309,7 @@ class TestGetCompetitionInformation:
         
         # Create matches out of order
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level_playoff.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level_playoff,
             match_number=1,
@@ -317,6 +323,7 @@ class TestGetCompetitionInformation:
         )
         
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level_qual.comp_lvl_typ}2",
             event=event,
             comp_level=comp_level_qual,
             match_number=2,
@@ -330,6 +337,7 @@ class TestGetCompetitionInformation:
         )
         
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level_qual.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level_qual,
             match_number=1,
@@ -411,6 +419,7 @@ class TestInitView:
         """Test successful competition init response"""
         # Create a match
         Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
@@ -478,6 +487,7 @@ class TestCompetitionInformationSerializer:
     def test_serializer_with_event_and_matches(self, event, team_3492, comp_level, other_team):
         """Test serializer with full competition information"""
         match = Match.objects.create(
+            match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
             match_number=1,
