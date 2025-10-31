@@ -57,15 +57,14 @@ def schedule_type(db):
 
 
 @pytest.fixture
-def schedule(db, event, schedule_type):
+def schedule(db, event, schedule_type, test_user):
     """Create a test schedule."""
     return Schedule.objects.create(
         event=event,
         sch_typ=schedule_type,
-        sch_nm='Team Meeting',
+        user=test_user,
         st_time=timezone.now(),
-        end_time=timezone.now() + timedelta(hours=2),
-        void_ind='n'
+        end_time=timezone.now() + timedelta(hours=2)
     )
 
 
@@ -84,7 +83,8 @@ def test_user(db):
 def competition_level(db):
     """Create a competition level."""
     return CompetitionLevel.objects.create(
-        comp_lvl='qm',
+        comp_lvl_typ='qm',
+        comp_lvl_typ_nm='Qualification Match',
         comp_lvl_order=1
     )
 
@@ -101,16 +101,15 @@ def match(db, event, competition_level):
 
 
 @pytest.fixture
-def field_schedule(db, match, test_user):
+def field_schedule(db, event, test_user):
     """Create a test field schedule."""
     return FieldSchedule.objects.create(
-        match=match,
+        event=event,
         st_time=timezone.now(),
         end_time=timezone.now() + timedelta(hours=1),
         red_one=test_user,
         notification1=True,
-        notification2=False,
-        void_ind='n'
+        notification2=False
     )
 
 
