@@ -481,27 +481,27 @@ class TestVoidScoutPitResponse:
 class TestSaveFieldForm:
     """Tests for save_field_form function."""
     
-    def test_create_new_field_form(self, season):
+    def test_create_new_field_form(self, current_season):
         """Test creating a new field form."""
         data = {
-            'season': {'id': season.id},
+            'season': {'id': current_season.id},
             'img_id': 'test_img',
             'img_ver': 'v1'
         }
         
         result = admin_util.save_field_form(data)
         
-        assert result.season == season
+        assert result.season == current_season
         assert result.img_id == 'test_img'
         assert result.void_ind == 'n'
     
-    def test_update_existing_field_form(self, season):
+    def test_update_existing_field_form(self, current_season):
         """Test updating an existing field form."""
-        field_form = FieldForm.objects.create(season=season, img_id='old')
+        field_form = FieldForm.objects.create(season=current_season, img_id='old')
         
         data = {
             'id': field_form.id,
-            'season': {'id': season.id},
+            'season': {'id': current_season.id},
             'img_id': 'updated_img',
             'img_ver': 'v2'
         }
@@ -608,6 +608,7 @@ class TestSeasonView:
         """Test POST to create a new season."""
         data = {
             'season': '2027',
+            'current': 'n',
             'game': 'Test Game',
             'manual': 'Test manual'
         }
@@ -622,7 +623,7 @@ class TestSeasonView:
     
     def test_post_season_no_access(self, api_rf, test_user):
         """Test POST season without permissions."""
-        data = {'season': '2027', 'game': 'Test', 'manual': 'Test'}
+        data = {'season': '2027', 'current': 'n', 'game': 'Test', 'manual': 'Test'}
         request = api_rf.post('/scouting/admin/season/', data, format='json')
         force_authenticate(request, user=test_user)
         
@@ -632,7 +633,7 @@ class TestSeasonView:
         assert response.status_code == 200
         assert 'You do not have access' in response.data['retMessage']
     
-    def test_delete_season(self, api_rf, scout_user, season):
+    def test_delete_season(self, api_rf, scout_user, season, system_user):
         """Test DELETE season."""
         request = api_rf.delete(f'/scouting/admin/season/?id={season.id}')
         force_authenticate(request, user=scout_user)
@@ -655,7 +656,9 @@ class TestEventView:
             'event_cd': '2024new',
             'date_st': now().isoformat(),
             'date_end': (now() + timedelta(days=3)).isoformat(),
-            'season': {'id': season.id}
+            'season_id': season.id,
+            'city': 'Test City',
+            'state_prov': 'TS'
         }
         request = api_rf.post('/scouting/admin/event/', data, format='json')
         force_authenticate(request, user=scout_user)
@@ -666,7 +669,7 @@ class TestEventView:
         assert response.status_code == 200
         assert Event.objects.filter(event_cd='2024new').exists()
     
-    def test_delete_event(self, api_rf, scout_user, event):
+    def test_delete_event(self, api_rf, scout_user, event, system_user):
         """Test DELETE event."""
         event_cd = event.event_cd
         request = api_rf.delete(f'/scouting/admin/event/?event_cd={event_cd}')
@@ -686,9 +689,8 @@ class TestMatchView:
     def test_post_create_match(self, api_rf, scout_user, event, comp_level):
         """Test POST to create a new match."""
         data = {
-            'match_key': '2024test_qm10',
             'match_number': 10,
-            'event': {'id': event.id},
+            'event': {'id': event.id, 'event_cd': event.event_cd},
             'comp_level': {'comp_lvl_typ': comp_level.comp_lvl_typ}
         }
         request = api_rf.post('/scouting/admin/match/', data, format='json')
@@ -698,7 +700,7 @@ class TestMatchView:
             response = MatchView.as_view()(request)
         
         assert response.status_code == 200
-        assert Match.objects.filter(match_key='2024test_qm10').exists()
+        assert Match.objects.filter(match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}10").exists()
 
 
 @pytest.mark.django_db
@@ -708,8 +710,8 @@ class TestTeamToEventView:
     def test_post_link_team_to_event(self, api_rf, scout_user, event, team):
         """Test POST to link team to event."""
         data = {
-            'event': {'id': event.id},
-            'team': {'team_no': team.team_no}
+            'event_id': event.id,
+            'teams': [{'team_no': team.team_no, 'team_nm': team.team_nm, 'checked': True}]
         }
         request = api_rf.post('/scouting/admin/team-to-event/', data, format='json')
         force_authenticate(request, user=scout_user)
@@ -726,14 +728,14 @@ class TestRemoveTeamToEventView:
     """Tests for RemoveTeamToEventView."""
     
     def test_delete_team_from_event(self, api_rf, scout_user, event, team):
-        """Test DELETE to remove team from event."""
+        """Test POST to remove team from event."""
         event.teams.add(team)
         
         data = {
-            'event': {'id': event.id},
-            'team': {'team_no': team.team_no}
+            'id': event.id,
+            'teams': [{'team_no': team.team_no, 'team_nm': team.team_nm, 'checked': True}]
         }
-        request = api_rf.delete('/scouting/admin/remove-team-from-event/', data, format='json')
+        request = api_rf.post('/scouting/admin/remove-team-from-event/', data, format='json')
         force_authenticate(request, user=scout_user)
         
         with patch('scouting.admin.views.has_access', return_value=True):
