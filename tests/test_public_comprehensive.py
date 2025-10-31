@@ -69,13 +69,15 @@ def comp_level(db):
 @pytest.fixture
 def event(db, season):
     """Create a test event"""
+    from django.utils.timezone import now
     return Event.objects.create(
         season=season,
         event_nm="Test Competition",
         event_cd="TEST2024",
+        date_st=now(),
+        date_end=now(),
         current="y",
-        competition_page_active="y",
-        void_ind="n"
+        competition_page_active="y"
     )
 
 
@@ -359,35 +361,39 @@ class TestGetCompetitionInformation:
     
     def test_get_competition_information_no_current_event(self, db):
         """Test when no current event with competition page active exists"""
+        from django.utils.timezone import now
         # Create event but not current
         season = Season.objects.create(season=2024, current="y")
         Event.objects.create(
             season=season,
             event_nm="Past Event",
             event_cd="PAST2024",
+            date_st=now(),
+            date_end=now(),
             current="n",  # Not current
-            competition_page_active="y",
-            void_ind="n"
+            competition_page_active="y"
         )
         
-        Team.objects.create(team_no=3492, team_nm="PARTs", void_ind="n")
+        Team.objects.create(team_no=3492, team_nm="PARTs")
         
         with pytest.raises(Event.DoesNotExist):
             get_competition_information()
     
     def test_get_competition_information_competition_page_not_active(self, db):
         """Test when event exists but competition page is not active"""
+        from django.utils.timezone import now
         season = Season.objects.create(season=2024, current="y")
         Event.objects.create(
             season=season,
             event_nm="Test Event",
             event_cd="TEST2024",
+            date_st=now(),
+            date_end=now(),
             current="y",
-            competition_page_active="n",  # Not active
-            void_ind="n"
+            competition_page_active="n"  # Not active
         )
         
-        Team.objects.create(team_no=3492, team_nm="PARTs", void_ind="n")
+        Team.objects.create(team_no=3492, team_nm="PARTs")
         
         with pytest.raises(Event.DoesNotExist):
             get_competition_information()
