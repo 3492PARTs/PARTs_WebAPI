@@ -55,7 +55,7 @@ def set_current_season_event(season_id, event_id, competition_page_active):
 
 
 def delete_event(event_id):
-    e = Event.objects.get(event_id=event_id)
+    e = Event.objects.get(id=event_id)
 
     if e.current == "y":
         raise Exception("Cannot delete current event.")
@@ -130,7 +130,7 @@ def save_season(data):
 
 
 def delete_season(season_id):
-    season = Season.objects.get(season_id=season_id)
+    season = Season.objects.get(id=season_id)
 
     if season.current == "y":
         raise Exception("Cannot delete current season.")
@@ -161,8 +161,8 @@ def delete_season(season_id):
 
 def save_event(data):
     if (data.get("event_id", None)) is not None:
-        event = Event.objects.get(event_id=data["event_id"])
-        event.season.id = data["season_id"]
+        event = Event.objects.get(id=data["event_id"])
+        event.season = Season.objects.get(id=data["season_id"])
         event.event_nm = data["event_nm"]
         event.date_st = data["date_st"]
         event.event_cd = data["event_cd"]
@@ -181,7 +181,7 @@ def save_event(data):
         event.void_ind = data["void_ind"]
     else:
         event = Event(
-            season_id=data["season_id"],
+            season=Season.objects.get(id=data["season_id"]),
             event_nm=data["event_nm"],
             date_st=data["date_st"],
             event_cd=data["event_cd"],
@@ -214,13 +214,13 @@ def save_match(data):
         match.event_id = data["event"]["id"]
 
     match.match_number = data["match_number"]
-    match.red_one_id = data["red_one_id"]
-    match.red_two_id = data["red_two_id"]
-    match.red_three_id = data["red_three_id"]
-    match.blue_one_id = data["blue_one_id"]
-    match.blue_two_id = data["blue_two_id"]
-    match.blue_three_id = data["blue_three_id"]
-    match.time = data["time"]
+    match.red_one_id = data.get("red_one_id", None)
+    match.red_two_id = data.get("red_two_id", None)
+    match.red_three_id = data.get("red_three_id", None)
+    match.blue_one_id = data.get("blue_one_id", None)
+    match.blue_two_id = data.get("blue_two_id", None)
+    match.blue_three_id = data.get("blue_three_id", None)
+    match.time = data.get("time", None)
     match.comp_level_id = data["comp_level"]["comp_lvl_typ"]
 
     match.save()
