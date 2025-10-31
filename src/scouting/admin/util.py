@@ -444,14 +444,26 @@ def save_field_form(field_form):
     if img is not None:
         ff.img_id = img["public_id"]
         ff.img_ver = img["version"]
+    elif field_form.get("img_id", None) is not None:
+        ff.img_id = field_form["img_id"]
+        if field_form.get("img_ver", None) is not None:
+            ff.img_ver = field_form["img_ver"]
 
     if inv_img is not None:
         ff.inv_img_id = inv_img["public_id"]
         ff.inv_img_ver = inv_img["version"]
+    elif field_form.get("inv_img_id", None) is not None:
+        ff.inv_img_id = field_form["inv_img_id"]
+        if field_form.get("inv_img_ver", None) is not None:
+            ff.inv_img_ver = field_form["inv_img_ver"]
 
     if full_img is not None:
         ff.full_img_id = full_img["public_id"]
         ff.full_img_ver = full_img["version"]
+    elif field_form.get("full_img_id", None) is not None:
+        ff.full_img_id = field_form["full_img_id"]
+        if field_form.get("full_img_ver", None) is not None:
+            ff.full_img_ver = field_form["full_img_ver"]
 
     ff.save()
     return ff
