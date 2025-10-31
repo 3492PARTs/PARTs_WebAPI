@@ -81,8 +81,7 @@ def season(db):
     """Create a test season"""
     return Season.objects.create(
         season=2024,
-        current='y',
-        void_ind='n'
+        current='y'
     )
 
 

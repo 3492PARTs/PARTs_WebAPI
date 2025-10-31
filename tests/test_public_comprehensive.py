@@ -42,8 +42,7 @@ def season(db):
     """Create a test season"""
     return Season.objects.create(
         season=2024,
-        current="y",
-        void_ind="n"
+        current="y"
     )
 
 
@@ -361,7 +360,7 @@ class TestGetCompetitionInformation:
     def test_get_competition_information_no_current_event(self, db):
         """Test when no current event with competition page active exists"""
         # Create event but not current
-        season = Season.objects.create(season=2024, current="y", void_ind="n")
+        season = Season.objects.create(season=2024, current="y")
         Event.objects.create(
             season=season,
             event_nm="Past Event",
@@ -378,7 +377,7 @@ class TestGetCompetitionInformation:
     
     def test_get_competition_information_competition_page_not_active(self, db):
         """Test when event exists but competition page is not active"""
-        season = Season.objects.create(season=2024, current="y", void_ind="n")
+        season = Season.objects.create(season=2024, current="y")
         Event.objects.create(
             season=season,
             event_nm="Test Event",
