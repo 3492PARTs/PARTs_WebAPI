@@ -42,7 +42,7 @@ from form.models import (
     QuestionAggregateType,
     Flow,
     FlowAnswer,
-    QuestionFlow,
+    FlowQuestion,
 )
 
 User = get_user_model()
