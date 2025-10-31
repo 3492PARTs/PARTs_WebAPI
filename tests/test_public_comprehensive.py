@@ -11,7 +11,9 @@ Tests cover:
 
 import pytest
 from unittest.mock import patch, Mock
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 from rest_framework.test import force_authenticate, APIRequestFactory
 from rest_framework import status
 
