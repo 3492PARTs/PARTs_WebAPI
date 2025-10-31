@@ -29,7 +29,8 @@ RUN pip install poetry==2.1.4 \
     && rm -rf $POETRY_CACHE_DIR \
     && pipdeptree -fl --exclude poetry --exclude pipdeptree --python /app/.venv/bin/python > requirements.txt
 
-# Test stage - run tests to validate the build
+# Test stage - contains dev dependencies for testing
+# Tests are now run in Jenkins before the build, not during Docker build
 FROM builder AS test
 
 # Install dev dependencies for testing
@@ -37,10 +38,8 @@ RUN poetry install --with dev --no-root
 
 COPY ./ ./
 
-# pytest.ini is already configured with pythonpath = src
-RUN echo "Running test suite..." \
-    && poetry run pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v \
-    && echo "All tests passed!"
+# Test stage is ready for running tests in Jenkins
+# Tests will be executed by Jenkins using: docker run --rm <test-image> poetry run pytest ...
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
