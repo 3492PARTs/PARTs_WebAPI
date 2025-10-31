@@ -228,7 +228,7 @@ def api_rf():
 class TestGetTableColumns:
     """Tests for get_table_columns function"""
     
-    def test_basic_table_columns(self, db):
+    def test_basic_table_columns(self, db, field_form_type):
         """Test basic table column generation"""
         columns = field_util.get_table_columns([])
         
@@ -734,7 +734,7 @@ class TestFormView:
         request = api_rf.get('/scouting/field/form/')
         force_authenticate(request, user=admin_user)
         
-        with patch('general.security.has_access') as mock_access, \
+        with patch('scouting.field.views.has_access') as mock_access, \
              patch('scouting.field.util.get_field_form') as mock_form:
             mock_access.return_value = True
             mock_form.side_effect = Exception("Test error")
@@ -814,7 +814,7 @@ class TestResponsesView:
         request = api_rf.get('/scouting/field/responses/?team=3492')
         force_authenticate(request, user=admin_user)
         
-        with patch('general.security.has_access') as mock_access, \
+        with patch('scouting.field.views.has_access') as mock_access, \
              patch('scouting.field.util.get_responses') as mock_resp:
             mock_access.return_value = True
             mock_resp.return_value = {
@@ -906,7 +906,7 @@ class TestScoutingResponsesView:
         request = api_rf.get('/scouting/field/scouting-responses/')
         force_authenticate(request, user=admin_user)
         
-        with patch('general.security.has_access') as mock_access, \
+        with patch('scouting.field.views.has_access') as mock_access, \
              patch('scouting.field.util.get_scouting_responses') as mock_resp:
             mock_access.return_value = True
             mock_resp.side_effect = Exception("Test error")
