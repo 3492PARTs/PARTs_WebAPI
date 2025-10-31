@@ -237,53 +237,67 @@ def save_match(data):
 
 
 def link_team_to_event(data):
-    # Handle both single team and teams array
-    teams_list = data.get("teams", [])
-    if "team" in data and not teams_list:
-        teams_list = [{"team_no": data["team"]["team_no"], "checked": True}]
-    
-    # Handle both event_id and event.id
-    event_id = data.get("event_id") or (data.get("event", {}).get("id"))
-    if not event_id:
-        return ""
-    
-    processed = False
-    for t in teams_list:
+    messages = ""
+
+    for t in data.get("teams", []):
         try:  # TODO it doesn't throw an error, and re-linking many to many only keeps one entry in the table for the link
             if t.get("checked", False):
                 team = Team.objects.get(team_no=t["team_no"], void_ind="n")
-                e = Event.objects.get(id=event_id, void_ind="n")
+                e = Event.objects.get(id=data["event_id"], void_ind="n")
                 team.event_set.add(e)
-                processed = True
+                messages += (
+                    "(ADD) Added team: "
+                    + str(t["team_no"])
+                    + " "
+                    + t["team_nm"]
+                    + " to event: "
+                    + e.event_cd
+                    + "\n"
+                )
         except IntegrityError:
-            processed = True
-    
-    return "success" if processed else ""
+            messages += (
+                "(NO ADD) Team: "
+                + str(t["team_no"])
+                + " "
+                + t["team_nm"]
+                + " already at event: "
+                + e.event_cd
+                + "\n"
+            )
+
+    return messages
 
 
 def remove_link_team_to_event(data):
-    # Handle both single team and teams array
-    teams_list = data.get("teams", [])
-    if "team" in data and not teams_list:
-        teams_list = [{"team_no": data["team"]["team_no"], "checked": True}]
-    
-    # Handle both id and event.id
-    event_id = data.get("id") or (data.get("event", {}).get("id"))
-    if not event_id:
-        return ""
-    
-    processed = False
-    for t in teams_list:
+    messages = ""
+
+    for t in data.get("teams", []):
         try:  # TODO it doesn't throw an error, but re-linking many to many only keeps one entry in the table for the link
             if t.get("checked", False):
                 team = Team.objects.get(team_no=t["team_no"], void_ind="n")
-                e = Event.objects.get(id=event_id, void_ind="n")
+                e = Event.objects.get(id=data["id"], void_ind="n")
                 team.event_set.remove(e)
-                processed = True
+                messages += (
+                    "(REMOVE) Removed team: "
+                    + str(t["team_no"])
+                    + " "
+                    + t["team_nm"]
+                    + " from event: "
+                    + e.event_cd
+                    + "\n"
+                )
         except IntegrityError:
-            processed = True
-    
-    return "success" if processed else ""
+            messages += (
+                "(NO REMOVE) Team: "
+                + str(t["team_no"])
+                + " "
+                + t["team_nm"]
+                + " from event: "
+                + e.event_cd
+                + "\n"
+            )
+
+    return messages
 
 
 def save_scout_schedule(data):

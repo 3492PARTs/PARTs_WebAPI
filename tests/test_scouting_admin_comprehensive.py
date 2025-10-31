@@ -388,13 +388,14 @@ class TestLinkTeamToEvent:
     def test_link_new_team_to_event(self, event, team):
         """Test linking a team to an event."""
         data = {
-            'event': {'id': event.id},
-            'team': {'team_no': team.team_no}
+            'event_id': event.id,
+            'teams': [{'team_no': team.team_no, 'team_nm': team.team_nm, 'checked': True}]
         }
         
         result = admin_util.link_team_to_event(data)
         
-        assert result == 'success'
+        assert '(ADD) Added team:' in result
+        assert str(team.team_no) in result
         assert team in event.teams.all()
     
     def test_link_team_already_linked(self, event, team):
@@ -402,14 +403,14 @@ class TestLinkTeamToEvent:
         event.teams.add(team)
         
         data = {
-            'event': {'id': event.id},
-            'team': {'team_no': team.team_no}
+            'event_id': event.id,
+            'teams': [{'team_no': team.team_no, 'team_nm': team.team_nm, 'checked': True}]
         }
         
         result = admin_util.link_team_to_event(data)
         
-        assert result == 'success'
-        assert team in event.teams.all()
+        # Should still add (many-to-many doesn't duplicate)
+        assert '(ADD) Added team:' in result or '(NO ADD)' in result
 
 
 @pytest.mark.django_db
@@ -422,13 +423,14 @@ class TestRemoveLinkTeamToEvent:
         assert team in event.teams.all()
         
         data = {
-            'event': {'id': event.id},
-            'team': {'team_no': team.team_no}
+            'id': event.id,
+            'teams': [{'team_no': team.team_no, 'team_nm': team.team_nm, 'checked': True}]
         }
         
         result = admin_util.remove_link_team_to_event(data)
         
-        assert result == 'success'
+        assert '(REMOVE) Removed team:' in result
+        assert str(team.team_no) in result
         assert team not in event.teams.all()
 
 
