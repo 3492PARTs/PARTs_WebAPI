@@ -658,7 +658,9 @@ class TestEventView:
             'date_end': (now() + timedelta(days=3)).isoformat(),
             'season_id': season.id,
             'city': 'Test City',
-            'state_prov': 'TS'
+            'state_prov': 'TS',
+            'current': 'n',
+            'competition_page_active': 'n'
         }
         request = api_rf.post('/scouting/admin/event/', data, format='json')
         force_authenticate(request, user=scout_user)
@@ -671,15 +673,15 @@ class TestEventView:
     
     def test_delete_event(self, api_rf, scout_user, event, system_user):
         """Test DELETE event."""
-        event_cd = event.event_cd
-        request = api_rf.delete(f'/scouting/admin/event/?event_cd={event_cd}')
+        event_id = event.id
+        request = api_rf.delete(f'/scouting/admin/event/?event_id={event_id}')
         force_authenticate(request, user=scout_user)
         
         with patch('scouting.admin.views.has_access', return_value=True):
             response = EventView.as_view()(request)
         
         assert response.status_code == 200
-        assert not Event.objects.filter(event_cd=event_cd).exists()
+        assert not Event.objects.filter(id=event_id).exists()
 
 
 @pytest.mark.django_db
@@ -733,6 +735,15 @@ class TestRemoveTeamToEventView:
         
         data = {
             'id': event.id,
+            'season_id': event.season.id,
+            'event_nm': event.event_nm,
+            'event_cd': event.event_cd,
+            'date_st': event.date_st.isoformat(),
+            'date_end': event.date_end.isoformat(),
+            'city': 'Test City',
+            'state_prov': 'TS',
+            'current': event.current,
+            'competition_page_active': 'n',
             'teams': [{'team_no': team.team_no, 'team_nm': team.team_nm, 'checked': True}]
         }
         request = api_rf.post('/scouting/admin/remove-team-from-event/', data, format='json')
