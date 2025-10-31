@@ -304,7 +304,7 @@ class TestDeleteSeason:
     
     def test_cannot_delete_current_season(self, current_season):
         """Test that current season cannot be deleted."""
-        with pytest.raises(Exception, match="Cannot delete the current season"):
+        with pytest.raises(Exception, match="Cannot delete current season"):
             admin_util.delete_season(current_season.id)
         
         assert Season.objects.filter(id=current_season.id).exists()
@@ -354,15 +354,14 @@ class TestSaveMatch:
     def test_create_new_match(self, event, comp_level):
         """Test creating a new match."""
         data = {
-            'match_key': '2024test_qm2',
             'match_number': 2,
-            'event': {'id': event.id},
+            'event': {'id': event.id, 'event_cd': event.event_cd},
             'comp_level': {'comp_lvl_typ': comp_level.comp_lvl_typ}
         }
         
         result = admin_util.save_match(data)
         
-        assert result.match_key == '2024test_qm2'
+        assert result.match_key == f"{event.event_cd}_{comp_level.comp_lvl_typ}2"
         assert result.match_number == 2
         assert result.event == event
     
@@ -544,7 +543,7 @@ class TestScoutAuthGroupsView:
             response = ScoutAuthGroupsView.as_view()(request)
         
         assert response.status_code == 200
-        assert 'You do not have access' in response.data['message']
+        assert 'You do not have access' in response.data['retMessage']
     
     def test_get_scout_auth_groups_exception(self, api_rf, scout_user):
         """Test GET scout auth groups with exception."""
@@ -557,7 +556,7 @@ class TestScoutAuthGroupsView:
             response = ScoutAuthGroupsView.as_view()(request)
         
         assert response.status_code == 200
-        assert 'error occurred' in response.data['message']
+        assert 'error occurred' in response.data['retMessage']
 
 
 @pytest.mark.django_db
@@ -576,7 +575,7 @@ class TestSetSeasonEventView:
             response = SetSeasonEventView.as_view()(request)
         
         assert response.status_code == 200
-        assert 'Successfully set the season' in response.data['message']
+        assert 'Successfully set the season' in response.data['retMessage']
     
     def test_set_season_event_no_access(self, api_rf, test_user, season):
         """Test setting season without permissions."""
@@ -587,7 +586,7 @@ class TestSetSeasonEventView:
             response = SetSeasonEventView.as_view()(request)
         
         assert response.status_code == 200
-        assert 'You do not have access' in response.data['message']
+        assert 'You do not have access' in response.data['retMessage']
     
     def test_set_season_event_exception(self, api_rf, scout_user):
         """Test setting season with exception."""
@@ -598,7 +597,7 @@ class TestSetSeasonEventView:
             response = SetSeasonEventView.as_view()(request)
         
         assert response.status_code == 200
-        assert 'error occurred' in response.data['message']
+        assert 'error occurred' in response.data['retMessage']
 
 
 @pytest.mark.django_db
@@ -631,7 +630,7 @@ class TestSeasonView:
             response = SeasonView.as_view()(request)
         
         assert response.status_code == 200
-        assert 'You do not have access' in response.data['message']
+        assert 'You do not have access' in response.data['retMessage']
     
     def test_delete_season(self, api_rf, scout_user, season):
         """Test DELETE season."""

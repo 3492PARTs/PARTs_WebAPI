@@ -500,22 +500,16 @@ class TestCompetitionInformationSerializer:
             void_ind="n"
         )
         
-        with patch('scouting.util.parse_match') as mock_parse:
-            mock_parse.return_value = {
-                'match_number': 1,
-                'comp_level': 'qm'
-            }
-            
-            data = {
-                'event': event,
-                'matches': [mock_parse(match)]
-            }
-            
-            serializer = CompetitionInformationSerializer(data)
-            
-            assert 'event' in serializer.data
-            assert 'matches' in serializer.data
-            assert len(serializer.data['matches']) == 1
+        data = {
+            'event': event,
+            'matches': [match]
+        }
+        
+        serializer = CompetitionInformationSerializer(data)
+        
+        assert 'event' in serializer.data
+        assert 'matches' in serializer.data
+        assert len(serializer.data['matches']) == 1
     
     def test_serializer_with_event_no_matches(self, event):
         """Test serializer with event but no matches"""
