@@ -17,7 +17,7 @@ from unittest.mock import patch, MagicMock
 from scouting.models import Season, Event, Team, PitResponse, PitImage, PitImageType, EventTeamInfo
 from scouting.pit import util as pit_util
 from scouting.pit.views import SavePictureView, ResponsesView, SetDefaultPitImageView, TeamDataView
-from form.models import FormType, FormSubType, Response as FormResponse, QuestionType, Question, Answer
+from form.models import FormType, FormSubType, Response as FormResponse, QuestionType, Question, Answer, QuestionCondition, QuestionConditionType
 
 User = get_user_model()
 
@@ -308,6 +308,13 @@ class TestGetResponses:
     
     def test_get_responses_with_conditional_question(self, event, team, pit_response, question_type, form_type, form_sub_type):
         """Test handling of conditional questions"""
+        # Create a conditional question condition type
+        condition_type = QuestionConditionType.objects.create(
+            question_condition_typ='equals',
+            question_condition_nm='Equals',
+            void_ind='n'
+        )
+        
         # Create a conditional question
         parent_question = Question.objects.create(
             form_typ=form_type,
@@ -330,7 +337,16 @@ class TestGetResponses:
             required='n',
             void_ind='n'
         )
-        conditional_question.conditional_on_questions.add(parent_question)
+        
+        # Create the condition relationship
+        QuestionCondition.objects.create(
+            question_condition_typ=condition_type,
+            value='yes',
+            question_from=parent_question,
+            question_to=conditional_question,
+            active='y',
+            void_ind='n'
+        )
         
         Answer.objects.create(
             response=pit_response.response,
