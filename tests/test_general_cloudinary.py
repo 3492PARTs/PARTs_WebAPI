@@ -85,7 +85,7 @@ class TestBuildImageUrl:
 
     def test_build_image_url(self):
         """Test building image URL."""
-        with patch("cloudinary.CloudinaryImage") as MockCloudinaryImage:
+        with patch("general.cloudinary.CloudinaryImage") as MockCloudinaryImage:
             mock_instance = MagicMock()
             mock_instance.build_url.return_value = "https://res.cloudinary.com/test/image.jpg"
             MockCloudinaryImage.return_value = mock_instance
