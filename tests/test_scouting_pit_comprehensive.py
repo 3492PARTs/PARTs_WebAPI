@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIRequestFactory, force_authenticate
 from unittest.mock import patch, MagicMock
 
-from scouting.models import Season, Event, Team, PitResponse, PitImage, PitImageType, EventTeamInfo
+from scouting.models import Season, Event, Team, PitResponse, PitImage, PitImageType, EventTeamInfo, Question as ScoutingQuestion
 from scouting.pit import util as pit_util
 from scouting.pit.views import SavePictureView, ResponsesView, SetDefaultPitImageView, TeamDataView
 from form.models import FormType, FormSubType, Response as FormResponse, QuestionType, Question, Answer, QuestionCondition, QuestionConditionType
@@ -110,9 +110,9 @@ def question_type(db):
 
 
 @pytest.fixture
-def question(db, form_type, form_sub_type, question_type):
+def question(db, form_type, form_sub_type, question_type, season):
     """Create a test question"""
-    return Question.objects.create(
+    q = Question.objects.create(
         form_typ=form_type,
         question='What is the robot weight?',
         order=1,
@@ -122,6 +122,13 @@ def question(db, form_type, form_sub_type, question_type):
         required='n',
         void_ind='n'
     )
+    # Create the scouting question link for the question to appear in get_questions("pit")
+    ScoutingQuestion.objects.create(
+        question=q,
+        season=season,
+        void_ind='n'
+    )
+    return q
 
 
 @pytest.fixture
@@ -306,7 +313,7 @@ class TestGetResponses:
             
             assert len(result['teams'][0]['pics']) == 0
     
-    def test_get_responses_with_conditional_question(self, event, team, pit_response, question_type, form_type, form_sub_type):
+    def test_get_responses_with_conditional_question(self, event, team, pit_response, question_type, form_type, form_sub_type, season):
         """Test handling of conditional questions"""
         # Create a conditional question condition type
         condition_type = QuestionConditionType.objects.create(
@@ -326,6 +333,12 @@ class TestGetResponses:
             required='n',
             void_ind='n'
         )
+        # Create scouting question link
+        ScoutingQuestion.objects.create(
+            question=parent_question,
+            season=season,
+            void_ind='n'
+        )
         
         conditional_question = Question.objects.create(
             form_typ=form_type,
@@ -335,6 +348,12 @@ class TestGetResponses:
             question_typ=question_type,
             table_col_width='200',
             required='n',
+            void_ind='n'
+        )
+        # Create scouting question link
+        ScoutingQuestion.objects.create(
+            question=conditional_question,
+            season=season,
             void_ind='n'
         )
         
@@ -393,7 +412,7 @@ class TestSaveRobotPicture:
                 'New Robot Image'
             )
             
-            assert 'Saved pit image successfully' in str(result)
+            assert result.data['retMessage'] == 'Saved pit image successfully.'
             
             # Verify image was created
             pit_images = PitImage.objects.filter(pit_response=pit_response)
