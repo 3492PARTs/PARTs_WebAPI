@@ -139,41 +139,42 @@ class TestAllModels:
         from sponsoring.models import Sponsor
         
         sponsor = Sponsor.objects.create(
-            sponsor_name="Test Sponsor",
-            void_ind="n"
+            sponsor_nm="Test Sponsor",
+            phone="1234567890",
+            email="test@example.com"
         )
         str_repr = str(sponsor)
         assert str_repr is not None
-        assert "Test Sponsor" in str_repr or sponsor.sponsor_name in str_repr
+        assert "Test Sponsor" in str_repr or sponsor.sponsor_nm in str_repr
     
     def test_sponsoring_item_str(self):
         """Test Item __str__ method."""
-        from sponsoring.models import Item, Sponsor
+        from sponsoring.models import Item
+        from django.utils.timezone import now
         
-        sponsor = Sponsor.objects.create(
-            sponsor_name="Test Sponsor",
-            void_ind="n"
-        )
         item = Item.objects.create(
-            sponsor=sponsor,
-            item_name="Test Item",
-            void_ind="n"
+            item_nm="Test Item",
+            item_desc="Test Description",
+            quantity=10,
+            reset_date=now().date()
         )
         str_repr = str(item)
         assert str_repr is not None
-        assert "Test Item" in str_repr or item.item_name in str_repr
+        assert "Test Item" in str_repr or item.item_nm in str_repr
     
     def test_scouting_event_str(self):
         """Test Event __str__ method."""
         from scouting.models import Event, Season
+        from django.utils.timezone import now
         
         season = Season.objects.create(season="2024", current="y")
         event = Event.objects.create(
             season=season,
             event_nm="Test Event",
             event_cd="TEST2024",
-            current="n",
-            void_ind="n"
+            date_st=now(),
+            date_end=now(),
+            current="n"
         )
         str_repr = str(event)
         assert str_repr is not None
@@ -185,19 +186,19 @@ class TestAllModels:
         
         form_type = FormType.objects.create(
             form_typ="test",
-            form_nm="Test Form",
-            void_ind="n"
+            form_nm="Test Form"
         )
         question_type = QuestionType.objects.create(
             question_typ="text",
-            void_ind="n"
+            question_typ_nm="Text"
         )
         question = Question.objects.create(
             form_typ=form_type,
             question_typ=question_type,
             question="Test Question?",
+            table_col_width="100",
             order=1,
-            void_ind="n"
+            required="n"
         )
         str_repr = str(question)
         assert str_repr is not None
