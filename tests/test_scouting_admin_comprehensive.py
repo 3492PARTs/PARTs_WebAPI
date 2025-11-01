@@ -688,12 +688,38 @@ class TestEventView:
 class TestMatchView:
     """Tests for MatchView."""
     
-    def test_post_create_match(self, api_rf, scout_user, event, comp_level):
+    def test_post_create_match(self, api_rf, scout_user, event, comp_level, team):
         """Test POST to create a new match."""
+        # Create additional teams for the match
+        team2 = Team.objects.create(team_no=1234, team_nm='Team 2')
+        team3 = Team.objects.create(team_no=5678, team_nm='Team 3')
+        team4 = Team.objects.create(team_no=9012, team_nm='Team 4')
+        team5 = Team.objects.create(team_no=3456, team_nm='Team 5')
+        team6 = Team.objects.create(team_no=7890, team_nm='Team 6')
+        
         data = {
             'match_number': 10,
-            'event': {'id': event.id, 'event_cd': event.event_cd},
-            'comp_level': {'comp_lvl_typ': comp_level.comp_lvl_typ}
+            'event': {
+                'id': event.id,
+                'season_id': event.season.id,
+                'event_nm': event.event_nm,
+                'event_cd': event.event_cd,
+                'date_st': event.date_st.isoformat(),
+                'date_end': event.date_end.isoformat(),
+                'city': 'Test City'
+            },
+            'comp_level': {
+                'comp_lvl_typ': comp_level.comp_lvl_typ,
+                'comp_lvl_typ_nm': comp_level.comp_lvl_typ_nm,
+                'comp_lvl_order': comp_level.comp_lvl_order
+            },
+            'time': '2024-03-01T10:00:00Z',
+            'red_one_id': team.team_no,
+            'red_two_id': team2.team_no,
+            'red_three_id': team3.team_no,
+            'blue_one_id': team4.team_no,
+            'blue_two_id': team5.team_no,
+            'blue_three_id': team6.team_no,
         }
         request = api_rf.post('/scouting/admin/match/', data, format='json')
         force_authenticate(request, user=scout_user)
@@ -772,7 +798,7 @@ class TestFieldResponseView:
             void_ind='n'
         )
         
-        request = api_rf.delete(f'/scouting/admin/field-response/?id={field_resp.id}')
+        request = api_rf.delete(f'/scouting/admin/field-response/?scout_field_id={field_resp.id}')
         force_authenticate(request, user=scout_user)
         
         with patch('scouting.admin.views.has_access', return_value=True):
@@ -799,7 +825,7 @@ class TestPitResponseView:
             void_ind='n'
         )
         
-        request = api_rf.delete(f'/scouting/admin/pit-response/?id={pit_resp.id}')
+        request = api_rf.delete(f'/scouting/admin/pit-response/?scout_pit_id={pit_resp.id}')
         force_authenticate(request, user=scout_user)
         
         with patch('scouting.admin.views.has_access', return_value=True):
@@ -814,10 +840,10 @@ class TestPitResponseView:
 class TestFieldFormView:
     """Tests for FieldFormView."""
     
-    def test_post_create_field_form(self, api_rf, scout_user, season):
+    def test_post_create_field_form(self, api_rf, scout_user, current_season):
         """Test POST to create a field form."""
         data = {
-            'season': {'id': season.id},
+            'season': {'id': current_season.id},
             'img_id': 'test_img',
             'img_ver': 'v1'
         }

@@ -69,10 +69,10 @@ def comp_level(db):
 
 
 @pytest.fixture
-def event(db, season):
+def event(db, season, team_3492):
     """Create a test event"""
     from django.utils.timezone import now
-    return Event.objects.create(
+    event_obj = Event.objects.create(
         season=season,
         event_nm="Test Competition",
         event_cd="TEST2024",
@@ -81,16 +81,20 @@ def event(db, season):
         current="y",
         competition_page_active="y"
     )
+    event_obj.teams.add(team_3492)
+    return event_obj
 
 
 @pytest.fixture
-def other_team(db):
+def other_team(db, event):
     """Create another team for matches"""
-    return Team.objects.create(
+    team = Team.objects.create(
         team_no=1234,
         team_nm="Other Team",
         void_ind="n"
     )
+    event.teams.add(team)
+    return team
 
 
 # ============================================================================
