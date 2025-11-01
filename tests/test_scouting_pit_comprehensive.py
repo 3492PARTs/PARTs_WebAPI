@@ -54,7 +54,7 @@ def team(db, event):
         team_nm='PARTs',
         void_ind='n'
     )
-    team_obj.event.add(event)
+    event.teams.add(team_obj)
     return team_obj
 
 
@@ -66,7 +66,7 @@ def team2(db, event):
         team_nm='Test Team',
         void_ind='n'
     )
-    team_obj.event.add(event)
+    event.teams.add(team_obj)
     return team_obj
 
 
@@ -94,8 +94,9 @@ def form_sub_type(db, form_type):
     """Create a form sub type"""
     return FormSubType.objects.create(
         form_sub_typ='pit',
-        form_sub_typ_nm='Pit Scouting',
-        form_typ=form_type
+        form_sub_nm='Pit Scouting',
+        form_typ=form_type,
+        order=1
     )
 
 
@@ -109,24 +110,25 @@ def question_type(db):
 
 
 @pytest.fixture
-def question(db, form_sub_type, question_type):
+def question(db, form_type, form_sub_type, question_type):
     """Create a test question"""
     return Question.objects.create(
-        season_id=2024,
+        form_typ=form_type,
         question='What is the robot weight?',
         order=1,
         form_sub_typ=form_sub_type,
         question_typ=question_type,
+        table_col_width='200',
+        required='n',
         void_ind='n'
     )
 
 
 @pytest.fixture
-def form_response(db, form_type, test_user):
+def form_response(db, form_type):
     """Create a form response"""
     return FormResponse.objects.create(
         form_typ=form_type,
-        user=test_user,
         time='2024-03-01 10:00:00',
         void_ind='n'
     )

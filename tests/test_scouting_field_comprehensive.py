@@ -24,6 +24,7 @@ from scouting.models import (
     Event,
     Team,
     Match,
+    CompetitionLevel,
     FieldResponse,
     FieldSchedule,
     EventTeamInfo,
@@ -123,13 +124,24 @@ def team_3492(db):
 
 
 @pytest.fixture
-def match(db, event, team):
+def comp_level(db):
+    """Create a competition level"""
+    return CompetitionLevel.objects.create(
+        comp_lvl_typ='qm',
+        comp_lvl_typ_nm='Qualification Match',
+        comp_lvl_order=1,
+        void_ind='n'
+    )
+
+
+@pytest.fixture
+def match(db, event, team, comp_level):
     """Create a test match"""
     return Match.objects.create(
+        match_key=f'{event.event_cd}_qm1',
         event=event,
         match_number=1,
-        comp_level='qm',
-        comp_level_order=1,
+        comp_level=comp_level,
         red_one=team,
         void_ind='n'
     )
@@ -140,8 +152,7 @@ def field_form_type(db):
     """Create field form type"""
     return FormType.objects.create(
         form_typ='field',
-        form_nm='Field Scouting',
-        void_ind='n'
+        form_nm='Field Scouting'
     )
 
 
@@ -152,7 +163,7 @@ def field_sub_type(db, field_form_type):
         form_sub_typ='auto',
         form_sub_nm='Autonomous',
         form_typ=field_form_type,
-        void_ind='n'
+        order=1
     )
 
 
@@ -162,7 +173,6 @@ def question_type(db):
     return QuestionType.objects.create(
         question_typ='text',
         question_typ_nm='Text Input',
-        answer_options='',
         void_ind='n'
     )
 
