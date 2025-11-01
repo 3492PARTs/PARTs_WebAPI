@@ -184,7 +184,6 @@ class TestGetResponses:
         # Create pit response for team2
         form_response2 = FormResponse.objects.create(
             form_typ=pit_response.response.form_typ,
-            user=pit_response.user,
             time='2024-03-01 11:00:00',
             void_ind='n'
         )
@@ -307,24 +306,28 @@ class TestGetResponses:
             
             assert len(result['teams'][0]['pics']) == 0
     
-    def test_get_responses_with_conditional_question(self, event, team, pit_response, question_type, form_sub_type):
+    def test_get_responses_with_conditional_question(self, event, team, pit_response, question_type, form_type, form_sub_type):
         """Test handling of conditional questions"""
         # Create a conditional question
         parent_question = Question.objects.create(
-            season_id=2024,
+            form_typ=form_type,
             question='Has autonomous?',
             order=1,
             form_sub_typ=form_sub_type,
             question_typ=question_type,
+            table_col_width='200',
+            required='n',
             void_ind='n'
         )
         
         conditional_question = Question.objects.create(
-            season_id=2024,
+            form_typ=form_type,
             question='Describe autonomous',
             order=2,
             form_sub_typ=form_sub_type,
             question_typ=question_type,
+            table_col_width='200',
+            required='n',
             void_ind='n'
         )
         conditional_question.conditional_on_questions.add(parent_question)
@@ -514,7 +517,7 @@ class TestSavePictureView:
         
         with patch('scouting.util.get_current_event') as mock_event, \
              patch('general.cloudinary.upload_image') as mock_upload, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_event.return_value = event
             mock_upload.return_value = {'public_id': 'test123', 'version': 1}
             mock_access.return_value = True
@@ -543,7 +546,7 @@ class TestResponsesView:
         
         with patch('scouting.util.get_current_season') as mock_season, \
              patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_season.return_value = event.season
             mock_event.return_value = event
             mock_access.return_value = True
@@ -560,7 +563,7 @@ class TestResponsesView:
         
         with patch('scouting.util.get_current_season') as mock_season, \
              patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_season.return_value = event.season
             mock_event.return_value = event
             mock_access.return_value = True
@@ -580,7 +583,7 @@ class TestSetDefaultPitImageView:
                              {'scout_pit_img_id': pit_image.id})
         force_authenticate(request, user=test_user)
         
-        with patch('general.security.check_access') as mock_access:
+        with patch('general.security.has_access') as mock_access:
             mock_access.return_value = True
             
             response = SetDefaultPitImageView.as_view()(request)
@@ -605,7 +608,7 @@ class TestTeamDataView:
         force_authenticate(request, user=test_user)
         
         with patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_event.return_value = event
             mock_access.return_value = True
             

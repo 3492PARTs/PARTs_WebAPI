@@ -474,10 +474,10 @@ class TestGetRemovedResponses:
         
         assert void_response in removed
     
-    def test_get_removed_responses_with_void_response_object(self, event, team, test_user):
+    def test_get_removed_responses_with_void_response_object(self, event, team, test_user, field_form_type):
         """Test getting responses with void response objects"""
         void_form_response = Response.objects.create(
-            form_typ_id='field',
+            form_typ=field_form_type,
             void_ind='y'
         )
         field_resp = FieldResponse.objects.create(
@@ -575,11 +575,13 @@ class TestGetFieldQuestionAggregates:
 class TestCheckInScout:
     """Tests for check_in_scout function"""
     
-    def test_check_in_red_one(self, test_user, match):
+    def test_check_in_red_one(self, test_user, event):
         """Test checking in red_one scout"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=test_user,
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -589,11 +591,13 @@ class TestCheckInScout:
         sfs.refresh_from_db()
         assert sfs.red_one_check_in is not None
     
-    def test_check_in_blue_three(self, test_user, match):
+    def test_check_in_blue_three(self, test_user, event):
         """Test checking in blue_three scout"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             blue_three=test_user,
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -603,12 +607,14 @@ class TestCheckInScout:
         sfs.refresh_from_db()
         assert sfs.blue_three_check_in is not None
     
-    def test_check_in_already_checked_in(self, test_user, match):
+    def test_check_in_already_checked_in(self, test_user, event):
         """Test checking in when already checked in"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=test_user,
             red_one_check_in=timezone.now(),  # Already checked in
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -616,11 +622,13 @@ class TestCheckInScout:
         
         assert result == ""
     
-    def test_check_in_wrong_user(self, test_user, admin_user, match):
+    def test_check_in_wrong_user(self, test_user, admin_user, event):
         """Test checking in when user is not assigned"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=admin_user,  # Different user
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -850,11 +858,13 @@ class TestResponsesView:
 class TestCheckInView:
     """Tests for CheckInView"""
     
-    def test_check_in_view_success(self, api_rf, test_user, match):
+    def test_check_in_view_success(self, api_rf, test_user, event):
         """Test successful scout check-in"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=test_user,
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
