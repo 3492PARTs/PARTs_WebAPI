@@ -1,4 +1,5 @@
-from django.db.models import Q, Case, When, OuterRef, Subquery, Exists
+from typing import Any
+from django.db.models import Q, Case, When, OuterRef, Subquery, Exists, QuerySet
 
 import general.cloudinary
 from scouting.models import (
@@ -18,15 +19,39 @@ from scouting.models import (
 from user.models import User
 
 
-def get_all_seasons():
+def get_all_seasons() -> QuerySet[Season]:
+    """
+    Get all seasons ordered by year.
+    
+    Returns:
+        QuerySet of all Season objects ordered by season year
+    """
     return Season.objects.all().order_by("season")
 
 
-def get_season(year: str):
+def get_season(year: str) -> Season:
+    """
+    Get a specific season by year.
+    
+    Args:
+        year: The year of the season (e.g., "2024")
+        
+    Returns:
+        The Season object for the specified year
+    """
     return Season.objects.get(season=year)
 
 
-def get_or_create_season(year: str):
+def get_or_create_season(year: str) -> Season:
+    """
+    Get an existing season or create a new one if it doesn't exist.
+    
+    Args:
+        year: The year of the season (e.g., "2024")
+        
+    Returns:
+        The Season object (existing or newly created)
+    """
     try:
         season = Season.objects.get(season=year)
     except Season.DoesNotExist:
@@ -36,7 +61,16 @@ def get_or_create_season(year: str):
     return season
 
 
-def get_current_season():
+def get_current_season() -> Season:
+    """
+    Get the currently active season.
+    
+    Returns:
+        The current Season object
+        
+    Raises:
+        Exception: If no season is set as current
+    """
     try:
         current_season = Season.objects.get(current="y")
         return current_season
@@ -44,11 +78,26 @@ def get_current_season():
         raise Exception("No season set, see an admin.")
 
 
-def get_all_events():
+def get_all_events() -> QuerySet[Event]:
+    """
+    Get all non-voided events.
+    
+    Returns:
+        QuerySet of Event objects that are not voided
+    """
     return Event.objects.filter(void_ind="n")
 
 
-def get_current_event():
+def get_current_event() -> Event:
+    """
+    Get the currently active event.
+    
+    Returns:
+        The current Event object
+        
+    Raises:
+        Exception: If no event is set as current for the current season
+    """
     try:
         event = Event.objects.get(Q(season=get_current_season()) & Q(current="y"))
         return event
@@ -56,19 +105,46 @@ def get_current_event():
         raise Exception("No event set, see an admin.")
 
 
-def get_event(event_cd: str):
+def get_event(event_cd: str) -> Event:
+    """
+    Get a specific event by its event code.
+    
+    Args:
+        event_cd: The event code
+        
+    Returns:
+        The Event object with the specified code
+    """
     event = Event.objects.get(event_cd=event_cd)
 
     return event
 
 
-def get_events(season: Season):
+def get_events(season: Season) -> QuerySet[Event]:
+    """
+    Get all events for a specific season.
+    
+    Args:
+        season: The Season object to get events for
+        
+    Returns:
+        QuerySet of Event objects for the specified season
+    """
     event = Event.objects.filter(Q(season=season))
 
     return event
 
 
-def get_teams(current: bool):
+def get_teams(current: bool) -> list[dict[str, Any]]:
+    """
+    Get teams, optionally filtered to the current event.
+    
+    Args:
+        current: If True, only return teams at the current event
+        
+    Returns:
+        List of dictionaries containing parsed team information
+    """
     current_event = get_current_event()
 
     q_current_event = Q()
@@ -94,7 +170,17 @@ def get_teams(current: bool):
     return [parse_team(team) for team in teams]
 
 
-def parse_team(in_team: Team, checked=False):
+def parse_team(in_team: Team, checked: bool = False) -> dict[str, Any]:
+    """
+    Parse a Team object into a dictionary with event-specific information.
+    
+    Args:
+        in_team: The Team object to parse
+        checked: Whether the team is checked/selected
+        
+    Returns:
+        Dictionary containing team number, name, checked status, pit result, and rank
+    """
     eti = get_event_team_info(in_team, get_current_event())
     return {
         "team_no": in_team.team_no,
@@ -109,7 +195,16 @@ def parse_team(in_team: Team, checked=False):
     }
 
 
-def format_scout_field_schedule_entry(fs: FieldSchedule):
+def format_scout_field_schedule_entry(fs: FieldSchedule) -> dict[str, Any]:
+    """
+    Format a FieldSchedule object into a dictionary with detailed scout assignments.
+    
+    Args:
+        fs: The FieldSchedule object to format
+        
+    Returns:
+        Dictionary containing schedule details including scout assignments for all positions
+    """
     return {
         "id": fs.id,
         "event_id": fs.event_id,

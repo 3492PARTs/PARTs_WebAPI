@@ -1,3 +1,4 @@
+from typing import Any
 from django.db import transaction
 from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -23,14 +24,26 @@ app_url = "admin/"
 
 class ErrorLogView(APIView):
     """
-    API endpoint to get errors for the admin screen
+    API endpoint to get paginated error logs for the admin screen.
+    
+    Authentication required: JWT
+    Permission required: admin
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "error-log/"
 
-    def get_errors(self, pg):
+    def get_errors(self, pg: int) -> dict[str, Any]:
+        """
+        Retrieve paginated error logs.
+        
+        Args:
+            pg: Page number to retrieve
+            
+        Returns:
+            Dictionary containing count, previous/next page numbers, and errors list
+        """
         errors = ErrorLog.objects.filter(void_ind="n").order_by("-time")
         paginator = Paginator(errors, 10)
         try:
@@ -56,7 +69,16 @@ class ErrorLogView(APIView):
         }
         return data
 
-    def get(self, request, format=None):
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve paginated error logs.
+        
+        Query parameters:
+            pg_num: Page number (default: 1)
+            
+        Returns:
+            Response with paginated error log data or error message
+        """
         if has_access(request.user.id, auth_obj):
             try:
                 req = self.get_errors(request.query_params.get("pg_num", 1))
@@ -80,14 +102,24 @@ class ErrorLogView(APIView):
 
 class ScoutAuthGroupsView(APIView):
     """
-    API endpoint to manage the auth groups the scout admin can assign
+    API endpoint to manage the authorization groups that scout admins can assign.
+    
+    Authentication required: JWT
+    GET: Returns list of groups that scout admins can manage
+    POST: Updates the list of groups that scout admins can assign (requires admin permission)
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "scout-auth-groups/"
 
-    def get(self, request, format=None):
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve scout auth groups.
+        
+        Returns:
+            Response with list of groups or error message
+        """
         try:
             groups = user.util.get_groups().filter(
                 id__in=list(
@@ -105,7 +137,15 @@ class ScoutAuthGroupsView(APIView):
                 e,
             )
 
-    def post(self, request, format=None):
+    def post(self, request, format=None) -> Response:
+        """
+        POST endpoint to update the list of scout auth groups.
+        
+        Request body: List of group objects with 'id' field
+        
+        Returns:
+            Success message or error response
+        """
         serializer = GroupSerializer(data=request.data, many=True)
         if not serializer.is_valid():
             return ret_message(
@@ -152,14 +192,27 @@ class ScoutAuthGroupsView(APIView):
 
 class PhoneTypeView(APIView):
     """
-    API endpoint to get all phone types
+    API endpoint to manage phone types for SMS messaging.
+    
+    Authentication required: JWT
+    Permission required: admin or scoutadmin
+    
+    GET: Returns all phone types
+    POST: Create or update a phone type (requires admin)
+    DELETE: Delete a phone type (requires admin)
     """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     endpoint = "phone-type/"
 
-    def get(self, request, format=None):
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve all phone types.
+        
+        Returns:
+            Response with list of phone types or error message
+        """
         if has_access(request.user.id, [auth_obj, "scoutadmin"]):
             try:
                 phone_types = user.util.get_phone_types()
