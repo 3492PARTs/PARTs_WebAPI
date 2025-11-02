@@ -1,3 +1,4 @@
+from typing import Any
 import requests
 import datetime
 from json import loads
@@ -23,7 +24,20 @@ from tba.models import Message
 tba_url = "https://www.thebluealliance.com/api/v3"
 
 
-def get_events_for_team(team: Team, season: Season, event_cds_to_ignore=None):
+def get_events_for_team(
+    team: Team, season: Season, event_cds_to_ignore: list[str] | None = None
+) -> list[dict[str, Any]]:
+    """
+    Get all events for a team in a specific season from The Blue Alliance API.
+    
+    Args:
+        team: The Team object to get events for
+        season: The Season object to get events for
+        event_cds_to_ignore: Optional list of event codes to skip
+        
+    Returns:
+        List of dictionaries containing event data
+    """
 
     request = requests.get(
         f"{tba_url}/team/frc{team.team_no}/events/{season.season}",
@@ -46,7 +60,17 @@ def get_events_for_team(team: Team, season: Season, event_cds_to_ignore=None):
     return parsed
 
 
-def get_matches_for_team_event(team_key, event_key):
+def get_matches_for_team_event(team_key: str, event_key: str) -> list[dict[str, Any]]:
+    """
+    Get all matches for a team at a specific event from The Blue Alliance API.
+    
+    Args:
+        team_key: The team number (without 'frc' prefix)
+        event_key: The event code
+        
+    Returns:
+        List of match data dictionaries from TBA
+    """
     request = requests.get(
         f"{tba_url}/team/frc{team_key}/event/{event_key}/matches",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
@@ -58,7 +82,16 @@ def get_matches_for_team_event(team_key, event_key):
     return matches
 
 
-def sync_season(season_id):
+def sync_season(season_id: int) -> str:
+    """
+    Synchronize all events for team 3492 in a specific season from The Blue Alliance.
+    
+    Args:
+        season_id: The ID of the Season to synchronize
+        
+    Returns:
+        Message string with sync results for each event
+    """
     season = Season.objects.get(id=season_id)
 
     request = requests.get(
@@ -75,7 +108,19 @@ def sync_season(season_id):
     return messages
 
 
-def get_tba_event(event_cd: str):
+def get_tba_event(event_cd: str) -> dict[str, Any]:
+    """
+    Fetch event details from The Blue Alliance API.
+    
+    Args:
+        event_cd: The event code (e.g., '2024pahat')
+        
+    Returns:
+        Dictionary containing parsed event data (event_nm, date_st, date_end, event_cd, time_zone)
+        
+    Raises:
+        Exception: If TBA returns an error
+    """
     request = requests.get(
         f"{tba_url}/event/{event_cd}",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},

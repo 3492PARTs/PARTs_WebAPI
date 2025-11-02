@@ -49,14 +49,17 @@ class Attendance(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.id} : {self.user} : {self.time_in}"
 
-    def is_unapproved(self):
+    def is_unapproved(self) -> bool:
+        """Check if attendance is in unapproved state."""
         return self.approval_typ.approval_typ == "unapp"
 
-    def is_approved(self):
+    def is_approved(self) -> bool:
+        """Check if attendance has been approved."""
         return self.approval_typ.approval_typ == "app"
 
-    def is_rejected(self):
+    def is_rejected(self) -> bool:
+        """Check if attendance has been rejected."""
         return self.approval_typ.approval_typ == "rej"
