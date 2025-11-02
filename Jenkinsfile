@@ -67,7 +67,8 @@ node {
                 testImage.inside {
                     sh '''
                         echo "Running test suite..."
-                        poetry run pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v
+                        cd /app
+                        /app/.venv/bin/pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v
                         echo "All tests passed!"
                     '''
                 }

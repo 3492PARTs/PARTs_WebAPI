@@ -39,7 +39,7 @@ RUN poetry install --with dev --no-root
 COPY ./ ./
 
 # Test stage is ready for running tests in Jenkins
-# Tests will be executed by Jenkins using: docker run --rm <test-image> poetry run pytest ...
+# Tests will be executed by Jenkins using: /app/.venv/bin/pytest ...
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.11-slim AS runtime
