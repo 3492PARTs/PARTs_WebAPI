@@ -264,7 +264,13 @@ def format_scout_field_schedule_entry(fs: FieldSchedule) -> dict[str, Any]:
     }
 
 
-def get_current_scout_field_schedule():
+def get_current_scout_field_schedule() -> QuerySet[FieldSchedule]:
+    """
+    Get all field scouting schedules for the current event.
+    
+    Returns:
+        QuerySet of FieldSchedule objects ordered by notification status and start time
+    """
     current_event = get_current_event()
 
     sfs = FieldSchedule.objects.filter(
@@ -274,13 +280,25 @@ def get_current_scout_field_schedule():
     return sfs
 
 
-def get_current_scout_field_schedule_parsed():
+def get_current_scout_field_schedule_parsed() -> list[dict[str, Any]]:
+    """
+    Get parsed field scouting schedules for the current event.
+    
+    Returns:
+        List of dictionaries with parsed schedule information
+    """
     return list(
         parse_scout_field_schedule(s) for s in get_current_scout_field_schedule()
     )
 
 
-def get_current_schedule():
+def get_current_schedule() -> QuerySet[Schedule]:
+    """
+    Get all schedules for the current event.
+    
+    Returns:
+        QuerySet of Schedule objects ordered by type, notification status, and start time
+    """
     current_event = get_current_event()
 
     schs = Schedule.objects.filter(Q(event=current_event) & Q(void_ind="n")).order_by(
@@ -290,15 +308,36 @@ def get_current_schedule():
     return schs
 
 
-def get_current_schedule_parsed():
+def get_current_schedule_parsed() -> list[dict[str, Any]]:
+    """
+    Get parsed schedules for the current event.
+    
+    Returns:
+        List of dictionaries with parsed schedule information
+    """
     return list(parse_schedule(s) for s in get_current_schedule())
 
 
-def get_schedule_types():
+def get_schedule_types() -> QuerySet[ScheduleType]:
+    """
+    Get all available schedule types.
+    
+    Returns:
+        QuerySet of ScheduleType objects ordered by schedule name
+    """
     return ScheduleType.objects.all().order_by("sch_nm")
 
 
-def get_group_leader_user(user: User):
+def get_group_leader_user(user: User | None) -> User | None:
+    """
+    Check if a user is a group leader in scouting.
+    
+    Args:
+        user: The User object to check
+        
+    Returns:
+        The User object if they are a group leader, None otherwise
+    """
     try:
         if user is None:
             return None
@@ -309,7 +348,16 @@ def get_group_leader_user(user: User):
         return None
 
 
-def parse_scout_field_schedule(s: FieldSchedule):
+def parse_scout_field_schedule(s: FieldSchedule) -> dict[str, Any]:
+    """
+    Parse a FieldSchedule object into a detailed dictionary.
+    
+    Args:
+        s: The FieldSchedule object to parse
+        
+    Returns:
+        Dictionary with schedule details including group leaders and scout assignments
+    """
 
     red_leader = get_group_leader_user(s.red_one)
     if red_leader is None:

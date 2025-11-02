@@ -1,3 +1,4 @@
+from typing import Any
 from statistics import median, stdev
 
 from datetime import datetime, date, timedelta
@@ -41,14 +42,29 @@ from scouting.models import Match, FieldResponse, PitResponse, Event
 
 
 def get_questions(
-    form_typ: str = None,
+    form_typ: str | None = None,
     active: str = "",
     form_sub_typ: str = "",
-    not_in_flow=False,
-    is_conditional=False,
-    is_not_conditional=False,
-    qid=None,
-):
+    not_in_flow: bool = False,
+    is_conditional: bool = False,
+    is_not_conditional: bool = False,
+    qid: int | None = None,
+) -> list[dict[str, Any]]:
+    """
+    Get questions filtered by various criteria.
+    
+    Args:
+        form_typ: Filter by form type ('field', 'pit', etc.)
+        active: Filter by active status ('y' or 'n')
+        form_sub_typ: Filter by form sub-type
+        not_in_flow: If True, exclude questions that are in flows
+        is_conditional: If True, only return questions that have conditions
+        is_not_conditional: If True, only return questions without active conditions
+        qid: Filter to a specific question ID
+        
+    Returns:
+        List of dictionaries containing parsed question data
+    """
     questions = []
     q_season = Q()
     q_active_ind = Q()
@@ -137,7 +153,16 @@ def get_questions(
     return questions
 
 
-def parse_question(in_question: Question):
+def parse_question(in_question: Question) -> dict[str, Any]:
+    """
+    Parse a Question object into a comprehensive dictionary with all related data.
+    
+    Args:
+        in_question: The Question object to parse
+        
+    Returns:
+        Dictionary containing question details, options, conditions, and related data
+    """
     # Question Type
     question_type = {
         "question_typ": in_question.question_typ.question_typ,

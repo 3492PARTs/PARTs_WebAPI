@@ -1,10 +1,18 @@
+from typing import Any
 from django.db.models import Q
 
 from scouting.models import Event, Match, Team
 import scouting.util
 
 
-def get_competition_information():
+def get_competition_information() -> dict[str, Any]:
+    """
+    Get the current competition event information and team 3492's match schedule.
+    
+    Returns:
+        Dictionary containing 'event' (Event object) and 'matches' (list of parsed match dicts)
+        for the current active competition
+    """
     event = Event.objects.get(
         Q(current="y") & Q(competition_page_active="y") & Q(void_ind="n")
     )
