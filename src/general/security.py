@@ -1,6 +1,8 @@
 import traceback
 from typing import Callable, Any
 from django.utils import timezone
+from django.db.models import QuerySet
+from django.contrib.auth.models import Group
 
 import json
 from admin.models import ErrorLog
@@ -74,7 +76,7 @@ def access_response(
         )
 
 
-def get_user_permissions(user_id: int, as_list: bool = True) -> list[Permission] | Any:
+def get_user_permissions(user_id: int, as_list: bool = True) -> list[Permission] | QuerySet[Permission]:
     """
     Get all permissions for a user based on their group memberships.
     
@@ -98,7 +100,7 @@ def get_user_permissions(user_id: int, as_list: bool = True) -> list[Permission]
         return prmsns
 
 
-def get_user_groups(user_id: int) -> Any:
+def get_user_groups(user_id: int) -> QuerySet[Group]:
     """
     Get all groups that a user belongs to.
     
@@ -121,7 +123,7 @@ def ret_message(
     path: str = "", 
     user_id: int = -1, 
     exception: Exception | None = None, 
-    error_message: Any = None
+    error_message: str | dict | None = None
 ) -> Response:
     """
     Create a standardized response message and log errors if applicable.
@@ -135,7 +137,7 @@ def ret_message(
         path: The API endpoint path where the error occurred
         user_id: The ID of the user who triggered the error
         exception: The exception object if an exception occurred
-        error_message: Additional error details (typically validation errors)
+        error_message: Additional error details (typically validation errors or messages)
         
     Returns:
         Response object with the message, error flag, and error details

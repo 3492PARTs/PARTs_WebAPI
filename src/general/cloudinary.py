@@ -39,6 +39,8 @@ def build_image_url(img_id: str | None, img_ver: str | None) -> str | None:
     Returns:
         Secure HTTPS URL for the image, or None if img_id is None
     """
+    if img_id is None:
+        return None
     url = CloudinaryImage(img_id, version=img_ver).build_url(secure=True)
     return url
 
