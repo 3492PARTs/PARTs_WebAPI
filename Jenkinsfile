@@ -52,8 +52,11 @@ node {
                     && sed -i "s/BUILD/$SHA/g" src/parts_webapi/settings/base.py
                 '''
                 
-                // Pull cache image if it exists, ignore errors
-                sh "docker pull parts-webapi-test-base:latest || true"
+                // Attempt to pull cache image if it exists (this is a local image, so it may not exist)
+                sh '''
+                    echo "Attempting to pull test cache image (may not exist on first build)..."
+                    docker pull parts-webapi-test-base:latest 2>/dev/null || echo "Cache image not found, building from scratch..."
+                '''
                 
                 // Build test image with BuildKit cache
                 def testImage = docker.build("parts-webapi-test-base", 
@@ -74,8 +77,10 @@ node {
         stage('Build image') {
             timeout(time: 20, unit: 'MINUTES') {
                 if (env.BRANCH_NAME == 'main') {
-                    // Pull cache image if it exists, ignore errors
-                    sh 'docker pull bduke97/parts_webapi:latest || true'
+                    sh '''
+                        echo "Attempting to pull runtime cache image..."
+                        docker pull bduke97/parts_webapi:latest 2>/dev/null || echo "Runtime cache not found, will build from scratch..."
+                    '''
                     
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
@@ -84,8 +89,10 @@ node {
                         "-f ./Dockerfile --target=runtime .")
                 }
                 else {
-                    // Pull cache image if it exists, ignore errors
-                    sh "docker pull bduke97/parts_webapi:${env.FORMATTED_BRANCH_NAME} || true"
+                    sh """
+                        echo "Attempting to pull runtime cache image for branch ${env.FORMATTED_BRANCH_NAME}..."
+                        docker pull bduke97/parts_webapi:${env.FORMATTED_BRANCH_NAME} 2>/dev/null || echo "Runtime cache not found, will build from scratch..."
+                    """
                     
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
