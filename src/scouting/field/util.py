@@ -151,7 +151,7 @@ def get_responses(pg=1, team=None, user=None, after_scout_field_id=None):
     # Pull responses by what input
     if team is not None:
         # get response for individual team
-        q_team = Q(team_no_id=team)
+        q_team = Q(team_id=team)
     elif user is not None:
         # get response for individual scout
         q_user = Q(user=user)

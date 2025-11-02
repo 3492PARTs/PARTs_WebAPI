@@ -14,10 +14,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIRequestFactory, force_authenticate
 from unittest.mock import patch, MagicMock
 
-from scouting.models import Season, Event, Team, PitResponse, PitImage, PitImageType, EventTeamInfo
+from scouting.models import Season, Event, Team, PitResponse, PitImage, PitImageType, EventTeamInfo, Question as ScoutingQuestion
 from scouting.pit import util as pit_util
 from scouting.pit.views import SavePictureView, ResponsesView, SetDefaultPitImageView, TeamDataView
-from form.models import FormType, FormSubType, Response as FormResponse, QuestionType, Question, Answer
+from form.models import FormType, FormSubType, Response as FormResponse, QuestionType, Question, Answer, QuestionCondition, QuestionConditionType
 
 User = get_user_model()
 
@@ -54,7 +54,7 @@ def team(db, event):
         team_nm='PARTs',
         void_ind='n'
     )
-    team_obj.event.add(event)
+    event.teams.add(team_obj)
     return team_obj
 
 
@@ -66,7 +66,7 @@ def team2(db, event):
         team_nm='Test Team',
         void_ind='n'
     )
-    team_obj.event.add(event)
+    event.teams.add(team_obj)
     return team_obj
 
 
@@ -94,8 +94,9 @@ def form_sub_type(db, form_type):
     """Create a form sub type"""
     return FormSubType.objects.create(
         form_sub_typ='pit',
-        form_sub_typ_nm='Pit Scouting',
-        form_typ=form_type
+        form_sub_nm='Pit Scouting',
+        form_typ=form_type,
+        order=1
     )
 
 
@@ -109,24 +110,32 @@ def question_type(db):
 
 
 @pytest.fixture
-def question(db, form_sub_type, question_type):
+def question(db, form_type, form_sub_type, question_type, season):
     """Create a test question"""
-    return Question.objects.create(
-        season_id=2024,
+    q = Question.objects.create(
+        form_typ=form_type,
         question='What is the robot weight?',
         order=1,
         form_sub_typ=form_sub_type,
         question_typ=question_type,
+        table_col_width='200',
+        required='n',
         void_ind='n'
     )
+    # Create the scouting question link for the question to appear in get_questions("pit")
+    ScoutingQuestion.objects.create(
+        question=q,
+        season=season,
+        void_ind='n'
+    )
+    return q
 
 
 @pytest.fixture
-def form_response(db, form_type, test_user):
+def form_response(db, form_type):
     """Create a form response"""
     return FormResponse.objects.create(
         form_typ=form_type,
-        user=test_user,
         time='2024-03-01 10:00:00',
         void_ind='n'
     )
@@ -182,7 +191,6 @@ class TestGetResponses:
         # Create pit response for team2
         form_response2 = FormResponse.objects.create(
             form_typ=pit_response.response.form_typ,
-            user=pit_response.user,
             time='2024-03-01 11:00:00',
             void_ind='n'
         )
@@ -305,27 +313,59 @@ class TestGetResponses:
             
             assert len(result['teams'][0]['pics']) == 0
     
-    def test_get_responses_with_conditional_question(self, event, team, pit_response, question_type, form_sub_type):
+    def test_get_responses_with_conditional_question(self, event, team, pit_response, question_type, form_type, form_sub_type, season):
         """Test handling of conditional questions"""
+        # Create a conditional question condition type
+        condition_type = QuestionConditionType.objects.create(
+            question_condition_typ='equals',
+            question_condition_nm='Equals',
+            void_ind='n'
+        )
+        
         # Create a conditional question
         parent_question = Question.objects.create(
-            season_id=2024,
+            form_typ=form_type,
             question='Has autonomous?',
             order=1,
             form_sub_typ=form_sub_type,
             question_typ=question_type,
+            table_col_width='200',
+            required='n',
+            void_ind='n'
+        )
+        # Create scouting question link
+        ScoutingQuestion.objects.create(
+            question=parent_question,
+            season=season,
             void_ind='n'
         )
         
         conditional_question = Question.objects.create(
-            season_id=2024,
+            form_typ=form_type,
             question='Describe autonomous',
             order=2,
             form_sub_typ=form_sub_type,
             question_typ=question_type,
+            table_col_width='200',
+            required='n',
             void_ind='n'
         )
-        conditional_question.conditional_on_questions.add(parent_question)
+        # Create scouting question link
+        ScoutingQuestion.objects.create(
+            question=conditional_question,
+            season=season,
+            void_ind='n'
+        )
+        
+        # Create the condition relationship
+        QuestionCondition.objects.create(
+            question_condition_typ=condition_type,
+            value='yes',
+            question_from=parent_question,
+            question_to=conditional_question,
+            active='y',
+            void_ind='n'
+        )
         
         Answer.objects.create(
             response=pit_response.response,
@@ -372,7 +412,7 @@ class TestSaveRobotPicture:
                 'New Robot Image'
             )
             
-            assert 'Saved pit image successfully' in str(result)
+            assert result.data['retMessage'] == 'Saved pit image successfully.'
             
             # Verify image was created
             pit_images = PitImage.objects.filter(pit_response=pit_response)
@@ -512,7 +552,7 @@ class TestSavePictureView:
         
         with patch('scouting.util.get_current_event') as mock_event, \
              patch('general.cloudinary.upload_image') as mock_upload, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_event.return_value = event
             mock_upload.return_value = {'public_id': 'test123', 'version': 1}
             mock_access.return_value = True
@@ -541,7 +581,7 @@ class TestResponsesView:
         
         with patch('scouting.util.get_current_season') as mock_season, \
              patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_season.return_value = event.season
             mock_event.return_value = event
             mock_access.return_value = True
@@ -558,7 +598,7 @@ class TestResponsesView:
         
         with patch('scouting.util.get_current_season') as mock_season, \
              patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_season.return_value = event.season
             mock_event.return_value = event
             mock_access.return_value = True
@@ -578,7 +618,7 @@ class TestSetDefaultPitImageView:
                              {'scout_pit_img_id': pit_image.id})
         force_authenticate(request, user=test_user)
         
-        with patch('general.security.check_access') as mock_access:
+        with patch('general.security.has_access') as mock_access:
             mock_access.return_value = True
             
             response = SetDefaultPitImageView.as_view()(request)
@@ -603,7 +643,7 @@ class TestTeamDataView:
         force_authenticate(request, user=test_user)
         
         with patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.check_access') as mock_access:
+             patch('general.security.has_access') as mock_access:
             mock_event.return_value = event
             mock_access.return_value = True
             

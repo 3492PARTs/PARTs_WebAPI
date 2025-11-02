@@ -24,6 +24,7 @@ from scouting.models import (
     Event,
     Team,
     Match,
+    CompetitionLevel,
     FieldResponse,
     FieldSchedule,
     EventTeamInfo,
@@ -123,13 +124,24 @@ def team_3492(db):
 
 
 @pytest.fixture
-def match(db, event, team):
+def comp_level(db):
+    """Create a competition level"""
+    return CompetitionLevel.objects.create(
+        comp_lvl_typ='qm',
+        comp_lvl_typ_nm='Qualification Match',
+        comp_lvl_order=1,
+        void_ind='n'
+    )
+
+
+@pytest.fixture
+def match(db, event, team, comp_level):
     """Create a test match"""
     return Match.objects.create(
+        match_key=f'{event.event_cd}_qm1',
         event=event,
         match_number=1,
-        comp_level='qm',
-        comp_level_order=1,
+        comp_level=comp_level,
         red_one=team,
         void_ind='n'
     )
@@ -140,8 +152,7 @@ def field_form_type(db):
     """Create field form type"""
     return FormType.objects.create(
         form_typ='field',
-        form_nm='Field Scouting',
-        void_ind='n'
+        form_nm='Field Scouting'
     )
 
 
@@ -152,7 +163,7 @@ def field_sub_type(db, field_form_type):
         form_sub_typ='auto',
         form_sub_nm='Autonomous',
         form_typ=field_form_type,
-        void_ind='n'
+        order=1
     )
 
 
@@ -162,7 +173,6 @@ def question_type(db):
     return QuestionType.objects.create(
         question_typ='text',
         question_typ_nm='Text Input',
-        answer_options='',
         void_ind='n'
     )
 
@@ -464,10 +474,10 @@ class TestGetRemovedResponses:
         
         assert void_response in removed
     
-    def test_get_removed_responses_with_void_response_object(self, event, team, test_user):
+    def test_get_removed_responses_with_void_response_object(self, event, team, test_user, field_form_type):
         """Test getting responses with void response objects"""
         void_form_response = Response.objects.create(
-            form_typ_id='field',
+            form_typ=field_form_type,
             void_ind='y'
         )
         field_resp = FieldResponse.objects.create(
@@ -565,11 +575,13 @@ class TestGetFieldQuestionAggregates:
 class TestCheckInScout:
     """Tests for check_in_scout function"""
     
-    def test_check_in_red_one(self, test_user, match):
+    def test_check_in_red_one(self, test_user, event):
         """Test checking in red_one scout"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=test_user,
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -579,11 +591,13 @@ class TestCheckInScout:
         sfs.refresh_from_db()
         assert sfs.red_one_check_in is not None
     
-    def test_check_in_blue_three(self, test_user, match):
+    def test_check_in_blue_three(self, test_user, event):
         """Test checking in blue_three scout"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             blue_three=test_user,
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -593,12 +607,14 @@ class TestCheckInScout:
         sfs.refresh_from_db()
         assert sfs.blue_three_check_in is not None
     
-    def test_check_in_already_checked_in(self, test_user, match):
+    def test_check_in_already_checked_in(self, test_user, event):
         """Test checking in when already checked in"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=test_user,
             red_one_check_in=timezone.now(),  # Already checked in
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -606,11 +622,13 @@ class TestCheckInScout:
         
         assert result == ""
     
-    def test_check_in_wrong_user(self, test_user, admin_user, match):
+    def test_check_in_wrong_user(self, test_user, admin_user, event):
         """Test checking in when user is not assigned"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=admin_user,  # Different user
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         
@@ -840,11 +858,13 @@ class TestResponsesView:
 class TestCheckInView:
     """Tests for CheckInView"""
     
-    def test_check_in_view_success(self, api_rf, test_user, match):
+    def test_check_in_view_success(self, api_rf, test_user, event):
         """Test successful scout check-in"""
         sfs = FieldSchedule.objects.create(
-            match=match,
+            event=event,
             red_one=test_user,
+            st_time=timezone.now(),
+            end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
         )
         

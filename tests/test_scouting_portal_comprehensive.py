@@ -93,6 +93,7 @@ def competition_level(db):
 def match(db, event, competition_level):
     """Create a test match."""
     return Match.objects.create(
+        match_key=f'{event.event_cd}_qm1',
         event=event,
         match_number=1,
         comp_level=competition_level,
@@ -132,7 +133,8 @@ class TestScheduleByTypeSerializer:
         assert result['sch_typ']['sch_nm'] == 'Meeting'
         assert 'sch' in result
         assert len(result['sch']) == 1
-        assert result['sch'][0]['sch_nm'] == 'Team Meeting'
+        # sch_nm comes from sch_typ.sch_nm via the serializer
+        assert result['sch'][0]['sch_nm'] == 'Meeting'
     
     def test_serialize_with_schedule_type_only(self, schedule_type):
         """Test serialization with only schedule type, no schedules."""
@@ -148,12 +150,12 @@ class TestScheduleByTypeSerializer:
         # sch field should not be present or be empty
         assert 'sch' not in result or result['sch'] is None
     
-    def test_serialize_multiple_schedules(self, schedule_type, event):
+    def test_serialize_multiple_schedules(self, schedule_type, event, test_user):
         """Test serialization with multiple schedules of same type."""
         schedule1 = Schedule.objects.create(
             event=event,
             sch_typ=schedule_type,
-            sch_nm='Morning Meeting',
+            user=test_user,
             st_time=timezone.now(),
             end_time=timezone.now() + timedelta(hours=1),
             void_ind='n'
@@ -161,7 +163,7 @@ class TestScheduleByTypeSerializer:
         schedule2 = Schedule.objects.create(
             event=event,
             sch_typ=schedule_type,
-            sch_nm='Afternoon Meeting',
+            user=test_user,
             st_time=timezone.now() + timedelta(hours=5),
             end_time=timezone.now() + timedelta(hours=6),
             void_ind='n'
@@ -176,9 +178,9 @@ class TestScheduleByTypeSerializer:
         result = serializer.data
         
         assert len(result['sch']) == 2
-        schedule_names = [s['sch_nm'] for s in result['sch']]
-        assert 'Morning Meeting' in schedule_names
-        assert 'Afternoon Meeting' in schedule_names
+        # Both schedules have the same sch_nm from the schedule_type
+        assert result['sch'][0]['sch_nm'] == 'Meeting'
+        assert result['sch'][1]['sch_nm'] == 'Meeting'
 
 
 @pytest.mark.django_db
@@ -220,7 +222,8 @@ class TestInitSerializer:
         
         assert 'schedule' in result
         assert len(result['schedule']) == 1
-        assert result['schedule'][0]['sch_nm'] == 'Team Meeting'
+        # sch_nm comes from sch_typ.sch_nm via the serializer
+        assert result['schedule'][0]['sch_nm'] == 'Meeting'
     
     def test_serialize_with_all_field_schedule(self, field_schedule):
         """Test serialization with allFieldSchedule data."""

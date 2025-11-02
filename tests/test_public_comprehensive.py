@@ -69,28 +69,33 @@ def comp_level(db):
 
 
 @pytest.fixture
-def event(db, season):
+def event(db, season, team_3492):
     """Create a test event"""
     from django.utils.timezone import now
-    return Event.objects.create(
+    event_obj = Event.objects.create(
         season=season,
         event_nm="Test Competition",
         event_cd="TEST2024",
         date_st=now(),
         date_end=now(),
         current="y",
-        competition_page_active="y"
+        competition_page_active="y",
+        void_ind="n"
     )
+    event_obj.teams.add(team_3492)
+    return event_obj
 
 
 @pytest.fixture
-def other_team(db):
+def other_team(db, event):
     """Create another team for matches"""
-    return Team.objects.create(
+    team = Team.objects.create(
         team_no=1234,
         team_nm="Other Team",
         void_ind="n"
     )
+    event.teams.add(team)
+    return team
 
 
 # ============================================================================
@@ -413,14 +418,14 @@ class TestGetCompetitionInformation:
 # public.competition.views.InitView Tests
 # ============================================================================
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestInitView:
     """Tests for competition InitView"""
     
     def test_init_view_success(self, api_rf, test_user, event, team_3492, comp_level, other_team):
         """Test successful competition init response"""
         # Create a match
-        Match.objects.create(
+        match = Match.objects.create(
             match_key=f"{event.event_cd}_{comp_level.comp_lvl_typ}1",
             event=event,
             comp_level=comp_level,
@@ -437,8 +442,9 @@ class TestInitView:
         request = api_rf.get('/public/competition/init/')
         force_authenticate(request, user=test_user)
         
-        with patch('scouting.util.parse_match') as mock_parse:
-            mock_parse.return_value = {'match_number': 1}
+        # Patch where the view accesses the function
+        with patch('public.competition.util.get_competition_information') as mock_get_info:
+            mock_get_info.return_value = {'event': event, 'matches': [{'match_number': 1}]}
             
             view = InitView.as_view()
             response = view(request)
