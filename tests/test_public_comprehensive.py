@@ -79,7 +79,8 @@ def event(db, season, team_3492):
         date_st=now(),
         date_end=now(),
         current="y",
-        competition_page_active="y"
+        competition_page_active="y",
+        void_ind="n"
     )
     event_obj.teams.add(team_3492)
     return event_obj
