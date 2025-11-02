@@ -68,6 +68,7 @@ node {
                     sh '''
                         echo "Running test suite..."
                         cd /app
+                        export COVERAGE_FILE=/tmp/.coverage
                         /app/.venv/bin/pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v
                         echo "All tests passed!"
                     '''
