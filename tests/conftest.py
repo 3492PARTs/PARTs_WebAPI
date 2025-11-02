@@ -91,3 +91,25 @@ def mock_has_access():
 def mock_has_access_false():
     """Returns a mock for has_access function that returns False."""
     return Mock(return_value=False)
+
+@pytest.fixture
+def system_user(db):
+    """Creates and returns a system user with id=-1 for error logging."""
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=-1)
+    except User.DoesNotExist:
+        user = User.objects.create_user(
+            username="system",
+            first_name="System",
+            last_name="User",
+            email="system@example.com",
+            password="systempass"
+        )
+        # Update to id=-1 using raw SQL
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute(f"UPDATE user_user SET id=-1 WHERE id={user.id}")
+        user.id = -1
+        user.save(update_fields=[])
+    return user

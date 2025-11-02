@@ -8,6 +8,7 @@
 
 import django
 from django.db import models
+from django.utils.timezone import now
 from simple_history.models import HistoricalRecords
 
 
@@ -24,7 +25,7 @@ class Item(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.item_id + " " + self.item_nm
+        return f"{self.item_id} {self.item_nm}"
 
 
 class Sponsor(models.Model):
@@ -37,7 +38,7 @@ class Sponsor(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.sponsor_id + " " + self.sponsor_nm
+        return f"{self.sponsor_id} {self.sponsor_nm}"
 
 
 class ItemSponsor(models.Model):
@@ -49,4 +50,4 @@ class ItemSponsor(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return self.item_sponsor_id + " " + self.quantity
+        return f"{self.item_sponsor_id} {self.quantity}"
