@@ -217,10 +217,12 @@ def save_match(data):
     if (data.get("match_key", None)) is not None and len(data["match_key"]) > 0:
         match = Match.objects.get(match_key=data["match_key"])
     else:
+        # Get the event object for the foreign key relationship
+        event = Event.objects.get(id=data["event"]["id"])
         match = Match(
-            match_key=f"{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}"
+            match_key=f"{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}",
+            event=event
         )
-        match.event_id = data["event"]["id"]
 
     match.match_number = data["match_number"]
     match.red_one_id = data.get("red_one_id", None)
@@ -425,8 +427,9 @@ def save_field_form(field_form):
     if field_form.get("id", None) is not None:
         ff = FieldForm.objects.get(id=field_form["id"])
     else:
-        ff = FieldForm()
-        ff.season = scouting.util.get_current_season()
+        # Get the current season and create the FieldForm with it
+        current_season = scouting.util.get_current_season()
+        ff = FieldForm(season=current_season)
 
     img = None
     if field_form.get("img", None) is not None:

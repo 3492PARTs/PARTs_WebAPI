@@ -31,8 +31,8 @@ class EventSerializer(serializers.Serializer):
     event_cd = serializers.CharField()
     event_url = serializers.CharField(required=False, allow_null=True)
     address = serializers.CharField(required=False, allow_null=True)
-    city = serializers.CharField()
-    state_prov = serializers.CharField()
+    city = serializers.CharField(required=False, allow_null=True)
+    state_prov = serializers.CharField(required=False, allow_null=True)
     postal_code = serializers.CharField(required=False, allow_null=True)
     location_name = serializers.CharField(required=False, allow_null=True)
     gmaps_url = serializers.CharField(required=False, allow_null=True)
@@ -40,8 +40,8 @@ class EventSerializer(serializers.Serializer):
         required=False, allow_null=True, allow_blank=True
     )
     timezone = serializers.CharField(required=False, allow_null=True)
-    current = serializers.CharField()
-    competition_page_active = serializers.CharField()
+    current = serializers.CharField(required=False, default="n")
+    competition_page_active = serializers.CharField(required=False, default="n")
     void_ind = serializers.CharField(default="n")
 
 
@@ -53,39 +53,39 @@ class CompetitionLevelSerializer(serializers.Serializer):
 
 class MatchSerializer(serializers.Serializer):
     match_key = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    event = EventSerializer()
+    event = EventSerializer(required=False)
     match_number = serializers.IntegerField()
     red_score = serializers.IntegerField(required=False, allow_null=True)
     blue_score = serializers.IntegerField(required=False, allow_null=True)
-    time = serializers.DateTimeField(allow_null=True)
+    time = serializers.DateTimeField(required=False, allow_null=True)
 
-    blue_one_id = serializers.IntegerField()
+    blue_one_id = serializers.IntegerField(required=False, allow_null=True)
     blue_one_rank = serializers.IntegerField(required=False, allow_null=True)
     blue_one_field_response = serializers.BooleanField(required=False, allow_null=True)
 
-    blue_two_id = serializers.IntegerField()
+    blue_two_id = serializers.IntegerField(required=False, allow_null=True)
     blue_two_rank = serializers.IntegerField(required=False, allow_null=True)
     blue_two_field_response = serializers.BooleanField(required=False, allow_null=True)
 
-    blue_three_id = serializers.IntegerField()
+    blue_three_id = serializers.IntegerField(required=False, allow_null=True)
     blue_three_rank = serializers.IntegerField(required=False, allow_null=True)
     blue_three_field_response = serializers.BooleanField(
         required=False, allow_null=True
     )
 
-    red_one_id = serializers.IntegerField()
+    red_one_id = serializers.IntegerField(required=False, allow_null=True)
     red_one_rank = serializers.IntegerField(required=False, allow_null=True)
     red_one_field_response = serializers.BooleanField(required=False, allow_null=True)
 
-    red_two_id = serializers.IntegerField()
+    red_two_id = serializers.IntegerField(required=False, allow_null=True)
     red_two_rank = serializers.IntegerField(required=False, allow_null=True)
     red_two_field_response = serializers.BooleanField(required=False, allow_null=True)
 
-    red_three_id = serializers.IntegerField()
+    red_three_id = serializers.IntegerField(required=False, allow_null=True)
     red_three_rank = serializers.IntegerField(required=False, allow_null=True)
     red_three_field_response = serializers.BooleanField(required=False, allow_null=True)
 
-    comp_level = CompetitionLevelSerializer()
+    comp_level = CompetitionLevelSerializer(required=False)
 
 
 class ScheduleSerializer(serializers.Serializer):
@@ -169,10 +169,16 @@ class FieldFormSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     season_id = serializers.IntegerField(required=False, allow_null=True)
     img = serializers.FileField(required=False, allow_null=True)
+    img_id = serializers.CharField(required=False, allow_null=True)
+    img_ver = serializers.CharField(required=False, allow_null=True)
     img_url = serializers.CharField(required=False, allow_null=True)
     inv_img = serializers.FileField(required=False, allow_null=True)
+    inv_img_id = serializers.CharField(required=False, allow_null=True)
+    inv_img_ver = serializers.CharField(required=False, allow_null=True)
     inv_img_url = serializers.CharField(required=False, allow_null=True)
     full_img = serializers.FileField(required=False, allow_null=True)
+    full_img_id = serializers.CharField(required=False, allow_null=True)
+    full_img_ver = serializers.CharField(required=False, allow_null=True)
     full_img_url = serializers.CharField(required=False, allow_null=True)
 
 
