@@ -4,7 +4,7 @@ import general.cloudinary
 from form.models import Answer
 from general.security import ret_message
 import scouting
-import form
+import form.util
 from scouting.models import EventTeamInfo, PitResponse, PitImage, Team
 
 
