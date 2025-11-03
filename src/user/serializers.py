@@ -8,6 +8,7 @@ from django.core.validators import ValidationError
 
 
 class PermissionSerializer(serializers.Serializer):
+    """Serializer for permission objects."""
     id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField()
     content_type_id = serializers.IntegerField(read_only=True)
@@ -15,18 +16,21 @@ class PermissionSerializer(serializers.Serializer):
 
 
 class GroupSerializer(serializers.Serializer):
+    """Serializer for group objects with their permissions."""
     id = serializers.IntegerField(required=False, allow_null=True)
     name = serializers.CharField()
     permissions = PermissionSerializer(many=True, required=False)
 
 
 class PhoneTypeSerializer(serializers.Serializer):
+    """Serializer for phone type objects used for SMS messaging."""
     id = serializers.IntegerField(read_only=True)
     carrier = serializers.CharField()
     phone_type = serializers.CharField()
 
 
 class LinkSerializer(serializers.Serializer):
+    """Serializer for navigation link objects."""
     id = serializers.IntegerField(allow_null=True, required=False)
     permission = PermissionSerializer(allow_null=True, required=False)
     menu_name = serializers.CharField()
@@ -35,6 +39,7 @@ class LinkSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.Serializer):
+    """Serializer for user objects with all related data."""
     id = serializers.IntegerField(required=False, allow_null=True)
     username = serializers.CharField()
     email = serializers.CharField()
@@ -79,7 +84,19 @@ class UserCreationSerializer(serializers.Serializer):
             "last_name",
         ]
 
-    def validate_password1(self, validated_data):
+    def validate_password1(self, validated_data: str) -> str:
+        """
+        Validate password meets Django's password requirements.
+        
+        Args:
+            validated_data: The password to validate
+            
+        Returns:
+            The validated password
+            
+        Raises:
+            serializers.ValidationError: If password doesn't meet requirements
+        """
         try:
             validate_password(
                 validated_data, password_validators=get_default_password_validators()
@@ -91,6 +108,7 @@ class UserCreationSerializer(serializers.Serializer):
 
 
 class UserUpdateSerializer(serializers.Serializer):
+    """Serializer for updating user profile information."""
     email = serializers.EmailField(required=False)
     password = serializers.CharField(required=False)
     first_name = serializers.CharField(required=False)
@@ -99,12 +117,14 @@ class UserUpdateSerializer(serializers.Serializer):
 
 
 class RetMessageSerializer(serializers.Serializer):
+    """Serializer for standardized API response messages."""
     retMessage = serializers.CharField()
     error = serializers.BooleanField()
     errorMessage = serializers.CharField(required=False)
 
 
 class GetAlertsSerializer(serializers.Serializer):
+    """Serializer for alert notification objects."""
     id = serializers.IntegerField()
     channel_send_id = serializers.IntegerField()
     subject = serializers.CharField()

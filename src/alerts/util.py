@@ -1,4 +1,5 @@
 import django
+from typing import Any
 
 from django.db import transaction
 from django.db.models import Q
@@ -14,9 +15,22 @@ def create_alert(
     u: User,
     alert_subject: str,
     alert_body: str,
-    alert_url: str = None,
-    alert_typ: AlertType = None,
-):
+    alert_url: str | None = None,
+    alert_typ: AlertType | None = None,
+) -> Alert:
+    """
+    Create a new alert for a user.
+    
+    Args:
+        u: The user to create the alert for
+        alert_subject: Subject/title of the alert
+        alert_body: Body text of the alert (will be truncated to 4000 characters)
+        alert_url: Optional URL associated with the alert
+        alert_typ: Optional alert type classification
+        
+    Returns:
+        The created Alert object
+    """
     alert = Alert(
         user=u,
         subject=alert_subject,
@@ -28,7 +42,17 @@ def create_alert(
     return alert
 
 
-def create_channel_send_for_comm_typ(alert: Alert, alert_comm_typ: str):
+def create_channel_send_for_comm_typ(alert: Alert, alert_comm_typ: str) -> ChannelSend:
+    """
+    Create a channel send record for delivering an alert through a specific communication type.
+    
+    Args:
+        alert: The alert to be sent
+        alert_comm_typ: The communication type code (e.g., 'email', 'discord', 'notification', 'txt')
+        
+    Returns:
+        The created ChannelSend object
+    """
     acs = ChannelSend(
         comm_typ=CommunicationChannelType.objects.get(
             Q(comm_typ=alert_comm_typ) & Q(void_ind="n")
@@ -39,7 +63,17 @@ def create_channel_send_for_comm_typ(alert: Alert, alert_comm_typ: str):
     return acs
 
 
-def send_alerts():
+def send_alerts() -> str:
+    """
+    Process and send all pending alerts that haven't been sent or dismissed.
+    
+    This function is typically called by a cron job to process queued alerts.
+    It handles different communication channels (email, Discord, webpush, SMS) and
+    tracks delivery attempts. Alerts that fail to send will be retried up to 3 times.
+    
+    Returns:
+        A message string describing which alerts were sent or if there were errors
+    """
     message = ""
 
     # Alert not send, dismissed, and been tried to send 3 or fewer times
@@ -129,7 +163,17 @@ def send_alerts():
     return message
 
 
-def get_user_alerts(user_id: str, comm_typ_cd: str):
+def get_user_alerts(user_id: str, comm_typ_cd: str) -> list[dict[str, Any]]:
+    """
+    Get all undismissed alerts for a user on a specific communication channel.
+    
+    Args:
+        user_id: The ID of the user
+        comm_typ_cd: The communication type code to filter by
+        
+    Returns:
+        List of dictionaries containing alert information (id, subject, body, url, staged_time, etc.)
+    """
     acs = ChannelSend.objects.filter(
         Q(dismissed_time__isnull=True)
         & Q(comm_typ_id=comm_typ_cd)
@@ -153,7 +197,13 @@ def get_user_alerts(user_id: str, comm_typ_cd: str):
     return notifs
 
 
-def dismiss_alert(channel_send_id: str):
+def dismiss_alert(channel_send_id: str) -> None:
+    """
+    Mark a channel send as dismissed by the user.
+    
+    Args:
+        channel_send_id: The ID of the ChannelSend record to dismiss
+    """
     acs = ChannelSend.objects.get(
         Q(dismissed_time__isnull=True)
         & Q(void_ind="n")
@@ -170,10 +220,25 @@ def send_alerts_to_role(
     body: str,
     alert_role: str,
     channels: list[str],
-    ignore_user_id: int = None,
-    url: str = None,
-    alert_type: AlertType = None,
-):
+    ignore_user_id: int | None = None,
+    url: str | None = None,
+    alert_type: AlertType | None = None,
+) -> list[Alert]:
+    """
+    Create and queue alerts for all users with a specific role/permission.
+    
+    Args:
+        subject: Alert subject line
+        body: Alert body text
+        alert_role: The permission/role codename to target
+        channels: List of communication channel types to send through (e.g., ['email', 'discord'])
+        ignore_user_id: Optional user ID to exclude from receiving the alert
+        url: Optional URL to include in the alert
+        alert_type: Optional AlertType classification
+        
+    Returns:
+        List of created Alert objects
+    """
     with transaction.atomic():
         alerts = []
         users = user.util.get_users_with_permission(alert_role)
@@ -192,5 +257,14 @@ def send_alerts_to_role(
         return alerts
 
 
-def get_alert_type(alert_typ: str):
+def get_alert_type(alert_typ: str) -> AlertType:
+    """
+    Retrieve an AlertType by its type code.
+    
+    Args:
+        alert_typ: The alert type code to look up
+        
+    Returns:
+        The AlertType object with the specified code
+    """
     return AlertType.objects.get(Q(alert_typ=alert_typ) & Q(void_ind="n"))

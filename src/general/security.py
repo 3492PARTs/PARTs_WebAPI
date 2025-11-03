@@ -1,5 +1,8 @@
 import traceback
+from typing import Callable, Any
 from django.utils import timezone
+from django.db.models import QuerySet
+from django.contrib.auth.models import Group
 
 import json
 from admin.models import ErrorLog
@@ -8,8 +11,21 @@ from rest_framework.response import Response
 from user.models import User, Permission
 
 
-def has_access(user_id, sec_permission: str | list[str]):
-    # how to use has_access(self.request.user.id, 36)
+def has_access(user_id: int, sec_permission: str | list[str]) -> bool:
+    """
+    Check if a user has the specified permission(s).
+    
+    Args:
+        user_id: The ID of the user to check permissions for
+        sec_permission: A single permission codename or list of permission codenames
+        
+    Returns:
+        True if the user has at least one of the specified permissions, False otherwise
+        
+    Example:
+        has_access(request.user.id, 'admin')
+        has_access(request.user.id, ['admin', 'scoutadmin'])
+    """
     prmsns = get_user_permissions(user_id, False)
 
     if not isinstance(sec_permission, list):
@@ -21,8 +37,25 @@ def has_access(user_id, sec_permission: str | list[str]):
 
 
 def access_response(
-    endpoint, user_id, sec_permission: str | list[str], error_message, fun
-):
+    endpoint: str, 
+    user_id: int, 
+    sec_permission: str | list[str], 
+    error_message: str, 
+    fun: Callable[[], Response]
+) -> Response:
+    """
+    Execute a function if user has access, otherwise return an error response.
+    
+    Args:
+        endpoint: The API endpoint path for error logging
+        user_id: The ID of the user attempting access
+        sec_permission: Required permission(s) - single string or list of strings
+        error_message: Error message to display if function execution fails
+        fun: The function to execute if user has access
+        
+    Returns:
+        Response from the function if successful, or error response if access denied or exception occurs
+    """
     if has_access(user_id, sec_permission):
         try:
             return fun()
@@ -43,7 +76,17 @@ def access_response(
         )
 
 
-def get_user_permissions(user_id, as_list=True):
+def get_user_permissions(user_id: int, as_list: bool = True) -> list[Permission] | QuerySet[Permission]:
+    """
+    Get all permissions for a user based on their group memberships.
+    
+    Args:
+        user_id: The ID of the user
+        as_list: If True, return a list of Permission objects. If False, return a QuerySet
+        
+    Returns:
+        List of Permission objects if as_list is True, otherwise a Permission QuerySet
+    """
     permissions_queryset = Permission.objects.filter(
         group__user=User.objects.get(id=user_id)
     ).distinct()
@@ -57,7 +100,16 @@ def get_user_permissions(user_id, as_list=True):
         return prmsns
 
 
-def get_user_groups(user_id):
+def get_user_groups(user_id: int) -> QuerySet[Group]:
+    """
+    Get all groups that a user belongs to.
+    
+    Args:
+        user_id: The ID of the user
+        
+    Returns:
+        QuerySet of Group objects the user belongs to
+    """
     user = User.objects.get(id=user_id)
 
     augs = user.groups.all()
@@ -66,8 +118,30 @@ def get_user_groups(user_id):
 
 
 def ret_message(
-    message, error=False, path="", user_id=-1, exception=None, error_message=None
-):
+    message: str, 
+    error: bool = False, 
+    path: str = "", 
+    user_id: int = -1, 
+    exception: Exception | None = None, 
+    error_message: str | dict | None = None
+) -> Response:
+    """
+    Create a standardized response message and log errors if applicable.
+    
+    This function is the standard way to return responses from API endpoints.
+    When error=True, it logs the error to the database and prints debug information.
+    
+    Args:
+        message: The message to return to the user
+        error: Whether this is an error response
+        path: The API endpoint path where the error occurred
+        user_id: The ID of the user who triggered the error
+        exception: The exception object if an exception occurred
+        error_message: Additional error details (typically validation errors or messages)
+        
+    Returns:
+        Response object with the message, error flag, and error details
+    """
     # TODO Make all of these optional in the DB
     if error:
         print("----------ERROR START----------")

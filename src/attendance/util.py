@@ -1,7 +1,7 @@
+from typing import Any
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from user.models import User
 from attendance.models import Attendance, Meeting, AttendanceApprovalType
@@ -9,13 +9,29 @@ import scouting.util
 import user.util
 
 
-def get_meetings():
+def get_meetings() -> QuerySet[Meeting]:
+    """
+    Get all non-voided meetings for the current season.
+    
+    Returns:
+        QuerySet of Meeting objects for the current season, ordered by start time and title
+    """
     return Meeting.objects.filter(
         Q(season=scouting.util.get_current_season()) & Q(void_ind="n")
     ).order_by("start", "title")
 
 
-def save_meeting(meeting):
+def save_meeting(meeting: dict[str, Any]) -> Meeting:
+    """
+    Create or update a meeting record.
+    
+    Args:
+        meeting: Dictionary containing meeting data (id, title, description, start, end, bonus, void_ind)
+                If id is present, updates existing meeting; otherwise creates new one
+                
+    Returns:
+        The created or updated Meeting object
+    """
     if meeting.get("id", None) is not None:
         m = Meeting.objects.get(id=meeting["id"])
     else:
@@ -38,7 +54,16 @@ def save_meeting(meeting):
     return m
 
 
-def get_meeting_hours():
+def get_meeting_hours() -> dict[str, float]:
+    """
+    Calculate total hours and bonus hours from all meetings in the current season.
+    
+    Returns:
+        Dictionary with 'hours' (regular meeting hours) and 'bonus_hours' keys
+        
+    Raises:
+        Exception: If any meeting is missing an end time
+    """
     meetings = get_meetings()
     total = 0
     bonus = 0
@@ -55,7 +80,17 @@ def get_meeting_hours():
     return {"hours": round(total, 2), "bonus_hours": round(bonus, 2)}
 
 
-def get_attendance_report(user_id=None, meeting_id=None):
+def get_attendance_report(user_id: int | None = None, meeting_id: int | None = None) -> list[dict[str, Any]]:
+    """
+    Generate an attendance report showing hours and percentage for users.
+    
+    Args:
+        user_id: If provided, generate report for specific user only
+        meeting_id: If provided, filter attendance to specific meeting
+        
+    Returns:
+        List of dictionaries containing user, time (hours), and percentage for each user
+    """
     users = None
     if user_id is not None:
         users = User.objects.filter(id=user_id)
@@ -85,7 +120,17 @@ def get_attendance_report(user_id=None, meeting_id=None):
     return ret
 
 
-def get_attendance(user_id=None, meeting_id=None):
+def get_attendance(user_id: int | None = None, meeting_id: int | None = None) -> QuerySet[Attendance]:
+    """
+    Get attendance records filtered by user and/or meeting.
+    
+    Args:
+        user_id: If provided, filter to specific user
+        meeting_id: If provided, filter to specific meeting
+        
+    Returns:
+        QuerySet of Attendance objects for current season matching the filters
+    """
     user = Q()
     if user_id is not None:
         user = Q(user__id=user_id)

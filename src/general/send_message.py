@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 
 from json import dumps
 
@@ -13,7 +14,18 @@ from pywebpush import WebPushException
 from general.security import ret_message
 
 
-def send_email(to_email: str | list[str], subject: str, template: str, cntx: dict):
+def send_email(
+    to_email: str | list[str], subject: str, template: str, cntx: dict[str, Any]
+) -> None:
+    """
+    Send an email using Django's email backend with both plain text and HTML versions.
+
+    Args:
+        to_email: Email address(es) to send to. Can be a single string or list of strings
+        subject: Email subject line
+        template: Name of the email template (without extension) located in email_templates/
+        cntx: Context dictionary to render the template with
+    """
     plaintext = get_template("./email_templates/" + template + ".txt")
     html = get_template("email_templates/" + template + ".html")
 
@@ -32,7 +44,16 @@ def send_email(to_email: str | list[str], subject: str, template: str, cntx: dic
     email.send()
 
 
-def send_discord_notification(message: str):
+def send_discord_notification(message: str) -> None:
+    """
+    Send a notification message to Discord via webhook.
+
+    Args:
+        message: The message content to send to Discord
+
+    Raises:
+        Exception: If the Discord webhook request fails
+    """
     url = settings.DISCORD_NOTIFICATION_WEBHOOK
 
     message = add_test_env_subject(message)
@@ -44,13 +65,25 @@ def send_discord_notification(message: str):
         raise Exception("discord sending issue")
 
 
-def send_webpush(user, subject: str, body: str, alert_id: int):
+def send_webpush(user: Any, subject: str, body: str, alert_id: int) -> str:
+    """
+    Send a web push notification to a user.
+
+    Args:
+        user: The user object to send the notification to
+        subject: Notification title
+        body: Notification body text (will be truncated to 3500 chars)
+        alert_id: ID of the alert for notification tagging
+
+    Returns:
+        A message string indicating success or failure
+    """
     subject = add_test_env_subject(subject)
 
     payload = {
         "notification": {
             "title": subject,
-            "body": body[0:3500],  # max length is 4096 bytes
+            "body": body[0:3450],  # max length is 4096 bytes
             "icon": "assets/icons/icon-128x128.png",
             "badge": "badge",
             "tag": alert_id,
@@ -87,7 +120,16 @@ def send_webpush(user, subject: str, body: str, alert_id: int):
     return msg
 
 
-def add_test_env_subject(subject: str):
+def add_test_env_subject(subject: str) -> str:
+    """
+    Prefix subject with test environment identifier if not in production.
+
+    Args:
+        subject: The original subject string
+
+    Returns:
+        Subject string, possibly prefixed with environment information
+    """
     if settings.ENVIRONMENT != "main":
         return f"TEST ENVIRONMENT - {settings.ENVIRONMENT}: {subject}"
     return subject
