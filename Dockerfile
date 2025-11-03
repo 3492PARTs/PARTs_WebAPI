@@ -110,7 +110,7 @@ RUN mv ./crontab /etc/cron.d/myjob \
     && chmod 666 /var/log/cron.log   # writable for any user (including appuser)
 
 # ── For main branch: setup deployment scripts and wsgi ────────────────────
-RUN if [ "$DEPLOY_ENV" = "main" ]; then \
+RUN if [ "${DEPLOY_ENV}" = "main" ]; then \
         apt update && apt install -y openssh-client wget && rm -rf /var/lib/apt/lists/* && \
         pip install paramiko==3.5.1 pysftp && \
         mkdir /wsgi && \
