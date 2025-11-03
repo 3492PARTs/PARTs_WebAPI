@@ -182,7 +182,7 @@ node {
         }
 
         stage('Cleanup docker images') {
-            sh '''
+            sh """
                 echo "Starting Docker image cleanup..."
                 
                 # 1. Force remove the intermediate test image
@@ -195,7 +195,7 @@ node {
                 docker builder prune -f --filter "until=168h" || true
                 
                 echo "Docker images cleaned up."
-            '''
+            """
         }
 
         env.RESULT = 'success'
