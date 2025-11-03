@@ -33,14 +33,12 @@ node {
             if (env.BRANCH_NAME == 'main') {
                 env.DEPLOY_PATH = "\\/home\\/parts3492\\/domains\\/api.parts3492.org\\/code"
                 env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
-                env.DEPENDENCY_GROUP = "wvnet"
-                env.DEPLOY_ENV = "main"
+                env.DOCKERFILE = "./Dockerfile"
             }
             else {
                 env.DEPLOY_PATH = "\\/app"
                 env.DEPLOY_URL = "https:\\/\\/partsuat.bduke.dev"
-                env.DEPENDENCY_GROUP = "uat"
-                env.DEPLOY_ENV = "uat"
+                env.DOCKERFILE = "./Dockerfile.uat"
             }
 
             sh'''
@@ -64,9 +62,8 @@ node {
                 
                 // Build test image with BuildKit cache
                 buildImage = docker.build("parts-webapi-build-${env.formatted_branch_name}", 
-                    "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
                     "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                    "-f ./Dockerfile --target=test .")
+                    "-f ${env.DOCKERFILE} --target=test .")
 
                 // Run tests inside the test container
                 buildImage.inside {
@@ -106,8 +103,6 @@ node {
                     
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
-                        "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
-                        "--build-arg DEPLOY_ENV=${env.DEPLOY_ENV} " +
                         "--cache-from bduke97/parts_webapi:latest " +
                         "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
                         "-f ./Dockerfile --target=runtime .")
@@ -120,11 +115,9 @@ node {
                     
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
-                        "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
-                        "--build-arg DEPLOY_ENV=${env.DEPLOY_ENV} " +
                         "--cache-from bduke97/parts_webapi:${env.FORMATTED_BRANCH_NAME} " +
                         "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                        "-f ./Dockerfile --target=runtime .")
+                        "-f ./Dockerfile.uat --target=runtime .")
                 }
             }
         }
