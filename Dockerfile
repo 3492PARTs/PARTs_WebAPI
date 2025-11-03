@@ -1,7 +1,7 @@
 # ------------------------------------------------------------
 # 1️⃣ Builder stage – builds the virtual environment
 # ------------------------------------------------------------
-FROM python:3.11.3 AS builder
+FROM python:3.11.3 AS build
 
 # Build argument to select dependency group (wvnet or uat)
 ARG DEPENDENCY_GROUP=wvnet
@@ -37,7 +37,7 @@ RUN pip install poetry==2.1.4 \
 # Test stage - contains dev dependencies for testing
 # Tests are now run in Jenkins before the build, not during Docker build
 # ------------------------------------------------------------
-FROM builder AS test
+FROM build AS test
 
 # Install dev dependencies for testing
 RUN poetry install --with dev --no-root
@@ -50,15 +50,15 @@ COPY ./ ./
 # ------------------------------------------------------------
 # 2️⃣ Runtime stage for MAIN branch (production)
 # ------------------------------------------------------------
-FROM python:3.11-slim AS runtime-main
+FROM python:3.11-slim AS runtime-production
 
 WORKDIR /app
 
 # Copy your application code to the container
 COPY ./ ./
 
-# Copy virtual env from builder stage
-COPY --from=builder /app/requirements.txt ./
+# Copy virtual env from build stage
+COPY --from=build /app/requirements.txt ./
 
 RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
     && apt update \
@@ -118,7 +118,7 @@ RUN RUN_DEPS=" \
 WORKDIR /app
 
 # ── Pull the virtual‑env built in the previous stage ───────────────────────
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --from=build ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # ── Copy application source code ───────────────────────────────────────────
 COPY ./ /app

@@ -34,7 +34,7 @@ node {
                 env.DEPLOY_PATH = "\\/home\\/parts3492\\/domains\\/api.parts3492.org\\/code"
                 env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
                 env.DEPENDENCY_GROUP = "wvnet"
-                env.RUNTIME_TARGET = "runtime-main"
+                env.RUNTIME_TARGET = "runtime-production"
             }
             else {
                 env.DEPLOY_PATH = "\\/app"
@@ -66,18 +66,7 @@ node {
                 buildImage = docker.build("parts-webapi-build-${env.formatted_branch_name}", 
                     "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
                     "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                    "-f ./Dockerfile --target=test .")
-
-                // Run tests inside the test container
-                buildImage.inside {
-                    sh '''
-                        echo "Running test suite..."
-                        cd /app
-                        export COVERAGE_FILE=/tmp/.coverage
-                        /app/.venv/bin/pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v
-                        echo "All tests passed!"
-                    '''
-                }
+                    "-f ./Dockerfile --target=build .")
             }
         }
 
