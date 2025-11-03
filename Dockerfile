@@ -48,12 +48,35 @@ COPY ./ ./
 # Tests will be executed by Jenkins using: /app/.venv/bin/pytest ...
 
 # ------------------------------------------------------------
-# 2️⃣ Runtime stage – the production runtime environment
+# 2️⃣ Runtime stage for MAIN branch (production)
 # ------------------------------------------------------------
-FROM python:3.11-slim AS runtime
+FROM python:3.11-slim AS runtime-main
 
-# Build argument for deployment environment (main or uat)
-ARG DEPLOY_ENV=main
+WORKDIR /app
+
+# Copy your application code to the container
+COPY ./ ./
+
+# Copy virtual env from builder stage
+COPY --from=builder /app/requirements.txt ./
+
+RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
+    && apt update \
+    && apt upgrade -y \
+    && apt install openssh-client wget -y \
+    && pip install paramiko==3.5.1  pysftp \
+    && rm ./poetry.toml \
+    && mkdir /wsgi \
+    && cp ./src/parts_webapi/wsgi.py /wsgi/wsgi.py \
+    && mkdir /scripts \
+    && cd /scripts \
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
+    && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py
+
+# ------------------------------------------------------------
+# 2️⃣ Runtime stage for UAT branch
+# ------------------------------------------------------------
+FROM python:3.11-slim AS runtime-uat
 
 # ── Expose the HTTP port that uWSGI will listen on ────────────────────────
 EXPOSE 9090
@@ -110,18 +133,6 @@ RUN mv ./crontab /etc/cron.d/myjob \
     && crontab /etc/cron.d/myjob \
     && touch /var/log/cron.log \
     && chmod 666 /var/log/cron.log   # writable for any user (including appuser)
-
-# ── For main branch: setup deployment scripts and wsgi ────────────────────
-RUN if [ "${DEPLOY_ENV}" = "main" ]; then \
-        apt update && apt install -y openssh-client wget && rm -rf /var/lib/apt/lists/* && \
-        pip install paramiko==3.5.1 pysftp && \
-        mkdir /wsgi && \
-        cp ./src/parts_webapi/wsgi.py /wsgi/wsgi.py && \
-        mkdir /scripts && \
-        cd /scripts && \
-        wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py && \
-        wget https://raw.githubusercontent.com/bduke-dev/scripts/main/upload_directory.py; \
-    fi
 
 # ── Health‑check ───────────────────────────────────────────────────────────
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \

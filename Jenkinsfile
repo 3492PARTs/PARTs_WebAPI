@@ -34,13 +34,13 @@ node {
                 env.DEPLOY_PATH = "\\/home\\/parts3492\\/domains\\/api.parts3492.org\\/code"
                 env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
                 env.DEPENDENCY_GROUP = "wvnet"
-                env.DEPLOY_ENV = "main"
+                env.RUNTIME_TARGET = "runtime-main"
             }
             else {
                 env.DEPLOY_PATH = "\\/app"
                 env.DEPLOY_URL = "https:\\/\\/partsuat.bduke.dev"
                 env.DEPENDENCY_GROUP = "uat"
-                env.DEPLOY_ENV = "uat"
+                env.RUNTIME_TARGET = "runtime-uat"
             }
 
             sh'''
@@ -107,10 +107,9 @@ node {
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
                         "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
-                        "--build-arg DEPLOY_ENV=${env.DEPLOY_ENV} " +
                         "--cache-from bduke97/parts_webapi:latest " +
                         "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                        "-f ./Dockerfile --target=runtime .")
+                        "-f ./Dockerfile --target=${env.RUNTIME_TARGET} .")
                 }
                 else {
                     sh """
@@ -121,10 +120,9 @@ node {
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
                         "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
-                        "--build-arg DEPLOY_ENV=${env.DEPLOY_ENV} " +
                         "--cache-from bduke97/parts_webapi:${env.FORMATTED_BRANCH_NAME} " +
                         "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                        "-f ./Dockerfile --target=runtime .")
+                        "-f ./Dockerfile --target=${env.RUNTIME_TARGET} .")
                 }
             }
         }
