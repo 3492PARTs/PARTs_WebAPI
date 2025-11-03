@@ -98,13 +98,13 @@ class ScheduleSerializer(serializers.Serializer):
     notified = serializers.BooleanField()
     user = UserSerializer(required=False, allow_null=True)
     user_name = serializers.CharField(required=False, allow_null=True)
-    
+
     def get_sch_nm(self, obj):
         """Get schedule name from related ScheduleType"""
-        if hasattr(obj, 'sch_typ') and hasattr(obj.sch_typ, 'sch_nm'):
+        if hasattr(obj, "sch_typ") and hasattr(obj.sch_typ, "sch_nm"):
             return obj.sch_typ.sch_nm
         # Handle dict case (when obj is already serialized data)
-        return obj.get('sch_nm', '')
+        return obj.get("sch_nm", "")
 
 
 class ScoutFieldScheduleSerializer(serializers.Serializer):
@@ -118,17 +118,17 @@ class ScoutFieldScheduleSerializer(serializers.Serializer):
 
     blue_leader = UserSerializer(required=False, allow_null=True)
     red_leader = UserSerializer(required=False, allow_null=True)
-    red_one_id = serializers.IntegerField(required=False, allow_null=True)
+    red_one_id = UserSerializer(required=False, allow_null=True)
     red_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    red_two_id = serializers.IntegerField(required=False, allow_null=True)
+    red_two_id = UserSerializer(required=False, allow_null=True)
     red_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    red_three_id = serializers.IntegerField(required=False, allow_null=True)
+    red_three_id = UserSerializer(required=False, allow_null=True)
     red_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    blue_one_id = serializers.IntegerField(required=False, allow_null=True)
+    blue_one_id = UserSerializer(required=False, allow_null=True)
     blue_one_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    blue_two_id = serializers.IntegerField(required=False, allow_null=True)
+    blue_two_id = UserSerializer(required=False, allow_null=True)
     blue_two_check_in = serializers.DateTimeField(required=False, allow_null=True)
-    blue_three_id = serializers.IntegerField(required=False, allow_null=True)
+    blue_three_id = UserSerializer(required=False, allow_null=True)
     blue_three_check_in = serializers.DateTimeField(required=False, allow_null=True)
     scouts = serializers.CharField(required=False, allow_null=True)
 
