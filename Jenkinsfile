@@ -33,12 +33,14 @@ node {
             if (env.BRANCH_NAME == 'main') {
                 env.DEPLOY_PATH = "\\/home\\/parts3492\\/domains\\/api.parts3492.org\\/code"
                 env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
-                env.DOCKERFILE = "./Dockerfile"
+                env.DEPENDENCY_GROUP = "wvnet"
+                env.RUNTIME_TARGET = "runtime-production"
             }
             else {
                 env.DEPLOY_PATH = "\\/app"
                 env.DEPLOY_URL = "https:\\/\\/partsuat.bduke.dev"
-                env.DOCKERFILE = "./Dockerfile.uat"
+                env.DEPENDENCY_GROUP = "uat"
+                env.RUNTIME_TARGET = "runtime-uat"
             }
 
             sh'''
@@ -62,26 +64,21 @@ node {
                 
                 // Build test image with BuildKit cache
                 buildImage = docker.build("parts-webapi-build-${env.formatted_branch_name}", 
+                    "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
                     "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                    "-f ${env.DOCKERFILE} --target=test .")
-
-                // Run tests inside the test container
-                buildImage.inside {
-                    sh '''
-                        echo "Running test suite..."
-                        cd /app
-                        export COVERAGE_FILE=/tmp/.coverage
-                        /app/.venv/bin/pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v
-                        echo "All tests passed!"
-                    '''
-                }
+                    "-f ./Dockerfile --target=build .")
             }
         }
 
         stage('Run tests') {
             timeout(time: 15, unit: 'MINUTES') {
                 // Run tests inside the test container
-                buildImage.inside {
+                def testImage = docker.build("parts-webapi-test-${env.formatted_branch_name}", 
+                    "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
+                    "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
+                    "-f ./Dockerfile --target=test .")
+
+                testImage.inside {
                     sh '''
                         echo "Running test suite..."
                         cd /app
@@ -103,9 +100,10 @@ node {
                     
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
+                        "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
                         "--cache-from bduke97/parts_webapi:latest " +
                         "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                        "-f ./Dockerfile --target=runtime .")
+                        "-f ./Dockerfile --target=${env.RUNTIME_TARGET} .")
                 }
                 else {
                     sh """
@@ -115,9 +113,10 @@ node {
                     
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
+                        "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
                         "--cache-from bduke97/parts_webapi:${env.FORMATTED_BRANCH_NAME} " +
                         "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
-                        "-f ./Dockerfile.uat --target=runtime .")
+                        "-f ./Dockerfile --target=${env.RUNTIME_TARGET} .")
                 }
             }
         }
@@ -187,6 +186,9 @@ node {
                 
                 # 1. Force remove the intermediate test image
                 docker rmi -f parts-webapi-build-${env.formatted_branch_name} || true
+
+                # 1.2. Force remove the intermediate test image
+                docker rmi -f parts-webapi-test-${env.formatted_branch_name} || true
                 
                 # 2. Remove all dangling images (untagged)
                 docker image prune -f
