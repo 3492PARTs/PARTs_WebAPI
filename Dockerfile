@@ -51,7 +51,7 @@ COPY ./ ./
 FROM python:3.11-slim AS runtime
 
 # Build argument for deployment environment (main or uat)
-ARG DEPLOY_ENV=uat
+ARG DEPLOY_ENV=main
 
 # ── Expose the HTTP port that uWSGI will listen on ────────────────────────
 EXPOSE 9090
