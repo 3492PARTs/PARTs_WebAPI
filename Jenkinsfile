@@ -73,7 +73,12 @@ node {
         stage('Run tests') {
             timeout(time: 15, unit: 'MINUTES') {
                 // Run tests inside the test container
-                buildImage.inside {
+                def testImage = docker.build("parts-webapi-test-${env.formatted_branch_name}", 
+                    "--build-arg DEPENDENCY_GROUP=${env.DEPENDENCY_GROUP} " +
+                    "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
+                    "-f ./Dockerfile --target=test .")
+
+                testImage.inside {
                     sh '''
                         echo "Running test suite..."
                         cd /app
@@ -181,6 +186,9 @@ node {
                 
                 # 1. Force remove the intermediate test image
                 docker rmi -f parts-webapi-build-${env.formatted_branch_name} || true
+
+                # 1.2. Force remove the intermediate test image
+                docker rmi -f parts-webapi-test-${env.formatted_branch_name} || true
                 
                 # 2. Remove all dangling images (untagged)
                 docker image prune -f
