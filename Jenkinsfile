@@ -11,6 +11,7 @@ node {
     
     try {
         def app
+        def buildImage
 
         stage('Clone repository') {
             timeout(time: 5, unit: 'MINUTES') {
@@ -28,43 +29,44 @@ node {
             '''
         }
 
-        stage('Run Tests') {
-            timeout(time: 15, unit: 'MINUTES') {
-                // Prepare environment-specific configuration
-                if (env.BRANCH_NAME == 'main') {
-                    env.DEPLOY_PATH = "\\/home\\/parts3492\\/domains\\/api.parts3492.org\\/code"
-                    env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
-                    env.DOCKERFILE = "./Dockerfile"
-                }
-                else {
-                    env.DEPLOY_PATH = "\\/app"
-                    env.DEPLOY_URL = "https:\\/\\/partsuat.bduke.dev"
-                    env.DOCKERFILE = "./Dockerfile.uat"
-                }
+        stage('Set variables') {
+            if (env.BRANCH_NAME == 'main') {
+                env.DEPLOY_PATH = "\\/home\\/parts3492\\/domains\\/api.parts3492.org\\/code"
+                env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
+                env.DOCKERFILE = "./Dockerfile"
+            }
+            else {
+                env.DEPLOY_PATH = "\\/app"
+                env.DEPLOY_URL = "https:\\/\\/partsuat.bduke.dev"
+                env.DOCKERFILE = "./Dockerfile.uat"
+            }
 
-                sh'''
-                    sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/clear-logs.sh \
-                    && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/notify-users.sh \
-                    && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/notify-users.sh \
-                    && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/refresh-event-team-info.sh \
-                    && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/refresh-event-team-info.sh \
-                    && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab \
-                    && sed -i "s/BUILD/$SHA/g" src/parts_webapi/settings/base.py
-                '''
-                
+            sh'''
+                sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/clear-logs.sh \
+                && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/notify-users.sh \
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/notify-users.sh \
+                && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/refresh-event-team-info.sh \
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/refresh-event-team-info.sh \
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab \
+                && sed -i "s/BUILD/$SHA/g" src/parts_webapi/settings/base.py
+            '''
+        }
+
+        stage('Build image') {
+            timeout(time: 15, unit: 'MINUTES') {
                 // Attempt to pull cache image if it exists (this is a local image, so it may not exist)
                 sh '''
                     echo "Attempting to pull test cache image (may not exist on first build)..."
-                    docker pull parts-webapi-test-base:latest 2>/dev/null || echo "Cache image not found, building from scratch..."
+                    docker pull parts-webapi-build-${env.formatted_branch_name}:latest 2>/dev/null || echo "Cache image not found, building from scratch..."
                 '''
                 
                 // Build test image with BuildKit cache
-                def testImage = docker.build("parts-webapi-test-base", 
-                    "--cache-from parts-webapi-test-base:latest " +
+                buildImage = docker.build("parts-webapi-build-${env.formatted_branch_name}", 
+                    "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
                     "-f ${env.DOCKERFILE} --target=test .")
 
                 // Run tests inside the test container
-                testImage.inside {
+                buildImage.inside {
                     sh '''
                         echo "Running test suite..."
                         cd /app
@@ -76,8 +78,23 @@ node {
             }
         }
 
-        stage('Build image') {
-            timeout(time: 20, unit: 'MINUTES') {
+        stage('Run tests') {
+            timeout(time: 15, unit: 'MINUTES') {
+                // Run tests inside the test container
+                buildImage.inside {
+                    sh '''
+                        echo "Running test suite..."
+                        cd /app
+                        export COVERAGE_FILE=/tmp/.coverage
+                        /app/.venv/bin/pytest --cov=src --cov-report=term-missing --cov-fail-under=50 -v
+                        echo "All tests passed!"
+                    '''
+                }
+            }
+        }
+
+        stage('Build runtime image') {
+            timeout(time: 5, unit: 'MINUTES') {
                 if (env.BRANCH_NAME == 'main') {
                     sh '''
                         echo "Attempting to pull runtime cache image..."
@@ -87,7 +104,7 @@ node {
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
                         "--cache-from bduke97/parts_webapi:latest " +
-                        "--cache-from parts-webapi-test-base:latest " +
+                        "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
                         "-f ./Dockerfile --target=runtime .")
                 }
                 else {
@@ -99,14 +116,14 @@ node {
                     // Use BuildKit cache for faster builds - build only runtime stage
                     app = docker.build("bduke97/parts_webapi", 
                         "--cache-from bduke97/parts_webapi:${env.FORMATTED_BRANCH_NAME} " +
-                        "--cache-from parts-webapi-test-base:latest " +
+                        "--cache-from parts-webapi-build-${env.formatted_branch_name}:latest " +
                         "-f ./Dockerfile.uat --target=runtime .")
                 }
             }
         }
 
-        stage('Push image') {
-            if (env.BRANCH_NAME != 'main') {
+        if (env.BRANCH_NAME != 'main') {
+            stage('Push image') {
                 timeout(time: 10, unit: 'MINUTES') {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
                         app.push("${env.FORMATTED_BRANCH_NAME}")
@@ -151,16 +168,25 @@ node {
                 && TAG=$FORMATTED_BRANCH_NAME docker compose pull \
                 && TAG=$FORMATTED_BRANCH_NAME docker compose up -d --force-recreate"
                 '''
+
+                sh '''
+                    ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "
+                        cd /home/brandon/PARTs_Website && 
+                        git fetch --prune &&
+                        git for-each-ref --format '%(if:equals=gone)%(upstream:track,nobracket)%(then)%(refname:short)%(end)' refs/heads/ | 
+                        xargs -r git branch --delete
+                    "
+                '''
             } 
         }
         }
 
-        stage('Cleanup Docker Images') {
+        stage('Cleanup docker images') {
             sh '''
                 echo "Starting Docker image cleanup..."
                 
                 # 1. Force remove the intermediate test image
-                docker rmi -f parts-webapi-test-base || true
+                docker rmi -f parts-webapi-build-${env.formatted_branch_name} || true
                 
                 # 2. Remove all dangling images (untagged)
                 docker image prune -f
