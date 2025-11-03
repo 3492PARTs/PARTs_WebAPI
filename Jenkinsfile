@@ -55,10 +55,10 @@ node {
         stage('Build image') {
             timeout(time: 15, unit: 'MINUTES') {
                 // Attempt to pull cache image if it exists (this is a local image, so it may not exist)
-                sh '''
+                sh """
                     echo "Attempting to pull test cache image (may not exist on first build)..."
                     docker pull parts-webapi-build-${env.formatted_branch_name}:latest 2>/dev/null || echo "Cache image not found, building from scratch..."
-                '''
+                """
                 
                 // Build test image with BuildKit cache
                 buildImage = docker.build("parts-webapi-build-${env.formatted_branch_name}", 
