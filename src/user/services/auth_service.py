@@ -4,16 +4,15 @@ Authentication service for user authentication business logic.
 This service handles authentication-related operations.
 """
 
-from typing import Optional
-
 
 class AuthService:
-    """Service for authentication business logic."""
+    """
+    Service for authentication business logic.
+    
+    This is a placeholder for future authentication-related business logic
+    that should be extracted from views and consolidated here.
+    """
     
     def __init__(self):
         """Initialize AuthService."""
         pass
-    
-    # Authentication logic will be added here as needed
-    # This is a placeholder for future authentication-related business logic
-    pass

@@ -5,7 +5,7 @@ This service handles authorization checks and access control logic.
 It is separate from authentication and focuses on permission-based access.
 """
 
-from typing import Callable, List, Union
+from typing import Callable, List, Union, Optional
 from django.db.models import QuerySet
 from django.contrib.auth.models import Permission
 from rest_framework.response import Response
@@ -17,14 +17,24 @@ from user.repositories.permission_repository import PermissionRepository
 class AuthorizationService:
     """Service for authorization and access control."""
     
-    def __init__(self, permission_repo: PermissionRepository = None):
+    def __init__(
+        self,
+        permission_repo: Optional[PermissionRepository] = None,
+        user_repo = None
+    ):
         """
         Initialize AuthorizationService.
         
         Args:
             permission_repo: Permission repository instance (uses default if None)
+            user_repo: User repository instance (uses default if None)
         """
         self.permission_repo = permission_repo or PermissionRepository()
+        # Import here to avoid circular dependency at module level
+        if user_repo is None:
+            from user.repositories.user_repository import UserRepository
+            user_repo = UserRepository()
+        self.user_repo = user_repo
     
     def has_access(self, user_id: int, required_permission: Union[str, List[str]]) -> bool:
         """
@@ -37,10 +47,7 @@ class AuthorizationService:
         Returns:
             True if the user has at least one of the specified permissions, False otherwise
         """
-        from user.repositories.user_repository import UserRepository
-        
-        user_repo = UserRepository()
-        user = user_repo.get_by_id(user_id)
+        user = self.user_repo.get_by_id(user_id)
         user_permissions = self.permission_repo.get_user_permissions(user)
         
         if not isinstance(required_permission, list):
@@ -107,8 +114,5 @@ class AuthorizationService:
         Returns:
             QuerySet of Permission objects
         """
-        from user.repositories.user_repository import UserRepository
-        
-        user_repo = UserRepository()
-        user = user_repo.get_by_id(user_id)
+        user = self.user_repo.get_by_id(user_id)
         return self.permission_repo.get_user_permissions(user)
