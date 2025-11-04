@@ -552,7 +552,7 @@ class TestSavePictureView:
         
         with patch('scouting.util.get_current_event') as mock_event, \
              patch('general.cloudinary.upload_image') as mock_upload, \
-             patch('general.security.has_access') as mock_access:
+             patch('general.services.authorization_service.AuthorizationService.has_access') as mock_access:
             mock_event.return_value = event
             mock_upload.return_value = {'public_id': 'test123', 'version': 1}
             mock_access.return_value = True
@@ -581,7 +581,7 @@ class TestResponsesView:
         
         with patch('scouting.util.get_current_season') as mock_season, \
              patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.has_access') as mock_access:
+             patch('general.services.authorization_service.AuthorizationService.has_access') as mock_access:
             mock_season.return_value = event.season
             mock_event.return_value = event
             mock_access.return_value = True
@@ -598,7 +598,7 @@ class TestResponsesView:
         
         with patch('scouting.util.get_current_season') as mock_season, \
              patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.has_access') as mock_access:
+             patch('general.services.authorization_service.AuthorizationService.has_access') as mock_access:
             mock_season.return_value = event.season
             mock_event.return_value = event
             mock_access.return_value = True
@@ -618,7 +618,7 @@ class TestSetDefaultPitImageView:
                              {'scout_pit_img_id': pit_image.id})
         force_authenticate(request, user=test_user)
         
-        with patch('general.security.has_access') as mock_access:
+        with patch('general.services.authorization_service.AuthorizationService.has_access') as mock_access:
             mock_access.return_value = True
             
             response = SetDefaultPitImageView.as_view()(request)
@@ -643,7 +643,7 @@ class TestTeamDataView:
         force_authenticate(request, user=test_user)
         
         with patch('scouting.util.get_current_event') as mock_event, \
-             patch('general.security.has_access') as mock_access:
+             patch('general.services.authorization_service.AuthorizationService.has_access') as mock_access:
             mock_event.return_value = event
             mock_access.return_value = True
             

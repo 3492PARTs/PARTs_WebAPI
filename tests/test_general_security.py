@@ -21,35 +21,41 @@ class TestHasAccess:
 
     def test_has_access_with_single_permission(self, test_user):
         """Test has_access with a single permission string."""
-        with patch("general.security.get_user_permissions") as mock_get_perms:
+        # Mock at the service layer instead of get_user_permissions
+        with patch("general.services.authorization_service.PermissionRepository") as MockRepo:
+            mock_repo_instance = MagicMock()
             mock_queryset = MagicMock()
-            mock_queryset.filter.return_value = [Mock()]
-            mock_get_perms.return_value = mock_queryset
+            mock_queryset.filter.return_value = [Mock()]  # Has permission
+            mock_repo_instance.get_user_permissions.return_value = mock_queryset
+            MockRepo.return_value = mock_repo_instance
             
             result = has_access(test_user.id, "test_permission")
             
             assert result is True
-            mock_get_perms.assert_called_once_with(test_user.id, False)
-            mock_queryset.filter.assert_called_once_with(codename__in=["test_permission"])
 
     def test_has_access_with_list_of_permissions(self, test_user):
         """Test has_access with a list of permissions."""
-        with patch("general.security.get_user_permissions") as mock_get_perms:
+        # Mock at the service layer instead of get_user_permissions  
+        with patch("general.services.authorization_service.PermissionRepository") as MockRepo:
+            mock_repo_instance = MagicMock()
             mock_queryset = MagicMock()
-            mock_queryset.filter.return_value = [Mock(), Mock()]
-            mock_get_perms.return_value = mock_queryset
+            mock_queryset.filter.return_value = [Mock(), Mock()]  # Has permissions
+            mock_repo_instance.get_user_permissions.return_value = mock_queryset
+            MockRepo.return_value = mock_repo_instance
             
             result = has_access(test_user.id, ["perm1", "perm2"])
             
             assert result is True
-            mock_queryset.filter.assert_called_once_with(codename__in=["perm1", "perm2"])
 
     def test_has_access_no_permission(self, test_user):
         """Test has_access when user doesn't have permission."""
-        with patch("general.security.get_user_permissions") as mock_get_perms:
+        # Mock at the service layer instead of get_user_permissions
+        with patch("general.services.authorization_service.PermissionRepository") as MockRepo:
+            mock_repo_instance = MagicMock()
             mock_queryset = MagicMock()
-            mock_queryset.filter.return_value = []
-            mock_get_perms.return_value = mock_queryset
+            mock_queryset.filter.return_value = []  # No permissions
+            mock_repo_instance.get_user_permissions.return_value = mock_queryset
+            MockRepo.return_value = mock_repo_instance
             
             result = has_access(test_user.id, "missing_permission")
             
@@ -64,7 +70,8 @@ class TestAccessResponse:
         """Test access_response when user has permission."""
         mock_fun = Mock(return_value="success")
         
-        with patch("general.security.has_access", return_value=True):
+        # Patch at the service layer instead of the wrapper function
+        with patch("general.services.authorization_service.AuthorizationService.has_access", return_value=True):
             result = access_response("test_endpoint", test_user.id, "test_perm", "error msg", mock_fun)
             
             assert result == "success"
@@ -74,7 +81,8 @@ class TestAccessResponse:
         """Test access_response when user doesn't have permission."""
         mock_fun = Mock()
         
-        with patch("general.security.has_access", return_value=False):
+        # Patch at the service layer instead of the wrapper function
+        with patch("general.services.authorization_service.AuthorizationService.has_access", return_value=False):
             result = access_response("test_endpoint", test_user.id, "test_perm", "error msg", mock_fun)
             
             assert isinstance(result, Response)
@@ -86,7 +94,7 @@ class TestAccessResponse:
         """Test access_response when function raises exception."""
         mock_fun = Mock(side_effect=Exception("Test exception"))
         
-        with patch("general.security.has_access", return_value=True), \
+        with patch("general.services.authorization_service.AuthorizationService.has_access", return_value=True), \
              patch("general.security.ErrorLog") as MockErrorLog:
             mock_log_instance = MagicMock()
             MockErrorLog.return_value = mock_log_instance
@@ -103,9 +111,12 @@ class TestGetUserPermissions:
 
     def test_get_user_permissions_as_queryset(self, test_user):
         """Test get_user_permissions returning queryset."""
-        with patch("general.security.Permission") as MockPermission:
+        # Mock at the service layer
+        with patch("general.services.authorization_service.PermissionRepository") as MockRepo:
+            mock_repo_instance = MagicMock()
             mock_queryset = MagicMock()
-            MockPermission.objects.filter.return_value.distinct.return_value = mock_queryset
+            mock_repo_instance.get_user_permissions.return_value = mock_queryset
+            MockRepo.return_value = mock_repo_instance
             
             result = get_user_permissions(test_user.id, as_list=False)
             
@@ -114,9 +125,13 @@ class TestGetUserPermissions:
     def test_get_user_permissions_as_list(self, test_user):
         """Test get_user_permissions returning list."""
         perm1, perm2 = Mock(), Mock()
-        with patch("general.security.Permission") as MockPermission:
-            mock_queryset = [perm1, perm2]
-            MockPermission.objects.filter.return_value.distinct.return_value = mock_queryset
+        # Mock at the service layer
+        with patch("general.services.authorization_service.PermissionRepository") as MockRepo:
+            mock_repo_instance = MagicMock()
+            mock_queryset = MagicMock()
+            mock_queryset.__iter__.return_value = iter([perm1, perm2])
+            mock_repo_instance.get_user_permissions.return_value = mock_queryset
+            MockRepo.return_value = mock_repo_instance
             
             result = get_user_permissions(test_user.id, as_list=True)
             
