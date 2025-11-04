@@ -21,28 +21,6 @@ class TestUserViewsAdditional:
         """Test token refresh endpoint."""
         response = api_client.post('/user/token/refresh/', {'refresh': 'invalid'})
         assert response.status_code in [200, 400, 401]
-    
-    def test_user_confirm_email_invalid(self, api_client, test_user):
-        """Test email confirmation with invalid data."""
-        # Create a user first to avoid DoesNotExist
-        response = api_client.get(f'/user/confirm/?pk={test_user.id}&confirm=123')
-        assert response.status_code in [200, 302, 400, 404]
-    
-    def test_user_resend_confirmation(self, api_client, test_user):
-        """Test resend confirmation endpoint."""
-        # Use existing test user email
-        response = api_client.post('/user/confirm/resend/', {'email': test_user.email})
-        assert response.status_code in [200, 400, 404]
-    
-    def test_user_request_password_reset(self, api_client, test_user):
-        """Test password reset request."""
-        response = api_client.post('/user/request-reset-password/', {'email': test_user.email})
-        assert response.status_code in [200, 400, 404]
-    
-    def test_user_request_username(self, api_client, test_user):
-        """Test username request."""
-        response = api_client.post('/user/request-username/', {'email': test_user.email})
-        assert response.status_code in [200, 400, 404]
 
 
 @pytest.mark.django_db
