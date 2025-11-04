@@ -1,6 +1,6 @@
 # Complex Integration Testing Guide
 
-This guide explains the complex integration tests in `test_complex_integration_scenarios.py` and how to create similar tests for other modules.
+This guide explains the complex integration tests organized by module and how to create similar tests for other components.
 
 ## Overview
 
@@ -10,11 +10,28 @@ Complex integration tests go beyond simple unit tests by testing:
 - **Data relationships across modules** (e.g., correlating responses across different form types)
 - **Complex business logic** (e.g., cascading question conditions, permission hierarchies)
 
+## Test Organization
+
+Integration tests are organized by module, following the repository's existing pattern:
+
+- **`test_form_integration.py`** - Form builder workflows, conditional logic, flows, and data aggregation
+- **`test_tba_integration.py`** - The Blue Alliance API integration and event/match synchronization
+- **`test_user_integration.py`** - User authentication, permissions, and access control workflows
+- **`test_attendance_integration.py`** - Attendance tracking, meeting management, and bulk operations
+
+This organization makes it easy to:
+- Find tests related to specific modules
+- Run tests for a particular component: `pytest tests/test_form_integration.py`
+- Maintain tests alongside related functionality
+- Follow the existing repository structure
+
 ## Test Categories
 
-### 1. Complex Form Workflows (`TestComplexFormWorkflows`)
+### 1. Form Integration Tests (`test_form_integration.py`)
 
 These tests validate the form builder system with advanced features:
+
+**Location:** `tests/test_form_integration.py`
 
 #### Test: `test_question_with_cascading_conditions`
 **Purpose:** Validate that conditional questions can be chained together (A → B → C).
@@ -78,9 +95,11 @@ assert len(all_questions) == 3
 **Real-world scenario:**
 Onboarding process where students and mentors follow different paths through the form.
 
-### 2. Complex TBA Integration (`TestComplexTBAIntegration`)
+### 2. TBA Integration Tests (`test_tba_integration.py`)
 
 These tests validate The Blue Alliance API integration:
+
+**Location:** `tests/test_tba_integration.py`
 
 #### Test: `test_sync_season_with_multiple_events_and_matches`
 **Purpose:** Test retrieving multiple events for a team in a season.
@@ -132,9 +151,11 @@ Team filtering out practice events to focus on official competitions.
 **Real-world scenario:**
 Scouting team viewing all their matches to plan scouting assignments.
 
-### 3. Complex User Auth Workflows (`TestComplexUserAuthWorkflows`)
+### 3. User Integration Tests (`test_user_integration.py`)
 
 These tests validate authentication and permission systems:
+
+**Location:** `tests/test_user_integration.py`
 
 #### Test: `test_multi_level_permission_hierarchy`
 **Purpose:** Test that permission groups work correctly with inheritance.
@@ -175,9 +196,11 @@ Team member management with different access levels for students, mentors, and a
 **Real-world scenario:**
 API endpoint that requires specific permissions and handles errors gracefully.
 
-### 4. Complex Attendance Workflows (`TestComplexAttendanceWorkflows`)
+### 4. Attendance Integration Tests (`test_attendance_integration.py`)
 
 These tests validate meeting and attendance tracking:
+
+**Location:** `tests/test_attendance_integration.py`
 
 #### Test: `test_meeting_creation_and_queries`
 **Purpose:** Test creating and querying meetings.
@@ -201,9 +224,11 @@ Team scheduling weekly meetings and workshops.
 **Real-world scenario:**
 Importing a semester schedule all at once.
 
-### 5. Complex Data Aggregation (`TestComplexDataAggregation`)
+### 5. Data Aggregation Tests (`test_form_integration.py`)
 
 These tests validate data analysis and correlation:
+
+**Location:** `tests/test_form_integration.py` (part of form integration tests)
 
 #### Test: `test_question_aggregate_setup`
 **Purpose:** Test setting up aggregation relationships.
@@ -316,33 +341,46 @@ class TestComplexFormWorkflows:
 ## Running Complex Tests
 
 ```bash
-# Run just the complex integration tests
-poetry run pytest tests/test_complex_integration_scenarios.py -v
+# Run all integration tests
+poetry run pytest tests/test_*_integration.py -v
+
+# Run a specific module's integration tests
+poetry run pytest tests/test_form_integration.py -v
+poetry run pytest tests/test_tba_integration.py -v
+poetry run pytest tests/test_user_integration.py -v
+poetry run pytest tests/test_attendance_integration.py -v
 
 # Run a specific test class
-poetry run pytest tests/test_complex_integration_scenarios.py::TestComplexFormWorkflows -v
+poetry run pytest tests/test_form_integration.py::TestComplexFormWorkflows -v
 
 # Run a specific test
-poetry run pytest tests/test_complex_integration_scenarios.py::TestComplexFormWorkflows::test_question_with_cascading_conditions -v
+poetry run pytest tests/test_form_integration.py::TestComplexFormWorkflows::test_question_with_cascading_conditions -v
 
 # Run with verbose output and show print statements
-poetry run pytest tests/test_complex_integration_scenarios.py -v -s
+poetry run pytest tests/test_form_integration.py -v -s
 
 # Run without coverage for speed during development
-poetry run pytest tests/test_complex_integration_scenarios.py --no-cov
+poetry run pytest tests/test_*_integration.py --no-cov
 ```
 
 ## Adding New Complex Tests
 
 When adding new complex integration tests:
 
-1. **Identify the workflow:** What user journey or business process are you testing?
-2. **Map the components:** What models, utilities, and views are involved?
-3. **Create realistic data:** Use actual model instances that reflect real usage
-4. **Test happy path first:** Ensure the primary workflow works
-5. **Add edge cases:** Test boundary conditions, empty states, and error scenarios
-6. **Mock external dependencies:** Don't call real APIs or send real emails
-7. **Document the test:** Explain what real-world scenario it represents
+1. **Choose the right file:** Add tests to the appropriate module-specific integration file:
+   - Form-related → `test_form_integration.py`
+   - TBA API → `test_tba_integration.py`
+   - User/auth → `test_user_integration.py`
+   - Attendance → `test_attendance_integration.py`
+   - New module → Create `test_<module>_integration.py`
+
+2. **Identify the workflow:** What user journey or business process are you testing?
+3. **Map the components:** What models, utilities, and views are involved?
+4. **Create realistic data:** Use actual model instances that reflect real usage
+5. **Test happy path first:** Ensure the primary workflow works
+6. **Add edge cases:** Test boundary conditions, empty states, and error scenarios
+7. **Mock external dependencies:** Don't call real APIs or send real emails
+8. **Document the test:** Explain what real-world scenario it represents
 
 Example template:
 ```python
@@ -368,11 +406,10 @@ def test_my_complex_workflow(self):
 ## Coverage Impact
 
 These complex integration tests significantly improve coverage in:
-- `form/util.py`: Testing question retrieval and parsing logic
-- `tba/util.py`: Testing TBA API integration
-- `general/security.py`: Testing permission and access control
-- `attendance/models.py`: Testing meeting management
-- Form models: Testing relationships between questions, flows, and aggregates
+- **`test_form_integration.py`**: `form/util.py`, form models, question relationships, flows, and aggregates
+- **`test_tba_integration.py`**: `tba/util.py`, TBA API integration, event/match synchronization
+- **`test_user_integration.py`**: `general/security.py`, permission and access control workflows
+- **`test_attendance_integration.py`**: `attendance/models.py`, meeting management and bulk operations
 
 The tests focus on **high-value code paths** that are critical to the application's functionality.
 
@@ -408,11 +445,12 @@ cd src && grep -r "class MyClass" .
 ## Contributing
 
 When contributing complex tests:
-1. Follow the existing patterns in `test_complex_integration_scenarios.py`
-2. Add documentation explaining the business workflow
-3. Ensure tests pass independently: `pytest tests/test_complex_integration_scenarios.py::TestClass::test_method`
-4. Don't break existing tests: `poetry run pytest --no-cov -x`
-5. Update this guide if you introduce new testing patterns
+1. Add tests to the appropriate module-specific file (e.g., `test_form_integration.py`)
+2. Follow the existing patterns in that file
+3. Add documentation explaining the business workflow
+4. Ensure tests pass independently: `pytest tests/test_form_integration.py::TestClass::test_method`
+5. Don't break existing tests: `poetry run pytest --no-cov -x`
+6. Update this guide if you introduce new testing patterns or create a new integration test file
 
 ## Questions?
 
