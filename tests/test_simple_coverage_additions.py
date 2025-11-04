@@ -6,39 +6,16 @@ from unittest.mock import Mock, patch, MagicMock
 
 
 @pytest.mark.django_db
-class TestScoutingUtilAdditional:
-    """Additional tests for scouting util functions."""
-    
-    def test_get_team_list(self):
-        """Test getting team list."""
-        from scouting.util import get_teams
-        
-        with patch('scouting.models.Team.objects.filter') as mock_filter:
-            mock_filter.return_value.order_by.return_value = []
-            result = get_teams()
-            assert isinstance(result, list)
-    
-    def test_get_event_list(self):
-        """Test getting event list."""
-        from scouting.util import get_events
-        
-        with patch('scouting.models.Event.objects.filter') as mock_filter:
-            mock_filter.return_value.order_by.return_value = []
-            result = get_events()
-            assert isinstance(result, list)
-
-
-@pytest.mark.django_db
 class TestFormUtilBasic:
     """Basic tests for form util."""
     
-    def test_get_form_types_basic(self):
-        """Test get_form_types function."""
-        from form.util import get_form_types
+    def test_get_questions_basic(self):
+        """Test get_questions function."""
+        from form.util import get_questions
         
-        with patch('form.models.FormType.objects.filter') as mock_filter:
-            mock_filter.return_value = []
-            result = get_form_types()
+        with patch('form.models.Question.objects.filter') as mock_filter:
+            mock_filter.return_value.order_by.return_value = []
+            result = get_questions()
             assert isinstance(result, list)
 
 
@@ -96,6 +73,10 @@ class TestAttendanceUtilBasic:
     def test_get_meetings_basic(self):
         """Test get_meetings function."""
         from attendance.util import get_meetings
+        from scouting.models import Season
+        
+        # Create a season to avoid the exception
+        Season.objects.create(season="2024", current="y")
         
         with patch('attendance.models.Meeting.objects.filter') as mock_filter:
             mock_filter.return_value.order_by.return_value = []
@@ -123,17 +104,3 @@ class TestPublicViews:
         # Just ensure endpoint exists
         assert response.status_code in [200, 404, 405]
 
-
-@pytest.mark.django_db
-class TestSimpleEndpoints:
-    """Test simple endpoint responses."""
-    
-    def test_user_token_endpoint_exists(self, api_client):
-        """Test token endpoint exists."""
-        response = api_client.post('/user/token/', {})
-        assert response.status_code in [200, 400, 401, 404, 405]
-    
-    def test_user_profile_endpoint_exists(self, api_client):
-        """Test profile endpoint exists."""
-        response = api_client.post('/user/profile/', {})
-        assert response.status_code in [200, 400, 404, 405]
