@@ -8,10 +8,17 @@ from user.models import User, PhoneType, Link
 import general.cloudinary
 import general.security
 
+# Import new service layer
+from user.services.user_service import UserService
+from user.services.permission_service import PermissionService
+
 
 def get_user(user_id: int) -> dict[str, Any]:
     """
     Get comprehensive user information including permissions and links.
+    
+    DEPRECATED: Use UserService.get_user_info() instead.
+    This function is maintained for backward compatibility.
     
     Args:
         user_id: The ID of the user to retrieve
@@ -19,37 +26,16 @@ def get_user(user_id: int) -> dict[str, Any]:
     Returns:
         Dictionary containing user details, permissions, groups, and accessible links
     """
-    usr = User.objects.get(id=user_id)
-
-    permissions = general.security.get_user_permissions(user_id)
-
-    user_links = Link.objects.filter(
-        Q(permission__in=permissions) | Q(permission_id__isnull=True)
-    ).order_by("order")
-
-    usr = {
-        "id": usr.id,
-        "username": usr.username,
-        "email": usr.email,
-        "name": usr.get_full_name(),
-        "first_name": usr.first_name,
-        "last_name": usr.last_name,
-        "is_active": usr.is_active,
-        "phone": usr.phone,
-        "groups": usr.groups,
-        "permissions": permissions,
-        "phone_type": usr.phone_type,
-        "phone_type_id": usr.phone_type_id,
-        "image": general.cloudinary.build_image_url(usr.img_id, usr.img_ver),
-        "links": user_links,
-    }
-
-    return usr
+    service = UserService()
+    return service.get_user_info(user_id)
 
 
 def get_users(active: int, admin: bool) -> QuerySet[User]:
     """
     Get a filtered list of users based on active status and admin exclusion.
+    
+    DEPRECATED: Use UserService.get_users() instead.
+    This function is maintained for backward compatibility.
     
     Args:
         active: Filter by active status. -1 or 1 for active=True, other values for no filter
@@ -58,62 +44,30 @@ def get_users(active: int, admin: bool) -> QuerySet[User]:
     Returns:
         QuerySet of User objects ordered by active status and name
     """
-    user_active = Q()
-    if active in [-1, 1]:
-        user_active = Q(is_active=active == 1)
-
-    user_admin = Q()
-    if not admin:
-        group = Group.objects.get(name="Admin")
-        user_admin = Q(groups__in=[group])
-
-    users = (
-        User.objects.filter(user_active)
-        .exclude(user_admin)
-        .order_by("is_active", Lower("first_name"), Lower("last_name"))
-    )
-
-    # Q(date_joined__isnull=False) &
-
-    return users
+    service = UserService()
+    users_list = service.get_users(active=active, exclude_admin=not admin)
+    # Return as QuerySet for compatibility - convert list back to queryset IDs
+    if users_list:
+        user_ids = [u.id for u in users_list]
+        return User.objects.filter(id__in=user_ids).order_by('is_active', Lower('first_name'), Lower('last_name'))
+    return User.objects.none()
 
 
 def save_user(data: dict[str, Any]) -> User:
     """
     Update a user's information and group memberships.
     
+    DEPRECATED: Use UserService.update_user() instead.
+    This function is maintained for backward compatibility.
+    
     Args:
-        data: Dictionary containing user fields to update (username, first_name, last_name, 
-              email, discord_user_id, phone, phone_type_id, is_active, groups)
-              
+        data: Dictionary containing user fields to update
+        
     Returns:
         The updated User object
     """
-    groups = []
-    u = User.objects.get(username=data["username"])
-    u.first_name = data["first_name"]
-    u.last_name = data["last_name"]
-    u.email = data["email"].lower()
-    u.discord_user_id = data["discord_user_id"]
-    u.phone = data["phone"]
-    u.phone_type_id = data.get("phone_type_id", None)
-    u.is_active = data["is_active"]
-    u.save()
-
-    if "groups" in data:
-        for d in data["groups"]:
-            groups.append(d["name"])
-            aug = u.groups.filter(name=d["name"]).exists()
-            if not aug:
-                group = Group.objects.get(name=d["name"])
-                u.groups.add(group)
-
-        user_groups = u.groups.filter(~Q(name__in=groups))
-
-        for user_group in user_groups:
-            user_group.user_set.remove(u)
-
-    return u
+    service = UserService()
+    return service.update_user(data)
 
 
 def get_user_groups(user_id: int) -> QuerySet[Group]:
@@ -135,15 +89,26 @@ def get_phone_types() -> QuerySet[PhoneType]:
     """
     Get all available phone types for SMS messaging.
     
+    DEPRECATED: Use UserService.get_phone_types() instead.
+    This function is maintained for backward compatibility.
+    
     Returns:
         QuerySet of PhoneType objects ordered by carrier
     """
-    return PhoneType.objects.all().order_by("carrier")
+    service = UserService()
+    types_list = service.get_phone_types()
+    if types_list:
+        type_ids = [t.id for t in types_list]
+        return PhoneType.objects.filter(id__in=type_ids).order_by('carrier')
+    return PhoneType.objects.none()
 
 
 def delete_phone_type(phone_type_id: int) -> None:
     """
     Delete a phone type if no users are using it.
+    
+    DEPRECATED: Use UserService.delete_phone_type() instead.
+    This function is maintained for backward compatibility.
     
     Args:
         phone_type_id: The ID of the phone type to delete
@@ -151,17 +116,16 @@ def delete_phone_type(phone_type_id: int) -> None:
     Raises:
         ValueError: If there are users associated with this phone type
     """
-    phone_type = PhoneType.objects.get(id=phone_type_id)
-
-    if phone_type.user_set.exists():
-        raise ValueError("Can't delete, there are users tied to this phone type.")
-
-    phone_type.delete()
+    service = UserService()
+    service.delete_phone_type(phone_type_id)
 
 
 def get_users_in_group(name: str) -> QuerySet[User]:
     """
     Get all active users in a specific group.
+    
+    DEPRECATED: Use UserService.get_users_in_group() instead.
+    This function is maintained for backward compatibility.
     
     Args:
         name: The name of the group
@@ -169,12 +133,20 @@ def get_users_in_group(name: str) -> QuerySet[User]:
     Returns:
         QuerySet of active User objects in the specified group
     """
-    return get_users(1, 1).filter(groups__name=name)
+    service = UserService()
+    users_list = service.get_users_in_group(name)
+    if users_list:
+        user_ids = [u.id for u in users_list]
+        return User.objects.filter(id__in=user_ids)
+    return User.objects.none()
 
 
 def get_users_with_permission(codename: str) -> QuerySet[User]:
     """
     Get all active users who have a specific permission through their group memberships.
+    
+    DEPRECATED: Use UserService.get_users_with_permission() instead.
+    This function is maintained for backward compatibility.
     
     Args:
         codename: The permission codename to check for
@@ -182,135 +154,161 @@ def get_users_with_permission(codename: str) -> QuerySet[User]:
     Returns:
         QuerySet of distinct User objects with the specified permission
     """
-    users = []
-    prmsn = Permission.objects.get(codename=codename)
-    groups = set(g.name for g in prmsn.group_set.all())
-    users = get_users(1, 1).filter(groups__name__in=groups).distinct()
-
-    return users
+    service = UserService()
+    users_list = service.get_users_with_permission(codename)
+    if users_list:
+        user_ids = [u.id for u in users_list]
+        return User.objects.filter(id__in=user_ids).distinct()
+    return User.objects.none()
 
 
 def get_groups() -> QuerySet[Group]:
     """
     Get all available permission groups.
     
+    DEPRECATED: Use PermissionService.get_all_groups() instead.
+    This function is maintained for backward compatibility.
+    
     Returns:
         QuerySet of Group objects ordered by name
     """
-    return Group.objects.all().order_by("name")
+    service = PermissionService()
+    groups_list = service.get_all_groups()
+    if groups_list:
+        group_ids = [g.id for g in groups_list]
+        return Group.objects.filter(id__in=group_ids).order_by('name')
+    return Group.objects.none()
 
 
 def save_group(data: dict[str, Any]) -> None:
     """
     Create or update a permission group and its permissions.
     
+    DEPRECATED: Use PermissionService.save_group() instead.
+    This function is maintained for backward compatibility.
+    
     Args:
         data: Dictionary containing group data (id, name, permissions)
-              If id is None, creates a new group
     """
-    if data.get("id", None) is None:
-        group = Group(name=data.get("name"))
-    else:
-        group = Group.objects.get(id=data["id"])
-        group.name = data.get("name")
-
-    group.save()
-
-    prmsn_ids = []
-    for prm in data.get("permissions", []):
-        prmsn_ids.append(prm["id"])
-        gpr_prmsn = group.permissions.filter(id=prm["id"]).exists()
-        if not gpr_prmsn:
-            permission = Permission.objects.get(id=prm["id"])
-            group.permissions.add(permission)
-
-    gpr_prmsns = group.permissions.filter(~Q(id__in=prmsn_ids))
-
-    for gpr_prmsn in gpr_prmsns:
-        gpr_prmsn.group_set.remove(group)
+    service = PermissionService()
+    service.save_group(data)
 
 
 def delete_group(group_id: int) -> None:
     """
     Delete a group and its scout auth group association if it exists.
     
+    DEPRECATED: Use PermissionService.delete_group() instead.
+    This function is maintained for backward compatibility.
+    
     Args:
         group_id: The ID of the group to delete
     """
-    try:
-        ScoutAuthGroup.objects.get(group__id=group_id).delete()
-    except ScoutAuthGroup.DoesNotExist:
-        pass
-    Group.objects.get(id=group_id).delete()
+    service = PermissionService()
+    service.delete_group(group_id)
 
 
 def get_permissions() -> QuerySet[Permission]:
     """
     Get all custom permissions (those with content_type_id=-1).
     
+    DEPRECATED: Use PermissionService.get_all_permissions() instead.
+    This function is maintained for backward compatibility.
+    
     Returns:
         QuerySet of Permission objects ordered by name
     """
-    return Permission.objects.filter(content_type_id=-1).order_by("name")
+    service = PermissionService()
+    perms_list = service.get_all_permissions()
+    if perms_list:
+        perm_ids = [p.id for p in perms_list]
+        return Permission.objects.filter(id__in=perm_ids).order_by('name')
+    return Permission.objects.none()
 
 
 def save_permission(data: dict[str, Any]) -> None:
     """
     Create or update a custom permission.
     
+    DEPRECATED: Use PermissionService.save_permission() instead.
+    This function is maintained for backward compatibility.
+    
     Args:
         data: Dictionary containing permission data (id, name, codename)
-              If id is None, creates a new permission
     """
-    if data.get("id", None) is None:
-        prmsn = Permission(name=data["name"])
-    else:
-        prmsn = Permission.objects.get(id=data["id"])
-        prmsn.name = data["name"]
-
-    prmsn.codename = data["codename"]
-    prmsn.content_type_id = -1
-
-    prmsn.save()
+    service = PermissionService()
+    service.save_permission(data)
 
 
 def delete_permission(prmsn_id: int):
-    Permission.objects.get(id=prmsn_id).delete()
+    """
+    Delete a permission.
+    
+    DEPRECATED: Use PermissionService.delete_permission() instead.
+    This function is maintained for backward compatibility.
+    
+    Args:
+        prmsn_id: The ID of the permission to delete
+    """
+    service = PermissionService()
+    service.delete_permission(prmsn_id)
 
 
 def run_security_audit():
-    users = get_users(1, 1)
-
-    users_ret = []
-
-    for u in users:
-        if len(u.groups.all()) > 0:
-            users_ret.append(u)
-
-    return users_ret
+    """
+    Run security audit.
+    
+    DEPRECATED: Use UserService.run_security_audit() instead.
+    This function is maintained for backward compatibility.
+    
+    Returns:
+        List of users with group memberships
+    """
+    service = UserService()
+    return service.run_security_audit()
 
 
 def get_links():
-    return Link.objects.all().order_by("order")
+    """
+    Get all navigation links.
+    
+    DEPRECATED: Use PermissionService.get_all_links() instead.
+    This function is maintained for backward compatibility.
+    
+    Returns:
+        QuerySet of Link objects
+    """
+    service = PermissionService()
+    links_list = service.get_all_links()
+    if links_list:
+        link_ids = [link.id for link in links_list]
+        return Link.objects.filter(id__in=link_ids).order_by('order')
+    return Link.objects.none()
 
 
 def save_link(data):
-    if data.get("id", None) is None:
-        link = Link()
-    else:
-        link = Link.objects.get(id=data["id"])
-
-    link.menu_name = data["menu_name"]
-    link.permission_id = (
-        None
-        if data.get("permission", None) is None
-        else data.get("permission", None).get("id", None)
-    )
-    link.routerlink = data["routerlink"]
-    link.order = data["order"]
-
-    link.save()
+    """
+    Create or update a navigation link.
+    
+    DEPRECATED: Use PermissionService.save_link() instead.
+    This function is maintained for backward compatibility.
+    
+    Args:
+        data: Dictionary containing link data
+    """
+    service = PermissionService()
+    service.save_link(data)
 
 
 def delete_link(link_id: int):
-    Link.objects.get(id=link_id).delete()
+    """
+    Delete a navigation link.
+    
+    DEPRECATED: Use PermissionService.delete_link() instead.
+    This function is maintained for backward compatibility.
+    
+    Args:
+        link_id: The ID of the link to delete
+    """
+    service = PermissionService()
+    service.delete_link(link_id)

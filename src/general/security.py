@@ -10,10 +10,16 @@ from user.serializers import RetMessageSerializer
 from rest_framework.response import Response
 from user.models import User, Permission
 
+# Import new service layer
+from general.services.authorization_service import AuthorizationService
+
 
 def has_access(user_id: int, sec_permission: str | list[str]) -> bool:
     """
     Check if a user has the specified permission(s).
+    
+    DEPRECATED: Use AuthorizationService.has_access() instead.
+    This function is maintained for backward compatibility.
     
     Args:
         user_id: The ID of the user to check permissions for
@@ -26,14 +32,8 @@ def has_access(user_id: int, sec_permission: str | list[str]) -> bool:
         has_access(request.user.id, 'admin')
         has_access(request.user.id, ['admin', 'scoutadmin'])
     """
-    prmsns = get_user_permissions(user_id, False)
-
-    if not isinstance(sec_permission, list):
-        sec_permission = [sec_permission]
-
-    prmsn = prmsns.filter(codename__in=sec_permission)
-
-    return len(prmsn) > 0
+    service = AuthorizationService()
+    return service.has_access(user_id, sec_permission)
 
 
 def access_response(
@@ -46,6 +46,9 @@ def access_response(
     """
     Execute a function if user has access, otherwise return an error response.
     
+    DEPRECATED: Use AuthorizationService.execute_with_access_check() instead.
+    This function is maintained for backward compatibility.
+    
     Args:
         endpoint: The API endpoint path for error logging
         user_id: The ID of the user attempting access
@@ -56,29 +59,16 @@ def access_response(
     Returns:
         Response from the function if successful, or error response if access denied or exception occurs
     """
-    if has_access(user_id, sec_permission):
-        try:
-            return fun()
-        except Exception as e:
-            return ret_message(
-                error_message,
-                True,
-                endpoint,
-                -1,
-                e,
-            )
-    else:
-        return ret_message(
-            "You do not have access.",
-            True,
-            endpoint,
-            user_id,
-        )
+    service = AuthorizationService()
+    return service.execute_with_access_check(endpoint, user_id, sec_permission, error_message, fun)
 
 
 def get_user_permissions(user_id: int, as_list: bool = True) -> list[Permission] | QuerySet[Permission]:
     """
     Get all permissions for a user based on their group memberships.
+    
+    DEPRECATED: Use AuthorizationService.get_user_permissions() instead.
+    This function is maintained for backward compatibility.
     
     Args:
         user_id: The ID of the user
@@ -87,17 +77,13 @@ def get_user_permissions(user_id: int, as_list: bool = True) -> list[Permission]
     Returns:
         List of Permission objects if as_list is True, otherwise a Permission QuerySet
     """
-    permissions_queryset = Permission.objects.filter(
-        group__user=User.objects.get(id=user_id)
-    ).distinct()
-
+    service = AuthorizationService()
+    permissions_queryset = service.get_user_permissions(user_id)
+    
     if not as_list:
         return permissions_queryset
     else:
-        prmsns = []
-        for prmsn in permissions_queryset:
-            prmsns.append(prmsn)
-        return prmsns
+        return list(permissions_queryset)
 
 
 def get_user_groups(user_id: int) -> QuerySet[Group]:
