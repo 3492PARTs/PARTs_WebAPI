@@ -1,5 +1,6 @@
+from typing import Any
 from django.db import IntegrityError
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 import general.cloudinary
 import general.util
@@ -30,7 +31,21 @@ from user.models import User
 import user.util
 
 
-def set_current_season_event(season_id, event_id, competition_page_active):
+def set_current_season_event(season_id: int, event_id: int | None, competition_page_active: str) -> str:
+    """
+    Set the current season and optionally the current event.
+    
+    Updates the current season marker and optionally sets the current event
+    and its competition page active status.
+    
+    Args:
+        season_id: ID of the season to set as current
+        event_id: Optional ID of the event to set as current
+        competition_page_active: 'y' or 'n' for competition page status
+        
+    Returns:
+        Success message string
+    """
     msg = ""
 
     Season.objects.filter(current="y").update(current="n")
@@ -54,7 +69,29 @@ def set_current_season_event(season_id, event_id, competition_page_active):
     return msg
 
 
-def delete_event(event_id):
+def delete_event(event_id: int) -> dict[str, Any]:
+    """
+    Delete an event and all associated data.
+    
+    Cascades deletion to:
+    - Team associations
+    - Field responses and answers
+    - Pit responses, answers, and images
+    - Matches
+    - Field schedules
+    - General schedules
+    - Team notes
+    - Event team info
+    
+    Args:
+        event_id: ID of the event to delete
+        
+    Returns:
+        Success message dictionary
+        
+    Raises:
+        Exception: If trying to delete the current event
+    """
     e = Event.objects.get(id=event_id)
 
     if e.current == "y":
@@ -109,7 +146,13 @@ def delete_event(event_id):
     return ret_message("Successfully deleted event: " + e.event_nm)
 
 
-def get_scout_auth_groups():
+def get_scout_auth_groups() -> list[Any]:
+    """
+    Get list of groups that scout admins can manage.
+    
+    Returns:
+        List of Group objects that are authorized for scout admin management
+    """
     sags = ScoutAuthGroup.objects.all().order_by("group__name")
 
     groups = list(sag.group for sag in sags)
@@ -117,7 +160,21 @@ def get_scout_auth_groups():
     return groups
 
 
-def save_season(data):
+def save_season(data: dict[str, Any]) -> Season:
+    """
+    Create or update a season.
+    
+    Args:
+        data: Dictionary containing:
+              - id (optional): Season ID for updates
+              - season: Year/name of the season
+              - game: Game name
+              - manual: Manual/documentation link
+              - current (optional): 'y' or 'n' for current status
+              
+    Returns:
+        The created or updated Season object
+    """
     if data.get("id", None) is not None:
         season = Season.objects.get(id=data["id"])
     else:
@@ -129,7 +186,22 @@ def save_season(data):
     return season
 
 
-def delete_season(season_id):
+def delete_season(season_id: int) -> dict[str, Any]:
+    """
+    Delete a season and all associated data.
+    
+    Cascades deletion to all events in the season (which further cascades),
+    and all scouting questions for the season.
+    
+    Args:
+        season_id: ID of the season to delete
+        
+    Returns:
+        Success message dictionary
+        
+    Raises:
+        Exception: If trying to delete the current season
+    """
     season = Season.objects.get(id=season_id)
 
     if season.current == "y":
@@ -159,7 +231,27 @@ def delete_season(season_id):
     return ret_message("Successfully deleted season: " + season.season)
 
 
-def save_event(data):
+def save_event(data: dict[str, Any]) -> Event:
+    """
+    Create or update an event.
+    
+    Args:
+        data: Dictionary containing event details including:
+              - id or event_id (optional): Event ID for updates
+              - season_id or season.id: ID of the season
+              - event_nm: Event name
+              - event_cd: Event code
+              - date_st: Start date
+              - date_end: End date
+              - timezone: Timezone string
+              - And other optional fields (address, location, URLs, etc.)
+              
+    Returns:
+        The created or updated Event object
+        
+    Raises:
+        ValueError: If season_id is not provided
+    """
     # Handle both season_id and season.id formats
     if "season_id" in data:
         season_id = data["season_id"]
@@ -213,7 +305,23 @@ def save_event(data):
     return event
 
 
-def save_match(data):
+def save_match(data: dict[str, Any]) -> Match:
+    """
+    Create or update a match.
+    
+    Args:
+        data: Dictionary containing:
+              - match_key (optional): Match key for updates
+              - event: Event dictionary with id and event_cd
+              - comp_level: Competition level dictionary with comp_lvl_typ
+              - match_number: Match number
+              - red_one_id, red_two_id, red_three_id: Red alliance team IDs
+              - blue_one_id, blue_two_id, blue_three_id: Blue alliance team IDs
+              - time (optional): Match scheduled time
+              
+    Returns:
+        The created or updated Match object
+    """
     if (data.get("match_key", None)) is not None and len(data["match_key"]) > 0:
         match = Match.objects.get(match_key=data["match_key"])
     else:
@@ -238,7 +346,18 @@ def save_match(data):
     return match
 
 
-def link_team_to_event(data):
+def link_team_to_event(data: dict[str, Any]) -> str:
+    """
+    Link teams to an event (many-to-many relationship).
+    
+    Args:
+        data: Dictionary containing:
+              - event_id: ID of the event
+              - teams: List of team dictionaries with team_no, team_nm, and checked flag
+              
+    Returns:
+        String message describing which teams were added
+    """
     messages = ""
 
     for t in data.get("teams", []):
@@ -270,7 +389,18 @@ def link_team_to_event(data):
     return messages
 
 
-def remove_link_team_to_event(data):
+def remove_link_team_to_event(data: dict[str, Any]) -> str:
+    """
+    Remove team-to-event links.
+    
+    Args:
+        data: Dictionary containing:
+              - id: ID of the event
+              - teams: List of team dictionaries with team_no, team_nm, and checked flag
+              
+    Returns:
+        String message describing which teams were removed
+    """
     messages = ""
 
     for t in data.get("teams", []):
@@ -302,7 +432,26 @@ def remove_link_team_to_event(data):
     return messages
 
 
-def save_scout_schedule(data):
+def save_scout_schedule(data: dict[str, Any]) -> FieldSchedule:
+    """
+    Create or update a field scouting schedule entry.
+    
+    Args:
+        data: Dictionary containing:
+              - id (optional): FieldSchedule ID for updates
+              - event_id: ID of the event
+              - st_time: Start datetime
+              - end_time: End datetime
+              - red_one_id, red_two_id, red_three_id: Red alliance scout user IDs
+              - blue_one_id, blue_two_id, blue_three_id: Blue alliance scout user IDs
+              - void_ind: Void indicator
+              
+    Returns:
+        The created or updated FieldSchedule object
+        
+    Raises:
+        Exception: If end_time is before or equal to st_time
+    """
     if data["end_time"] <= data["st_time"]:
         raise Exception("End time can't come before start.")
 
@@ -335,7 +484,25 @@ def save_scout_schedule(data):
     return sfs
 
 
-def save_schedule(data):
+def save_schedule(data: dict[str, Any]) -> Schedule:
+    """
+    Create or update a general schedule entry (pit schedule).
+    
+    Args:
+        data: Dictionary containing:
+              - id (optional): Schedule ID for updates
+              - st_time: Start datetime
+              - end_time: End datetime
+              - user: User ID assigned to the schedule
+              - sch_typ: Schedule type ID
+              - void_ind: Void indicator
+              
+    Returns:
+        The created or updated Schedule object
+        
+    Raises:
+        Exception: If end_time is before or equal to st_time
+    """
     if data["end_time"] <= data["st_time"]:
         raise Exception("End time can't come before start.")
 
@@ -362,7 +529,16 @@ def save_schedule(data):
     return s
 
 
-def notify_user(id):
+def notify_user(id: int) -> str:
+    """
+    Manually trigger notification for a single schedule entry.
+    
+    Args:
+        id: Schedule ID to notify for
+        
+    Returns:
+        Message string describing who was notified
+    """
     sch = Schedule.objects.get(id=id)
     message = alerts.util.stage_schedule_alert(sch)
     sch.notified = True
@@ -371,14 +547,31 @@ def notify_user(id):
     return message
 
 
-def notify_users(id):
+def notify_users(id: int) -> str:
+    """
+    Manually trigger notifications for a field schedule entry.
+    
+    Args:
+        id: FieldSchedule ID to notify for
+        
+    Returns:
+        Message string describing who was notified
+    """
     event = Event.objects.get(Q(current="y") & Q(void_ind="n"))
     sfs = FieldSchedule.objects.get(id=id)
     message = alerts.util.stage_field_schedule_alerts(-1, [sfs], event)
     return message
 
 
-def get_scouting_user_info():
+def get_scouting_user_info() -> list[UserInfo]:
+    """
+    Get scouting-specific user info for all active users.
+    
+    Creates UserInfo records for users who don't have one yet.
+    
+    Returns:
+        List of UserInfo objects for all active users
+    """
     user_results = []
     users = user.util.get_users(1, 0)
     for u in users:
@@ -393,7 +586,21 @@ def get_scouting_user_info():
     return user_results
 
 
-def save_scouting_user_info(data):
+def save_scouting_user_info(data: dict[str, Any]) -> UserInfo:
+    """
+    Save or update scouting-specific user information.
+    
+    Args:
+        data: Dictionary containing:
+              - id (optional): UserInfo ID for updates
+              - user: User dictionary with id
+              - group_leader: Boolean for group leader status
+              - under_review: Boolean for review status
+              - eliminate_results: Boolean to exclude results from analysis
+              
+    Returns:
+        The created or updated UserInfo object
+    """
     if data.get("id", None) is not None:
         user_info = UserInfo.objects.get(id=data["id"])
     else:
@@ -407,14 +614,34 @@ def save_scouting_user_info(data):
     return user_info
 
 
-def void_field_response(id):
+def void_field_response(id: int) -> FieldResponse:
+    """
+    Mark a field scouting response as void.
+    
+    Args:
+        id: FieldResponse ID to void
+        
+    Returns:
+        The updated FieldResponse object
+    """
     sf = FieldResponse.objects.get(id=id)
     sf.void_ind = "y"
     sf.save()
     return sf
 
 
-def void_scout_pit_response(id):
+def void_scout_pit_response(id: int) -> PitResponse:
+    """
+    Mark a pit scouting response as void.
+    
+    Voids both the PitResponse and its underlying Response.
+    
+    Args:
+        id: PitResponse ID to void
+        
+    Returns:
+        The updated PitResponse object
+    """
     sp = PitResponse.objects.get(id=id)
 
     sp.response.void_ind = "y"
@@ -423,7 +650,21 @@ def void_scout_pit_response(id):
     return sp
 
 
-def save_field_form(field_form):
+def save_field_form(field_form: dict[str, Any]) -> FieldForm:
+    """
+    Save or update the field scouting form configuration with images.
+    
+    Handles uploading of field layout images (normal, inverted, full).
+    
+    Args:
+        field_form: Dictionary containing:
+                   - id (optional): FieldForm ID for updates
+                   - img, inv_img, full_img (optional): Image files to upload
+                   - img_id, img_ver, etc. (optional): Existing image identifiers
+                   
+    Returns:
+        The created or updated FieldForm object
+    """
     if field_form.get("id", None) is not None:
         ff = FieldForm.objects.get(id=field_form["id"])
     else:
@@ -473,7 +714,13 @@ def save_field_form(field_form):
     return ff
 
 
-def foo():
+def foo() -> None:
+    """
+    Utility function for analyzing team event participation (legacy/debug function).
+    
+    Note:
+        This appears to be a development/testing function and may need refactoring or removal.
+    """
     team_3492 = Team.objects.get(team_no=3492)
 
     current_season = scouting.util.get_current_season()

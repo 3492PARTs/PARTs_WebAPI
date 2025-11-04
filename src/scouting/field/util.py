@@ -1,4 +1,5 @@
-from django.db.models import Q, Exists, OuterRef
+from typing import Any
+from django.db.models import Q, Exists, OuterRef, QuerySet
 from django.conf import settings
 from django.utils import timezone
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -23,7 +24,16 @@ import general.util
 import form.util
 
 
-def get_table_columns(question_aggregates):
+def get_table_columns(question_aggregates: QuerySet[QuestionAggregate]) -> list[dict[str, Any]]:
+    """
+    Build table column definitions for field scouting data display.
+    
+    Args:
+        question_aggregates: QuerySet of QuestionAggregate objects to include as columns
+        
+    Returns:
+        List of dictionaries defining table columns with PropertyName, ColLabel, Width, order, etc.
+    """
     # sqsa = form.util.get_form_questions("field", "auto")
     # sqst = form.util.get_form_questions("field", "teleop")
     # sqso = form.util.get_form_questions("field", "post")
@@ -134,7 +144,25 @@ def get_table_columns(question_aggregates):
     return table_cols
 
 
-def get_responses(pg=1, team=None, user=None, after_scout_field_id=None):
+def get_responses(pg: int = 1, team: int | None = None, user: int | None = None, after_scout_field_id: int | None = None) -> dict[str, Any]:
+    """
+    Get paginated field scouting responses with answers and metadata.
+    
+    Args:
+        pg: Page number for pagination (default: 1)
+        team: Optional team number to filter by
+        user: Optional user ID to filter by
+        after_scout_field_id: Optional ID to get responses after (for incremental loading)
+        
+    Returns:
+        Dictionary containing:
+            - count: Total number of pages
+            - previous/next: Page numbers for pagination
+            - scoutAnswers: List of responses with parsed answers
+            - current_season: Current season object
+            - current_event: Current event object
+            - removed_responses: List of IDs that were removed
+    """
     loading_all = False
 
     current_season = scouting.util.get_current_season()
@@ -268,7 +296,16 @@ def get_responses(pg=1, team=None, user=None, after_scout_field_id=None):
     return data
 
 
-def get_removed_responses(before_scout_field_id=None):
+def get_removed_responses(before_scout_field_id: int | None = None) -> QuerySet[FieldResponse]:
+    """
+    Get field responses that have been marked as void.
+    
+    Args:
+        before_scout_field_id: Optional ID to limit search to responses before this ID
+        
+    Returns:
+        QuerySet of voided FieldResponse objects
+    """
     condition = Q()
 
     if before_scout_field_id is not None:
@@ -281,7 +318,16 @@ def get_removed_responses(before_scout_field_id=None):
     return removed
 
 
-def get_field_question_aggregates(current_season: Season):
+def get_field_question_aggregates(current_season: Season) -> QuerySet[QuestionAggregate]:
+    """
+    Get active horizontal question aggregates for field scouting in the current season.
+    
+    Args:
+        current_season: The Season object to filter by
+        
+    Returns:
+        QuerySet of QuestionAggregate objects
+    """
     # get aggregates
     question_aggregates = QuestionAggregate.objects.filter(
         Q(void_ind="n")
@@ -309,7 +355,16 @@ def get_field_question_aggregates(current_season: Season):
     return question_aggregates
 
 
-def get_parsed_field_question_aggregates(current_season: Season):
+def get_parsed_field_question_aggregates(current_season: Season) -> list[dict[str, Any]]:
+    """
+    Get field question aggregates with their questions parsed into dictionaries.
+    
+    Args:
+        current_season: The Season object to filter by
+        
+    Returns:
+        List of dictionaries with 'parsed_question_aggregate' and 'questions' keys
+    """
     question_aggregates = get_field_question_aggregates(current_season)
     parsed_question_aggregates = []
     for question_aggregate in question_aggregates:
@@ -333,7 +388,20 @@ def get_parsed_field_question_aggregates(current_season: Season):
     return parsed_question_aggregates
 
 
-def check_in_scout(sfs: FieldSchedule, user_id: int):
+def check_in_scout(sfs: FieldSchedule, user_id: int) -> str:
+    """
+    Check in a scout for their scheduled field scouting shift.
+    
+    Updates the check-in time for the scout in the appropriate position
+    (red_one, red_two, red_three, blue_one, blue_two, or blue_three).
+    
+    Args:
+        sfs: The FieldSchedule object representing the shift
+        user_id: The ID of the user checking in
+        
+    Returns:
+        Success message if checked in, empty string if user not found in schedule
+    """
     check_in = False
     if sfs.red_one and not sfs.red_one_check_in and sfs.red_one.id == user_id:
         sfs.red_one_check_in = timezone.now()
@@ -362,7 +430,15 @@ def check_in_scout(sfs: FieldSchedule, user_id: int):
     return ""
 
 
-def get_field_form():
+def get_field_form() -> dict[str, Any]:
+    """
+    Get the field scouting form configuration with questions organized by form sub-types.
+    
+    Returns:
+        Dictionary containing:
+            - field_form: The FieldForm object
+            - form_sub_types: Questions organized by form sub-types (auto, teleop, post)
+    """
     field_form = scouting.util.get_field_form()
 
     form_parsed = {
@@ -373,7 +449,16 @@ def get_field_form():
     return form_parsed
 
 
-def get_graph_options(graph_type):
+def get_graph_options(graph_type: str) -> None:
+    """
+    Get options for different graph types (placeholder/stub function).
+    
+    Args:
+        graph_type: Type of graph (e.g., 'bar')
+        
+    Note:
+        This function is currently a stub and needs implementation
+    """
     match graph_type:
         case "bar":
             v = 9
@@ -382,7 +467,21 @@ def get_graph_options(graph_type):
 # need % and avg
 
 
-def get_scouting_responses():
+def get_scouting_responses() -> list[dict[str, Any]]:
+    """
+    Get recent field scouting responses with parsed answers.
+    
+    Returns the 10 most recent responses for the current event.
+    
+    Returns:
+        List of dictionaries containing:
+            - id: Response ID
+            - match: Parsed match information
+            - user: User object who submitted the response
+            - time: Submission timestamp
+            - answers: Parsed answer data
+            - display_value: Human-readable summary string
+    """
     parsed_responses = []
     event = scouting.util.get_current_event()
 

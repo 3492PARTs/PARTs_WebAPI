@@ -1,4 +1,5 @@
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -13,12 +14,21 @@ app_url = "alerts/"
 
 
 class StageAlertsView(APIView):
-    """API endpoint to stage user alerts"""
+    """
+    API endpoint to stage user alerts.
+    
+    This view triggers the staging of alerts defined in alert definitions.
+    """
 
     endpoint = "stage/"
 
-    def get(self, request, format=None):
-
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to stage all alerts.
+        
+        Returns:
+            Response with success message or error message
+        """
         try:
             ret = "STAGE ALERTS: "
             ret += alerts.util_alert_definitions.stage_alerts()
@@ -34,11 +44,21 @@ class StageAlertsView(APIView):
 
 
 class SendAlertsView(APIView):
-    """API endpoint to notify users"""
+    """
+    API endpoint to send queued alerts to users.
+    
+    This view processes staged alerts and sends them through configured channels.
+    """
 
     endpoint = "send/"
 
-    def get(self, request, format=None):
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to send all staged alerts.
+        
+        Returns:
+            Response with success message or error message
+        """
         try:
             ret = "SEND ALERTS: "
             ret += send_alerts()
@@ -54,11 +74,21 @@ class SendAlertsView(APIView):
 
 
 class RunAlertsView(APIView):
-    """API endpoint to stage and send"""
+    """
+    API endpoint to stage and send alerts in one operation.
+    
+    This view combines staging and sending of alerts for convenience.
+    """
 
     endpoint = "run/"
 
-    def get(self, request, format=None):
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to stage and send all alerts.
+        
+        Returns:
+            Response with success message or error message
+        """
         try:
             ret = "RUN ALERTS: "
             ret += "STAGE ALERTS: "
@@ -77,14 +107,28 @@ class RunAlertsView(APIView):
 
 
 class DismissAlertView(APIView):
-    """API endpoint to dismiss an alert"""
+    """
+    API endpoint to dismiss an alert for the authenticated user.
+    
+    Authentication required: JWT
+    Permission required: IsAuthenticated
+    """
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     endpoint = "dismiss/"
 
-    def get(self, request, format=None):
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to dismiss a specific alert.
+        
+        Query parameters:
+            channel_send_id: The ID of the channel send to dismiss
+            
+        Returns:
+            Response with empty message on success or error message
+        """
         try:
             dismiss_alert(request.query_params.get("channel_send_id", None))
             return ret_message("")

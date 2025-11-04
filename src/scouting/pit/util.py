@@ -1,3 +1,4 @@
+from typing import Any
 from django.db.models import Q
 
 import general.cloudinary
@@ -8,7 +9,19 @@ import form.util
 from scouting.models import EventTeamInfo, PitResponse, PitImage, Team
 
 
-def get_responses(team=None):
+def get_responses(team: int | None = None) -> dict[str, Any]:
+    """
+    Get pit scouting responses for teams at the current event.
+    
+    Args:
+        team: Optional team number to filter by. If None, returns all teams.
+        
+    Returns:
+        Dictionary containing:
+            - teams: List of team response data with pictures and answers
+            - current_season: The current season object
+            - current_event: The current event object
+    """
     current_season = scouting.util.get_current_season()
 
     current_event = scouting.util.get_current_event()
@@ -105,7 +118,19 @@ def get_responses(team=None):
     }
 
 
-def save_robot_picture(file, team_no, pit_image_typ, img_title):
+def save_robot_picture(file: Any, team_no: int, pit_image_typ: str, img_title: str) -> dict[str, Any]:
+    """
+    Upload and save a robot picture for a pit response.
+    
+    Args:
+        file: The uploaded image file
+        team_no: The team number
+        pit_image_typ: The type of pit image (e.g., 'robot', 'mechanism')
+        img_title: Title/description for the image
+        
+    Returns:
+        Success message dictionary
+    """
     current_event = scouting.util.get_current_event()
 
     sp = PitResponse.objects.get(
@@ -128,7 +153,19 @@ def save_robot_picture(file, team_no, pit_image_typ, img_title):
     return ret_message("Saved pit image successfully.")
 
 
-def set_default_team_image(id):
+def set_default_team_image(id: int) -> PitImage:
+    """
+    Set a pit image as the default for its type.
+    
+    This unsets all other images of the same type for the pit response
+    and sets the specified image as the default.
+    
+    Args:
+        id: The ID of the PitImage to set as default
+        
+    Returns:
+        The updated PitImage object
+    """
     spi = PitImage.objects.get(Q(void_ind="n") & Q(id=id))
 
     for pi in spi.pit_response.pitimage_set.filter(
@@ -143,7 +180,19 @@ def set_default_team_image(id):
     return spi
 
 
-def get_team_data(team_no=None):
+def get_team_data(team_no: int | None = None) -> dict[str, Any]:
+    """
+    Get detailed pit scouting data for a specific team.
+    
+    Args:
+        team_no: The team number to retrieve data for
+        
+    Returns:
+        Dictionary containing:
+            - response_id: The response ID
+            - questions: List of questions with their answers
+            - pics: List of team pictures with URLs and metadata
+    """
     current_event = scouting.util.get_current_event()
 
     sp = PitResponse.objects.get(

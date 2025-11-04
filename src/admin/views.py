@@ -234,7 +234,15 @@ class PhoneTypeView(APIView):
                 request.user.id,
             )
 
-    def post(self, request, format=None):
+    def post(self, request, format=None) -> Response:
+        """
+        POST endpoint to create or update a phone type.
+        
+        Request body: PhoneType object with optional id, phone_type, and carrier fields
+        
+        Returns:
+            Success message or error response
+        """
         serializer = PhoneTypeSerializer(data=request.data)
         if not serializer.is_valid():
             return ret_message(
@@ -275,7 +283,16 @@ class PhoneTypeView(APIView):
                 request.user.id,
             )
 
-    def delete(self, request, format=None):
+    def delete(self, request, format=None) -> Response:
+        """
+        DELETE endpoint to remove a phone type.
+        
+        Query parameters:
+            phone_type_id: The ID of the phone type to delete
+            
+        Returns:
+            Success message or error response
+        """
         try:
             if has_access(request.user.id, "admin"):
                 user.util.delete_phone_type(request.query_params["phone_type_id"])

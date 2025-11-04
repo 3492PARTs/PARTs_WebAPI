@@ -1,5 +1,6 @@
+from typing import Any
 import pytz
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.db import transaction
 
 import alerts.util
@@ -30,7 +31,17 @@ import form.util
 import form.models
 
 
-def get_team_notes(team_no: int = None, event: Event = None):
+def get_team_notes(team_no: int | None = None, event: Event | None = None) -> list[dict[str, Any]]:
+    """
+    Get team notes filtered by team and/or event.
+    
+    Args:
+        team_no: Optional team number to filter by
+        event: Optional Event object to filter by
+        
+    Returns:
+        List of parsed team note dictionaries
+    """
     q_event = Q()
     q_team = Q()
 
@@ -47,7 +58,16 @@ def get_team_notes(team_no: int = None, event: Event = None):
     return [parse_team_note(n) for n in notes]
 
 
-def parse_team_note(n: TeamNote):
+def parse_team_note(n: TeamNote) -> dict[str, Any]:
+    """
+    Parse a TeamNote object into a dictionary.
+    
+    Args:
+        n: TeamNote object to parse
+        
+    Returns:
+        Dictionary with id, team_id, match_id, note, time, and user fields
+    """
     return {
         "id": n.id,
         "team_id": n.team.team_no,
@@ -58,7 +78,17 @@ def parse_team_note(n: TeamNote):
     }
 
 
-def save_note(data, user: User):
+def save_note(data: dict[str, Any], user: User) -> dict[str, Any]:
+    """
+    Save a new team note for the current event.
+    
+    Args:
+        data: Dictionary containing team_id, optional match_id, and note text
+        user: User object who is creating the note
+        
+    Returns:
+        Success message dictionary
+    """
     current_event = scouting.util.get_current_event()
 
     note = TeamNote(
@@ -74,7 +104,18 @@ def save_note(data, user: User):
     return ret_message("Note saved successfully")
 
 
-def get_match_strategies(match_id: int = None, event: Event = None):
+def get_match_strategies(match_id: int | None = None, event: Event | None = None) -> list[dict[str, Any]]:
+    """
+    Get match strategies filtered by match and/or event.
+    
+    Args:
+        match_id: Optional match ID to filter by
+        event: Optional Event object to filter by
+        
+    Returns:
+        List of parsed match strategy dictionaries with match data, user, strategy text,
+        image URL, timestamp, and display value
+    """
     q_match_id = Q()
     q_event = Q()
 
@@ -122,7 +163,14 @@ def get_match_strategies(match_id: int = None, event: Event = None):
     return parsed_match_strategies
 
 
-def save_match_strategy(data, img=None):
+def save_match_strategy(data: dict[str, Any], img: Any = None) -> None:
+    """
+    Save or update a match strategy with optional image.
+    
+    Args:
+        data: Dictionary containing id (optional), match_key, user_id, and strategy text
+        img: Optional image file to upload to Cloudinary
+    """
     if data.get("id", None) is not None:
         match_strategy = MatchStrategy.objects.get(id=data["id"])
     else:
@@ -142,7 +190,17 @@ def save_match_strategy(data, img=None):
     match_strategy.save()
 
 
-def get_alliance_selections():
+def get_alliance_selections() -> QuerySet[AllianceSelection]:
+    """
+    Get alliance selections for the current event ordered by selection order.
+    
+    Returns:
+        QuerySet of AllianceSelection objects for the current event
+        
+    Note:
+        The function currently returns a QuerySet but builds a parsed list internally
+        that isn't used. This may need refactoring.
+    """
     selections = AllianceSelection.objects.filter(
         Q(event=scouting.util.get_current_event()) & Q(void_ind="n")
     ).order_by("order")
@@ -162,7 +220,13 @@ def get_alliance_selections():
     return selections
 
 
-def save_alliance_selections(data):
+def save_alliance_selections(data: list[dict[str, Any]]) -> None:
+    """
+    Save or update multiple alliance selections.
+    
+    Args:
+        data: List of dictionaries containing id (optional), event, team, note, and order
+    """
     for d in data:
         if d.get("id") is not None:
             selection = AllianceSelection.objects.get(id=d["id"])
@@ -177,7 +241,22 @@ def save_alliance_selections(data):
         selection.save()
 
 
-def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
+def graph_team(graph: form.models.Graph, team_ids: list[int], reference_team_id: int | None = None) -> list[Any]:
+    """
+    Generate graph data for one or more teams.
+    
+    Creates visualizations comparing team performance based on scouting data.
+    Supports multiple graph types including histograms, plots, box-and-whisker,
+    and touch maps.
+    
+    Args:
+        graph: The Graph object defining the visualization
+        team_ids: List of team numbers to graph
+        reference_team_id: Optional team to use as a reference/comparison
+        
+    Returns:
+        List of graph data structures appropriate for the graph type
+    """
     all_graphs = []
     for team_id in team_ids:
         responses = [
@@ -237,7 +316,18 @@ def graph_team(graph: form.models.Graph, team_ids, reference_team_id=None):
     return all_graphs
 
 
-def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
+def serialize_graph_team(graph_id: int, team_ids: list[int], reference_team_id: int | None = None) -> list[dict[str, Any]]:
+    """
+    Generate and serialize graph data for teams.
+    
+    Args:
+        graph_id: ID of the Graph to generate
+        team_ids: List of team numbers to include
+        reference_team_id: Optional reference team for comparison
+        
+    Returns:
+        Serialized graph data ready for JSON response
+    """
     graph = form.models.Graph.objects.get(id=graph_id)
 
     data = graph_team(graph, team_ids, reference_team_id)
@@ -256,7 +346,21 @@ def serialize_graph_team(graph_id, team_ids, reference_team_id=None):
     return serializer.data
 
 
-def get_dashboard(user_id, dash_view_typ_id=None):
+def get_dashboard(user_id: int, dash_view_typ_id: str | None = None) -> dict[str, Any]:
+    """
+    Get or create a user's dashboard configuration for the current season.
+    
+    Args:
+        user_id: ID of the user
+        dash_view_typ_id: Optional dashboard view type ID to filter views
+        
+    Returns:
+        Dictionary containing dashboard configuration including:
+            - id: Dashboard ID
+            - active: Whether dashboard is active
+            - default_dash_view_typ: Default view type
+            - dashboard_views: List of dashboard views with graphs and teams
+    """
     try:
         dashboard = Dashboard.objects.get(
             Q(user_id=user_id)
@@ -326,7 +430,21 @@ def get_dashboard(user_id, dash_view_typ_id=None):
     return parsed
 
 
-def save_dashboard(data, user_id):
+def save_dashboard(data: dict[str, Any], user_id: int) -> None:
+    """
+    Save or update a user's dashboard configuration.
+    
+    Creates/updates the dashboard, dashboard views, associated teams,
+    and dashboard graphs in a single transaction.
+    
+    Args:
+        data: Dictionary containing dashboard configuration including:
+              - id (optional): Dashboard ID for updates
+              - active: Active status
+              - default_dash_view_typ: Default view type
+              - dashboard_views: List of view configurations
+        user_id: ID of the user owning the dashboard
+    """
     with transaction.atomic():
         if data.get("id", None) is None:
             dashboard = Dashboard(user_id=user_id)
@@ -392,5 +510,11 @@ def save_dashboard(data, user_id):
                 dashboard_graph.save()
 
 
-def get_dashboard_view_types():
+def get_dashboard_view_types() -> QuerySet[DashboardViewType]:
+    """
+    Get all available dashboard view types.
+    
+    Returns:
+        QuerySet of DashboardViewType objects
+    """
     return DashboardViewType.objects.all()

@@ -161,7 +161,16 @@ def get_tba_event(event_cd: str) -> dict[str, Any]:
     }
 
 
-def get_tba_event_teams(event_cd: str):
+def get_tba_event_teams(event_cd: str) -> list[dict[str, Any]]:
+    """
+    Get list of teams at an event from The Blue Alliance API.
+    
+    Args:
+        event_cd: The event code (e.g., '2024pahat')
+        
+    Returns:
+        List of dictionaries with team_no and team_nm fields
+    """
     request = requests.get(
         f"{tba_url}/event/{event_cd}/teams",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
@@ -176,7 +185,20 @@ def get_tba_event_teams(event_cd: str):
     return parsed
 
 
-def sync_event(season: Season, event_cd: str):
+def sync_event(season: Season, event_cd: str) -> str:
+    """
+    Synchronize an event and its teams from The Blue Alliance.
+    
+    Creates or updates the event and team records, linking teams to the event.
+    Removes teams that are no longer at the event.
+    
+    Args:
+        season: The Season object the event belongs to
+        event_cd: The event code from TBA
+        
+    Returns:
+        Message string detailing what was added, updated, or removed
+    """
     data = get_tba_event(event_cd)
     data["teams"] = get_tba_event_teams(event_cd)
 
@@ -244,7 +266,16 @@ def sync_event(season: Season, event_cd: str):
     return messages
 
 
-def sync_matches(event: Event):
+def sync_matches(event: Event) -> str:
+    """
+    Synchronize all matches for an event from The Blue Alliance.
+    
+    Args:
+        event: The Event object to sync matches for
+        
+    Returns:
+        Message string detailing sync results
+    """
     messages = ""
     request = requests.get(
         f"{tba_url}/event/{event.event_cd}/matches",
@@ -261,7 +292,17 @@ def sync_matches(event: Event):
     return messages
 
 
-def get_tba_event_team_info(event_cd: str):
+def get_tba_event_team_info(event_cd: str) -> list[dict[str, Any]]:
+    """
+    Get team ranking and performance info from The Blue Alliance.
+    
+    Args:
+        event_cd: The event code to get rankings for
+        
+    Returns:
+        List of dictionaries containing team stats including:
+            - matches_played, qual_average, wins, losses, ties, rank, dq, team_id
+    """
     request = requests.get(
         f"{tba_url}/event/{event_cd}/rankings",
         headers={"X-TBA-Auth-Key": settings.TBA_KEY},
@@ -298,7 +339,19 @@ def get_tba_event_team_info(event_cd: str):
     return ret
 
 
-def sync_event_team_info(force: int):
+def sync_event_team_info(force: int) -> str:
+    """
+    Synchronize team performance info for the current event.
+    
+    Only syncs if the event is currently active (between start and end dates)
+    or if force is set to 1.
+    
+    Args:
+        force: 1 to force sync regardless of event dates, 0 to only sync if event is active
+        
+    Returns:
+        Message string describing what was synced
+    """
     messages = ""
     event = Event.objects.get(current="y")
 
@@ -337,7 +390,18 @@ def sync_event_team_info(force: int):
     return messages
 
 
-def save_tba_match(tba_match):
+def save_tba_match(tba_match: dict[str, Any]) -> str:
+    """
+    Save or update a match from The Blue Alliance data.
+    
+    Args:
+        tba_match: Dictionary of match data from TBA API containing:
+                   - event_key, match_number, match_key, comp_level, time
+                   - alliances with red/blue team_keys and scores
+                   
+    Returns:
+        Message string indicating if match was added or updated
+    """
     event = Event.objects.get(event_cd=tba_match["event_key"])
     messages = ""
     match_number = tba_match.get("match_number", 0)
@@ -419,7 +483,16 @@ def save_tba_match(tba_match):
     return messages
 
 
-def save_message(message):
+def save_message(message: dict[str, Any]) -> Message:
+    """
+    Save a TBA webhook message to the database.
+    
+    Args:
+        message: Dictionary containing message_type and message_data
+        
+    Returns:
+        The created Message object
+    """
     msg = Message(
         message_type=message["message_type"],
         message_data=str(message["message_data"])[:4000],
@@ -428,7 +501,18 @@ def save_message(message):
     return msg
 
 
-def verify_tba_webhook_call(request):
+def verify_tba_webhook_call(request: Any) -> bool:
+    """
+    Verify that a webhook call is legitimately from The Blue Alliance.
+    
+    Uses HMAC-SHA256 to verify the request signature against the configured secret.
+    
+    Args:
+        request: The HTTP request object with data and META attributes
+        
+    Returns:
+        True if the webhook signature is valid, False otherwise
+    """
     json_str = json.dumps(request.data, ensure_ascii=True)
     hmac_hex = hmac.new(
         settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
@@ -436,5 +520,14 @@ def verify_tba_webhook_call(request):
     return hmac_hex == request.META.get("HTTP_X_TBA_HMAC", None)
 
 
-def replace_frc_in_str(s: str):
+def replace_frc_in_str(s: str) -> str:
+    """
+    Remove 'frc' prefix from team keys.
+    
+    Args:
+        s: String that may contain 'frc' prefix (e.g., 'frc3492')
+        
+    Returns:
+        String with 'frc' removed (e.g., '3492')
+    """
     return s.replace("frc", "")
