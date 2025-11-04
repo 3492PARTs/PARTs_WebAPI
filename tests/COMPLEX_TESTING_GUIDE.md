@@ -156,8 +156,9 @@ These tests validate authentication and permission systems:
 assert has_access(viewer.id, 'view_user_profile')
 assert not has_access(viewer.id, 'admin_users')
 
-# has_access with list returns True if user has AT LEAST ONE permission
-assert has_access(editor.id, ['view_user_profile', 'admin_users'])  # True because editor has view
+# IMPORTANT: has_access with a list returns True if user has ANY of the listed permissions
+# This assertion is True because editor has 'view_user_profile', even though they lack 'admin_users'
+assert has_access(editor.id, ['view_user_profile', 'admin_users'])  # True due to view permission
 ```
 
 **Real-world scenario:**

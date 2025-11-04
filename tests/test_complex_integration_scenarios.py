@@ -765,7 +765,9 @@ class TestComplexDataAggregation:
             void_ind='n'
         )
         
-        # Create responses (without user field)
+        # Create responses
+        # Note: Response model doesn't have a user field - responses are tracked
+        # by form type and timestamp only. User tracking happens through other means.
         pre_response = Response.objects.create(
             form_typ=pre_survey,
             void_ind='n'
