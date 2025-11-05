@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q, QuerySet
 
 from user.models import User
-from attendance.models import Attendance, Meeting, AttendanceApprovalType
+from attendance.models import Attendance, Meeting, AttendanceApprovalType, MeetingType
 import scouting.util
 import user.util
 
@@ -12,7 +12,7 @@ import user.util
 def get_meetings() -> QuerySet[Meeting]:
     """
     Get all non-voided meetings for the current season.
-    
+
     Returns:
         QuerySet of Meeting objects for the current season, ordered by start time and title
     """
@@ -24,11 +24,11 @@ def get_meetings() -> QuerySet[Meeting]:
 def save_meeting(meeting: dict[str, Any]) -> Meeting:
     """
     Create or update a meeting record.
-    
+
     Args:
         meeting: Dictionary containing meeting data (id, title, description, start, end, bonus, void_ind)
                 If id is present, updates existing meeting; otherwise creates new one
-                
+
     Returns:
         The created or updated Meeting object
     """
@@ -41,7 +41,9 @@ def save_meeting(meeting: dict[str, Any]) -> Meeting:
     m.description = meeting["description"]
     m.start = meeting["start"]
     m.end = meeting["end"]
-    m.bonus = meeting["bonus"]
+    m.meeting_typ = MeetingType.objects.get(
+        meeting_typ=meeting["meeting_typ"]["meeting_typ"]
+    )
 
     try:
         m.season
@@ -54,40 +56,51 @@ def save_meeting(meeting: dict[str, Any]) -> Meeting:
     return m
 
 
-def get_meeting_hours() -> dict[str, float]:
+def get_meeting_hours() -> dict[float, float, float]:
     """
     Calculate total hours and bonus hours from all meetings in the current season.
-    
+
     Returns:
-        Dictionary with 'hours' (regular meeting hours) and 'bonus_hours' keys
-        
+        Dictionary with 'hours' (regular meeting hours), 'bonus_hours', and 'event_hours' keys
+
     Raises:
         Exception: If any meeting is missing an end time
     """
     meetings = get_meetings()
     total = 0
     bonus = 0
+    event = 0
     for meeting in meetings:
         if meeting.end is None:
             raise Exception("There is a meeting without an end time")
 
         diff = (meeting.end - meeting.start).total_seconds() / 3600
-        if meeting.bonus:
-            bonus += diff
-        else:
-            total += diff
 
-    return {"hours": round(total, 2), "bonus_hours": round(bonus, 2)}
+        match meeting.meeting_typ.meeting_typ:
+            case "reg":
+                total += diff
+            case "evnt":
+                event += diff
+            case "bns":
+                bonus += diff
+
+    return {
+        "hours": round(total, 2),
+        "bonus_hours": round(bonus, 2),
+        "event_hours": round(event, 2),
+    }
 
 
-def get_attendance_report(user_id: int | None = None, meeting_id: int | None = None) -> list[dict[str, Any]]:
+def get_attendance_report(
+    user_id: int | None = None, meeting_id: int | None = None
+) -> list[dict[str, Any]]:
     """
     Generate an attendance report showing hours and percentage for users.
-    
+
     Args:
         user_id: If provided, generate report for specific user only
         meeting_id: If provided, filter attendance to specific meeting
-        
+
     Returns:
         List of dictionaries containing user, time (hours), and percentage for each user
     """
@@ -97,37 +110,57 @@ def get_attendance_report(user_id: int | None = None, meeting_id: int | None = N
     else:
         users = user.util.get_users(1, 0 if settings.ENVIRONMENT == "main" else 1)
 
-    total = get_meeting_hours()["hours"]
+    all_hours = get_meeting_hours()
+    total = all_hours["hours"]
+    event_total = all_hours["event_hours"]
 
     ret = []
 
     for u in users:
         attendance = get_attendance(u.id, meeting_id)
-        time = 0
+        reg_time = 0
+        event_time = 0
 
         for att in attendance:
             if att.is_approved() and not att.absent:
-                time += (att.time_out - att.time_in).total_seconds() / 3600
+                diff = (att.time_out - att.time_in).total_seconds() / 3600
+
+                if att.meeting is None:
+                    reg_time += diff
+                else:
+                    match att.meeting.meeting_typ.meeting_typ:
+                        case "reg":
+                            reg_time += diff
+                        case "evnt":
+                            event_time += diff
 
         ret.append(
             {
                 "user": u,
-                "time": round(time, 2),
-                "percentage": round(time / total * 100, 0) if total != 0 else 0,
+                "reg_time": round(reg_time, 2),
+                "reg_time_percentage": (
+                    round(reg_time / total * 100, 0) if total != 0 else 0
+                ),
+                "event_time": round(event_time, 2),
+                "event_time_percentage": (
+                    round(event_time / event_total * 100, 0) if event_total != 0 else 0
+                ),
             }
         )
 
     return ret
 
 
-def get_attendance(user_id: int | None = None, meeting_id: int | None = None) -> QuerySet[Attendance]:
+def get_attendance(
+    user_id: int | None = None, meeting_id: int | None = None
+) -> QuerySet[Attendance]:
     """
     Get attendance records filtered by user and/or meeting.
-    
+
     Args:
         user_id: If provided, filter to specific user
         meeting_id: If provided, filter to specific meeting
-        
+
     Returns:
         QuerySet of Attendance objects for current season matching the filters
     """

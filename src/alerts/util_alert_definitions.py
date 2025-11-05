@@ -1,7 +1,14 @@
 from typing import Any
 from datetime import timedelta
 import pytz
-from django.db.models import Q, ExpressionWrapper, DurationField, F, IntegerField, QuerySet
+from django.db.models import (
+    Q,
+    ExpressionWrapper,
+    DurationField,
+    F,
+    IntegerField,
+    QuerySet,
+)
 from django.utils import timezone
 from django.conf import settings
 from django.db.models.functions import Cast
@@ -27,7 +34,7 @@ from general import send_message
 def stage_alerts() -> str:
     """
     Stage all types of alerts by running all individual alert staging functions.
-    
+
     This is the main entry point for staging alerts. It triggers staging for:
     - Field schedule alerts (15 min, 5 min, and immediate warnings)
     - General schedule alerts
@@ -35,7 +42,7 @@ def stage_alerts() -> str:
     - Form submission alerts (contact and application)
     - Match strategy alerts
     - Meeting start/end alerts
-    
+
     Returns:
         String message summarizing what alerts were staged
     """
@@ -62,10 +69,10 @@ def stage_alerts() -> str:
 def stage_error_alerts() -> str:
     """
     Stage alerts for system errors that have occurred since last run.
-    
+
     Checks the error log for new errors (excluding ignored exceptions like
     authentication failures) and sends alerts to users with error_alert permission.
-    
+
     Returns:
         String message describing errors staged or "NONE TO STAGE"
     """
@@ -103,10 +110,10 @@ def stage_error_alerts() -> str:
 def stage_form_alerts(form_type: str) -> str:
     """
     Stage alerts for new form submissions.
-    
+
     Args:
         form_type: The form type code (e.g., 'team-cntct' or 'team-app')
-        
+
     Returns:
         String message listing staged alerts or "NONE TO STAGE"
     """
@@ -143,12 +150,12 @@ def stage_form_alerts(form_type: str) -> str:
 def stage_all_field_schedule_alerts() -> str:
     """
     Stage all field scouting schedule alerts at different time intervals.
-    
+
     Creates alerts for upcoming scouting shifts at:
     - 15 minutes before
-    - 5 minutes before  
+    - 5 minutes before
     - Immediately (when it's time to scout)
-    
+
     Returns:
         String message summarizing alerts staged or "NONE TO STAGE"
     """
@@ -273,14 +280,16 @@ def stage_all_field_schedule_alerts() -> str:
     return message
 
 
-def stage_field_schedule_alerts(notification: int, sfss: QuerySet[FieldSchedule]) -> str:
+def stage_field_schedule_alerts(
+    notification: int, sfss: QuerySet[FieldSchedule]
+) -> str:
     """
     Stage alerts for a specific set of field schedules.
-    
+
     Args:
         notification: The notification number (1=15 min, 2=5 min, 3=now)
         sfss: QuerySet of FieldSchedule objects to alert for
-        
+
     Returns:
         String message listing who was alerted
     """
@@ -348,10 +357,10 @@ def stage_field_schedule_alerts(notification: int, sfss: QuerySet[FieldSchedule]
 def stage_schedule_alerts() -> str:
     """
     Stage alerts for general pit schedules that are starting soon.
-    
+
     Checks for schedule entries starting within 6 minutes and creates
     alerts for the assigned users.
-    
+
     Returns:
         String message listing alerts staged or "NONE TO STAGE"
     """
@@ -383,10 +392,10 @@ def stage_schedule_alerts() -> str:
 def stage_schedule_alert(sch: Schedule) -> str:
     """
     Stage an alert for a specific schedule entry.
-    
+
     Args:
         sch: The Schedule object to create an alert for
-        
+
     Returns:
         String message confirming who was notified
     """
@@ -411,11 +420,11 @@ def stage_schedule_alert(sch: Schedule) -> str:
 def stage_scout_admin_alerts(subject: str, body: str) -> list[Any]:
     """
     Stage alerts for all scout admin users.
-    
+
     Args:
         subject: Alert subject line
         body: Alert body text
-        
+
     Returns:
         List of created Alert objects
     """
@@ -430,10 +439,10 @@ def stage_scout_admin_alerts(subject: str, body: str) -> list[Any]:
 def stage_match_strategy_added_alerts() -> str:
     """
     Stage alerts when new match strategies are added.
-    
+
     Notifies users with match_strat_added_alert permission when
     someone adds a match strategy, excluding the user who added it.
-    
+
     Returns:
         String message listing notifications sent or "NONE TO STAGE"
     """
@@ -527,10 +536,10 @@ def stage_match_strategy_added_alerts() -> str:
 def stage_meeting_alert(start_or_end: bool = True) -> str:
     """
     Stage alerts for meeting start or end times.
-    
+
     Args:
         start_or_end: True for start alerts (20 min before), False for end alerts
-        
+
     Returns:
         String message listing meetings alerted or "NONE TO STAGE"
     """
@@ -574,9 +583,10 @@ def stage_meeting_alert(start_or_end: bool = True) -> str:
                 alert_typ.subject,
                 alert_typ.body
                 + (f"\n{meeting.title}")
+                + (f"\nMeeting Type: {meeting.meeting_typ.meeting_nm}")
                 + (f"\nFrom: {date_st_str} - {date_end_str}")
                 + (f"\n{meeting.description}" if meeting.description else "")
-                + f"\nThis meeting {('COUNTS' if not meeting.bonus else 'DOES NOT COUNT')} towards attendance"
+                + f"\nThis meeting {('COUNTS' if meeting.meeting_typ.meeting_typ != 'bns' else 'DOES NOT COUNT')} towards attendance"
                 + f"\n{settings.FRONTEND_ADDRESS}attendance",
                 None,
                 alert_typ,
