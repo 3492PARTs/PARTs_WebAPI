@@ -8,6 +8,7 @@ from datetime import datetime, date
 
 
 # Originally from: test_coverage_boost.py
+@pytest.mark.django_db
 class TestFormModels:
     """Test form model methods."""
     

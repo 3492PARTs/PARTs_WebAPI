@@ -77,6 +77,7 @@ class TestPublicViews:
 
 
 # Originally from: test_ultimate_coverage.py
+@pytest.mark.django_db
 class TestComprehensivePublic:
     """Comprehensive public view testing."""
     

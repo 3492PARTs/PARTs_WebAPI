@@ -549,6 +549,7 @@ class TestEdgeCases:
 
 
 # Originally from: test_final_coverage_push.py
+@pytest.mark.django_db
 class TestUtilityEdgeCases:
     """Test utility function edge cases."""
     
@@ -691,6 +692,7 @@ class TestErrorHandlingPaths:
 
 
 # Originally from: test_ultimate_coverage.py
+@pytest.mark.django_db
 class TestModelMethods:
     """Test additional model methods."""
     
