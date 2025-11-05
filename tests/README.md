@@ -12,39 +12,32 @@ tests/
 ├── README.md                # This file
 │
 ├── admin/                   # Admin app tests
-│   ├── __init__.py
 │   └── test_admin_comprehensive.py
 │
 ├── alerts/                  # Alerts app tests
-│   ├── __init__.py
 │   ├── test_alerts_comprehensive.py
 │   └── test_alerts_util_definitions.py
 │
 ├── attendance/              # Attendance app tests
-│   ├── __init__.py
 │   ├── test_attendance_comprehensive.py
 │   └── test_attendance_integration.py
 │
 ├── form/                    # Form builder app tests
-│   ├── __init__.py
 │   ├── test_form_integration.py
 │   ├── test_form_util_comprehensive.py
 │   └── test_form_views_comprehensive.py
 │
 ├── general/                 # General utilities tests
-│   ├── __init__.py
 │   ├── test_general_cloudinary.py
 │   ├── test_general_security.py
 │   ├── test_general_send_message.py
 │   └── test_general_util.py
 │
 ├── public/                  # Public API tests
-│   ├── __init__.py
 │   ├── test_public_api_status.py
 │   └── test_public_comprehensive.py
 │
 ├── scouting/                # Scouting system tests
-│   ├── __init__.py
 │   ├── test_scouting_admin_comprehensive.py
 │   ├── test_scouting_field_comprehensive.py
 │   ├── test_scouting_pit_comprehensive.py
@@ -55,18 +48,15 @@ tests/
 │   └── test_strategizing_comprehensive.py
 │
 ├── sponsoring/              # Sponsoring app tests
-│   ├── __init__.py
 │   └── test_sponsoring_comprehensive.py
 │
 ├── tba/                     # The Blue Alliance integration tests
-│   ├── __init__.py
 │   ├── test_tba_integration.py
 │   ├── test_tba_util_comprehensive.py
 │   ├── test_tba_util_extended.py
 │   └── test_tba_views_comprehensive.py
 │
 ├── user/                    # User app tests
-│   ├── __init__.py
 │   ├── test_user_auth_comprehensive.py
 │   ├── test_user_comprehensive.py
 │   ├── test_user_integration.py
@@ -74,14 +64,12 @@ tests/
 │   └── test_user_views_extended.py
 │
 ├── project/                 # Project-level tests (URLs, apps config, etc.)
-│   ├── __init__.py
 │   ├── test_api_urls.py
 │   ├── test_apps_comprehensive.py
 │   ├── test_bulk_modules.py
 │   └── test_manage_py.py
 │
 └── misc/                    # Coverage and meta tests
-    ├── __init__.py
     ├── test_additional_coverage.py
     ├── test_coverage_boost.py
     ├── test_coverage_push_85.py
@@ -173,7 +161,7 @@ This test suite follows Django pytest best practices:
 2. **One app per directory**: Each Django app has its own test subdirectory
 3. **Shared fixtures**: Common test setup lives in `conftest.py`
 4. **Clear naming**: Test files clearly indicate what they test
-5. **Proper imports**: Each test directory has `__init__.py` for proper Python packaging
+5. **No __init__.py files**: Test directories don't have `__init__.py` to avoid namespace conflicts with app modules
 
 ## More Information
 

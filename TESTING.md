@@ -278,7 +278,6 @@ Follow this structure when adding new tests:
 ```
 tests/
 ├── <app_name>/
-│   ├── __init__.py
 │   ├── test_models.py         # Model tests
 │   ├── test_views.py          # View tests
 │   ├── test_utils.py          # Utility function tests
@@ -286,6 +285,8 @@ tests/
 │   └── test_integration.py    # Integration tests
 └── conftest.py                # Shared fixtures
 ```
+
+**Note**: Test directories should NOT have `__init__.py` files to avoid namespace conflicts with Django app modules.
 
 ## Tools and Resources
 
