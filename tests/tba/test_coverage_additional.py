@@ -217,6 +217,3 @@ class TestComprehensiveTBAUtil:
             pass
 
 
-@pytest.mark.django_db
-
-

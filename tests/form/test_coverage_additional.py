@@ -180,6 +180,3 @@ class TestComprehensiveFormUtil:
             assert isinstance(result, list)
 
 
-@pytest.mark.django_db
-
-

@@ -142,6 +142,3 @@ class TestComprehensiveAdminUtil:
             pass
 
 
-@pytest.mark.django_db
-
-

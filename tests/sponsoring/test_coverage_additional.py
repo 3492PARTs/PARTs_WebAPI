@@ -80,6 +80,3 @@ class TestComprehensiveSponsoring:
         assert response.status_code in [200, 400, 404, 405]
 
 
-@pytest.mark.django_db
-
-

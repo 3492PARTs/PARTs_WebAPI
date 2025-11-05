@@ -94,6 +94,3 @@ class TestComprehensivePublic:
         assert response.status_code in [200, 404]
 
 
-@pytest.mark.django_db
-
-

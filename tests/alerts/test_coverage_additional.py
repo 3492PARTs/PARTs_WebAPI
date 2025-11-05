@@ -37,6 +37,3 @@ class TestAlertsUtilBasic:
         assert alerts.util is not None
 
 
-@pytest.mark.django_db
-
-
