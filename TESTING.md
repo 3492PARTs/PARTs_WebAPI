@@ -20,9 +20,27 @@
    - `tests/conftest.py` with reusable fixtures
 
 2. **Test Organization**
-   - `tests/` directory with organized test modules
-   - Pattern: `test_<module>_<type>.py` for easy navigation
-   - Comprehensive fixtures for common test scenarios
+   - `tests/` directory organized by Django app following pytest best practices
+   - Each app has its own subdirectory: `tests/<app_name>/`
+   - Test files use pattern: `test_<component>_<type>.py`
+   - Comprehensive fixtures in root `tests/conftest.py`
+   - Directory structure:
+     ```
+     tests/
+     ├── conftest.py              # Shared fixtures
+     ├── admin/                   # Admin app tests
+     ├── alerts/                  # Alerts app tests
+     ├── attendance/              # Attendance app tests
+     ├── form/                    # Form app tests
+     ├── general/                 # General utilities tests
+     ├── public/                  # Public API tests
+     ├── scouting/                # Scouting app tests
+     ├── sponsoring/              # Sponsoring app tests
+     ├── tba/                     # TBA integration tests
+     ├── user/                    # User app tests
+     ├── project/                 # Project-level tests (URLs, apps, etc.)
+     └── misc/                    # Coverage and meta tests
+     ```
 
 3. **CI/CD**
    - GitHub Actions workflow (`test-and-coverage.yml`)
@@ -192,8 +210,12 @@ class TestMyFeature:
 # Run all tests
 poetry run pytest
 
+# Run tests for a specific app
+poetry run pytest tests/user/
+poetry run pytest tests/scouting/
+
 # Run specific test file
-poetry run pytest tests/test_user_comprehensive.py
+poetry run pytest tests/user/test_user_comprehensive.py
 
 # Run with coverage
 poetry run pytest --cov=.
@@ -201,8 +223,12 @@ poetry run pytest --cov=.
 # Run fast (no coverage)
 poetry run pytest --no-cov -x
 
-# Run specific test
-poetry run pytest tests/test_user_comprehensive.py::TestUserViews::test_user_profile_get
+# Run specific test class or method
+poetry run pytest tests/user/test_user_comprehensive.py::TestUserViews
+poetry run pytest tests/user/test_user_comprehensive.py::TestUserViews::test_user_profile_get
+
+# Run tests matching a pattern
+poetry run pytest -k "test_user"
 
 # Verbose output
 poetry run pytest -v
@@ -221,8 +247,11 @@ open htmlcov/index.html
 # Show missing lines
 poetry run pytest --cov=. --cov-report=term-missing
 
-# Coverage for specific module
-poetry run pytest --cov=user --cov-report=term-missing tests/test_user_comprehensive.py
+# Coverage for specific app or module
+poetry run pytest --cov=user --cov-report=term-missing tests/user/
+
+# Coverage for specific component
+poetry run pytest --cov=user.views --cov-report=term-missing tests/user/test_user_views_extended.py
 ```
 
 ## Contributing Tests
@@ -230,13 +259,34 @@ poetry run pytest --cov=user --cov-report=term-missing tests/test_user_comprehen
 When adding new features:
 
 1. **Write tests first** (TDD approach recommended)
-2. **Test both success and failure cases**
-3. **Mock external dependencies** (API calls, email, etc.)
-4. **Use fixtures** from `conftest.py` for common setup
-5. **Follow naming conventions**: `test_<what>_<when>_<expected>`
-6. **Document complex test scenarios** with clear docstrings
-7. **Run tests locally** before pushing
-8. **Maintain or improve coverage** - never decrease it
+2. **Place tests in the correct app directory** under `tests/<app_name>/`
+3. **Test both success and failure cases**
+4. **Mock external dependencies** (API calls, email, etc.)
+5. **Use fixtures** from `conftest.py` for common setup
+6. **Follow naming conventions**: 
+   - Test files: `test_<component>_<type>.py` (e.g., `test_views_comprehensive.py`)
+   - Test classes: `Test<ComponentName>` (e.g., `TestUserViews`)
+   - Test methods: `test_<what>_<when>_<expected>` (e.g., `test_create_user_with_valid_data_succeeds`)
+7. **Document complex test scenarios** with clear docstrings
+8. **Run tests locally** before pushing
+9. **Maintain or improve coverage** - never decrease it
+
+### Test File Organization
+
+Follow this structure when adding new tests:
+
+```
+tests/
+├── <app_name>/
+│   ├── test_models.py         # Model tests
+│   ├── test_views.py          # View tests
+│   ├── test_utils.py          # Utility function tests
+│   ├── test_serializers.py    # Serializer tests
+│   └── test_integration.py    # Integration tests
+└── conftest.py                # Shared fixtures
+```
+
+**Note**: Test directories should NOT have `__init__.py` files to avoid namespace conflicts with Django app modules.
 
 ## Tools and Resources
 

@@ -172,7 +172,12 @@ poetry run pytest --no-cov
 
 Run specific test file:
 ```bash
-poetry run pytest tests/test_general_security.py
+poetry run pytest tests/general/test_general_security.py
+```
+
+Run all tests for a specific app:
+```bash
+poetry run pytest tests/user/
 ```
 
 Run tests with verbose output:
