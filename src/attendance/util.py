@@ -26,7 +26,7 @@ def save_meeting(meeting: dict[str, Any]) -> Meeting:
     Create or update a meeting record.
 
     Args:
-        meeting: Dictionary containing meeting data (id, title, description, start, end, bonus, void_ind)
+        meeting: Dictionary containing meeting data (id, title, description, start, end, meeting_typ, void_ind)
                 If id is present, updates existing meeting; otherwise creates new one
 
     Returns:
@@ -58,10 +58,11 @@ def save_meeting(meeting: dict[str, Any]) -> Meeting:
 
 def get_meeting_hours() -> dict[float, float, float]:
     """
-    Calculate total hours and bonus hours from all meetings in the current season.
+    Calculate total hours, bonus hours, and event hours from all meetings in the current season.
 
     Returns:
-        Dictionary with 'hours' (regular meeting hours), 'bonus_hours', and 'event_hours' keys
+        Dictionary with 'hours' (regular meeting hours), 'bonus_hours' (bonus meeting hours), 
+        and 'event_hours' (event hours) keys
 
     Raises:
         Exception: If any meeting is missing an end time

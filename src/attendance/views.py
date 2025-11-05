@@ -130,7 +130,7 @@ class MeetingsView(APIView):
         """
         POST endpoint to create or update a meeting.
         
-        Request body: Meeting object with title, description, start, end, bonus, etc.
+        Request body: Meeting object with title, description, start, end, meeting_typ, etc.
         
         Returns:
             Success message or error response
@@ -207,7 +207,7 @@ class MeetingHoursView(APIView):
     Authentication required: JWT
     Permission required: attendance
     
-    GET: Returns total hours and bonus hours
+    GET: Returns total hours, bonus hours, and event hours
     """
 
     authentication_classes = (JWTAuthentication,)
@@ -219,7 +219,7 @@ class MeetingHoursView(APIView):
         GET endpoint to retrieve total meeting hours.
         
         Returns:
-            Response with hours and bonus_hours or error message
+            Response with hours, bonus_hours, and event_hours or error message
         """
         def fun():
             serializer = MeetingHoursSerializer(attendance.util.get_meeting_hours())
