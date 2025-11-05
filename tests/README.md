@@ -62,7 +62,7 @@ tests/
 │   ├── test_user_integration.py
 │   ├── test_user_util_extended.py
 │   ├── test_user_views_extended.py
-│   └── test_coverage_additional.py
+│   └── test_user_coverage.py
 │
 ├── project/                 # Project-level tests (URLs, apps config, etc.)
 │   ├── test_api_urls.py
@@ -74,7 +74,7 @@ tests/
     └── test_coverage_misc.py
 ```
 
-**Note**: Each app directory now also contains a `test_coverage_additional.py` file with additional coverage tests that were extracted from the misc folder.
+**Note**: Each app directory contains a `test_<app>_coverage.py` file with additional coverage tests that were extracted from the misc folder.
 
 ## Running Tests
 
