@@ -174,7 +174,7 @@ node {
                         git worktree prune &&
                         git fetch --prune &&
                         git for-each-ref --format '%(if:equals=gone)%(upstream:track,nobracket)%(then)%(refname:short)%(end)' refs/heads/ | 
-                        xargs -r git branch -D
+                        xargs -r git branch --delete --force
                     "
                 '''
             } 
