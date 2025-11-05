@@ -27,7 +27,7 @@ class TestAttendanceModelStringMethods:
         from scouting.models import Season
         
         season = Season.objects.create(
-            season=2024,
+            season="2024",
             current="y"
         )
         
@@ -73,7 +73,7 @@ class TestAttendanceModelStringMethods:
         )
         
         season = Season.objects.create(
-            season=2024,
+            season="2024",
             current="y"
         )
         
@@ -123,7 +123,7 @@ class TestAttendanceModelMethods:
         )
         
         season = Season.objects.create(
-            season=2024,
+            season="2024",
             current="y"
         )
         
@@ -156,7 +156,7 @@ class TestAttendanceModelMethods:
         )
         
         season = Season.objects.create(
-            season=2024,
+            season="2024",
             current="y"
         )
         
@@ -189,7 +189,7 @@ class TestAttendanceModelMethods:
         )
         
         season = Season.objects.create(
-            season=2024,
+            season="2024",
             current="y"
         )
         
@@ -231,7 +231,7 @@ class TestAttendanceModelFields:
         from scouting.models import Season
         
         season = Season.objects.create(
-            season=2024,
+            season="2024",
             current="y"
         )
         
@@ -262,7 +262,7 @@ class TestAttendanceModelFields:
         )
         
         season = Season.objects.create(
-            season=2024,
+            season="2024",
             current="y"
         )
         
