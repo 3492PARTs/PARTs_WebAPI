@@ -22,18 +22,40 @@ class TestAttendanceUtil:
         )
 
     @pytest.fixture
-    def meeting(self, season):
+    def meeting_types(self):
+        """Create meeting types."""
+        from attendance.models import MeetingType
+        return {
+            'reg': MeetingType.objects.create(
+                meeting_typ="reg",
+                meeting_nm="Regular Meeting",
+                void_ind="n"
+            ),
+            'bns': MeetingType.objects.create(
+                meeting_typ="bns",
+                meeting_nm="Bonus Meeting",
+                void_ind="n"
+            ),
+            'evnt': MeetingType.objects.create(
+                meeting_typ="evnt",
+                meeting_nm="Event",
+                void_ind="n"
+            ),
+        }
+
+    @pytest.fixture
+    def meeting(self, season, meeting_types):
         """Create a test meeting."""
         from attendance.models import Meeting
         start_time = make_aware(datetime(2024, 1, 15, 18, 0))
         end_time = make_aware(datetime(2024, 1, 15, 20, 0))
         return Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Test Meeting",
             description="Test Description",
             start=start_time,
             end=end_time,
-            bonus=False,
             void_ind="n"
         )
 
@@ -69,7 +91,7 @@ class TestAttendanceUtil:
             assert len(meetings) == 1
             assert meetings[0].title == "Test Meeting"
 
-    def test_get_meetings_filters_void(self, season):
+    def test_get_meetings_filters_void(self, season, meeting_types):
         """Test that voided meetings are excluded."""
         from attendance.models import Meeting
         from attendance.util import get_meetings
@@ -77,6 +99,7 @@ class TestAttendanceUtil:
         # Create void meeting
         Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Voided Meeting",
             description="Void",
             start=now(),
@@ -89,7 +112,7 @@ class TestAttendanceUtil:
             
             assert len(meetings) == 0
 
-    def test_save_meeting_create_new(self, season):
+    def test_save_meeting_create_new(self, season, meeting_types):
         """Test creating a new meeting."""
         from attendance.util import save_meeting
         
@@ -102,7 +125,7 @@ class TestAttendanceUtil:
                 "description": "Description",
                 "start": start_time,
                 "end": end_time,
-                "bonus": False,
+                "meeting_typ": {"meeting_typ": "reg"},
                 "void_ind": "n"
             }
             
@@ -112,7 +135,7 @@ class TestAttendanceUtil:
             assert result.title == "New Meeting"
             assert result.season == season
 
-    def test_save_meeting_update_existing(self, season, meeting):
+    def test_save_meeting_update_existing(self, season, meeting, meeting_types):
         """Test updating an existing meeting."""
         from attendance.util import save_meeting
         
@@ -122,7 +145,7 @@ class TestAttendanceUtil:
             "description": "Updated",
             "start": meeting.start,
             "end": meeting.end,
-            "bonus": True,
+            "meeting_typ": {"meeting_typ": "bns"},
             "void_ind": "n"
         }
         
@@ -130,9 +153,9 @@ class TestAttendanceUtil:
         
         assert result.id == meeting.id
         assert result.title == "Updated Meeting"
-        assert result.bonus is True
+        assert result.meeting_typ.meeting_typ == "bns"
 
-    def test_get_meeting_hours(self, season):
+    def test_get_meeting_hours(self, season, meeting_types):
         """Test calculating meeting hours."""
         from attendance.models import Meeting
         from attendance.util import get_meeting_hours
@@ -140,22 +163,22 @@ class TestAttendanceUtil:
         # Create regular meeting (2 hours)
         Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Regular",
             description="Test",
             start=make_aware(datetime(2024, 1, 1, 18, 0)),
             end=make_aware(datetime(2024, 1, 1, 20, 0)),
-            bonus=False,
             void_ind="n"
         )
         
         # Create bonus meeting (1 hour)
         Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['bns'],
             title="Bonus",
             description="Test",
             start=make_aware(datetime(2024, 1, 2, 18, 0)),
             end=make_aware(datetime(2024, 1, 2, 19, 0)),
-            bonus=True,
             void_ind="n"
         )
         
@@ -165,13 +188,14 @@ class TestAttendanceUtil:
             assert result['hours'] == 2.0
             assert result['bonus_hours'] == 1.0
 
-    def test_get_meeting_hours_no_end_time_raises_error(self, season):
+    def test_get_meeting_hours_no_end_time_raises_error(self, season, meeting_types):
         """Test that meeting without end time raises error."""
         from attendance.models import Meeting
         from attendance.util import get_meeting_hours
         
         Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="No End",
             description="Test",
             start=make_aware(datetime(2024, 1, 1, 18, 0)),
@@ -237,13 +261,14 @@ class TestAttendanceUtil:
             assert len(result) == 1
             assert result[0].user == test_user
 
-    def test_get_attendance_filter_by_meeting(self, season, test_user, approval_types):
+    def test_get_attendance_filter_by_meeting(self, season, test_user, approval_types, meeting_types):
         """Test filtering attendance by meeting."""
         from attendance.models import Meeting, Attendance
         from attendance.util import get_attendance
         
         meeting1 = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Meeting 1",
             description="Test",
             start=make_aware(datetime(2024, 1, 1, 18, 0)),
@@ -252,6 +277,7 @@ class TestAttendanceUtil:
         )
         meeting2 = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Meeting 2",
             description="Test",
             start=make_aware(datetime(2024, 1, 2, 18, 0)),
@@ -396,7 +422,7 @@ class TestAttendanceUtil:
             
             assert result.is_unapproved()
 
-    def test_get_attendance_report(self, season, meeting, test_user, approval_types):
+    def test_get_attendance_report(self, season, meeting, test_user, approval_types, meeting_types):
         """Test generating attendance report."""
         from attendance.models import Attendance, Meeting
         from attendance.util import get_attendance_report
@@ -404,6 +430,7 @@ class TestAttendanceUtil:
         # Create 3 meetings, 2 hours each (6 total)
         meeting2 = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Meeting 2",
             description="Test",
             start=make_aware(datetime(2024, 1, 2, 18, 0)),
@@ -412,6 +439,7 @@ class TestAttendanceUtil:
         )
         meeting3 = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Meeting 3",
             description="Test",
             start=make_aware(datetime(2024, 1, 3, 18, 0)),
@@ -445,8 +473,8 @@ class TestAttendanceUtil:
             
             assert len(result) == 1
             assert result[0]['user'] == test_user
-            assert result[0]['time'] == 4.0
-            assert result[0]['percentage'] == 67.0  # 4/6 * 100 = 66.67 rounded to 67
+            assert result[0]['reg_time'] == 4.0
+            assert result[0]['reg_time_percentage'] == 67.0  # 4/6 * 100 = 66.67 rounded to 67
 
     def test_get_attendance_report_only_approved_counted(self, season, meeting, test_user, approval_types):
         """Test that only approved attendance is counted."""
@@ -480,7 +508,7 @@ class TestAttendanceUtil:
             result = get_attendance_report()
             
             assert len(result) == 1
-            assert result[0]['time'] == 2.0  # Only the approved 2-hour meeting
+            assert result[0]['reg_time'] == 2.0  # Only the approved 2-hour meeting
 
     def test_get_attendance_report_absent_not_counted(self, season, meeting, test_user, approval_types):
         """Test that absent records are not counted in time."""
@@ -503,7 +531,7 @@ class TestAttendanceUtil:
             result = get_attendance_report()
             
             assert len(result) == 1
-            assert result[0]['time'] == 0.0  # Absent not counted
+            assert result[0]['reg_time'] == 0.0  # Absent not counted
 
 
 @pytest.mark.django_db
@@ -520,18 +548,35 @@ class TestAttendanceViews:
         )
 
     @pytest.fixture
-    def meeting(self, season):
+    def meeting_types(self):
+        """Create meeting types."""
+        from attendance.models import MeetingType
+        return {
+            'reg': MeetingType.objects.create(
+                meeting_typ="reg",
+                meeting_nm="Regular Meeting",
+                void_ind="n"
+            ),
+            'bns': MeetingType.objects.create(
+                meeting_typ="bns",
+                meeting_nm="Bonus Meeting",
+                void_ind="n"
+            ),
+        }
+
+    @pytest.fixture
+    def meeting(self, season, meeting_types):
         """Create a test meeting."""
         from attendance.models import Meeting
         start_time = make_aware(datetime(2024, 1, 15, 18, 0))
         end_time = make_aware(datetime(2024, 1, 15, 20, 0))
         return Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_types['reg'],
             title="Test Meeting",
             description="Test Description",
             start=start_time,
             end=end_time,
-            bonus=False,
             void_ind="n"
         )
 
@@ -631,7 +676,7 @@ class TestAttendanceViews:
             assert len(response.data) == 1
             assert response.data[0]['title'] == "Test Meeting"
 
-    def test_meetings_view_post(self, api_rf, test_user, season):
+    def test_meetings_view_post(self, api_rf, test_user, season, meeting_types):
         """Test MeetingsView POST."""
         from attendance.views import MeetingsView
         
@@ -650,7 +695,7 @@ class TestAttendanceViews:
                 "description": "Test",
                 "start": start_time.isoformat(),
                 "end": end_time.isoformat(),
-                "bonus": False,
+                "meeting_typ": {"meeting_typ": "reg", "meeting_nm": "Regular Meeting"},
                 "void_ind": "n"
             }
             

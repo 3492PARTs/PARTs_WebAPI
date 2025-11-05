@@ -14,7 +14,17 @@ from datetime import datetime, timedelta
 class TestComplexAttendanceWorkflows:
     """Complex integration tests for attendance tracking with approval workflows."""
 
-    def test_meeting_creation_and_queries(self):
+    @pytest.fixture
+    def meeting_type(self):
+        """Create a meeting type."""
+        from attendance.models import MeetingType
+        return MeetingType.objects.create(
+            meeting_typ="reg",
+            meeting_nm="Regular Meeting",
+            void_ind="n"
+        )
+
+    def test_meeting_creation_and_queries(self, meeting_type):
         """Test creating meetings and querying them efficiently."""
         from attendance.models import Meeting
         from scouting.models import Season
@@ -30,6 +40,7 @@ class TestComplexAttendanceWorkflows:
         # Create multiple meetings
         meeting1 = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_type,
             title='Weekly Meeting 1',
             description='First team meeting',
             start=datetime(2024, 3, 1, 18, 0, 0),
@@ -38,6 +49,7 @@ class TestComplexAttendanceWorkflows:
         
         meeting2 = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_type,
             title='Weekly Meeting 2',
             description='Second team meeting',
             start=datetime(2024, 3, 8, 18, 0, 0),
@@ -51,7 +63,7 @@ class TestComplexAttendanceWorkflows:
         assert season_meetings[0].title == 'Weekly Meeting 1'
         assert season_meetings[1].title == 'Weekly Meeting 2'
 
-    def test_bulk_meeting_creation(self):
+    def test_bulk_meeting_creation(self, meeting_type):
         """Test bulk operations on meeting records."""
         from attendance.models import Meeting
         from scouting.models import Season
@@ -70,6 +82,7 @@ class TestComplexAttendanceWorkflows:
         for i in range(10):
             meeting = Meeting(
                 season=season,
+                meeting_typ=meeting_type,
                 title=f'Workshop {i+1}',
                 description=f'Workshop session {i+1}',
                 start=base_date + timedelta(days=i*7),
