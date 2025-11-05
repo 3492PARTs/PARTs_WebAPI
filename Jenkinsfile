@@ -170,7 +170,7 @@ node {
 
                 sh '''
                     ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "
-                        cd /home/brandon/PARTs_Website && 
+                        cd /home/brandon/PARTs_WebAPI && 
                         git fetch --prune &&
                         git for-each-ref --format '%(if:equals=gone)%(upstream:track,nobracket)%(then)%(refname:short)%(end)' refs/heads/ | 
                         xargs -r git branch --delete
@@ -185,10 +185,10 @@ node {
                 echo "Starting Docker image cleanup..."
                 
                 # 1. Force remove the intermediate test image
-                docker rmi -f parts-webapi-build-${env.formatted_branch_name} || true
+                # docker rmi -f parts-webapi-build-${env.formatted_branch_name} || true
 
                 # 1.2. Force remove the intermediate test image
-                docker rmi -f parts-webapi-test-${env.formatted_branch_name} || true
+                # docker rmi -f parts-webapi-test-${env.formatted_branch_name} || true
                 
                 # 2. Remove all dangling images (untagged)
                 docker image prune -f
