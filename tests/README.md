@@ -61,7 +61,8 @@ tests/
 │   ├── test_user_comprehensive.py
 │   ├── test_user_integration.py
 │   ├── test_user_util_extended.py
-│   └── test_user_views_extended.py
+│   ├── test_user_views_extended.py
+│   └── test_coverage_additional.py
 │
 ├── project/                 # Project-level tests (URLs, apps config, etc.)
 │   ├── test_api_urls.py
@@ -69,14 +70,11 @@ tests/
 │   ├── test_bulk_modules.py
 │   └── test_manage_py.py
 │
-└── misc/                    # Coverage and meta tests
-    ├── test_additional_coverage.py
-    ├── test_coverage_boost.py
-    ├── test_coverage_push_85.py
-    ├── test_final_coverage_push.py
-    ├── test_simple_coverage_additions.py
-    └── test_ultimate_coverage.py
+└── misc/                    # Cross-cutting coverage tests
+    └── test_coverage_misc.py
 ```
+
+**Note**: Each app directory now also contains a `test_coverage_additional.py` file with additional coverage tests that were extracted from the misc folder.
 
 ## Running Tests
 
