@@ -12,18 +12,19 @@ Complex integration tests go beyond simple unit tests by testing:
 
 ## Test Organization
 
-Integration tests are organized by module, following the repository's existing pattern:
+Integration tests are organized by module within app-specific directories:
 
-- **`test_form_integration.py`** - Form builder workflows, conditional logic, flows, and data aggregation
-- **`test_tba_integration.py`** - The Blue Alliance API integration and event/match synchronization
-- **`test_user_integration.py`** - User authentication, permissions, and access control workflows
-- **`test_attendance_integration.py`** - Attendance tracking, meeting management, and bulk operations
+- **`tests/form/test_form_integration.py`** - Form builder workflows, conditional logic, flows, and data aggregation
+- **`tests/tba/test_tba_integration.py`** - The Blue Alliance API integration and event/match synchronization
+- **`tests/user/test_user_integration.py`** - User authentication, permissions, and access control workflows
+- **`tests/attendance/test_attendance_integration.py`** - Attendance tracking, meeting management, and bulk operations
 
 This organization makes it easy to:
-- Find tests related to specific modules
-- Run tests for a particular component: `pytest tests/test_form_integration.py`
+- Find tests related to specific modules (all tests for an app are in `tests/<app_name>/`)
+- Run tests for a particular component: `pytest tests/form/test_form_integration.py`
+- Run all tests for an app: `pytest tests/form/`
 - Maintain tests alongside related functionality
-- Follow the existing repository structure
+- Follow Django pytest best practices
 
 ## Test Categories
 
@@ -31,7 +32,7 @@ This organization makes it easy to:
 
 These tests validate the form builder system with advanced features:
 
-**Location:** `tests/test_form_integration.py`
+**Location:** `tests/form/test_form_integration.py`
 
 #### Test: `test_question_with_cascading_conditions`
 **Purpose:** Validate that conditional questions can be chained together (A → B → C).
@@ -99,7 +100,7 @@ Onboarding process where students and mentors follow different paths through the
 
 These tests validate The Blue Alliance API integration:
 
-**Location:** `tests/test_tba_integration.py`
+**Location:** `tests/tba/test_tba_integration.py`
 
 #### Test: `test_sync_season_with_multiple_events_and_matches`
 **Purpose:** Test retrieving multiple events for a team in a season.
@@ -155,7 +156,7 @@ Scouting team viewing all their matches to plan scouting assignments.
 
 These tests validate authentication and permission systems:
 
-**Location:** `tests/test_user_integration.py`
+**Location:** `tests/user/test_user_integration.py`
 
 #### Test: `test_multi_level_permission_hierarchy`
 **Purpose:** Test that permission groups work correctly with inheritance.
@@ -200,7 +201,7 @@ API endpoint that requires specific permissions and handles errors gracefully.
 
 These tests validate meeting and attendance tracking:
 
-**Location:** `tests/test_attendance_integration.py`
+**Location:** `tests/attendance/test_attendance_integration.py`
 
 #### Test: `test_meeting_creation_and_queries`
 **Purpose:** Test creating and querying meetings.
@@ -228,7 +229,7 @@ Importing a semester schedule all at once.
 
 These tests validate data analysis and correlation:
 
-**Location:** `tests/test_form_integration.py` (part of form integration tests)
+**Location:** `tests/form/test_form_integration.py` (part of form integration tests)
 
 #### Test: `test_question_aggregate_setup`
 **Purpose:** Test setting up aggregation relationships.
@@ -342,25 +343,25 @@ class TestComplexFormWorkflows:
 
 ```bash
 # Run all integration tests
-poetry run pytest tests/test_*_integration.py -v
+poetry run pytest tests/*/test_*_integration.py -v
 
 # Run a specific module's integration tests
-poetry run pytest tests/test_form_integration.py -v
-poetry run pytest tests/test_tba_integration.py -v
-poetry run pytest tests/test_user_integration.py -v
-poetry run pytest tests/test_attendance_integration.py -v
+poetry run pytest tests/form/test_form_integration.py -v
+poetry run pytest tests/tba/test_tba_integration.py -v
+poetry run pytest tests/user/test_user_integration.py -v
+poetry run pytest tests/attendance/test_attendance_integration.py -v
 
 # Run a specific test class
-poetry run pytest tests/test_form_integration.py::TestComplexFormWorkflows -v
+poetry run pytest tests/form/test_form_integration.py::TestComplexFormWorkflows -v
 
 # Run a specific test
-poetry run pytest tests/test_form_integration.py::TestComplexFormWorkflows::test_question_with_cascading_conditions -v
+poetry run pytest tests/form/test_form_integration.py::TestComplexFormWorkflows::test_question_with_cascading_conditions -v
 
 # Run with verbose output and show print statements
-poetry run pytest tests/test_form_integration.py -v -s
+poetry run pytest tests/form/test_form_integration.py -v -s
 
 # Run without coverage for speed during development
-poetry run pytest tests/test_*_integration.py --no-cov
+poetry run pytest tests/*/test_*_integration.py --no-cov
 ```
 
 ## Adding New Complex Tests
@@ -448,7 +449,7 @@ When contributing complex tests:
 1. Add tests to the appropriate module-specific file (e.g., `test_form_integration.py`)
 2. Follow the existing patterns in that file
 3. Add documentation explaining the business workflow
-4. Ensure tests pass independently: `pytest tests/test_form_integration.py::TestClass::test_method`
+4. Ensure tests pass independently: `pytest tests/form/test_form_integration.py::TestClass::test_method`
 5. Don't break existing tests: `poetry run pytest --no-cov -x`
 6. Update this guide if you introduce new testing patterns or create a new integration test file
 
