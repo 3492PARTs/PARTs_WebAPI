@@ -29,7 +29,7 @@ class AlertType(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.comp_lvl_typ} : {self.comp_lvl_typ_nm}"
+        return f"{self.alert_typ} : {self.alert_typ_nm}"
 
 
 class Alert(models.Model):
@@ -67,4 +67,4 @@ class AlertedResource(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} : {self.subject}"
+        return f"{self.id} : {self.foreign_id}"
