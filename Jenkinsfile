@@ -170,11 +170,10 @@ node {
 
                 sh '''
                     ssh -o StrictHostKeyChecking=no brandon@192.168.1.41 "
-                        cd /home/brandon/PARTs_Website && 
-                        git worktree prune &&
+                        cd /home/brandon/PARTs_WebAPI && 
                         git fetch --prune &&
                         git for-each-ref --format '%(if:equals=gone)%(upstream:track,nobracket)%(then)%(refname:short)%(end)' refs/heads/ | 
-                        xargs -r git branch --delete --force
+                        xargs -r git branch --delete
                     "
                 '''
             } 
