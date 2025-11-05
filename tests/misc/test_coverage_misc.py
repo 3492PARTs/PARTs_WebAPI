@@ -71,14 +71,20 @@ class TestAllModels:
 
     def test_attendance_meeting_creation(self):
         """Test Meeting model creation."""
-        from attendance.models import Meeting
+        from attendance.models import Meeting, MeetingType
         from scouting.models import Season
         
         # Create a season first
         season = Season.objects.create(season="2024", current="y")
+        meeting_type = MeetingType.objects.create(
+            meeting_typ="reg",
+            meeting_nm="Regular Meeting",
+            void_ind="n"
+        )
         
         meeting = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_type,
             title="Test Meeting",
             description="Description",
             start=timezone.now(),
@@ -122,12 +128,18 @@ class TestAllModels:
     
     def test_attendance_meeting_str(self):
         """Test Meeting __str__ method."""
-        from attendance.models import Meeting
+        from attendance.models import Meeting, MeetingType
         from scouting.models import Season
         
         season = Season.objects.create(season="2024", current="y")
+        meeting_type = MeetingType.objects.create(
+            meeting_typ="reg",
+            meeting_nm="Regular Meeting",
+            void_ind="n"
+        )
         meeting = Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_type,
             title="Test Meeting",
             description="Test Description",
             start=timezone.now(),

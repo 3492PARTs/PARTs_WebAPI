@@ -594,7 +594,7 @@ class TestStageMeetingAlerts:
         """Test staging alerts for upcoming meetings."""
         from alerts.util_alert_definitions import stage_meeting_alert
         from alerts.models import AlertType, CommunicationChannelType
-        from attendance.models import Meeting
+        from attendance.models import Meeting, MeetingType
         from scouting.models import Season
         
         # Create communication channel types
@@ -614,10 +614,16 @@ class TestStageMeetingAlerts:
         )
         
         season = Season.objects.create(season="2024", game="Test Game", manual="Test Manual")
+        meeting_type = MeetingType.objects.create(
+            meeting_typ="reg",
+            meeting_nm="Regular Meeting",
+            void_ind="n"
+        )
         
         # Create meeting starting in 10 minutes
         Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_type,
             title="Test Meeting",
             description="Test Description",
             start=timezone.now() + timedelta(minutes=10),
@@ -634,7 +640,7 @@ class TestStageMeetingAlerts:
         """Test staging alerts for ending meetings."""
         from alerts.util_alert_definitions import stage_meeting_alert
         from alerts.models import AlertType, CommunicationChannelType
-        from attendance.models import Meeting
+        from attendance.models import Meeting, MeetingType
         from scouting.models import Season
         
         # Create communication channel types
@@ -654,10 +660,16 @@ class TestStageMeetingAlerts:
         )
         
         season = Season.objects.create(season="2024", game="Test Game", manual="Test Manual")
+        meeting_type = MeetingType.objects.create(
+            meeting_typ="reg",
+            meeting_nm="Regular Meeting",
+            void_ind="n"
+        )
         
         # Create meeting ending now (within the window)
         Meeting.objects.create(
             season=season,
+            meeting_typ=meeting_type,
             title="Test Meeting",
             description="Test Description",
             start=timezone.now() - timedelta(hours=1),
