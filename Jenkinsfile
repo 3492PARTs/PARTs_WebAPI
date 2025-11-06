@@ -155,7 +155,7 @@ node {
                         '''
 
                         sh '''
-                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /wsgi/ /domains/api.parts3492.org/code2/src/parts_webapi
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /wsgi/ /domains/api.parts3492.org/code2/api
                         '''
                     }
                 }
