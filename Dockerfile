@@ -72,9 +72,6 @@ RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
     && rm ./.coveragerc \
     && mkdir /wsgi \
     && mv ./src/parts_webapi/wsgi.py /wsgi/wsgi.py \
-    && mv ./src/* ./ \
-    && rm -r ./src \
-    && mv ./parts_webapi/ ./api \
     && mkdir /scripts \
     && cd /scripts \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
