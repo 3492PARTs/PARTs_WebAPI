@@ -55,7 +55,7 @@ FROM python:3.11-slim AS runtime-production
 WORKDIR /app
 
 # Copy your application code to the container
-COPY ./ ./
+COPY ./ ./ --exclude=tests
 
 # Copy virtual env from build stage
 COPY --from=build /app/requirements.txt ./
@@ -121,7 +121,7 @@ WORKDIR /app
 COPY --from=build ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # ── Copy application source code ───────────────────────────────────────────
-COPY ./ /app
+COPY ./ /app --exclude=tests
 
 # ── Create the non‑privileged user (UID/GID 1000) ────────────────────────
 RUN groupadd -g 1000 appuser && \
