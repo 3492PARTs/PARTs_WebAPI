@@ -1,0 +1,24 @@
+[run]
+omit =
+    */migrations/*
+    manage.py
+    */settings.py
+    */wsgi.py
+    */asgi.py
+    version.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if TYPE_CHECKING:
+    @abstractmethod
+
+# Goal is 100% coverage - currently at 52%
+# fail_under = 100
+fail_under = 50
+show_missing = True
+skip_covered = False
