@@ -6,7 +6,7 @@
 **/.gitignore
 **/.github
 **/.idea
-**/.md
+**/*.md
 **/.project
 **/.settings
 **/.toolstarget
