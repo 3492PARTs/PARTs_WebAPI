@@ -3,7 +3,7 @@ import sys
 from unittest.mock import patch
 
 def test_manage_main_calls_execute(monkeypatch):
-    monkeypatch.setenv("DJANGO_SETTINGS_MODULE", "api.settings")
+    monkeypatch.setenv("DJANGO_SETTINGS_MODULE", "parts_webapi.settings.test")
     module_name = "manage"
     if module_name in sys.modules:
         importlib.reload(sys.modules[module_name])
