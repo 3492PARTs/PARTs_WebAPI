@@ -55,7 +55,7 @@ FROM python:3.11-slim AS runtime-production
 WORKDIR /app
 
 # Copy your application code to the container
-COPY --exclude=./tests ./ ./
+COPY --exclude=./tests ./ ./ 
 
 # Copy virtual env from build stage
 COPY --from=build /app/requirements.txt ./
