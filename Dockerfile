@@ -52,26 +52,26 @@ COPY ./ ./
 # ------------------------------------------------------------
 FROM python:3.11-slim AS runtime-production
 
+# ── Environment variables ───────────────────────────────────────────────────
+ENV PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:${PATH}" \
+    PYTHONPATH=/app/src
+
+# ── Working directory ───────────────────────────────────────────────────────
 WORKDIR /app
 
-# Copy your application code to the container
-COPY --exclude=./tests ./ ./ 
+# ── Pull the virtual‑env built in the previous stage ───────────────────────
+COPY --from=build ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-# Copy virtual env from build stage
-COPY --from=build /app/requirements.txt ./
+# ── Copy application source code ───────────────────────────────────────────
+COPY ./ /app
 
 RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
     && apt update \
     && apt upgrade -y \
     && apt install openssh-client wget -y \
     && pip install paramiko==3.5.1  pysftp \
-    && rm ./poetry.toml \
-    && rm ./poetry.lock \
-    && rm ./pyproject.toml \
-    && rm ./pytest.ini \
-    && rm ./.coveragerc \
-    && mkdir /wsgi \
-    && mv ./src/parts_webapi/wsgi.py /wsgi/wsgi.py \
     && mkdir /scripts \
     && cd /scripts \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
@@ -125,7 +125,7 @@ WORKDIR /app
 COPY --from=build ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # ── Copy application source code ───────────────────────────────────────────
-COPY --exclude=./tests ./ /app
+COPY ./ /app
 
 # ── Create the non‑privileged user (UID/GID 1000) ────────────────────────
 RUN groupadd -g 1000 appuser && \

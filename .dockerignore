@@ -29,3 +29,4 @@
 **/README.md
 **/Jenkinsfile
 version.py
+tests/
