@@ -8,6 +8,8 @@ node {
     // Enable Docker BuildKit for faster builds
     env.DOCKER_BUILDKIT = '1'
     env.BUILDKIT_PROGRESS = 'plain'
+
+    env.BRANCH_NAME = 'main'
     
     try {
         def app
@@ -145,15 +147,15 @@ node {
                         '''
 
                         sh '''
-                        python3.11 /scripts/delete_remote_files.py $ENV_HOST "$USER" "$PASS" /domains/api.parts3492.org/code --exclude_dirs venv logs scripts __pycache__ --keep jwt-key jwt-key.pub .env
+                        python3.11 /scripts/delete_remote_files.py $ENV_HOST "$USER" "$PASS" /domains/api.parts3492.org/code2 --exclude_dirs venv logs scripts __pycache__ --keep jwt-key jwt-key.pub .env
                         '''
 
                         sh '''
-                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /app/ /domains/api.parts3492.org/code
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /app/ /domains/api.parts3492.org/code2
                         '''
 
                         sh '''
-                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /wsgi/ /domains/api.parts3492.org/code/src/parts_webapi
+                        python3.11 /scripts/upload_directory.py $ENV_HOST "$USER" "$PASS" /wsgi/ /domains/api.parts3492.org/code2/src/parts_webapi
                         '''
                     }
                 }
