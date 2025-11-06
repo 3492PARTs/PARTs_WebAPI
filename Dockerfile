@@ -66,8 +66,15 @@ RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
     && apt install openssh-client wget -y \
     && pip install paramiko==3.5.1  pysftp \
     && rm ./poetry.toml \
+    && rm ./poetry.lock \
+    && rm ./pyproject.toml \
+    && rm ./pytest.ini \
+    && rm ./.coveragerc \
     && mkdir /wsgi \
-    && cp ./src/parts_webapi/wsgi.py /wsgi/wsgi.py \
+    && mv ./src/parts_webapi/wsgi.py /wsgi/wsgi.py \
+    && mv ./src/* ./ \
+    && rm -r ./src \
+    && mv ./parts_webapi/ ./api \
     && mkdir /scripts \
     && cd /scripts \
     && wget https://raw.githubusercontent.com/bduke-dev/scripts/main/delete_remote_files.py \
@@ -121,7 +128,7 @@ WORKDIR /app
 COPY --from=build ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # ── Copy application source code ───────────────────────────────────────────
-COPY --exclude=tests ./ /app 
+COPY --exclude=./tests ./ /app
 
 # ── Create the non‑privileged user (UID/GID 1000) ────────────────────────
 RUN groupadd -g 1000 appuser && \
