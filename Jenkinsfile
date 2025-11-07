@@ -35,6 +35,10 @@ node {
                 env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
                 env.DEPENDENCY_GROUP = "wvnet"
                 env.RUNTIME_TARGET = "runtime-production"
+
+                sh'''
+                sed -i "s/parts_webapi.settings.development/parts_webapi.settings.production/g" src/manage.py
+                '''
             }
             else {
                 env.DEPLOY_PATH = "\\/app"
