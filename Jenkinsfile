@@ -35,10 +35,6 @@ node {
                 env.DEPLOY_URL = "https:\\/\\/api.parts3492.org"
                 env.DEPENDENCY_GROUP = "wvnet"
                 env.RUNTIME_TARGET = "runtime-production"
-
-                sh'''
-                sed -i "s/parts_webapi.settings.development/parts_webapi.settings.production/g" src/manage.py
-                '''
             }
             else {
                 env.DEPLOY_PATH = "\\/app"
@@ -54,7 +50,8 @@ node {
                 && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/refresh-event-team-info.sh \
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/refresh-event-team-info.sh \
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab \
-                && sed -i "s/BUILD/$SHA/g" src/parts_webapi/settings/base.py
+                && sed -i "s/BUILD/$SHA/g" src/parts_webapi/settings/base.py \
+                && sed -i "s/parts_webapi.settings.development/parts_webapi.settings.production/g" src/manage.py
             '''
         }
 
