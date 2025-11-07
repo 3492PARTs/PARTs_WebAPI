@@ -262,11 +262,23 @@ python manage.py collectstatic
 
 ## Contributing
 
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+**Quick Start:**
 1. Create a new branch for your feature
 2. Write tests for new functionality
 3. Ensure all tests pass: `poetry run pytest`
-4. Ensure code follows project standards
+4. Follow the [Django Best Practices](DJANGO_BEST_PRACTICES.md)
 5. Submit a pull request
+
+**Key Guidelines:**
+- Use explicit imports (no `from module import *`)
+- Add `app_name` to all `urls.py` files
+- Name all URL patterns
+- Write tests for all new code
+- Add docstrings to public functions
+
+See [DJANGO_BEST_PRACTICES.md](DJANGO_BEST_PRACTICES.md) for comprehensive coding standards.
 
 ## CI/CD
 
