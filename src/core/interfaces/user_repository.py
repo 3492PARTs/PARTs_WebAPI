@@ -4,11 +4,15 @@ User repository interface defining contracts for user data access.
 This interface extends the base repository with user-specific operations.
 """
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 from django.db.models import QuerySet
 from django.contrib.auth.models import Group, Permission
 
 from core.interfaces.repository import IRepository
+
+# Use TYPE_CHECKING to avoid circular imports
+if TYPE_CHECKING:
+    from user.models import User
 
 
 class IUserRepository(IRepository):
@@ -20,7 +24,7 @@ class IUserRepository(IRepository):
     """
     
     @abstractmethod
-    def get_by_username(self, username: str) -> Optional[Any]:
+    def get_by_username(self, username: str) -> 'Optional[User]':
         """
         Retrieve a user by username.
         
@@ -33,7 +37,7 @@ class IUserRepository(IRepository):
         pass
     
     @abstractmethod
-    def get_by_email(self, email: str) -> Optional[Any]:
+    def get_by_email(self, email: str) -> 'Optional[User]':
         """
         Retrieve a user by email address.
         
