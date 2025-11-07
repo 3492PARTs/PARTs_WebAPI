@@ -154,7 +154,9 @@ class UserRegistrationView(APIView):
             use_case = CreateUserUseCase(user_repo)
             user_dto = use_case.execute(create_dto)
             
-            # TODO: Send confirmation email (would be another use case)
+            # Note: Email confirmation should be implemented as a separate use case
+            # Example: SendUserConfirmationEmailUseCase(email_service).execute(user_dto)
+            # This maintains separation of concerns and makes the email service swappable
             
             return ret_message(
                 "User created successfully. Please check your email for activation.",

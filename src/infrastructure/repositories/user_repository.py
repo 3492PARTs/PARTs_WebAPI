@@ -14,6 +14,10 @@ from user.models import User, PhoneType, Link
 from core.interfaces.user_repository import IUserRepository
 
 
+# Constants
+ADMIN_GROUP_NAME = "Admin"
+
+
 class DjangoUserRepository(IUserRepository):
     """
     Django ORM implementation of IUserRepository.
@@ -30,16 +34,32 @@ class DjangoUserRepository(IUserRepository):
             return None
     
     def get_by_username(self, username: str) -> Optional[User]:
-        """Retrieve a user by username."""
+        """
+        Retrieve a user by username (case-insensitive).
+        
+        Args:
+            username: The username to search for
+            
+        Returns:
+            User if found, None otherwise
+        """
         try:
-            return User.objects.get(username=username.lower())
+            return User.objects.get(username__iexact=username)
         except User.DoesNotExist:
             return None
     
     def get_by_email(self, email: str) -> Optional[User]:
-        """Retrieve a user by email address."""
+        """
+        Retrieve a user by email address (case-insensitive).
+        
+        Args:
+            email: The email to search for
+            
+        Returns:
+            User if found, None otherwise
+        """
         try:
-            return User.objects.get(email=email.lower())
+            return User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             return None
     
@@ -99,7 +119,7 @@ class DjangoUserRepository(IUserRepository):
         
         if exclude_admin:
             try:
-                admin_group = Group.objects.get(name="Admin")
+                admin_group = Group.objects.get(name=ADMIN_GROUP_NAME)
                 query = query & ~Q(groups__in=[admin_group])
             except Group.DoesNotExist:
                 pass  # No admin group exists yet

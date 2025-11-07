@@ -91,6 +91,12 @@ class GetUsersUseCase:
     """
     
     def __init__(self, user_repository: IUserRepository):
+        """
+        Initialize the use case with required dependencies.
+        
+        Args:
+            user_repository: Repository for user data access
+        """
         self.user_repository = user_repository
     
     def execute(self, is_active: Optional[bool] = None, exclude_admin: bool = False) -> List[UserDTO]:
@@ -134,6 +140,12 @@ class CreateUserUseCase:
     """
     
     def __init__(self, user_repository: IUserRepository):
+        """
+        Initialize the use case with required dependencies.
+        
+        Args:
+            user_repository: Repository for user data access
+        """
         self.user_repository = user_repository
     
     def execute(self, dto: CreateUserDTO) -> UserDTO:
@@ -195,6 +207,12 @@ class UpdateUserUseCase:
     """
     
     def __init__(self, user_repository: IUserRepository):
+        """
+        Initialize the use case with required dependencies.
+        
+        Args:
+            user_repository: Repository for user data access
+        """
         self.user_repository = user_repository
     
     def execute(self, dto: UpdateUserDTO) -> UserDTO:
@@ -267,6 +285,12 @@ class CheckUserAccessUseCase:
     """
     
     def __init__(self, user_repository: IUserRepository):
+        """
+        Initialize the use case with required dependencies.
+        
+        Args:
+            user_repository: Repository for user data access
+        """
         self.user_repository = user_repository
     
     def execute(self, user_id: int, required_permissions: List[str]) -> bool:
@@ -295,6 +319,12 @@ class GetUsersInGroupUseCase:
     """
     
     def __init__(self, user_repository: IUserRepository):
+        """
+        Initialize the use case with required dependencies.
+        
+        Args:
+            user_repository: Repository for user data access
+        """
         self.user_repository = user_repository
     
     def execute(self, group_name: str) -> List[UserDTO]:
@@ -329,6 +359,12 @@ class GetUsersWithPermissionUseCase:
     """
     
     def __init__(self, user_repository: IUserRepository):
+        """
+        Initialize the use case with required dependencies.
+        
+        Args:
+            user_repository: Repository for user data access
+        """
         self.user_repository = user_repository
     
     def execute(self, permission_codename: str) -> List[UserDTO]:
