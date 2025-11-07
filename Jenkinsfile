@@ -8,8 +8,6 @@ node {
     // Enable Docker BuildKit for faster builds
     env.DOCKER_BUILDKIT = '1'
     env.BUILDKIT_PROGRESS = 'plain'
-
-    env.BRANCH_NAME = 'main'
     
     try {
         def app
