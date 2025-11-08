@@ -2,6 +2,21 @@
 
 Putnam Area Robotics Team Web API - A Django REST Framework application for managing team operations.
 
+## Documentation
+
+📚 **[Complete Documentation Index](docs/README.md)**
+
+### Quick Links
+- **[Poetry Setup Guide](docs/POETRY.md)** - Comprehensive guide to using Poetry for dependency management
+- **[Contributing Guidelines](CONTRIBUTING.md)** - How to contribute to this project
+- **[Django Best Practices](DJANGO_BEST_PRACTICES.md)** - Coding standards and patterns
+- **[Testing Guide](TESTING.md)** - Testing strategy and coverage roadmap
+- **[Test Organization](tests/README.md)** - How tests are organized
+
+### Project History
+- **[Reorganization Summary](docs/REORGANIZATION_SUMMARY.md)** - Project structure changes
+- **[Refactoring Summary](docs/REFACTORING_SUMMARY.md)** - Code quality improvements
+
 ## Project Structure
 
 The project follows Django best practices with a `src/` layout:
@@ -30,6 +45,11 @@ PARTs_WebAPI/
 │   ├── tba/                  # The Blue Alliance integration
 │   └── user/                 # User management app
 ├── tests/                    # Test suite
+├── docs/                     # Documentation
+│   ├── README.md            # Documentation index
+│   ├── POETRY.md            # Poetry setup guide
+│   ├── REORGANIZATION_SUMMARY.md
+│   └── REFACTORING_SUMMARY.md
 ├── templates/                # Django templates
 ├── .env.example              # Environment variables template
 ├── requirements.txt          # Python dependencies
@@ -42,7 +62,7 @@ PARTs_WebAPI/
 ### Prerequisites
 
 - Python 3.11 or higher
-- Poetry (Python package manager)
+- Poetry (Python package manager) - See [Poetry Setup Guide](docs/POETRY.md) for detailed installation and usage
 
 ### Installation
 
@@ -57,10 +77,11 @@ cd PARTs_WebAPI
 poetry install --with dev
 ```
 
-Or using pip:
-```bash
-pip install -r requirements.txt
-```
+> 📖 **New to Poetry?** Check out our comprehensive [Poetry Setup Guide](docs/POETRY.md) for:
+> - Installing Poetry
+> - Understanding dependency groups (dev, wvnet, uat)
+> - Common commands and workflows
+> - Troubleshooting tips
 
 3. Set up environment variables:
 
@@ -158,11 +179,6 @@ DJANGO_SETTINGS_MODULE=parts_webapi.settings.development
 Run all tests with coverage:
 ```bash
 poetry run pytest
-```
-
-Or with pip:
-```bash
-pytest
 ```
 
 Run tests without coverage (faster for development):
