@@ -6,7 +6,7 @@ Thank you for your interest in contributing to PARTs WebAPI! This document provi
 
 ### Prerequisites
 - Python 3.11 or higher
-- Poetry (for dependency management)
+- Poetry (for dependency management) - See [Poetry Setup Guide](docs/POETRY.md)
 - Git
 
 ### Setup Development Environment
@@ -21,6 +21,11 @@ Thank you for your interest in contributing to PARTs WebAPI! This document provi
    ```bash
    poetry install --with dev
    ```
+   
+   > 📖 **Need help with Poetry?** See our [Poetry Setup Guide](docs/POETRY.md) for detailed instructions on:
+   > - Installing Poetry
+   > - Understanding dependency groups
+   > - Common commands and troubleshooting
 
 3. **Set up environment variables:**
    ```bash
@@ -348,10 +353,13 @@ Update README.md when:
 - Check existing documentation
 
 ### Resources
+- [Poetry Setup Guide](docs/POETRY.md) - Dependency management guide
 - [Django Documentation](https://docs.djangoproject.com/)
 - [Django REST Framework](https://www.django-rest-framework.org/)
 - [Project Best Practices](DJANGO_BEST_PRACTICES.md)
-- [Testing Guide](tests/README.md)
+- [Testing Guide](TESTING.md)
+- [Test Organization](tests/README.md)
+- [Documentation Index](docs/README.md)
 
 ## License
 
