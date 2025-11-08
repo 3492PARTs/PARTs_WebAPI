@@ -7,9 +7,11 @@ from attendance.views import (
     MeetingHoursView,
 )
 
+app_name = "attendance"
+
 urlpatterns = [
-    path("attendance/", AttendanceView.as_view()),
-    path("meetings/", MeetingsView.as_view()),
-    path("attendance-report/", AttendanceReportView.as_view()),
-    path("meeting-hours/", MeetingHoursView.as_view()),
+    path("attendance/", AttendanceView.as_view(), name="attendance"),
+    path("meetings/", MeetingsView.as_view(), name="meetings"),
+    path("attendance-report/", AttendanceReportView.as_view(), name="attendance-report"),
+    path("meeting-hours/", MeetingHoursView.as_view(), name="meeting-hours"),
 ]
