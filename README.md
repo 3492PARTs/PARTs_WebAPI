@@ -83,11 +83,6 @@ poetry install --with dev
 > - Common commands and workflows
 > - Troubleshooting tips
 
-Or using pip:
-```bash
-pip install -r requirements.txt
-```
-
 3. Set up environment variables:
 
 Copy the example environment file:
@@ -184,11 +179,6 @@ DJANGO_SETTINGS_MODULE=parts_webapi.settings.development
 Run all tests with coverage:
 ```bash
 poetry run pytest
-```
-
-Or with pip:
-```bash
-pytest
 ```
 
 Run tests without coverage (faster for development):
