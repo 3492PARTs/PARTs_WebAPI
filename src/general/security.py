@@ -175,11 +175,11 @@ def ret_message(
             ErrorLog(
                 user=user,
                 path=path,
-                message=message[:1000],
+                message=str(message)[:1000],
                 exception=str(exception)[:4000],
                 traceback=str(tb)[:4000],
                 error_message=(
-                    error_message[:4000] if error_message is not None else None
+                    str(error_message)[:4000] if error_message is not None else None
                 ),
                 time=timezone.now(),
                 void_ind="n",
@@ -188,7 +188,7 @@ def ret_message(
             try:
                 ErrorLog(
                     user=User.objects.get(id=-1),
-                    path="general.security.ret_message",
+                    path=f"general.security.ret_message-{path}",
                     message=f"Error logging error:\n{message}",
                     exception=str(e)[:4000],
                     time=timezone.now(),
