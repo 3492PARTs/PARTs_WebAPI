@@ -570,7 +570,7 @@ def stage_meeting_alert(start_or_end: bool = True) -> str:
         meeting_time = Q(start__lte=timezone.now() + timedelta(minutes=20))
 
         if not start_or_end:
-            meeting_time = Q(end__lte=timezone.now())
+            meeting_time = Q(end__lte=timezone.now() + timedelta(minutes=5))
 
         excluded_ids = (
             AlertedResource.objects.filter(Q(alert_typ=alert_typ) & Q(void_ind="n"))
