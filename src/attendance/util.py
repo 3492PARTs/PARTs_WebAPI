@@ -2,6 +2,10 @@ from typing import Any
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q, QuerySet
+from django.utils.timezone import now as timezone_now
+from datetime import datetime, time
+import pytz
+from django.utils.timezone import localtime
 
 from user.models import User
 from attendance.models import Attendance, Meeting, AttendanceApprovalType, MeetingType
@@ -61,16 +65,29 @@ def get_meeting_hours() -> dict[float, float, float]:
     Calculate total hours, bonus hours, and event hours from all meetings in the current season.
 
     Returns:
-        Dictionary with 'hours' (regular meeting hours), 'bonus_hours' (bonus meeting hours), 
+        Dictionary with 'hours' (regular meeting hours), 'bonus_hours' (bonus meeting hours),
         and 'event_hours' (event hours) keys
 
     Raises:
         Exception: If any meeting is missing an end time
     """
+
+    # Get the current time in the default timezone
+    local_now = localtime().astimezone(pytz.timezone("America/New_York"))
+
+    # Set midnight (00:00:00) of the current day in the local timezone
+    local_midnight = datetime.combine(
+        local_now.date(), time.min, tzinfo=local_now.tzinfo
+    )
+    # Convert it to UTC
+    utc_midnight = local_midnight.astimezone(pytz.utc)
+
     meetings = get_meetings()
-    total = 0
+    total_past = 0
+    total_future = 0
     bonus = 0
     event = 0
+
     for meeting in meetings:
         if meeting.end is None:
             raise Exception("There is a meeting without an end time")
@@ -79,14 +96,18 @@ def get_meeting_hours() -> dict[float, float, float]:
 
         match meeting.meeting_typ.meeting_typ:
             case "reg":
-                total += diff
+                if meeting.end <= utc_midnight:
+                    total_past += diff
+                else:
+                    total_future += diff
             case "evnt":
                 event += diff
             case "bns":
                 bonus += diff
 
     return {
-        "hours": round(total, 2),
+        "hours": round(total_past, 2),
+        "hours_future": round(total_future, 2),
         "bonus_hours": round(bonus, 2),
         "event_hours": round(event, 2),
     }

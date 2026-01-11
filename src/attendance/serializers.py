@@ -44,5 +44,6 @@ class AttendanceReportSerializer(serializers.Serializer):
 
 class MeetingHoursSerializer(serializers.Serializer):
     hours = serializers.FloatField()
+    hours_future = serializers.FloatField()
     bonus_hours = serializers.FloatField()
     event_hours = serializers.FloatField()
