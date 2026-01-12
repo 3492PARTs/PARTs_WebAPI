@@ -7,6 +7,8 @@ from datetime import datetime, time
 import pytz
 from django.utils.timezone import localtime
 
+from attendance.serializers import MeetingSerializer
+from user.serializers import UserSerializer
 from user.models import User
 from attendance.models import Attendance, Meeting, AttendanceApprovalType, MeetingType
 import scouting.util
@@ -200,7 +202,7 @@ def get_attendance(
         & Q(season=scouting.util.get_current_season())
         & (Q(meeting__isnull=True) | Q(meeting__void_ind="n"))
         & Q(void_ind="n")
-    ).order_by("-time_in", "user__first_name", "user__last_name")
+    ).order_by("user__first_name", "user__last_name", "-time_in")
 
 
 def save_attendance(attendance):
@@ -244,3 +246,29 @@ def save_attendance(attendance):
 
     a.save()
     return a
+
+
+def end_meeting(meeting_id: int):
+    """
+    End a meeting by marking all users with no attendance record absent.
+
+    Args:
+        meeting_id: Specific meeting to end
+    """
+
+    meeting = Meeting.objects.get(id=meeting_id)
+
+    users = user.util.get_users(1, 0).filter(
+        ~Q(id__in=meeting.attendance_set.filter(void_ind="n").values("user_id"))
+    )
+
+    for u in users:
+        att = {
+            "user": UserSerializer(u).data,
+            "meeting": MeetingSerializer(meeting).data,
+            "time_in": meeting.start,
+            "absent": True,
+            "approval_typ": {"approval_typ": "app"},
+            "void_ind": "n",
+        }
+        save_attendance(att)

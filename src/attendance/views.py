@@ -20,10 +20,10 @@ auth_obj_meeting = "meetings"
 class AttendanceView(APIView):
     """
     API endpoint to manage attendance records.
-    
+
     Authentication required: JWT
     Permission required: attendance
-    
+
     GET: Returns attendance records filtered by user and/or meeting
     POST: Creates or updates an attendance entry
     """
@@ -35,14 +35,15 @@ class AttendanceView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to retrieve attendance records.
-        
+
         Query parameters:
             user_id: Optional user ID to filter by
             meeting_id: Optional meeting ID to filter by
-            
+
         Returns:
             Response with list of attendance records or error message
         """
+
         def fun():
             att = attendance.util.get_attendance(
                 request.query_params.get("user_id", None),
@@ -62,12 +63,13 @@ class AttendanceView(APIView):
     def post(self, request, format=None) -> Response:
         """
         POST endpoint to create or update an attendance entry.
-        
+
         Request body: Attendance object with user, meeting, time_in, time_out, etc.
-        
+
         Returns:
             Success message or error response
         """
+
         def fun():
             serializer = AttendanceSerializer(data=request.data)
             if not serializer.is_valid():
@@ -94,10 +96,10 @@ class AttendanceView(APIView):
 class MeetingsView(APIView):
     """
     API endpoint to manage meetings.
-    
+
     Authentication required: JWT
     Permission required: attendance or meetings
-    
+
     GET: Returns all meetings for the current season
     POST: Creates or updates a meeting
     """
@@ -109,10 +111,11 @@ class MeetingsView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to retrieve all meetings.
-        
+
         Returns:
             Response with list of meetings or error message
         """
+
         def fun():
             mtgs = attendance.util.get_meetings()
             serializer = MeetingSerializer(mtgs, many=True)
@@ -129,12 +132,13 @@ class MeetingsView(APIView):
     def post(self, request, format=None) -> Response:
         """
         POST endpoint to create or update a meeting.
-        
+
         Request body: Meeting object with title, description, start, end, meeting_typ, etc.
-        
+
         Returns:
             Success message or error response
         """
+
         def fun():
             serializer = MeetingSerializer(data=request.data)
             if not serializer.is_valid():
@@ -161,10 +165,10 @@ class MeetingsView(APIView):
 class AttendanceReportView(APIView):
     """
     API endpoint to get attendance reports showing hours and percentages.
-    
+
     Authentication required: JWT
     Permission required: attendance
-    
+
     GET: Returns attendance report for users
     """
 
@@ -175,14 +179,15 @@ class AttendanceReportView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to retrieve attendance report.
-        
+
         Query parameters:
             user_id: Optional user ID to filter by
             meeting_id: Optional meeting ID to filter by
-            
+
         Returns:
             Response with attendance statistics or error message
         """
+
         def fun():
             att = attendance.util.get_attendance_report(
                 request.query_params.get("user_id", None),
@@ -203,10 +208,10 @@ class AttendanceReportView(APIView):
 class MeetingHoursView(APIView):
     """
     API endpoint to get total meeting hours for the current season.
-    
+
     Authentication required: JWT
     Permission required: attendance
-    
+
     GET: Returns total hours, bonus hours, and event hours
     """
 
@@ -217,10 +222,11 @@ class MeetingHoursView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to retrieve total meeting hours.
-        
+
         Returns:
             Response with hours, bonus_hours, and event_hours or error message
         """
+
         def fun():
             serializer = MeetingHoursSerializer(attendance.util.get_meeting_hours())
             return Response(serializer.data)
@@ -230,5 +236,40 @@ class MeetingHoursView(APIView):
             request.user.id,
             auth_obj,
             "An error occurred while getting the total meeting hours.",
+            fun,
+        )
+
+
+class EndMeetingView(APIView):
+    """
+    API endpoint to end a meeting.
+
+    Authentication required: JWT
+    Permission required: attendance
+
+    GET: Returns success message after ending the meeting
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "meeting-hours/"
+
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to end a meeting.
+
+        Returns:
+            Response success message
+        """
+
+        def fun():
+            attendance.util.end_meeting(request.query_params.get("meeting_id", None))
+            return ret_message("Meeting ended successfully.")
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while ending the meeting.",
             fun,
         )

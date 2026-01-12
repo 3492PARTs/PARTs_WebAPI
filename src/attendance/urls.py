@@ -5,6 +5,7 @@ from attendance.views import (
     MeetingsView,
     AttendanceReportView,
     MeetingHoursView,
+    EndMeetingView,
 )
 
 app_name = "attendance"
@@ -12,6 +13,9 @@ app_name = "attendance"
 urlpatterns = [
     path("attendance/", AttendanceView.as_view(), name="attendance"),
     path("meetings/", MeetingsView.as_view(), name="meetings"),
-    path("attendance-report/", AttendanceReportView.as_view(), name="attendance-report"),
+    path(
+        "attendance-report/", AttendanceReportView.as_view(), name="attendance-report"
+    ),
     path("meeting-hours/", MeetingHoursView.as_view(), name="meeting-hours"),
+    path("end-meeting/", EndMeetingView.as_view(), name="meeting-hours"),
 ]
