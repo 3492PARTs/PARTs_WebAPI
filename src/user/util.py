@@ -9,17 +9,30 @@ import general.cloudinary
 import general.security
 
 
-def get_user(user_id: int) -> dict[str, Any]:
+def get_user(user_id: int) -> User:
     """
-    Get comprehensive user information including permissions and links.
-    
+    Get user object.
+
     Args:
         user_id: The ID of the user to retrieve
-        
+
+    Returns:
+        User object
+    """
+    return User.objects.get(id=user_id)
+
+
+def get_user_parsed(user_id: int) -> dict[str, Any]:
+    """
+    Get comprehensive user information including permissions and links.
+
+    Args:
+        user_id: The ID of the user to retrieve
+
     Returns:
         Dictionary containing user details, permissions, groups, and accessible links
     """
-    usr = User.objects.get(id=user_id)
+    usr = get_user(user_id)
 
     permissions = general.security.get_user_permissions(user_id)
 
@@ -50,11 +63,11 @@ def get_user(user_id: int) -> dict[str, Any]:
 def get_users(active: int, admin: bool) -> QuerySet[User]:
     """
     Get a filtered list of users based on active status and admin exclusion.
-    
+
     Args:
         active: Filter by active status. -1 or 1 for active=True, other values for no filter
         admin: If False, exclude users in the Admin group
-        
+
     Returns:
         QuerySet of User objects ordered by active status and name
     """
@@ -81,11 +94,11 @@ def get_users(active: int, admin: bool) -> QuerySet[User]:
 def save_user(data: dict[str, Any]) -> User:
     """
     Update a user's information and group memberships.
-    
+
     Args:
-        data: Dictionary containing user fields to update (username, first_name, last_name, 
+        data: Dictionary containing user fields to update (username, first_name, last_name,
               email, discord_user_id, phone, phone_type_id, is_active, groups)
-              
+
     Returns:
         The updated User object
     """
@@ -119,10 +132,10 @@ def save_user(data: dict[str, Any]) -> User:
 def get_user_groups(user_id: int) -> QuerySet[Group]:
     """
     Get all groups a user belongs to.
-    
+
     Args:
         user_id: The ID of the user
-        
+
     Returns:
         QuerySet of Group objects ordered by name
     """
@@ -134,7 +147,7 @@ def get_user_groups(user_id: int) -> QuerySet[Group]:
 def get_phone_types() -> QuerySet[PhoneType]:
     """
     Get all available phone types for SMS messaging.
-    
+
     Returns:
         QuerySet of PhoneType objects ordered by carrier
     """
@@ -144,10 +157,10 @@ def get_phone_types() -> QuerySet[PhoneType]:
 def delete_phone_type(phone_type_id: int) -> None:
     """
     Delete a phone type if no users are using it.
-    
+
     Args:
         phone_type_id: The ID of the phone type to delete
-        
+
     Raises:
         ValueError: If there are users associated with this phone type
     """
@@ -162,10 +175,10 @@ def delete_phone_type(phone_type_id: int) -> None:
 def get_users_in_group(name: str) -> QuerySet[User]:
     """
     Get all active users in a specific group.
-    
+
     Args:
         name: The name of the group
-        
+
     Returns:
         QuerySet of active User objects in the specified group
     """
@@ -175,10 +188,10 @@ def get_users_in_group(name: str) -> QuerySet[User]:
 def get_users_with_permission(codename: str) -> QuerySet[User]:
     """
     Get all active users who have a specific permission through their group memberships.
-    
+
     Args:
         codename: The permission codename to check for
-        
+
     Returns:
         QuerySet of distinct User objects with the specified permission
     """
@@ -193,7 +206,7 @@ def get_users_with_permission(codename: str) -> QuerySet[User]:
 def get_groups() -> QuerySet[Group]:
     """
     Get all available permission groups.
-    
+
     Returns:
         QuerySet of Group objects ordered by name
     """
@@ -203,7 +216,7 @@ def get_groups() -> QuerySet[Group]:
 def save_group(data: dict[str, Any]) -> None:
     """
     Create or update a permission group and its permissions.
-    
+
     Args:
         data: Dictionary containing group data (id, name, permissions)
               If id is None, creates a new group
@@ -233,7 +246,7 @@ def save_group(data: dict[str, Any]) -> None:
 def delete_group(group_id: int) -> None:
     """
     Delete a group and its scout auth group association if it exists.
-    
+
     Args:
         group_id: The ID of the group to delete
     """
@@ -247,7 +260,7 @@ def delete_group(group_id: int) -> None:
 def get_permissions() -> QuerySet[Permission]:
     """
     Get all custom permissions (those with content_type_id=-1).
-    
+
     Returns:
         QuerySet of Permission objects ordered by name
     """
@@ -257,7 +270,7 @@ def get_permissions() -> QuerySet[Permission]:
 def save_permission(data: dict[str, Any]) -> None:
     """
     Create or update a custom permission.
-    
+
     Args:
         data: Dictionary containing permission data (id, name, codename)
               If id is None, creates a new permission

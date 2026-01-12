@@ -13,6 +13,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from pytz import utc
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import (
@@ -33,6 +34,7 @@ from .serializers import (
 )
 from .models import User, Link
 from general.security import (
+    access_response,
     get_user_groups,
     get_user_permissions,
     ret_message,
@@ -739,7 +741,7 @@ class UserData(APIView):
 
     def get(self, request, format=None):
         try:
-            req = user.util.get_user(self.request.user.id)
+            req = user.util.get_user_parsed(self.request.user.id)
             serializer = UserSerializer(req)
             return Response(serializer.data)
         except Exception as e:
@@ -1184,6 +1186,45 @@ class Links(APIView):
                 app_url + self.endpoint,
                 request.user.id,
             )
+
+
+class SimulateUser(APIView):
+    """API Endpoint to simulate another user"""
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "simulate/"
+
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to get another user profile to simulate.
+
+        Query parameters:
+            user_id: User id of user to simulate
+
+        Returns:
+            Response with user to simulate or error message
+        """
+
+        def fun():
+            user_id = request.query_params.get("user_id", None)
+            u = user.util.get_user(user_id)
+            refresh = RefreshToken.for_user(u)
+            serializer = TokenRefreshSerializer(
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                }
+            )
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while getting attendance.",
+            fun,
+        )
 
 
 # Backward compatibility aliases (can be removed in future versions)
