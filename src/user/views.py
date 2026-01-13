@@ -262,20 +262,24 @@ class UserProfile(APIView):
 
     def put(self, request, pk=None):
         try:
-            user = User.objects.get(id=self.request.user.id)
-            if user.is_authenticated:
-                if user is None:
-                    return ret_message(
-                        "An error occurred while updating user data.",
-                        True,
-                        app_url + self.endpoint,
-                        -1,
-                    )
+            if request.user.is_authenticated:
                 serializer = UserUpdateSerializer(data=request.data)
                 # flag used to email user the user's old email about the change in the event that both the email and
                 # password are updated
                 password_changed = False
                 if serializer.is_valid():
+                    user = User.objects.get(id=serializer.validated_data["id"])
+
+                    if request.user.id != user.id and not has_access(
+                        request.user.id, "admin"
+                    ):
+                        return ret_message(
+                            "You do not have permission to update this user.",
+                            True,
+                            app_url + self.endpoint,
+                            request.user.id,
+                        )
+
                     if "password" in serializer.validated_data:
                         try:
                             validate_password(
@@ -379,10 +383,10 @@ class UserProfile(APIView):
                     if "last_name" in serializer.validated_data:
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
-                        if user.img_id:
-                            response = general.cloudinary.upload_image(
-                                serializer.validated_data["image"], user.img_id
-                            )
+                        response = general.cloudinary.upload_image(
+                            serializer.validated_data["image"], user.img_id
+                        )
+
                         user.img_id = response["public_id"]
                         user.img_ver = str(response["version"])
                     if request.user.is_superuser:  # only allow role editing if admin
@@ -1023,7 +1027,7 @@ class UsersView(APIView):
 
     def get(self, request, format=None):
         try:
-            req = user.util.get_users(
+            req = user.util.get_users_parsed(
                 int(request.query_params.get("is_active", "0")),
                 int(request.query_params.get("is_admin", "0")),
             )

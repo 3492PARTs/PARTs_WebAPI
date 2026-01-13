@@ -34,13 +34,26 @@ def get_user_parsed(user_id: int) -> dict[str, Any]:
     """
     usr = get_user(user_id)
 
-    permissions = general.security.get_user_permissions(user_id)
+    return parse_user(usr)
+
+
+def parse_user(usr: User) -> dict[str, Any]:
+    """
+    Parse a User object into a dictionary with detailed information.
+
+    Args:
+        usr: The User object to parse
+
+    Returns:
+        Dictionary containing user details, permissions, groups, and accessible links
+    """
+    permissions = general.security.get_user_permissions(usr.id)
 
     user_links = Link.objects.filter(
         Q(permission__in=permissions) | Q(permission_id__isnull=True)
     ).order_by("order")
 
-    usr = {
+    usr_dict = {
         "id": usr.id,
         "username": usr.username,
         "email": usr.email,
@@ -57,7 +70,7 @@ def get_user_parsed(user_id: int) -> dict[str, Any]:
         "links": user_links,
     }
 
-    return usr
+    return usr_dict
 
 
 def get_users(active: int, admin: bool) -> QuerySet[User]:
@@ -89,6 +102,25 @@ def get_users(active: int, admin: bool) -> QuerySet[User]:
     # Q(date_joined__isnull=False) &
 
     return users
+
+
+def get_users_parsed(active: int, admin: bool) -> list[dict[str, Any]]:
+    """
+    Get a list of parsed user dictionaries based on active status and admin exclusion.
+
+    Args:
+        active: Filter by active status. -1 or 1 for active=True, other values for no filter
+        admin: If False, exclude users in the Admin group
+    Returns:
+        List of dictionaries containing user details
+    """
+    users = get_users(active, admin)
+    users_parsed = []
+
+    for u in users:
+        users_parsed.append(parse_user(u))
+
+    return users_parsed
 
 
 def save_user(data: dict[str, Any]) -> User:

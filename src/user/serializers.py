@@ -115,6 +115,7 @@ class UserCreationSerializer(serializers.Serializer):
 class UserUpdateSerializer(serializers.Serializer):
     """Serializer for updating user profile information."""
 
+    id = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
     password = serializers.CharField(required=False)
     first_name = serializers.CharField(required=False)
