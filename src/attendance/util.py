@@ -155,6 +155,8 @@ def get_attendance_report(
                     match att.meeting.meeting_typ.meeting_typ:
                         case "reg":
                             reg_time += diff
+                        case "bns":
+                            reg_time += diff
                         case "evnt":
                             event_time += diff
 
