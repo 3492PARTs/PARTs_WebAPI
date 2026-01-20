@@ -1,6 +1,7 @@
 """
 Comprehensive tests for user app views and utilities.
 """
+
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from rest_framework import status
@@ -14,36 +15,39 @@ class TestUserViews:
     def test_user_profile_get(self, api_rf, test_user):
         """Test UserProfile GET method."""
         from user.views import UserProfile
-        
-        with patch('user.views.user.util.get_user') as mock_get:
+
+        with patch("user.views.user.util.get_user") as mock_get:
             mock_get.return_value = {"id": test_user.id, "username": "testuser"}
-            
-            request = api_rf.get(f'/user/profile/{test_user.id}/')
+
+            request = api_rf.get(f"/user/profile/{test_user.id}/")
             force_authenticate(request, user=test_user)
             view = UserProfile.as_view()
             response = view(request, id=test_user.id)
-            
-            assert hasattr(response, 'status_code')
+
+            assert hasattr(response, "status_code")
 
     def test_user_profile_put(self, api_rf, test_user):
         """Test UserProfile PUT method."""
         from user.views import UserProfile
-        
-        with patch('user.views.user.util.save_user') as mock_save, \
-             patch('user.views.has_access', return_value=True):
+
+        with patch("user.views.user.util.save_user") as mock_save, patch(
+            "user.views.has_access", return_value=True
+        ):
             mock_save.return_value = test_user
-            
-            request = api_rf.put(f'/user/profile/{test_user.id}/', {"username": "newname"})
+
+            request = api_rf.put(
+                f"/user/profile/", {"id": test_user.id, "username": "newname"}
+            )
             force_authenticate(request, user=test_user)
             view = UserProfile.as_view()
             response = view(request, pk=test_user.id)
-            
-            assert hasattr(response, 'status_code')
+
+            assert hasattr(response, "status_code")
 
     def test_token_obtain_pair_view(self, api_rf):
         """Test TokenObtainPairView."""
         from user.views import TokenObtainPairView
-        
+
         # Just test that the view can be instantiated
         view = TokenObtainPairView.as_view()
         assert view is not None
@@ -51,12 +55,12 @@ class TestUserViews:
     def test_token_refresh_view(self, api_rf):
         """Test TokenRefreshView."""
         from user.views import TokenRefreshView
-        
-        request = api_rf.post('/user/token/refresh/', {"refresh": "token"})
+
+        request = api_rf.post("/user/token/refresh/", {"refresh": "token"})
         view = TokenRefreshView.as_view()
         response = view(request)
-        
-        assert hasattr(response, 'status_code')
+
+        assert hasattr(response, "status_code")
 
 
 @pytest.mark.django_db
@@ -66,30 +70,30 @@ class TestUserUtils:
     def test_get_user(self, test_user):
         """Test get_user function."""
         from user.util import get_user
-        
+
         result = get_user(test_user.id)
         assert result is not None
-        assert isinstance(result, dict) or hasattr(result, 'id')
+        assert isinstance(result, dict) or hasattr(result, "id")
 
     def test_get_users(self):
         """Test get_users function."""
         from user.util import get_users
-        
+
         result = get_users(active="y", admin="n")
         assert result is not None
 
     def test_get_user_groups(self, test_user):
         """Test get_user_groups function."""
         from user.util import get_user_groups
-        
+
         result = get_user_groups(test_user.id)
         assert result is not None
 
     def test_get_phone_types(self):
         """Test get_phone_types function."""
         from user.util import get_phone_types
-        
-        with patch('user.util.PhoneType.objects.filter') as mock_filter:
+
+        with patch("user.util.PhoneType.objects.filter") as mock_filter:
             mock_filter.return_value = []
             result = get_phone_types()
             assert result is not None
@@ -107,6 +111,7 @@ class TestUserModels:
     def test_permission_model_exists(self):
         """Test Permission model can be imported."""
         from user.models import Permission
+
         assert Permission is not None
 
 
@@ -117,14 +122,14 @@ class TestUserSerializers:
     def test_user_serializer(self, test_user):
         """Test UserSerializer."""
         from user.serializers import UserSerializer
-        
+
         serializer = UserSerializer(test_user)
-        assert 'username' in serializer.data
+        assert "username" in serializer.data
 
     def test_ret_message_serializer(self):
         """Test RetMessageSerializer."""
         from user.serializers import RetMessageSerializer
-        
+
         data = {"retMessage": "Test", "error": False}
         serializer = RetMessageSerializer(data=data)
         assert serializer.is_valid()
@@ -136,11 +141,13 @@ class TestUserUrls:
     def test_urls_import(self):
         """Test user URLs can be imported."""
         import user.urls
+
         assert user.urls is not None
 
     def test_urlpatterns_exist(self):
         """Test URL patterns exist."""
         from user.urls import urlpatterns
+
         assert len(urlpatterns) > 0
 
 
@@ -150,6 +157,7 @@ class TestUserBackend:
     def test_user_login_backend(self):
         """Test UserLogIn backend."""
         from user.views import UserLogIn
+
         backend = UserLogIn()
         assert backend is not None
 
@@ -157,11 +165,13 @@ class TestUserBackend:
     def test_authenticate(self, test_user):
         """Test authenticate method."""
         from user.views import UserLogIn
-        
+
         backend = UserLogIn()
-        with patch('user.views.User.objects.filter') as mock_filter:
+        with patch("user.views.User.objects.filter") as mock_filter:
             mock_filter.return_value.first.return_value = test_user
             test_user.check_password = Mock(return_value=True)
-            
-            result = backend.authenticate(None, username="testuser", password="password")
+
+            result = backend.authenticate(
+                None, username="testuser", password="password"
+            )
             assert result is test_user or result is None
