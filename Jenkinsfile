@@ -49,6 +49,7 @@ node {
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/notify-users.sh \
                 && sed -i "s/DEPLOY_URL/$DEPLOY_URL/g" scripts/refresh-event-team-info.sh \
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/refresh-event-team-info.sh \
+                && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" scripts/dumpdata.sh \
                 && sed -i "s/DEPLOY_PATH/$DEPLOY_PATH/g" crontab \
                 && sed -i "s/BUILD/$SHA/g" src/parts_webapi/settings/base.py \
                 && sed -i "s/parts_webapi.settings.development/parts_webapi.settings.production/g" src/manage.py
