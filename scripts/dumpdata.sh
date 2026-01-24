@@ -22,7 +22,7 @@ if [ -f "$REQUEST_FILE" ]; then
   source "$VENV_PATH/bin/activate"
 
   # Run the dumpdata command and direct output to dump.json
-  python manage.py dumpdata > "$OUTPUT_FILE"
+  python $DIRECTORY/src/manage.py dumpdata > "$OUTPUT_FILE"
 
   # Check if the dumpdata command was successful
   if [ $? -eq 0 ]; then
