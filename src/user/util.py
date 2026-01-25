@@ -68,6 +68,7 @@ def parse_user(usr: User) -> dict[str, Any]:
         "phone_type_id": usr.phone_type_id,
         "image": general.cloudinary.build_image_url(usr.img_id, usr.img_ver),
         "links": user_links,
+        "discord_user_id": usr.discord_user_id,
     }
 
     return usr_dict
