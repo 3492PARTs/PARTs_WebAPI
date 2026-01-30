@@ -117,8 +117,9 @@ class MeetingsView(APIView):
         """
 
         def fun():
-            mtgs = attendance.util.get_meetings()
-            serializer = MeetingSerializer(mtgs, many=True)
+            mtg_id = request.query_params.get("meeting_id", None)
+            mtgs = attendance.util.get_meetings(mtg_id)
+            serializer = MeetingSerializer(mtgs, many=mtg_id is None)
             return Response(serializer.data)
 
         return access_response(

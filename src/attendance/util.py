@@ -2,6 +2,7 @@ from typing import Any
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q, QuerySet
+from django.db import transaction
 from django.utils.timezone import now as timezone_now
 from datetime import datetime, time
 import pytz
@@ -15,13 +16,15 @@ import scouting.util
 import user.util
 
 
-def get_meetings() -> QuerySet[Meeting]:
+def get_meetings(id: int = None) -> QuerySet[Meeting] | Meeting:
     """
     Get all non-voided meetings for the current season.
 
     Returns:
-        QuerySet of Meeting objects for the current season, ordered by start time and title
+        QuerySet of Meeting objects for the current season, ordered by start time and title or a single Meeting if id is provided
     """
+    if id is not None:
+        return Meeting.objects.get(id=id)
     return Meeting.objects.filter(
         Q(season=scouting.util.get_current_season()) & Q(void_ind="n")
     ).order_by("start", "title")
@@ -75,14 +78,14 @@ def get_meeting_hours() -> dict[float, float, float]:
     """
 
     # Get the current time in the default timezone
-    local_now = localtime().astimezone(pytz.timezone("America/New_York"))
+    # local_now = localtime().astimezone(pytz.timezone("America/New_York"))
 
     # Set midnight (00:00:00) of the current day in the local timezone
-    local_midnight = datetime.combine(
-        local_now.date(), time.min, tzinfo=local_now.tzinfo
-    )
+    # local_midnight = datetime.combine(
+    #     local_now.date(), time.min, tzinfo=local_now.tzinfo
+    # )
     # Convert it to UTC
-    utc_midnight = local_midnight.astimezone(pytz.utc)
+    # utc_midnight = local_midnight.astimezone(pytz.utc)
 
     meetings = get_meetings()
     total_past = 0
@@ -98,7 +101,7 @@ def get_meeting_hours() -> dict[float, float, float]:
 
         match meeting.meeting_typ.meeting_typ:
             case "reg":
-                if meeting.end <= utc_midnight:
+                if meeting.ended:
                     total_past += diff
                 else:
                     total_future += diff
@@ -260,20 +263,22 @@ def end_meeting(meeting_id: int):
     Args:
         meeting_id: Specific meeting to end
     """
+    with transaction.atomic():
+        meeting = Meeting.objects.get(id=meeting_id)
+        meeting.ended = True
+        meeting.save()
 
-    meeting = Meeting.objects.get(id=meeting_id)
+        users = user.util.get_users(1, 0).filter(
+            ~Q(id__in=meeting.attendance_set.filter(void_ind="n").values("user_id"))
+        )
 
-    users = user.util.get_users(1, 0).filter(
-        ~Q(id__in=meeting.attendance_set.filter(void_ind="n").values("user_id"))
-    )
-
-    for u in users:
-        att = {
-            "user": UserSerializer(u).data,
-            "meeting": MeetingSerializer(meeting).data,
-            "time_in": meeting.start,
-            "absent": True,
-            "approval_typ": {"approval_typ": "app"},
-            "void_ind": "n",
-        }
-        save_attendance(att)
+        for u in users:
+            att = {
+                "user": UserSerializer(u).data,
+                "meeting": MeetingSerializer(meeting).data,
+                "time_in": meeting.start,
+                "absent": True,
+                "approval_typ": {"approval_typ": "app"},
+                "void_ind": "n",
+            }
+            save_attendance(att)

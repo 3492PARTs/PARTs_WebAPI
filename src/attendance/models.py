@@ -22,7 +22,8 @@ class Meeting(models.Model):
     title = models.CharField(max_length=2000)
     description = models.CharField(max_length=4000)
     start = models.DateTimeField(default=now)
-    end = models.DateTimeField(null=True)
+    end = models.DateTimeField()
+    ended = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 
