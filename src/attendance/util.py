@@ -169,6 +169,7 @@ def get_attendance_report(
         ret.append(
             {
                 "user": u,
+                "req_reg_time": round(total, 2),
                 "reg_time": round(reg_time, 2),
                 "reg_time_percentage": (
                     round(reg_time / total * 100, 0) if total != 0 else 0
