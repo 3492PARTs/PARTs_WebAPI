@@ -29,6 +29,10 @@ class Meeting(models.Model):
     def __str__(self):
         return f"{self.id} : {self.title} : {self.start}"
 
+    def duration_hours(self) -> int:
+        """Compute meeting duration in hours."""
+        return (self.end - self.start).total_seconds() / 3600
+
 
 class AttendanceApprovalType(models.Model):
     approval_typ = models.CharField(primary_key=True, max_length=50)
@@ -65,3 +69,13 @@ class Attendance(models.Model):
     def is_rejected(self) -> bool:
         """Check if attendance has been rejected."""
         return self.approval_typ.approval_typ == "rej"
+
+    def is_exempt(self) -> bool:
+        """Check if attendance has been marked exempt."""
+        return self.approval_typ.approval_typ == "exmpt"
+
+    def duration_hours(self) -> int:
+        """Compute attendance duration in hours."""
+        if self.time_out is None:
+            return 0
+        return (self.time_out - self.time_in).total_seconds() / 3600

@@ -94,7 +94,7 @@ def get_meeting_hours() -> dict[float, float, float]:
         if meeting.end is None:
             raise Exception("There is a meeting without an end time")
 
-        diff = (meeting.end - meeting.start).total_seconds() / 3600
+        diff = meeting.duration_hours()
 
         match meeting.meeting_typ.meeting_typ:
             case "reg":
@@ -146,8 +146,11 @@ def get_attendance_report(
         event_time = 0
 
         for att in attendance:
-            if att.is_approved() and not att.absent:
-                diff = (att.time_out - att.time_in).total_seconds() / 3600
+            # Exempt attendance reduces total required hours
+            if att.is_exempt():
+                total -= att.meeting.duration_hours()
+            elif att.is_approved() and not att.absent:
+                diff = att.duration_hours()
 
                 if att.meeting is None:
                     reg_time += diff
