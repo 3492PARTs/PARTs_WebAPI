@@ -144,6 +144,7 @@ def get_attendance_report(
     ret = []
 
     for u in users:
+        user_total = total
         attendance = get_attendance(u.id, meeting_id)
         reg_time = 0
         event_time = 0
@@ -151,7 +152,7 @@ def get_attendance_report(
         for att in attendance:
             # Exempt attendance reduces total required hours
             if att.is_exempt():
-                total -= att.meeting.duration_hours()
+                user_total -= att.meeting.duration_hours()
             elif att.is_approved() and not att.absent:
                 diff = att.duration_hours()
 
@@ -169,10 +170,10 @@ def get_attendance_report(
         ret.append(
             {
                 "user": u,
-                "req_reg_time": round(total, 2),
+                "req_reg_time": round(user_total, 2),
                 "reg_time": round(reg_time, 2),
                 "reg_time_percentage": (
-                    round(reg_time / total * 100, 0) if total != 0 else 0
+                    round(reg_time / user_total * 100, 0) if total != 0 else 0
                 ),
                 "event_time": round(event_time, 2),
                 "event_time_percentage": (
