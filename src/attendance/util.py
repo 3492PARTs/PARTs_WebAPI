@@ -151,7 +151,7 @@ def get_attendance_report(
 
         for att in attendance:
             # Exempt attendance reduces total required hours
-            if att.is_exempt():
+            if att.is_exempt() and att.meeting.meeting_typ.meeting_typ == "reg":
                 user_total -= att.meeting.duration_hours()
             elif att.is_approved() and not att.absent:
                 diff = att.duration_hours()
