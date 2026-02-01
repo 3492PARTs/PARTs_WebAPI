@@ -20,14 +20,14 @@ def create_alert(
 ) -> Alert:
     """
     Create a new alert for a user.
-    
+
     Args:
         u: The user to create the alert for
         alert_subject: Subject/title of the alert
         alert_body: Body text of the alert (will be truncated to 4000 characters)
         alert_url: Optional URL associated with the alert
         alert_typ: Optional alert type classification
-        
+
     Returns:
         The created Alert object
     """
@@ -45,11 +45,11 @@ def create_alert(
 def create_channel_send_for_comm_typ(alert: Alert, alert_comm_typ: str) -> ChannelSend:
     """
     Create a channel send record for delivering an alert through a specific communication type.
-    
+
     Args:
         alert: The alert to be sent
         alert_comm_typ: The communication type code (e.g., 'email', 'discord', 'notification', 'txt')
-        
+
     Returns:
         The created ChannelSend object
     """
@@ -66,11 +66,11 @@ def create_channel_send_for_comm_typ(alert: Alert, alert_comm_typ: str) -> Chann
 def send_alerts() -> str:
     """
     Process and send all pending alerts that haven't been sent or dismissed.
-    
+
     This function is typically called by a cron job to process queued alerts.
     It handles different communication channels (email, Discord, webpush, SMS) and
     tracks delivery attempts. Alerts that fail to send will be retried up to 3 times.
-    
+
     Returns:
         A message string describing which alerts were sent or if there were errors
     """
@@ -133,7 +133,7 @@ def send_alerts() -> str:
 
                     # this is the system user id
                     if acs.alert.user.id == -1:
-                        u = "@everyone"
+                        u = "@Student"
 
                     discord_message = f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
                     send_message.send_discord_notification(discord_message)
@@ -166,11 +166,11 @@ def send_alerts() -> str:
 def get_user_alerts(user_id: str, comm_typ_cd: str) -> list[dict[str, Any]]:
     """
     Get all undismissed alerts for a user on a specific communication channel.
-    
+
     Args:
         user_id: The ID of the user
         comm_typ_cd: The communication type code to filter by
-        
+
     Returns:
         List of dictionaries containing alert information (id, subject, body, url, staged_time, etc.)
     """
@@ -200,7 +200,7 @@ def get_user_alerts(user_id: str, comm_typ_cd: str) -> list[dict[str, Any]]:
 def dismiss_alert(channel_send_id: str) -> None:
     """
     Mark a channel send as dismissed by the user.
-    
+
     Args:
         channel_send_id: The ID of the ChannelSend record to dismiss
     """
@@ -226,7 +226,7 @@ def send_alerts_to_role(
 ) -> list[Alert]:
     """
     Create and queue alerts for all users with a specific role/permission.
-    
+
     Args:
         subject: Alert subject line
         body: Alert body text
@@ -235,7 +235,7 @@ def send_alerts_to_role(
         ignore_user_id: Optional user ID to exclude from receiving the alert
         url: Optional URL to include in the alert
         alert_type: Optional AlertType classification
-        
+
     Returns:
         List of created Alert objects
     """
@@ -260,10 +260,10 @@ def send_alerts_to_role(
 def get_alert_type(alert_typ: str) -> AlertType:
     """
     Retrieve an AlertType by its type code.
-    
+
     Args:
         alert_typ: The alert type code to look up
-        
+
     Returns:
         The AlertType object with the specified code
     """
