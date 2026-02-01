@@ -238,6 +238,9 @@ def save_attendance(attendance):
 
     a.user = User.objects.get(id=attendance["user"]["id"])
 
+    if a.approval_typ.approval_typ == "exmpt":
+        a.absent = False
+
     if a.absent:
         a.approval_typ = AttendanceApprovalType.objects.get(approval_typ="app")
 
