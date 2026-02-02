@@ -759,6 +759,7 @@ def format_flow_values(flow: Flow):
                 "id": qf.id,
                 "flow_id": flow.id,
                 "question": parse_question(qf.question),
+                "press_to_continue": qf.press_to_continue,
                 "order": qf.order,
                 "active": qf.active,
             }
