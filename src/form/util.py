@@ -52,7 +52,7 @@ def get_questions(
 ) -> list[dict[str, Any]]:
     """
     Get questions filtered by various criteria.
-    
+
     Args:
         form_typ: Filter by form type ('field', 'pit', etc.)
         active: Filter by active status ('y' or 'n')
@@ -61,7 +61,7 @@ def get_questions(
         is_conditional: If True, only return questions that have conditions
         is_not_conditional: If True, only return questions without active conditions
         qid: Filter to a specific question ID
-        
+
     Returns:
         List of dictionaries containing parsed question data
     """
@@ -156,10 +156,10 @@ def get_questions(
 def parse_question(in_question: Question) -> dict[str, Any]:
     """
     Parse a Question object into a comprehensive dictionary with all related data.
-    
+
     Args:
         in_question: The Question object to parse
-        
+
     Returns:
         Dictionary containing question details, options, conditions, and related data
     """
@@ -964,6 +964,7 @@ def save_flow(data):
         else:
             question_flow = FlowQuestion.objects.get(id=data_flow_question["id"])
 
+        question_flow.press_to_continue = data_flow_question["press_to_continue"]
         question_flow.order = data_flow_question["order"]
 
         question_flow.save()
@@ -1802,9 +1803,7 @@ def graph_responses(graph_id, responses, aggregate_responses=None):
                                 flow_answer.question.question_typ.question_typ
                                 == "mnt-psh-btn"
                             ):
-                                map_entry["points"].append(
-                                    loads(flow_answer.value)
-                                )
+                                map_entry["points"].append(loads(flow_answer.value))
                             else:
                                 raise Exception("not accounted for yet")
                                 value = flow_answer.value
@@ -2096,9 +2095,7 @@ def aggregate_answers(question_aggregate, response_question_answers):
         case "median":
             return median([median(values) for values in responses_values])
         case "stdev":
-            return stdev(
-                [stdev(values) for values in responses_values]
-            )
+            return stdev([stdev(values) for values in responses_values])
         case "difference":
             i = 0
             for value_list in responses_values:
