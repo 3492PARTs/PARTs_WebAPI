@@ -81,7 +81,7 @@ optional = true
 [tool.poetry.group.uat.dependencies]
 gunicorn = "23.0.0"
 uwsgi = "2.0.30"
-psycopg2-binary = "*"
+mysqlclient = "2.2.7"
 
 [build-system]
 requires = ["poetry-core"]
