@@ -131,6 +131,7 @@ class FlowQuestionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     flow_id = serializers.IntegerField(required=False, allow_null=True)
     question = QuestionSerializer()
+    press_to_continue = serializers.BooleanField()
     order = serializers.IntegerField()
     active = serializers.CharField()
 
