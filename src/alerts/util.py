@@ -131,7 +131,7 @@ def send_alerts() -> str:
                         else acs.alert.user.get_full_name()
                     )
 
-                    # this is the system user id
+                    # this is the system user id, so sent to @Student
                     if acs.alert.user.id == -1:
                         u = "@1024485828283596941"
 
