@@ -1,7 +1,7 @@
 from typing import Any
 import requests
 import datetime
-from json import loads
+from json import loads, dumps
 from hashlib import sha256
 import hmac
 from django.conf import settings
@@ -29,12 +29,12 @@ def get_events_for_team(
 ) -> list[dict[str, Any]]:
     """
     Get all events for a team in a specific season from The Blue Alliance API.
-    
+
     Args:
         team: The Team object to get events for
         season: The Season object to get events for
         event_cds_to_ignore: Optional list of event codes to skip
-        
+
     Returns:
         List of dictionaries containing event data
     """
@@ -63,11 +63,11 @@ def get_events_for_team(
 def get_matches_for_team_event(team_key: str, event_key: str) -> list[dict[str, Any]]:
     """
     Get all matches for a team at a specific event from The Blue Alliance API.
-    
+
     Args:
         team_key: The team number (without 'frc' prefix)
         event_key: The event code
-        
+
     Returns:
         List of match data dictionaries from TBA
     """
@@ -85,10 +85,10 @@ def get_matches_for_team_event(team_key: str, event_key: str) -> list[dict[str, 
 def sync_season(season_id: int) -> str:
     """
     Synchronize all events for team 3492 in a specific season from The Blue Alliance.
-    
+
     Args:
         season_id: The ID of the Season to synchronize
-        
+
     Returns:
         Message string with sync results for each event
     """
@@ -111,13 +111,13 @@ def sync_season(season_id: int) -> str:
 def get_tba_event(event_cd: str) -> dict[str, Any]:
     """
     Fetch event details from The Blue Alliance API.
-    
+
     Args:
         event_cd: The event code (e.g., '2024pahat')
-        
+
     Returns:
         Dictionary containing parsed event data (event_nm, date_st, date_end, event_cd, time_zone)
-        
+
     Raises:
         Exception: If TBA returns an error
     """
@@ -164,10 +164,10 @@ def get_tba_event(event_cd: str) -> dict[str, Any]:
 def get_tba_event_teams(event_cd: str) -> list[dict[str, Any]]:
     """
     Get list of teams at an event from The Blue Alliance API.
-    
+
     Args:
         event_cd: The event code (e.g., '2024pahat')
-        
+
     Returns:
         List of dictionaries with team_no and team_nm fields
     """
@@ -188,14 +188,14 @@ def get_tba_event_teams(event_cd: str) -> list[dict[str, Any]]:
 def sync_event(season: Season, event_cd: str) -> str:
     """
     Synchronize an event and its teams from The Blue Alliance.
-    
+
     Creates or updates the event and team records, linking teams to the event.
     Removes teams that are no longer at the event.
-    
+
     Args:
         season: The Season object the event belongs to
         event_cd: The event code from TBA
-        
+
     Returns:
         Message string detailing what was added, updated, or removed
     """
@@ -269,10 +269,10 @@ def sync_event(season: Season, event_cd: str) -> str:
 def sync_matches(event: Event) -> str:
     """
     Synchronize all matches for an event from The Blue Alliance.
-    
+
     Args:
         event: The Event object to sync matches for
-        
+
     Returns:
         Message string detailing sync results
     """
@@ -295,10 +295,10 @@ def sync_matches(event: Event) -> str:
 def get_tba_event_team_info(event_cd: str) -> list[dict[str, Any]]:
     """
     Get team ranking and performance info from The Blue Alliance.
-    
+
     Args:
         event_cd: The event code to get rankings for
-        
+
     Returns:
         List of dictionaries containing team stats including:
             - matches_played, qual_average, wins, losses, ties, rank, dq, team_id
@@ -342,13 +342,13 @@ def get_tba_event_team_info(event_cd: str) -> list[dict[str, Any]]:
 def sync_event_team_info(force: int) -> str:
     """
     Synchronize team performance info for the current event.
-    
+
     Only syncs if the event is currently active (between start and end dates)
     or if force is set to 1.
-    
+
     Args:
         force: 1 to force sync regardless of event dates, 0 to only sync if event is active
-        
+
     Returns:
         Message string describing what was synced
     """
@@ -393,12 +393,12 @@ def sync_event_team_info(force: int) -> str:
 def save_tba_match(tba_match: dict[str, Any]) -> str:
     """
     Save or update a match from The Blue Alliance data.
-    
+
     Args:
         tba_match: Dictionary of match data from TBA API containing:
                    - event_key, match_number, match_key, comp_level, time
                    - alliances with red/blue team_keys and scores
-                   
+
     Returns:
         Message string indicating if match was added or updated
     """
@@ -486,10 +486,10 @@ def save_tba_match(tba_match: dict[str, Any]) -> str:
 def save_message(message: dict[str, Any]) -> Message:
     """
     Save a TBA webhook message to the database.
-    
+
     Args:
         message: Dictionary containing message_type and message_data
-        
+
     Returns:
         The created Message object
     """
@@ -504,16 +504,16 @@ def save_message(message: dict[str, Any]) -> Message:
 def verify_tba_webhook_call(request: Any) -> bool:
     """
     Verify that a webhook call is legitimately from The Blue Alliance.
-    
+
     Uses HMAC-SHA256 to verify the request signature against the configured secret.
-    
+
     Args:
         request: The HTTP request object with data and META attributes
-        
+
     Returns:
         True if the webhook signature is valid, False otherwise
     """
-    json_str = json.dumps(request.data, ensure_ascii=True)
+    json_str = dumps(request.data, ensure_ascii=True)
     hmac_hex = hmac.new(
         settings.TBA_WEBHOOK_SECRET.encode("utf-8"), json_str.encode("utf-8"), sha256
     ).hexdigest()
@@ -523,10 +523,10 @@ def verify_tba_webhook_call(request: Any) -> bool:
 def replace_frc_in_str(s: str) -> str:
     """
     Remove 'frc' prefix from team keys.
-    
+
     Args:
         s: String that may contain 'frc' prefix (e.g., 'frc3492')
-        
+
     Returns:
         String with 'frc' removed (e.g., '3492')
     """
