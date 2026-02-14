@@ -133,7 +133,7 @@ def send_alerts() -> str:
 
                     # this is the system user id, so sent to @Student
                     if acs.alert.user.id == -1:
-                        u = "@1024485828283596941"
+                        u = "<@1024485828283596941>"
 
                     discord_message = f"{acs.alert.subject}:\n {u}\n {acs.alert.body}"
                     send_message.send_discord_notification(discord_message)
