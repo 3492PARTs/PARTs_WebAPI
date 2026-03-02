@@ -16,7 +16,9 @@ import scouting.util
 import user.util
 
 
-def get_meetings(id: int = None) -> QuerySet[Meeting] | Meeting:
+def get_meetings(
+    id: int = None, remove_private_meetings: bool = False
+) -> QuerySet[Meeting] | Meeting:
     """
     Get all non-voided meetings for the current season.
 
@@ -25,8 +27,13 @@ def get_meetings(id: int = None) -> QuerySet[Meeting] | Meeting:
     """
     if id is not None:
         return Meeting.objects.get(id=id)
+
+    cond = Q()
+    if remove_private_meetings:
+        cond = ~Q(private_ind=True)
+
     return Meeting.objects.filter(
-        Q(season=scouting.util.get_current_season()) & Q(void_ind="n")
+        Q(season=scouting.util.get_current_season()) & cond & Q(void_ind="n")
     ).order_by("start", "title")
 
 
@@ -50,6 +57,7 @@ def save_meeting(meeting: dict[str, Any]) -> Meeting:
     m.description = meeting["description"]
     m.start = meeting["start"]
     m.end = meeting["end"]
+    m.private_ind = meeting["private_ind"]
     m.meeting_typ = MeetingType.objects.get(
         meeting_typ=meeting["meeting_typ"]["meeting_typ"]
     )
