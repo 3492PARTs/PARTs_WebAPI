@@ -131,6 +131,7 @@ class FlowQuestion(models.Model):
     flow = models.ForeignKey(Flow, models.PROTECT)
     question = models.ForeignKey(Question, models.PROTECT)
     order = models.IntegerField()
+    press_to_continue = models.BooleanField(default=False)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
 
