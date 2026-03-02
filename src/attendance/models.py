@@ -24,6 +24,7 @@ class Meeting(models.Model):
     start = models.DateTimeField(default=now)
     end = models.DateTimeField()
     ended = models.BooleanField(default=False)
+    private_ind = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 

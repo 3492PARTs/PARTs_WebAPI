@@ -118,7 +118,12 @@ class MeetingsView(APIView):
 
         def fun():
             mtg_id = request.query_params.get("meeting_id", None)
-            mtgs = attendance.util.get_meetings(mtg_id)
+            remove_private_meetings = (
+                not request.user.has_perm("admin")
+                or request.query_params.get("remove_private_meetings", "false").lower()
+                == "true"
+            )
+            mtgs = attendance.util.get_meetings(mtg_id, remove_private_meetings)
             serializer = MeetingSerializer(mtgs, many=mtg_id is None)
             return Response(serializer.data)
 

@@ -579,7 +579,10 @@ def stage_meeting_alert(start_or_end: bool = True) -> str:
         )
 
         meetings = Meeting.objects.filter(
-            meeting_time & Q(void_ind="n") & ~Q(id__in=excluded_ids)
+            meeting_time
+            & Q(private_ind=False)
+            & Q(void_ind="n")
+            & ~Q(id__in=excluded_ids)
         )
 
         for meeting in meetings:
