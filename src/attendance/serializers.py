@@ -16,6 +16,7 @@ class MeetingSerializer(serializers.Serializer):
     start = serializers.DateTimeField()
     end = serializers.DateTimeField()
     ended = serializers.BooleanField()
+    private_ind = serializers.BooleanField()
     void_ind = serializers.CharField()
 
 
