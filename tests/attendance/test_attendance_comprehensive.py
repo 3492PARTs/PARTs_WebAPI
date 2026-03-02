@@ -123,6 +123,7 @@ class TestAttendanceUtil:
                 "start": start_time,
                 "end": end_time,
                 "meeting_typ": {"meeting_typ": "reg"},
+                "private_ind": False,
                 "void_ind": "n",
             }
 
@@ -143,6 +144,7 @@ class TestAttendanceUtil:
             "start": meeting.start,
             "end": meeting.end,
             "meeting_typ": {"meeting_typ": "bns"},
+            "private_ind": False,
             "void_ind": "n",
         }
 
