@@ -46,6 +46,7 @@ class Flow(models.Model):
     single_run = models.BooleanField(default=False)
     form_typ = models.ForeignKey(FormType, models.PROTECT)
     form_sub_typ = models.ForeignKey(FormSubType, models.PROTECT, null=True)
+    form_based = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
