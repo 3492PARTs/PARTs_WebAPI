@@ -24,13 +24,15 @@ import general.util
 import form.util
 
 
-def get_table_columns(question_aggregates: QuerySet[QuestionAggregate]) -> list[dict[str, Any]]:
+def get_table_columns(
+    question_aggregates: QuerySet[QuestionAggregate],
+) -> list[dict[str, Any]]:
     """
     Build table column definitions for field scouting data display.
-    
+
     Args:
         question_aggregates: QuerySet of QuestionAggregate objects to include as columns
-        
+
     Returns:
         List of dictionaries defining table columns with PropertyName, ColLabel, Width, order, etc.
     """
@@ -144,16 +146,21 @@ def get_table_columns(question_aggregates: QuerySet[QuestionAggregate]) -> list[
     return table_cols
 
 
-def get_responses(pg: int = 1, team: int | None = None, user: int | None = None, after_scout_field_id: int | None = None) -> dict[str, Any]:
+def get_responses(
+    pg: int = 1,
+    team: int | None = None,
+    user: int | None = None,
+    after_scout_field_id: int | None = None,
+) -> dict[str, Any]:
     """
     Get paginated field scouting responses with answers and metadata.
-    
+
     Args:
         pg: Page number for pagination (default: 1)
         team: Optional team number to filter by
         user: Optional user ID to filter by
         after_scout_field_id: Optional ID to get responses after (for incremental loading)
-        
+
     Returns:
         Dictionary containing:
             - count: Total number of pages
@@ -243,9 +250,16 @@ def get_responses(pg: int = 1, team: int | None = None, user: int | None = None,
                 response[f"ans{answer.question.id}"] = answer.value
             if answer.flow is not None:
                 for flow_answer in answer.flowanswer_set.filter(void_ind="n"):
-                    response[f"ans{flow_answer.question.id}"] = 1 + response.get(
-                        f"ans{flow_answer.question.id}", 0
-                    )
+                    if flow_answer.question.question_typ.question_typ == "number":
+                        response[f"ans{flow_answer.question.id}"] = (
+                            float(flow_answer.value)
+                            if len(flow_answer.value) > 0
+                            else 0
+                        ) + response.get(f"ans{flow_answer.question.id}", 0)
+                    else:
+                        response[f"ans{flow_answer.question.id}"] = 1 + response.get(
+                            f"ans{flow_answer.question.id}", 0
+                        )
 
         for parsed_question_aggregate in parsed_question_aggregates:
             response[
@@ -296,13 +310,15 @@ def get_responses(pg: int = 1, team: int | None = None, user: int | None = None,
     return data
 
 
-def get_removed_responses(before_scout_field_id: int | None = None) -> QuerySet[FieldResponse]:
+def get_removed_responses(
+    before_scout_field_id: int | None = None,
+) -> QuerySet[FieldResponse]:
     """
     Get field responses that have been marked as void.
-    
+
     Args:
         before_scout_field_id: Optional ID to limit search to responses before this ID
-        
+
     Returns:
         QuerySet of voided FieldResponse objects
     """
@@ -318,13 +334,15 @@ def get_removed_responses(before_scout_field_id: int | None = None) -> QuerySet[
     return removed
 
 
-def get_field_question_aggregates(current_season: Season) -> QuerySet[QuestionAggregate]:
+def get_field_question_aggregates(
+    current_season: Season,
+) -> QuerySet[QuestionAggregate]:
     """
     Get active horizontal question aggregates for field scouting in the current season.
-    
+
     Args:
         current_season: The Season object to filter by
-        
+
     Returns:
         QuerySet of QuestionAggregate objects
     """
@@ -355,13 +373,15 @@ def get_field_question_aggregates(current_season: Season) -> QuerySet[QuestionAg
     return question_aggregates
 
 
-def get_parsed_field_question_aggregates(current_season: Season) -> list[dict[str, Any]]:
+def get_parsed_field_question_aggregates(
+    current_season: Season,
+) -> list[dict[str, Any]]:
     """
     Get field question aggregates with their questions parsed into dictionaries.
-    
+
     Args:
         current_season: The Season object to filter by
-        
+
     Returns:
         List of dictionaries with 'parsed_question_aggregate' and 'questions' keys
     """
@@ -391,14 +411,14 @@ def get_parsed_field_question_aggregates(current_season: Season) -> list[dict[st
 def check_in_scout(sfs: FieldSchedule, user_id: int) -> str:
     """
     Check in a scout for their scheduled field scouting shift.
-    
+
     Updates the check-in time for the scout in the appropriate position
     (red_one, red_two, red_three, blue_one, blue_two, or blue_three).
-    
+
     Args:
         sfs: The FieldSchedule object representing the shift
         user_id: The ID of the user checking in
-        
+
     Returns:
         Success message if checked in, empty string if user not found in schedule
     """
@@ -433,7 +453,7 @@ def check_in_scout(sfs: FieldSchedule, user_id: int) -> str:
 def get_field_form() -> dict[str, Any]:
     """
     Get the field scouting form configuration with questions organized by form sub-types.
-    
+
     Returns:
         Dictionary containing:
             - field_form: The FieldForm object
@@ -452,10 +472,10 @@ def get_field_form() -> dict[str, Any]:
 def get_graph_options(graph_type: str) -> None:
     """
     Get options for different graph types (placeholder/stub function).
-    
+
     Args:
         graph_type: Type of graph (e.g., 'bar')
-        
+
     Note:
         This function is currently a stub and needs implementation
     """
@@ -470,9 +490,9 @@ def get_graph_options(graph_type: str) -> None:
 def get_scouting_responses() -> list[dict[str, Any]]:
     """
     Get recent field scouting responses with parsed answers.
-    
+
     Returns the 10 most recent responses for the current event.
-    
+
     Returns:
         List of dictionaries containing:
             - id: Response ID
