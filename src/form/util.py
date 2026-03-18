@@ -752,6 +752,7 @@ def format_flow_values(flow: Flow):
         "id": flow.id,
         "name": flow.name,
         "single_run": flow.single_run,
+        "form_based": flow.form_based,
         "form_typ": flow.form_typ,
         "form_sub_typ": flow.form_sub_typ if flow.form_sub_typ is not None else None,
         "flow_questions": [
@@ -949,6 +950,7 @@ def save_flow(data):
 
     flow.name = data["name"]
     flow.single_run = data["single_run"]
+    flow.form_based = data["form_based"]
     flow.form_typ_id = data["form_typ"]["form_typ"]
     if data.get("form_sub_typ", None) is not None:
         flow.form_sub_typ_id = data["form_sub_typ"]["form_sub_typ"]
