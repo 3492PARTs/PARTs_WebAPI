@@ -6,6 +6,7 @@ from scouting.models import (
     Event,
     EventTeamInfo,
     Match,
+    PitImage,
     Schedule,
     ScheduleType,
     FieldSchedule,
@@ -22,7 +23,7 @@ from user.models import User
 def get_all_seasons() -> QuerySet[Season]:
     """
     Get all seasons ordered by year.
-    
+
     Returns:
         QuerySet of all Season objects ordered by season year
     """
@@ -32,10 +33,10 @@ def get_all_seasons() -> QuerySet[Season]:
 def get_season(year: str) -> Season:
     """
     Get a specific season by year.
-    
+
     Args:
         year: The year of the season (e.g., "2024")
-        
+
     Returns:
         The Season object for the specified year
     """
@@ -45,10 +46,10 @@ def get_season(year: str) -> Season:
 def get_or_create_season(year: str) -> Season:
     """
     Get an existing season or create a new one if it doesn't exist.
-    
+
     Args:
         year: The year of the season (e.g., "2024")
-        
+
     Returns:
         The Season object (existing or newly created)
     """
@@ -64,10 +65,10 @@ def get_or_create_season(year: str) -> Season:
 def get_current_season() -> Season:
     """
     Get the currently active season.
-    
+
     Returns:
         The current Season object
-        
+
     Raises:
         Exception: If no season is set as current
     """
@@ -81,7 +82,7 @@ def get_current_season() -> Season:
 def get_all_events() -> QuerySet[Event]:
     """
     Get all non-voided events.
-    
+
     Returns:
         QuerySet of Event objects that are not voided
     """
@@ -91,10 +92,10 @@ def get_all_events() -> QuerySet[Event]:
 def get_current_event() -> Event:
     """
     Get the currently active event.
-    
+
     Returns:
         The current Event object
-        
+
     Raises:
         Exception: If no event is set as current for the current season
     """
@@ -108,10 +109,10 @@ def get_current_event() -> Event:
 def get_event(event_cd: str) -> Event:
     """
     Get a specific event by its event code.
-    
+
     Args:
         event_cd: The event code
-        
+
     Returns:
         The Event object with the specified code
     """
@@ -123,10 +124,10 @@ def get_event(event_cd: str) -> Event:
 def get_events(season: Season) -> QuerySet[Event]:
     """
     Get all events for a specific season.
-    
+
     Args:
         season: The Season object to get events for
-        
+
     Returns:
         QuerySet of Event objects for the specified season
     """
@@ -138,10 +139,10 @@ def get_events(season: Season) -> QuerySet[Event]:
 def get_teams(current: bool) -> list[dict[str, Any]]:
     """
     Get teams, optionally filtered to the current event.
-    
+
     Args:
         current: If True, only return teams at the current event
-        
+
     Returns:
         List of dictionaries containing parsed team information
     """
@@ -161,7 +162,22 @@ def get_teams(current: bool) -> list[dict[str, Any]]:
                     then=1,
                 ),
                 default=0,
-            )
+            ),
+            pit_image=Case(
+                When(
+                    team_no__in=PitResponse.objects.filter(
+                        Q(event=current_event)
+                        & Q(void_ind="n")
+                        & Exists(
+                            PitImage.objects.filter(
+                                Q(void_ind="n") & Q(pit_response__id=OuterRef("pk"))
+                            )
+                        )
+                    ).values_list("team_id", flat=True),
+                    then=1,
+                ),
+                default=0,
+            ),
         )
         .filter(q_current_event)
         .order_by("team_no")
@@ -173,11 +189,11 @@ def get_teams(current: bool) -> list[dict[str, Any]]:
 def parse_team(in_team: Team, checked: bool = False) -> dict[str, Any]:
     """
     Parse a Team object into a dictionary with event-specific information.
-    
+
     Args:
         in_team: The Team object to parse
         checked: Whether the team is checked/selected
-        
+
     Returns:
         Dictionary containing team number, name, checked status, pit result, and rank
     """
@@ -191,6 +207,11 @@ def parse_team(in_team: Team, checked: bool = False) -> dict[str, Any]:
             if getattr(in_team, "pit_result", None) is not None
             else None
         ),
+        "pit_image": (
+            in_team.pit_image
+            if getattr(in_team, "pit_image", None) is not None
+            else None
+        ),
         "rank": eti.rank if eti is not None else None,
     }
 
@@ -198,10 +219,10 @@ def parse_team(in_team: Team, checked: bool = False) -> dict[str, Any]:
 def format_scout_field_schedule_entry(fs: FieldSchedule) -> dict[str, Any]:
     """
     Format a FieldSchedule object into a dictionary with detailed scout assignments.
-    
+
     Args:
         fs: The FieldSchedule object to format
-        
+
     Returns:
         Dictionary containing schedule details including scout assignments for all positions
     """
@@ -267,7 +288,7 @@ def format_scout_field_schedule_entry(fs: FieldSchedule) -> dict[str, Any]:
 def get_current_scout_field_schedule() -> QuerySet[FieldSchedule]:
     """
     Get all field scouting schedules for the current event.
-    
+
     Returns:
         QuerySet of FieldSchedule objects ordered by notification status and start time
     """
@@ -283,7 +304,7 @@ def get_current_scout_field_schedule() -> QuerySet[FieldSchedule]:
 def get_current_scout_field_schedule_parsed() -> list[dict[str, Any]]:
     """
     Get parsed field scouting schedules for the current event.
-    
+
     Returns:
         List of dictionaries with parsed schedule information
     """
@@ -295,7 +316,7 @@ def get_current_scout_field_schedule_parsed() -> list[dict[str, Any]]:
 def get_current_schedule() -> QuerySet[Schedule]:
     """
     Get all schedules for the current event.
-    
+
     Returns:
         QuerySet of Schedule objects ordered by type, notification status, and start time
     """
@@ -311,7 +332,7 @@ def get_current_schedule() -> QuerySet[Schedule]:
 def get_current_schedule_parsed() -> list[dict[str, Any]]:
     """
     Get parsed schedules for the current event.
-    
+
     Returns:
         List of dictionaries with parsed schedule information
     """
@@ -321,7 +342,7 @@ def get_current_schedule_parsed() -> list[dict[str, Any]]:
 def get_schedule_types() -> QuerySet[ScheduleType]:
     """
     Get all available schedule types.
-    
+
     Returns:
         QuerySet of ScheduleType objects ordered by schedule name
     """
@@ -331,10 +352,10 @@ def get_schedule_types() -> QuerySet[ScheduleType]:
 def get_group_leader_user(user: User | None) -> User | None:
     """
     Check if a user is a group leader in scouting.
-    
+
     Args:
         user: The User object to check
-        
+
     Returns:
         The User object if they are a group leader, None otherwise
     """
@@ -351,10 +372,10 @@ def get_group_leader_user(user: User | None) -> User | None:
 def parse_scout_field_schedule(s: FieldSchedule) -> dict[str, Any]:
     """
     Parse a FieldSchedule object into a detailed dictionary.
-    
+
     Args:
         s: The FieldSchedule object to parse
-        
+
     Returns:
         Dictionary with schedule details including group leaders and scout assignments
     """
