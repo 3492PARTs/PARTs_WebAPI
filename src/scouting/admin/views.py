@@ -785,7 +785,7 @@ class ScoutingReportView(APIView):
     def get(self, request, format=None):
         try:
             if has_access(request.user.id, auth_obj):
-                req = scouting.admin.util.foo()
+                req = scouting.admin.util.scouting_report()
                 return ret_message(req)
             else:
                 return ret_message(

@@ -31,18 +31,20 @@ from user.models import User
 import user.util
 
 
-def set_current_season_event(season_id: int, event_id: int | None, competition_page_active: str) -> str:
+def set_current_season_event(
+    season_id: int, event_id: int | None, competition_page_active: str
+) -> str:
     """
     Set the current season and optionally the current event.
-    
+
     Updates the current season marker and optionally sets the current event
     and its competition page active status.
-    
+
     Args:
         season_id: ID of the season to set as current
         event_id: Optional ID of the event to set as current
         competition_page_active: 'y' or 'n' for competition page status
-        
+
     Returns:
         Success message string
     """
@@ -72,7 +74,7 @@ def set_current_season_event(season_id: int, event_id: int | None, competition_p
 def delete_event(event_id: int) -> dict[str, Any]:
     """
     Delete an event and all associated data.
-    
+
     Cascades deletion to:
     - Team associations
     - Field responses and answers
@@ -82,13 +84,13 @@ def delete_event(event_id: int) -> dict[str, Any]:
     - General schedules
     - Team notes
     - Event team info
-    
+
     Args:
         event_id: ID of the event to delete
-        
+
     Returns:
         Success message dictionary
-        
+
     Raises:
         Exception: If trying to delete the current event
     """
@@ -149,7 +151,7 @@ def delete_event(event_id: int) -> dict[str, Any]:
 def get_scout_auth_groups() -> list[Any]:
     """
     Get list of groups that scout admins can manage.
-    
+
     Returns:
         List of Group objects that are authorized for scout admin management
     """
@@ -163,7 +165,7 @@ def get_scout_auth_groups() -> list[Any]:
 def save_season(data: dict[str, Any]) -> Season:
     """
     Create or update a season.
-    
+
     Args:
         data: Dictionary containing:
               - id (optional): Season ID for updates
@@ -171,7 +173,7 @@ def save_season(data: dict[str, Any]) -> Season:
               - game: Game name
               - manual: Manual/documentation link
               - current (optional): 'y' or 'n' for current status
-              
+
     Returns:
         The created or updated Season object
     """
@@ -189,16 +191,16 @@ def save_season(data: dict[str, Any]) -> Season:
 def delete_season(season_id: int) -> dict[str, Any]:
     """
     Delete a season and all associated data.
-    
+
     Cascades deletion to all events in the season (which further cascades),
     and all scouting questions for the season.
-    
+
     Args:
         season_id: ID of the season to delete
-        
+
     Returns:
         Success message dictionary
-        
+
     Raises:
         Exception: If trying to delete the current season
     """
@@ -234,7 +236,7 @@ def delete_season(season_id: int) -> dict[str, Any]:
 def save_event(data: dict[str, Any]) -> Event:
     """
     Create or update an event.
-    
+
     Args:
         data: Dictionary containing event details including:
               - id or event_id (optional): Event ID for updates
@@ -245,10 +247,10 @@ def save_event(data: dict[str, Any]) -> Event:
               - date_end: End date
               - timezone: Timezone string
               - And other optional fields (address, location, URLs, etc.)
-              
+
     Returns:
         The created or updated Event object
-        
+
     Raises:
         ValueError: If season_id is not provided
     """
@@ -259,7 +261,7 @@ def save_event(data: dict[str, Any]) -> Event:
         season_id = data["season"]["id"]
     else:
         raise ValueError("season_id or season.id required")
-    
+
     if (data.get("event_id", None)) is not None or (data.get("id", None)) is not None:
         event_id = data.get("event_id") or data.get("id")
         event = Event.objects.get(id=event_id)
@@ -308,7 +310,7 @@ def save_event(data: dict[str, Any]) -> Event:
 def save_match(data: dict[str, Any]) -> Match:
     """
     Create or update a match.
-    
+
     Args:
         data: Dictionary containing:
               - match_key (optional): Match key for updates
@@ -318,7 +320,7 @@ def save_match(data: dict[str, Any]) -> Match:
               - red_one_id, red_two_id, red_three_id: Red alliance team IDs
               - blue_one_id, blue_two_id, blue_three_id: Blue alliance team IDs
               - time (optional): Match scheduled time
-              
+
     Returns:
         The created or updated Match object
     """
@@ -329,7 +331,7 @@ def save_match(data: dict[str, Any]) -> Match:
         event = Event.objects.get(id=data["event"]["id"])
         match = Match(
             match_key=f"{data['event']['event_cd']}_{data['comp_level']['comp_lvl_typ']}{data['match_number']}",
-            event=event
+            event=event,
         )
 
     match.match_number = data["match_number"]
@@ -349,12 +351,12 @@ def save_match(data: dict[str, Any]) -> Match:
 def link_team_to_event(data: dict[str, Any]) -> str:
     """
     Link teams to an event (many-to-many relationship).
-    
+
     Args:
         data: Dictionary containing:
               - event_id: ID of the event
               - teams: List of team dictionaries with team_no, team_nm, and checked flag
-              
+
     Returns:
         String message describing which teams were added
     """
@@ -392,12 +394,12 @@ def link_team_to_event(data: dict[str, Any]) -> str:
 def remove_link_team_to_event(data: dict[str, Any]) -> str:
     """
     Remove team-to-event links.
-    
+
     Args:
         data: Dictionary containing:
               - id: ID of the event
               - teams: List of team dictionaries with team_no, team_nm, and checked flag
-              
+
     Returns:
         String message describing which teams were removed
     """
@@ -435,7 +437,7 @@ def remove_link_team_to_event(data: dict[str, Any]) -> str:
 def save_scout_schedule(data: dict[str, Any]) -> FieldSchedule:
     """
     Create or update a field scouting schedule entry.
-    
+
     Args:
         data: Dictionary containing:
               - id (optional): FieldSchedule ID for updates
@@ -445,10 +447,10 @@ def save_scout_schedule(data: dict[str, Any]) -> FieldSchedule:
               - red_one_id, red_two_id, red_three_id: Red alliance scout user IDs
               - blue_one_id, blue_two_id, blue_three_id: Blue alliance scout user IDs
               - void_ind: Void indicator
-              
+
     Returns:
         The created or updated FieldSchedule object
-        
+
     Raises:
         Exception: If end_time is before or equal to st_time
     """
@@ -487,7 +489,7 @@ def save_scout_schedule(data: dict[str, Any]) -> FieldSchedule:
 def save_schedule(data: dict[str, Any]) -> Schedule:
     """
     Create or update a general schedule entry (pit schedule).
-    
+
     Args:
         data: Dictionary containing:
               - id (optional): Schedule ID for updates
@@ -496,10 +498,10 @@ def save_schedule(data: dict[str, Any]) -> Schedule:
               - user: User ID assigned to the schedule
               - sch_typ: Schedule type ID
               - void_ind: Void indicator
-              
+
     Returns:
         The created or updated Schedule object
-        
+
     Raises:
         Exception: If end_time is before or equal to st_time
     """
@@ -532,10 +534,10 @@ def save_schedule(data: dict[str, Any]) -> Schedule:
 def notify_user(id: int) -> str:
     """
     Manually trigger notification for a single schedule entry.
-    
+
     Args:
         id: Schedule ID to notify for
-        
+
     Returns:
         Message string describing who was notified
     """
@@ -550,10 +552,10 @@ def notify_user(id: int) -> str:
 def notify_users(id: int) -> str:
     """
     Manually trigger notifications for a field schedule entry.
-    
+
     Args:
         id: FieldSchedule ID to notify for
-        
+
     Returns:
         Message string describing who was notified
     """
@@ -566,9 +568,9 @@ def notify_users(id: int) -> str:
 def get_scouting_user_info() -> list[UserInfo]:
     """
     Get scouting-specific user info for all active users.
-    
+
     Creates UserInfo records for users who don't have one yet.
-    
+
     Returns:
         List of UserInfo objects for all active users
     """
@@ -589,7 +591,7 @@ def get_scouting_user_info() -> list[UserInfo]:
 def save_scouting_user_info(data: dict[str, Any]) -> UserInfo:
     """
     Save or update scouting-specific user information.
-    
+
     Args:
         data: Dictionary containing:
               - id (optional): UserInfo ID for updates
@@ -597,7 +599,7 @@ def save_scouting_user_info(data: dict[str, Any]) -> UserInfo:
               - group_leader: Boolean for group leader status
               - under_review: Boolean for review status
               - eliminate_results: Boolean to exclude results from analysis
-              
+
     Returns:
         The created or updated UserInfo object
     """
@@ -617,10 +619,10 @@ def save_scouting_user_info(data: dict[str, Any]) -> UserInfo:
 def void_field_response(id: int) -> FieldResponse:
     """
     Mark a field scouting response as void.
-    
+
     Args:
         id: FieldResponse ID to void
-        
+
     Returns:
         The updated FieldResponse object
     """
@@ -633,12 +635,12 @@ def void_field_response(id: int) -> FieldResponse:
 def void_scout_pit_response(id: int) -> PitResponse:
     """
     Mark a pit scouting response as void.
-    
+
     Voids both the PitResponse and its underlying Response.
-    
+
     Args:
         id: PitResponse ID to void
-        
+
     Returns:
         The updated PitResponse object
     """
@@ -653,15 +655,15 @@ def void_scout_pit_response(id: int) -> PitResponse:
 def save_field_form(field_form: dict[str, Any]) -> FieldForm:
     """
     Save or update the field scouting form configuration with images.
-    
+
     Handles uploading of field layout images (normal, inverted, full).
-    
+
     Args:
         field_form: Dictionary containing:
                    - id (optional): FieldForm ID for updates
                    - img, inv_img, full_img (optional): Image files to upload
                    - img_id, img_ver, etc. (optional): Existing image identifiers
-                   
+
     Returns:
         The created or updated FieldForm object
     """
@@ -714,19 +716,18 @@ def save_field_form(field_form: dict[str, Any]) -> FieldForm:
     return ff
 
 
-def foo() -> None:
+def scouting_report() -> None:
     """
-    Utility function for analyzing team event participation (legacy/debug function).
-    
-    Note:
-        This appears to be a development/testing function and may need refactoring or removal.
+    Utility function for analyzing team event participation.
+
+
     """
     team_3492 = Team.objects.get(team_no=3492)
 
     current_season = scouting.util.get_current_season()
 
     our_events = team_3492.event_set.filter(
-        Q(void_ind="n") & Q(season=current_season)
+        Q(void_ind="n") & Q(season=current_season) & Q(current="y")
     ).order_by("date_end")
 
     event_cds = [event.event_cd for event in our_events]
@@ -753,11 +754,11 @@ def foo() -> None:
 
                 if team_event["event_cd"] in event_cds:
                     # print(f"same as us {team_event['event_cd']}")
-                    csv += f"Sharing,{[event.event_nm for event in our_events if event.event_cd == team_event['event_cd']][0]}\n"
+                    # csv += f"Sharing,{[event.event_nm for event in our_events if event.event_cd == team_event['event_cd']][0]}\n"
                     sharing += f"{[event.event_nm for event in our_events if event.event_cd == team_event['event_cd']][0]}, "
                 else:
                     # print(f"Different {team_event['event_nm']}")
-                    csv += f"Other,{team_event['event_nm']},{general.util.date_time_to_mdyhm(team_event['date_st'], team_event.get('timezone', 'America/New_York'))},{general.util.date_time_to_mdyhm(team_event['date_end'], team_event.get('timezone', 'America/New_York'))}\n"
+                    csv += f"Regional,{team_event['event_nm']},{general.util.date_time_to_mdyhm(team_event['date_st'], team_event.get('timezone', 'America/New_York'))},{general.util.date_time_to_mdyhm(team_event['date_end'], team_event.get('timezone', 'America/New_York'))}\n"
 
                     if team_event["date_end"] < highest_event_date:
                         other += f"{team_event['event_nm']}, "
@@ -778,43 +779,35 @@ def foo() -> None:
 
                             if match["score_breakdown"] is not None:
                                 csv_match += "Detailed Results,,,,,,\n"
-                                csv_match += f"{match['score_breakdown']['red']['autoLineRobot1']},{match['score_breakdown']['red']['autoLineRobot2']},{match['score_breakdown']['red']['autoLineRobot3']},Auto Leave,{match['score_breakdown']['blue']['autoLineRobot1']},{match['score_breakdown']['blue']['autoLineRobot2']},{match['score_breakdown']['blue']['autoLineRobot3']}\n"
+                                csv_match += f"{match['score_breakdown']['red']['autoTowerRobot1']},{match['score_breakdown']['red']['autoTowerRobot2']},{match['score_breakdown']['red']['autoTowerRobot3']},Auto Tower,{match['score_breakdown']['blue']['autoTowerRobot1']},{match['score_breakdown']['blue']['autoTowerRobot2']},{match['score_breakdown']['blue']['autoTowerRobot3']}\n"
 
                                 # auto
-                                csv_match += f"L4,{match['score_breakdown']['red']['autoReef']['tba_topRowCount']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['tba_topRowCount']},L4\n"
-                                csv_match += f"L3,{match['score_breakdown']['red']['autoReef']['tba_midRowCount']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['tba_midRowCount']},L3\n"
-                                csv_match += f"L2,{match['score_breakdown']['red']['autoReef']['tba_topRowCount']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['tba_topRowCount']},L2\n"
-                                csv_match += f"L1,{match['score_breakdown']['red']['autoReef']['trough']},,Auto Coral Count,,{match['score_breakdown']['blue']['autoReef']['trough']},L1\n"
-                                csv_match += f",{match['score_breakdown']['red']['autoCoralPoints']},,Auto Coral Points,,{match['score_breakdown']['blue']['autoCoralPoints']},\n"
-                                csv_match += f",{match['score_breakdown']['red']['autoPoints']},,Total Auto,,{match['score_breakdown']['blue']['autoPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['autoTowerPoints']},,Auto Tower Points,,{match['score_breakdown']['blue']['autoTowerPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['autoTowerPoints']},,Auto Fuel,,{match['score_breakdown']['blue']['autoTowerPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['autoPoints']},,Total Auto,,{match['score_breakdown']['blue']['hubScore']['autoPoints']},\n"
 
                                 # tele
-                                csv_match += f"L4,{match['score_breakdown']['red']['teleopReef']['tba_topRowCount']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['tba_topRowCount']},L4\n"
-                                csv_match += f"L3,{match['score_breakdown']['red']['teleopReef']['tba_midRowCount']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['tba_midRowCount']},L3\n"
-                                csv_match += f"L2,{match['score_breakdown']['red']['teleopReef']['tba_topRowCount']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['tba_topRowCount']},L2\n"
-                                csv_match += f"L1,{match['score_breakdown']['red']['teleopReef']['trough']},,Teleop Coral Count,,{match['score_breakdown']['blue']['teleopReef']['trough']},L1\n"
-                                csv_match += f",{match['score_breakdown']['red']['teleopCoralPoints']},,Teleop Coral Points,,{match['score_breakdown']['blue']['teleopCoralPoints']},\n"
-
-                                csv_match += f",{match['score_breakdown']['red']['wallAlgaeCount']},,Processor Algae Count,,{match['score_breakdown']['blue']['wallAlgaeCount']},\n"
-                                csv_match += f",{match['score_breakdown']['red']['netAlgaeCount']},,Net Algae Count,,{match['score_breakdown']['blue']['netAlgaeCount']},\n"
-                                csv_match += f",{match['score_breakdown']['red']['algaePoints']},,Algae Points,,{match['score_breakdown']['blue']['algaePoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['transitionPoints']},,Transition Shift Fuel,,{match['score_breakdown']['blue']['hubScore']['transitionPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['shift1Points']},,Shift 1 Fuel,,{match['score_breakdown']['blue']['hubScore']['shift1Points']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['shift2Points']},,Shift 2 Fuel,,{match['score_breakdown']['blue']['hubScore']['shift2Points']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['shift3Points']},,Shift 3 Fuel,,{match['score_breakdown']['blue']['hubScore']['shift3Points']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['shift4Points']},,Shift 4 Fuel,,{match['score_breakdown']['blue']['hubScore']['shift4Points']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['endgamePoints']},,Endgame Fuel,,{match['score_breakdown']['blue']['hubScore']['endgamePoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['hubScore']['teleopPoints']},,Teleop Fuel Points,,{match['score_breakdown']['blue']['hubScore']['teleopPoints']},\n"
 
                                 # endgame
-                                csv_match += f"{tba.util.replace_frc_in_str(match['alliances']['red']['team_keys'][0])},{match['score_breakdown']['red']['endGameRobot1']},,Robot 1 Endgame,,{match['score_breakdown']['blue']['endGameRobot1']},{tba.util.replace_frc_in_str(match['alliances']['blue']['team_keys'][0])}\n"
-                                csv_match += f"{tba.util.replace_frc_in_str(match['alliances']['red']['team_keys'][1])},{match['score_breakdown']['red']['endGameRobot2']},,Robot 2 Endgame,,{match['score_breakdown']['blue']['endGameRobot2']},{tba.util.replace_frc_in_str(match['alliances']['blue']['team_keys'][1])}\n"
-                                csv_match += f"{tba.util.replace_frc_in_str(match['alliances']['red']['team_keys'][2])},{match['score_breakdown']['red']['endGameRobot3']},,Robot 3 Endgame,,{match['score_breakdown']['blue']['endGameRobot3']},{tba.util.replace_frc_in_str(match['alliances']['blue']['team_keys'][2])}\n"
-                                csv_match += f",{match['score_breakdown']['red']['endGameBargePoints']},,Barge Points,,{match['score_breakdown']['blue']['endGameBargePoints']},\n"
-
-                                csv_match += f",{match['score_breakdown']['red']['teleopPoints']},,Total Teleop,,{match['score_breakdown']['blue']['teleopPoints']},\n"
-
-                                csv_match += f",{match['score_breakdown']['red']['coopertitionCriteriaMet']},,Coopertition Criteria Met,,{match['score_breakdown']['blue']['coopertitionCriteriaMet']},\n"
-                                csv_match += f",{match['score_breakdown']['red']['autoBonusAchieved']},,Auto Bonus,,{match['score_breakdown']['blue']['autoBonusAchieved']},\n"
-                                csv_match += f",{match['score_breakdown']['red']['coralBonusAchieved']},,Coral Bonus,,{match['score_breakdown']['blue']['coralBonusAchieved']},\n"
-                                csv_match += f",{match['score_breakdown']['red']['bargeBonusAchieved']},,Barge Bonus,,{match['score_breakdown']['blue']['bargeBonusAchieved']},\n"
-                                csv_match += f",{match['score_breakdown']['red']['foulCount']}/{match['score_breakdown']['red']['techFoulCount']},,Fouls / Tech Fouls,,{match['score_breakdown']['blue']['foulCount']}/{match['score_breakdown']['red']['techFoulCount']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['endGameTowerRobot1']},,Robot 1 Endgame,,{match['score_breakdown']['blue']['endGameTowerRobot1']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['endGameTowerRobot2']},,Robot 2 Endgame,,{match['score_breakdown']['blue']['endGameTowerRobot2']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['endGameTowerRobot3']},,Robot 3 Endgame,,{match['score_breakdown']['blue']['endGameTowerRobot3']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['endGameTowerPoints']},,Endgame Tower Points,,{match['score_breakdown']['blue']['endGameTowerPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['totalTowerPoints']},,Total Tower Points,,{match['score_breakdown']['blue']['totalTowerPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['totalPoints']},,Total Fuel Points,,{match['score_breakdown']['blue']['totalPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['totalTeleopPoints']},,Total Teleop,,{match['score_breakdown']['blue']['totalTeleopPoints']},\n"
+                                csv_match += f",{match['score_breakdown']['red']['minorFoulCount']}/{match['score_breakdown']['red']['majorFoulCount']},,Fouls / Major Fouls,,{match['score_breakdown']['blue']['minorFoulCount']}/{match['score_breakdown']['blue']['majorFoulCount']},\n"
                                 csv_match += f",{match['score_breakdown']['red']['foulPoints']},,Foul Points,,{match['score_breakdown']['blue']['foulPoints']},\n"
                                 csv_match += f",{match['score_breakdown']['red']['adjustPoints']},,Adjustments,,{match['score_breakdown']['blue']['adjustPoints']},\n"
                                 csv_match += f",{match['score_breakdown']['red']['totalPoints']},,Total Score,,{match['score_breakdown']['blue']['totalPoints']},\n"
+
                                 csv_match += f",{match['score_breakdown']['red']['rp']},,Ranking Points,,{match['score_breakdown']['blue']['rp']},\n"
 
                             if first_run:
