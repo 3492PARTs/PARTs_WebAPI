@@ -310,31 +310,32 @@ def get_tba_event_team_info(event_cd: str) -> list[dict[str, Any]]:
     rankings = loads(request.text)
 
     ret = []
-    for info in rankings.get("rankings", []):
-        ret.append(
-            {
-                "matches_played": info.get("matches_played", 0),
-                "qual_average": info.get("qual_average", 0),
-                "losses": (
-                    info["record"].get("losses", 0)
-                    if info.get("record", 0) is not None
-                    else 0
-                ),
-                "wins": (
-                    info["record"].get("wins", 0)
-                    if info.get("record", 0) is not None
-                    else 0
-                ),
-                "ties": (
-                    info["record"].get("ties", 0)
-                    if info.get("record", 0) is not None
-                    else 0
-                ),
-                "rank": info.get("rank", 0),
-                "dq": info.get("dq", 0),
-                "team_id": replace_frc_in_str(info["team_key"]),
-            }
-        )
+    if rankings is not None:
+        for info in rankings.get("rankings", []):
+            ret.append(
+                {
+                    "matches_played": info.get("matches_played", 0),
+                    "qual_average": info.get("qual_average", 0),
+                    "losses": (
+                        info["record"].get("losses", 0)
+                        if info.get("record", 0) is not None
+                        else 0
+                    ),
+                    "wins": (
+                        info["record"].get("wins", 0)
+                        if info.get("record", 0) is not None
+                        else 0
+                    ),
+                    "ties": (
+                        info["record"].get("ties", 0)
+                        if info.get("record", 0) is not None
+                        else 0
+                    ),
+                    "rank": info.get("rank", 0),
+                    "dq": info.get("dq", 0),
+                    "team_id": replace_frc_in_str(info["team_key"]),
+                }
+            )
 
     return ret
 

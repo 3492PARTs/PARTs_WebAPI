@@ -743,7 +743,7 @@ def scouting_report() -> None:
             # print(team)
             csv += f"Team: {team.team_no}\n"
 
-            team_events = tba.util.get_events_for_team(team, current_season, event_cds)
+            team_events = tba.util.get_events_for_team(team, current_season)
 
             sharing = ""
             other = ""
@@ -759,9 +759,14 @@ def scouting_report() -> None:
                 else:
                     # print(f"Different {team_event['event_nm']}")
                     csv += f"Regional,{team_event['event_nm']},{general.util.date_time_to_mdyhm(team_event['date_st'], team_event.get('timezone', 'America/New_York'))},{general.util.date_time_to_mdyhm(team_event['date_end'], team_event.get('timezone', 'America/New_York'))}\n"
+                    team_event_info = tba.util.get_tba_event_team_info(
+                        team_event["event_cd"]
+                    )
+                    if len(team_event_info) > 0:
+                        csv += f"Rank: {team_event_info[len(team_event_info)  - 1]['rank']}\n"
 
                     if team_event["date_end"] < highest_event_date:
-                        other += f"{team_event['event_nm']}, "
+                        other += f"{team_event['event_nm']}"
 
                         matches = tba.util.get_matches_for_team_event(
                             team.team_no, team_event["event_cd"]
@@ -779,7 +784,7 @@ def scouting_report() -> None:
 
                             if match["score_breakdown"] is not None:
                                 csv_match += "Detailed Results,,,,,,\n"
-                                csv_match += f"{match['score_breakdown']['red']['autoTowerRobot1']},{match['score_breakdown']['red']['autoTowerRobot2']},{match['score_breakdown']['red']['autoTowerRobot3']},Auto Tower,{match['score_breakdown']['blue']['autoTowerRobot1']},{match['score_breakdown']['blue']['autoTowerRobot2']},{match['score_breakdown']['blue']['autoTowerRobot3']}\n"
+                                csv_match += f",{match['score_breakdown']['red']['autoTowerRobot1']} : {match['score_breakdown']['red']['autoTowerRobot2']} : {match['score_breakdown']['red']['autoTowerRobot3']},,Auto Tower,,{match['score_breakdown']['blue']['autoTowerRobot1']} : {match['score_breakdown']['blue']['autoTowerRobot2']} : {match['score_breakdown']['blue']['autoTowerRobot3']},\n"
 
                                 # auto
                                 csv_match += f",{match['score_breakdown']['red']['autoTowerPoints']},,Auto Tower Points,,{match['score_breakdown']['blue']['autoTowerPoints']},\n"
