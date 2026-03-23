@@ -249,7 +249,22 @@ def get_responses(
             if answer.question is not None:
                 response[f"ans{answer.question.id}"] = answer.value
             if answer.flow is not None:
+                flow_answers = answer.flowanswer_set.filter(void_ind="n")
+                for flow_answer in flow_answers:
+
+                    if response.get(f"ans{flow_answer.question.id}", None) is None:
+                        response[f"ans{flow_answer.question.id}"] = []
+
+                    response[f"ans{flow_answer.question.id}"].append(
+                        {
+                            "round": len(response[f"ans{flow_answer.question.id}"]) + 1,
+                            "value": flow_answer.value,
+                        }
+                    )
+                """
                 for flow_answer in answer.flowanswer_set.filter(void_ind="n"):
+
+                    
                     if flow_answer.question.question_typ.question_typ == "number":
                         response[f"ans{flow_answer.question.id}"] = (
                             float(flow_answer.value)
@@ -260,6 +275,7 @@ def get_responses(
                         response[f"ans{flow_answer.question.id}"] = 1 + response.get(
                             f"ans{flow_answer.question.id}", 0
                         )
+                """
 
         for parsed_question_aggregate in parsed_question_aggregates:
             response[
