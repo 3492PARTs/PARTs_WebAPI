@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from ..serializers import FieldFormSerializer, MatchSerializer
 
 auth_obj = "scoutadmin"
+auth_obj_strat = "matchplanning"
 app_url = "scouting/admin/"
 
 
@@ -784,7 +785,7 @@ class ScoutingReportView(APIView):
 
     def get(self, request, format=None):
         try:
-            if has_access(request.user.id, auth_obj):
+            if has_access(request.user.id, [auth_obj, auth_obj_strat]):
                 req = scouting.admin.util.scouting_report()
                 return ret_message(req)
             else:
