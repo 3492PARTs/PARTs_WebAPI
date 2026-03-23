@@ -1172,7 +1172,6 @@ class TestParseGraphObjects:
         qt = _make_question_type("t14", "T14")
         ft = _make_form_type("s34", "S34")
         q = _make_question(form_typ=ft, question_typ=qt, question="Attr Q?")
-        ct = _make_condition_type("equal2") if not hasattr(_make_condition_type, "_eq2") else _make_condition_type("equal")
         ct = _make_condition_type("equal")
 
         gca = GraphCategoryAttribute.objects.create(
