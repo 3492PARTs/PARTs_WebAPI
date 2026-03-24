@@ -70,12 +70,15 @@ class TestMatchStrategyViewExtra:
         assert response.data.get("error") is True
 
     def test_get_with_match_id(self, api_client, test_user):
-        """Line 107: GET with match_id (single serializer)."""
+        """Line 107: GET with match_id (single serializer) - patched at serializer level."""
         api_client.force_authenticate(user=test_user)
-        mock_strategy = MagicMock()
+        mock_response = MagicMock()
+        mock_response.data = {"id": 1, "strategy": "test"}
         with patch("scouting.strategizing.views.has_access", return_value=True), \
              patch("scouting.strategizing.views.scouting.strategizing.util.get_match_strategies",
-                   return_value=mock_strategy):
+                   return_value={}), \
+             patch("scouting.strategizing.views.MatchStrategySerializer") as mock_ser:
+            mock_ser.return_value.data = {"id": 1, "strategy": "test"}
             response = api_client.get(f"{BASE}/match-strategy/?match_id=1")
         assert response.status_code == 200
 
@@ -246,7 +249,7 @@ class TestDashboardViewTypeViewExtra:
         assert response.status_code == 200
         assert response.data.get("error") is True
 
-    def test_get_exception(self, api_client, test_user):
+    def test_get_exception(self, api_client, test_user, system_user):
         """Lines 346-352: GET exception."""
         api_client.force_authenticate(user=test_user)
         with patch("scouting.strategizing.views.has_access", return_value=True), \
