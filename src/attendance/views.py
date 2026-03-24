@@ -81,8 +81,8 @@ class AttendanceView(APIView):
                     error_message=serializer.errors,
                 )
 
-            attendance.util.save_attendance(serializer.validated_data)
-            return ret_message("Saved attendance entry.")
+            att = attendance.util.save_attendance(serializer.validated_data)
+            return Response(AttendanceSerializer(att).data)
 
         return access_response(
             app_url + self.endpoint,
@@ -156,8 +156,8 @@ class MeetingsView(APIView):
                     error_message=serializer.errors,
                 )
 
-            attendance.util.save_meeting(serializer.validated_data)
-            return ret_message("Saved meeting entry.")
+            mtg = attendance.util.save_meeting(serializer.validated_data)
+            return Response(MeetingSerializer(mtg).data)
 
         return access_response(
             app_url + self.endpoint,
