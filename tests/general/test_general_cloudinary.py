@@ -1,6 +1,7 @@
 """
 Tests for general.cloudinary module.
 """
+
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from general.cloudinary import upload_image, build_image_url, allowed_file
@@ -42,40 +43,46 @@ class TestUploadImage:
         """Test successful image upload."""
         mock_file = MagicMock()
         mock_file.content_type = "image/png"
-        
+
         with patch("cloudinary.uploader.upload") as mock_upload:
-            mock_upload.return_value = {
-                "public_id": "test_id",
-                "version": "12345"
-            }
-            
+            mock_upload.return_value = {"public_id": "test_id", "version": "12345"}
+
             result = upload_image(mock_file)
-            
+
             assert result["public_id"] == "test_id"
             assert result["version"] == "12345"
-            mock_upload.assert_called_once_with(mock_file, public_id=None)
+            mock_upload.assert_called_once_with(
+                mock_file,
+                public_id=None,
+                folder=None,
+                overwrite=True,
+                unique_filename=False,
+            )
 
     def test_upload_image_with_id(self):
         """Test image upload with existing ID."""
         mock_file = MagicMock()
         mock_file.content_type = "image/jpeg"
-        
+
         with patch("cloudinary.uploader.upload") as mock_upload:
-            mock_upload.return_value = {
-                "public_id": "existing_id",
-                "version": "67890"
-            }
-            
+            mock_upload.return_value = {"public_id": "existing_id", "version": "67890"}
+
             result = upload_image(mock_file, img_id="existing_id")
-            
+
             assert result["public_id"] == "existing_id"
-            mock_upload.assert_called_once_with(mock_file, public_id="existing_id")
+            mock_upload.assert_called_once_with(
+                mock_file,
+                public_id="existing_id",
+                folder=None,
+                overwrite=True,
+                unique_filename=False,
+            )
 
     def test_upload_image_invalid_type(self):
         """Test upload_image with invalid file type."""
         mock_file = MagicMock()
         mock_file.content_type = "application/pdf"
-        
+
         with pytest.raises(Exception, match="Invalid file type"):
             upload_image(mock_file)
 
@@ -87,11 +94,13 @@ class TestBuildImageUrl:
         """Test building image URL."""
         with patch("general.cloudinary.CloudinaryImage") as MockCloudinaryImage:
             mock_instance = MagicMock()
-            mock_instance.build_url.return_value = "https://res.cloudinary.com/test/image.jpg"
+            mock_instance.build_url.return_value = (
+                "https://res.cloudinary.com/test/image.jpg"
+            )
             MockCloudinaryImage.return_value = mock_instance
-            
+
             result = build_image_url("test_id", "12345")
-            
+
             assert result == "https://res.cloudinary.com/test/image.jpg"
             MockCloudinaryImage.assert_called_once_with("test_id", version="12345")
             mock_instance.build_url.assert_called_once_with(secure=True)
