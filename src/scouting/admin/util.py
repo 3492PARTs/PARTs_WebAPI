@@ -667,6 +667,7 @@ def save_field_form(field_form: dict[str, Any]) -> FieldForm:
     Returns:
         The created or updated FieldForm object
     """
+
     if field_form.get("id", None) is not None:
         ff = FieldForm.objects.get(id=field_form["id"])
     else:
@@ -674,18 +675,21 @@ def save_field_form(field_form: dict[str, Any]) -> FieldForm:
         current_season = scouting.util.get_current_season()
         ff = FieldForm(season=current_season)
 
+    folder = f"{ff.season.season}/Field Images"
     img = None
     if field_form.get("img", None) is not None:
-        img = general.cloudinary.upload_image(field_form["img"], ff.img_id)
+        img = general.cloudinary.upload_image(field_form["img"], ff.img_id, folder)
 
     inv_img = None
     if field_form.get("inv_img", None) is not None:
-        inv_img = general.cloudinary.upload_image(field_form["inv_img"], ff.inv_img_id)
+        inv_img = general.cloudinary.upload_image(
+            field_form["inv_img"], ff.inv_img_id, folder
+        )
 
     full_img = None
     if field_form.get("full_img", None) is not None:
         full_img = general.cloudinary.upload_image(
-            field_form["full_img"], ff.full_img_id
+            field_form["full_img"], ff.full_img_id, folder
         )
 
     if img is not None:

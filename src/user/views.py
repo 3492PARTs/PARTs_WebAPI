@@ -384,7 +384,9 @@ class UserProfile(APIView):
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
                         response = general.cloudinary.upload_image(
-                            serializer.validated_data["image"], user.img_id
+                            serializer.validated_data["image"],
+                            user.img_id,
+                            "User Profile Images",
                         )
 
                         user.img_id = response["public_id"]

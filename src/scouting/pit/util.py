@@ -6,16 +6,16 @@ from form.models import Answer
 from general.security import ret_message
 import scouting
 import form.util
-from scouting.models import EventTeamInfo, PitResponse, PitImage, Team
+from scouting.models import EventTeamInfo, PitImageType, PitResponse, PitImage, Team
 
 
 def get_responses(team: int | None = None) -> dict[str, Any]:
     """
     Get pit scouting responses for teams at the current event.
-    
+
     Args:
         team: Optional team number to filter by. If None, returns all teams.
-        
+
     Returns:
         Dictionary containing:
             - teams: List of team response data with pictures and answers
@@ -118,20 +118,24 @@ def get_responses(team: int | None = None) -> dict[str, Any]:
     }
 
 
-def save_robot_picture(file: Any, team_no: int, pit_image_typ: str, img_title: str) -> dict[str, Any]:
+def save_robot_picture(
+    file: Any, team_no: int, pit_image_typ: str, img_title: str
+) -> dict[str, Any]:
     """
     Upload and save a robot picture for a pit response.
-    
+
     Args:
         file: The uploaded image file
         team_no: The team number
         pit_image_typ: The type of pit image (e.g., 'robot', 'mechanism')
         img_title: Title/description for the image
-        
+
     Returns:
         Success message dictionary
     """
     current_event = scouting.util.get_current_event()
+
+    pit_image_typ = PitImageType.objects.get(pit_image_typ=pit_image_typ)
 
     sp = PitResponse.objects.get(
         Q(event=current_event)
@@ -140,11 +144,14 @@ def save_robot_picture(file: Any, team_no: int, pit_image_typ: str, img_title: s
         & Q(response__void_ind="n")
     )
 
-    response = general.cloudinary.upload_image(file)
+    response = general.cloudinary.upload_image(
+        file,
+        folder=f"{current_event.season.season}/{current_event.event_nm}/{pit_image_typ.pit_image_nm}/{team_no}",
+    )
 
     PitImage(
         pit_response=sp,
-        pit_image_typ_id=pit_image_typ,
+        pit_image_typ=pit_image_typ,
         img_id=response["public_id"],
         img_ver=str(response["version"]),
         img_title=img_title,
@@ -156,13 +163,13 @@ def save_robot_picture(file: Any, team_no: int, pit_image_typ: str, img_title: s
 def set_default_team_image(id: int) -> PitImage:
     """
     Set a pit image as the default for its type.
-    
+
     This unsets all other images of the same type for the pit response
     and sets the specified image as the default.
-    
+
     Args:
         id: The ID of the PitImage to set as default
-        
+
     Returns:
         The updated PitImage object
     """
@@ -183,10 +190,10 @@ def set_default_team_image(id: int) -> PitImage:
 def get_team_data(team_no: int | None = None) -> dict[str, Any]:
     """
     Get detailed pit scouting data for a specific team.
-    
+
     Args:
         team_no: The team number to retrieve data for
-        
+
     Returns:
         Dictionary containing:
             - response_id: The response ID
