@@ -261,7 +261,19 @@ class TestTBAViewsMissingLines:
     def test_webhook_match_score_valid(self, api_client, system_user):
         """Lines 148-153: match_score webhook processes successfully."""
         mock_message = MagicMock()
-        mock_match_data = {"match": {"key": "2025test_qm1"}}
+        full_match_data = {
+            "key": "2025test_qm1",
+            "event_key": "2025test",
+            "comp_level": "qm",
+            "set_number": "1",
+            "match_number": "1",
+            "videos": [],
+            "time": 1000000,
+            "alliances": {
+                "red": {"score": "10", "team_keys": ["frc1", "frc2", "frc3"]},
+                "blue": {"score": "20", "team_keys": ["frc4", "frc5", "frc6"]},
+            }
+        }
         with patch("tba.views.tba.util.verify_tba_webhook_call", return_value=True), \
              patch("tba.views.tba.util.save_message", return_value=mock_message), \
              patch("tba.views.tba.util.save_tba_match"):
@@ -269,8 +281,12 @@ class TestTBAViewsMissingLines:
                 "/tba/webhook/",
                 {
                     "message_type": "match_score",
-                    "message_data": mock_match_data,
-                    "message_key": "test_key",
+                    "message_data": {
+                        "event_key": "2025test",
+                        "match_key": "2025test_qm1",
+                        "event_name": "Test Event",
+                        "match": full_match_data,
+                    },
                 },
                 format="json"
             )
@@ -291,8 +307,10 @@ class TestTBAViewsMissingLines:
                 "/tba/webhook/",
                 {
                     "message_type": "schedule_updated",
-                    "message_data": {"event_key": "2025test"},
-                    "message_key": "test_key",
+                    "message_data": {
+                        "event_key": "2025test",
+                        "event_name": "Test Event",
+                    },
                 },
                 format="json"
             )
