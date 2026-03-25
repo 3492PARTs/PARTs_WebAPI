@@ -1,4 +1,5 @@
 node {
+    def recipient = 'brandon@bduke.dev'
     def now = new Date()
     def formattedDate = now.format('yyyy.MM.dd')
     env.BUILD_DATE = formattedDate
@@ -208,18 +209,31 @@ node {
         // error handling, if needed
         // throw the exception to jenkins
         env.RESULT = 'error'
+
+        mail(
+            to: recipient,
+            subject: "Build ${env.JOB_NAME} Failed",
+            body: "The build failed with error: ${err}"
+        )
+        
         throw e
     } 
     finally {
         // some common final reporting in all cases (success or failure)
         withCredentials([string(credentialsId: 'github-status', variable: 'PASSWORD')]) {
-                env.SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
-                sh '''
-                    curl -X POST https://api.github.com/repos/3492PARTs/PARTs_WebAPI/statuses/$SHA \
-                        -H "Authorization: token $PASSWORD" \
-                        -H "Content-Type: application/json" \
-                        -d '{"state":"'\$RESULT'", "description":"Build '\$BUILD_NO' '\$RESULT'", "context":"Jenkins Build"}'
-                '''
-            }
+            env.SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+            sh '''
+                curl -X POST https://api.github.com/repos/3492PARTs/PARTs_WebAPI/statuses/$SHA \
+                    -H "Authorization: token $PASSWORD" \
+                    -H "Content-Type: application/json" \
+                    -d '{"state":"'\$RESULT'", "description":"Build '\$BUILD_NO' '\$RESULT'", "context":"Jenkins Build"}'
+            '''
+        }
+
+        mail(
+            to: recipient,
+            subject: "Build ${env.JOB_NAME} ${currentBuild.result}",
+            body: "Check the build details here: ${env.BUILD_URL}"
+        )
     }
 }
