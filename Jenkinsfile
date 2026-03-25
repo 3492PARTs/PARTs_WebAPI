@@ -204,6 +204,7 @@ node {
         }
 
         env.RESULT = 'success'
+        currentBuild.result = 'SUCCESS'
     }
     catch (e) {
         // error handling, if needed
@@ -215,7 +216,7 @@ node {
             subject: "Build ${env.JOB_NAME} Failed",
             body: "The build failed with error: ${err}"
         )
-        
+
         throw e
     } 
     finally {
