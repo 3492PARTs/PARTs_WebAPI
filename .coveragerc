@@ -3,6 +3,9 @@ omit =
     */migrations/*
     manage.py
     */settings.py
+    */settings/base.py
+    */settings/development.py
+    */settings/production.py
     */wsgi.py
     */asgi.py
     version.py
