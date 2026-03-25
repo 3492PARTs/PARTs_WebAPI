@@ -387,4 +387,4 @@ class DashboardGraph(models.Model):
     void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
-        return f"{self.id} : {self.dashboard} : {self.graph}"
+        return f"{self.id} : {self.dashboard_view} : {self.graph}"
