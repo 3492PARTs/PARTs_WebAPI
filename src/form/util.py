@@ -39,6 +39,8 @@ from form.models import (
     QuestionAggregateQuestion,
 )
 from scouting.models import Match, FieldResponse, PitResponse, Event
+from general.send_message import send_email
+from general.security import ret_message
 
 
 def get_questions(
@@ -485,8 +487,10 @@ def get_responses(form_typ: int, archive_ind: str):
         Q(form_typ__form_typ=form_typ) & Q(archive_ind=archive_ind) & Q(void_ind="n")
     ).order_by("-time")
 
+    questions_copy = get_questions(form_typ, "y")
+
     for res in resps:
-        questions = get_questions(res.form_typ, "y")
+        questions = questions_copy.copy()
 
         for question in questions:
             question["answer"] = get_response_question_answer(res, question["id"])
@@ -911,6 +915,9 @@ def save_answers(data):
         # Save the answers against the response object
         for d in data.get("question_answers", []):
             save_or_update_answer(d, response)
+
+    response.refresh_from_db()
+    return response
 
 
 def get_flows(fid=None, form_typ=None, form_sub_typ=None):
@@ -2192,3 +2199,30 @@ def compute_quartiles(data):
     q3 = _calculate_quartile(0.75)
 
     return {"Q1": q1, "Q2": q2, "Q3": q3}
+
+
+def send_email_notification(response):
+    try:
+        emails = Answer.objects.filter(
+            Q(response=response)
+            & Q(void_ind="n")
+            & (Q(question__question="School Email") | Q(question__question="Email"))
+        )
+
+        for email in emails:
+            send_email(
+                email.value,
+                f"{response.form_typ.form_nm} Received",
+                "generic_email",
+                {
+                    "message": f"Thank you for reaching out! We will try to get back to you as soon as possible.",
+                    "user": {"first_name": "", "last_name": ""},
+                },
+            )
+    except Exception as e:
+        ret_message(
+            "Error sending email notification",
+            True,
+            "form.util.send_email.notification",
+            exception=e,
+        )

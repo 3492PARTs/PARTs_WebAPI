@@ -156,7 +156,9 @@ class SaveAnswersView(APIView):
                     return HttpResponse("Unauthorized", status=401)
 
                 # Check if user has the appropriate permission for the form type
-                required_permission = "scoutfield" if form_typ == "field" else "scoutpit"
+                required_permission = (
+                    "scoutfield" if form_typ == "field" else "scoutpit"
+                )
                 if has_access(request.user.id, required_permission):
                     # Try to deserialize as a field or pit answer
                     serializer = ScoutFieldFormResponseSerializer(data=request.data)
@@ -191,7 +193,11 @@ class SaveAnswersView(APIView):
                 # regular response
                 serializer = SaveResponseSerializer(data=request.data)
                 if serializer.is_valid():
-                    form.util.save_answers(serializer.validated_data)
+                    response = form.util.save_answers(serializer.validated_data)
+
+                    if form_typ in ["team-app", "team-cntct"]:
+                        form.util.send_email_notification(response)
+
                 else:
                     return ret_message(
                         error_msg,
