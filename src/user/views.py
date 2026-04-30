@@ -594,23 +594,23 @@ class UserRequestPasswordReset(APIView):
                     ),
                 }
 
-            """
-            send_mail(
-                subject="Password Reset Requested",
-                message=render_to_string(
-                    "email_templates/password_reset_email.txt", cntx
-                ).strip(),
-                html_message=render_to_string(
-                    "email_templates/password_reset_email.html", cntx
-                ).strip(),
-                from_email="team3492@gmail.com",
-                recipient_list=[user.email],
-            )
-            """
+                """
+                send_mail(
+                    subject="Password Reset Requested",
+                    message=render_to_string(
+                        "email_templates/password_reset_email.txt", cntx
+                    ).strip(),
+                    html_message=render_to_string(
+                        "email_templates/password_reset_email.html", cntx
+                    ).strip(),
+                    from_email="team3492@gmail.com",
+                    recipient_list=[user.email],
+                )
+                """
 
-            send_message.send_email(
-                user.email, "Password Reset Requested", "password_reset_email", cntx
-            )
+                send_message.send_email(
+                    user.email, "Password Reset Requested", "password_reset_email", cntx
+                )
         except Exception as e:
             ret_message(
                 "Failed user reset attempt", True, app_url + self.endpoint, exception=e
