@@ -315,6 +315,16 @@ class UserInfo(models.Model):
         return f"{self.id} : {self.user}"
 
 
+class UserSeason(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, models.PROTECT, related_name="scouting_user_season")
+    season = models.ForeignKey(Season, models.PROTECT)
+    void_ind = models.CharField(max_length=1, default="n")
+
+    def __str__(self):
+        return f"{self.id} : {self.user} : {self.season}"
+
+    
 class MatchStrategy(models.Model):
     id = models.AutoField(primary_key=True)
     match = models.ForeignKey(Match, models.PROTECT, null=True)
