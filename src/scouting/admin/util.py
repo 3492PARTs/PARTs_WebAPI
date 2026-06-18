@@ -163,6 +163,16 @@ def get_scout_auth_groups() -> list[Any]:
     return groups
 
 
+def get_seasons() -> QuerySet[Season]:
+    """
+    Get all non-voided seasons ordered by season year/name.
+
+    Returns:
+        QuerySet of Season objects ordered by season field
+    """
+    return Season.objects.filter(void_ind="n").order_by("season")
+
+
 def save_season(data: dict[str, Any]) -> Season:
     """
     Create or update a season.
@@ -881,8 +891,8 @@ def save_user_season(user_season: dict[str, Any]) -> UserSeason:
     else:
         us = UserSeason()
 
-    us.user = User.objects.get(id=user_season["user_id"])
-    us.season = Season.objects.get(id=user_season["season_id"])
+    us.user = User.objects.get(id=user_season["user"]["id"])
+    us.season = Season.objects.get(id=user_season["season"]["id"])
     us.void_ind = user_season["void_ind"]
 
     us.save()

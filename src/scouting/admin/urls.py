@@ -17,6 +17,7 @@ from .views import (
     MarkScoutPresentView,
     FieldFormView,
     ScoutingReportView,
+    UserSeasonView,
 )
 
 app_name = "scouting_admin"
@@ -25,7 +26,7 @@ app_name = "scouting_admin"
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path("scout-auth-group/", ScoutAuthGroupsView.as_view(), name="scout-auth-group"),
-    path("season/", SeasonView.as_view(), name="season"),
+    path("seasons/", SeasonView.as_view(), name="seasons"),
     path("event/", EventView.as_view(), name="event"),
     path("team/", TeamView.as_view(), name="team"),
     path("match/", MatchView.as_view(), name="match"),
@@ -41,4 +42,5 @@ urlpatterns = [
     path("mark-scout-present/", MarkScoutPresentView.as_view(), name="mark-scout-present"),
     path("field-form/", FieldFormView.as_view(), name="field-form"),
     path("scouting-report/", ScoutingReportView.as_view(), name="scouting-report"),
+    path("user-seasons/", UserSeasonView.as_view(), name="user-seasons"),
 ]

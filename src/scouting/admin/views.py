@@ -818,7 +818,7 @@ class UserSeasonView(APIView):
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "user-season/"
+    endpoint = "user-seasons/"
 
     def get(self, request, format=None) -> Response:
         """
@@ -834,7 +834,7 @@ class UserSeasonView(APIView):
             user_id = request.query_params.get("user_id", None)
             id = request.query_params.get("id", None)
             user_seasons = scouting.admin.util.get_user_seasons(id=id, user_id=user_id)
-            serializer = UserSeasonSerializer(user_seasons, many=user_id is not None)
+            serializer = UserSeasonSerializer(user_seasons, many=user_id is not None or (user_id is None and id is None))
             return Response(serializer.data)
 
         return access_response(
@@ -845,6 +845,20 @@ class UserSeasonView(APIView):
             fun,
         )
 
+    def save_fun(self, request):
+        serializer = UserSeasonSerializer(data=request.data)
+        if not serializer.is_valid():
+            return ret_message(
+                "Invalid data",
+                True,
+                app_url + self.endpoint,
+                request.user.id,
+                error_message=serializer.errors,
+            )
+
+        user_season = scouting.admin.util.save_user_season(serializer.validated_data)
+        return Response(UserSeasonSerializer(user_season).data)
+
     def post(self, request, format=None) -> Response:
         """
         POST endpoint to create or update a user season.
@@ -854,25 +868,29 @@ class UserSeasonView(APIView):
         Returns:
             Success message or error response
         """
-
-        def fun():
-            serializer = UserSeasonSerializer(data=request.data)
-            if not serializer.is_valid():
-                return ret_message(
-                    "Invalid data",
-                    True,
-                    app_url + self.endpoint,
-                    request.user.id,
-                    error_message=serializer.errors,
-                )
-
-            user_season = scouting.admin.util.save_user_season(serializer.validated_data)
-            return Response(UserSeasonSerializer(user_season).data)
-
+        
         return access_response(
             app_url + self.endpoint,
             request.user.id,
             auth_obj,
             "An error occurred while saving user season entry.",
-            fun,
+            lambda: self.save_fun(request),
+        )
+
+    def delete(self, request, format=None) -> Response:
+        """
+        DELETE endpoint to remove a user season.
+
+        Request body: UserSeason object with relevant fields.
+
+        Returns:
+            Success message or error response
+        """
+        
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while deleting user season entry.",
+            lambda: self.save_fun(request),
         )

@@ -70,7 +70,7 @@ class ScoutingUserInfoSerializer(serializers.Serializer):
 
 
 class UserSeasonSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=False)
+    id = serializers.IntegerField(required=False, allow_null=True)
     user = UserSerializer()
     season = SeasonSerializer()
     void_ind = serializers.CharField(default="n")
