@@ -67,3 +67,10 @@ class ScoutingUserInfoSerializer(serializers.Serializer):
     under_review = serializers.BooleanField(required=False)
     group_leader = serializers.BooleanField(required=False)
     eliminate_results = serializers.BooleanField(required=False)
+
+
+class UserSeasonSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    user = UserSerializer()
+    season = SeasonSerializer()
+    void_ind = serializers.CharField(default="n")

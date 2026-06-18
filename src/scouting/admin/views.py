@@ -10,7 +10,7 @@ import scouting.field.util
 
 from .serializers import *
 from rest_framework.views import APIView
-from general.security import has_access, ret_message
+from general.security import access_response, has_access, ret_message
 from rest_framework.response import Response
 
 from ..serializers import FieldFormSerializer, MatchSerializer
@@ -803,3 +803,76 @@ class ScoutingReportView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class UserSeasonView(APIView):
+    """
+    API endpoint to manage user seasons.
+
+    Authentication required: JWT
+    Permission required: attendance or meetings
+
+    GET: Returns all user seasons for the current season
+    POST: Creates or updates a user season
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "user-season/"
+
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve all user seasons.
+
+        Returns:
+            Response with list of user seasons or error message
+        """
+
+        def fun():
+            # mtg_id = request.query_params.get("meeting_id", None)
+
+            user_id = request.query_params.get("user_id", None)
+            id = request.query_params.get("id", None)
+            user_seasons = scouting.admin.util.get_user_seasons(id=id, user_id=user_id)
+            serializer = UserSeasonSerializer(user_seasons, many=user_id is not None)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting user seasons.",
+            fun,
+        )
+
+    def post(self, request, format=None) -> Response:
+        """
+        POST endpoint to create or update a user season.
+
+        Request body: UserSeason object with relevant fields.
+
+        Returns:
+            Success message or error response
+        """
+
+        def fun():
+            serializer = UserSeasonSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            user_season = scouting.admin.util.save_user_season(serializer.validated_data)
+            return Response(UserSeasonSerializer(user_season).data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving user season entry.",
+            fun,
+        )
