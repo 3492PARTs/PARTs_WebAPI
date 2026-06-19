@@ -94,7 +94,7 @@ class SeasonView(APIView):
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "season/"
+    endpoint = "seasons/"
 
     def post(self, request, format=None):
         try:
@@ -139,7 +139,7 @@ class SeasonView(APIView):
                         error_message=serializer.errors,
                     )
                 req = scouting.admin.util.save_season(serializer.validated_data)
-                ret_message("Successfully saved season")
+                #ret_message("Successfully saved season")
                 return req
             else:
                 return ret_message(

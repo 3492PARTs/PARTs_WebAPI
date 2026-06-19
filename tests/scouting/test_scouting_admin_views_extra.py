@@ -18,7 +18,7 @@ class TestScoutAdminSeasonView:
         """Line 104: invalid serializer data."""
         api_client.force_authenticate(user=test_user)
         with patch("scouting.admin.views.has_access", return_value=True):
-            response = api_client.post(f"{BASE}/season/", {}, format="json")
+            response = api_client.post(f"{BASE}/seasons/", {}, format="json")
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -27,7 +27,7 @@ class TestScoutAdminSeasonView:
         api_client.force_authenticate(user=test_user)
         with patch("scouting.admin.views.has_access", return_value=False):
             response = api_client.post(
-                f"{BASE}/season/",
+                f"{BASE}/seasons/",
                 {"season": "2025", "current": "n", "game": "G"},
                 format="json"
             )
@@ -41,7 +41,7 @@ class TestScoutAdminSeasonView:
              patch("scouting.admin.views.scouting.admin.util.save_season",
                    side_effect=Exception("boom")):
             response = api_client.post(
-                f"{BASE}/season/",
+                f"{BASE}/seasons/",
                 {"season": "2025", "current": "n", "game": "G"},
                 format="json"
             )
@@ -52,7 +52,7 @@ class TestScoutAdminSeasonView:
         """Line 130-140: PUT invalid serializer."""
         api_client.force_authenticate(user=test_user)
         with patch("scouting.admin.views.has_access", return_value=True):
-            response = api_client.put(f"{BASE}/season/", {}, format="json")
+            response = api_client.put(f"{BASE}/seasons/", {}, format="json")
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -61,7 +61,7 @@ class TestScoutAdminSeasonView:
         api_client.force_authenticate(user=test_user)
         with patch("scouting.admin.views.has_access", return_value=False):
             response = api_client.put(
-                f"{BASE}/season/",
+                f"{BASE}/seasons/",
                 {"season": "2025", "current": "n", "game": "G"},
                 format="json"
             )
@@ -75,7 +75,7 @@ class TestScoutAdminSeasonView:
              patch("scouting.admin.views.scouting.admin.util.save_season",
                    side_effect=Exception("boom")):
             response = api_client.put(
-                f"{BASE}/season/",
+                f"{BASE}/seasons/",
                 {"season": "2025", "current": "n", "game": "G"},
                 format="json"
             )
@@ -88,7 +88,7 @@ class TestScoutAdminSeasonView:
         with patch("scouting.admin.views.has_access", return_value=True), \
              patch("scouting.admin.views.scouting.admin.util.delete_season",
                    side_effect=Exception("boom")):
-            response = api_client.delete(f"{BASE}/season/?season_id=1")
+            response = api_client.delete(f"{BASE}/seasons/?season_id=1")
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -96,7 +96,7 @@ class TestScoutAdminSeasonView:
         """Lines 175-181: DELETE access denied."""
         api_client.force_authenticate(user=test_user)
         with patch("scouting.admin.views.has_access", return_value=False):
-            response = api_client.delete(f"{BASE}/season/?season_id=1")
+            response = api_client.delete(f"{BASE}/seasons/?season_id=1")
         assert response.status_code == 200
         assert response.data.get("error") is True
 
