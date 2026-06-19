@@ -912,9 +912,10 @@ def save_user_seasons(user_seasons: list[dict[str, Any]]) -> list[UserSeason]:
     """
     
     user_season_ids = [us["id"] for us in user_seasons if us.get("id") is not None]
+    user_ids = [us["user"]["id"] for us in user_seasons if us.get("id") is not None]
     
-    # Delete any existing user seasons not in the provided list
-    UserSeason.objects.exclude(id__in=user_season_ids).delete()
+    # Set void_ind to 'y' for any existing user seasons not in the provided list
+    UserSeason.objects.filter(~Q(id__in=user_season_ids) & Q(user__id__in=user_ids) & Q(void_ind='n')).update(void_ind='y')
 
     result = []
     for user_season in user_seasons:
