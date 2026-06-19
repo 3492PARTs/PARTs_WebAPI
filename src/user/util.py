@@ -53,6 +53,8 @@ def parse_user(usr: User) -> dict[str, Any]:
         Q(permission__in=permissions) | Q(permission_id__isnull=True)
     ).order_by("order")
 
+    img = usr.userimage_set.filter(img_approved=True).order_by("-date_added").first()
+
     usr_dict = {
         "id": usr.id,
         "username": usr.username,
@@ -66,7 +68,7 @@ def parse_user(usr: User) -> dict[str, Any]:
         "permissions": permissions,
         "phone_type": usr.phone_type,
         "phone_type_id": usr.phone_type_id,
-        "image": general.cloudinary.build_image_url(usr.img_id, usr.img_ver),
+        "image": general.cloudinary.build_image_url(img.img_id, img.img_ver),
         "links": user_links,
         "discord_user_id": usr.discord_user_id,
     }

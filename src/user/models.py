@@ -85,8 +85,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=10, blank=True, null=True)
     phone_type = models.ForeignKey(PhoneType, models.PROTECT, blank=True, null=True)
     discord_user_id = models.CharField(max_length=1000, blank=True, null=True)
-    img_id = models.CharField(max_length=500, blank=True, null=True)
-    img_ver = models.CharField(max_length=500, blank=True, null=True)
 
     # sets what the user will log in with
     USERNAME_FIELD = "username"
@@ -116,3 +114,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         # (only needed when we know the dependent fields changed)
         self.name = None  # clear cached value
         super().save(*args, **kwargs)
+
+class UserImage(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, models.PROTECT, null=True)
+    img_id = models.CharField(max_length=500, blank=True, null=True)
+    img_ver = models.CharField(max_length=500, blank=True, null=True)
+    date_added = models.DateTimeField(auto_now_add=True)
+    img_approved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.id) + " " + str(self.user)

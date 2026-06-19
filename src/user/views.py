@@ -32,7 +32,7 @@ from .serializers import (
     GetAlertsSerializer,
     PermissionSerializer,
 )
-from .models import User, Link
+from .models import User, Link, UserImage
 from general.security import (
     access_response,
     get_user_groups,
@@ -388,9 +388,9 @@ class UserProfile(APIView):
                             user.img_id,
                             "User Profile Images",
                         )
+                        ui = UserImage(user=user, img_id=response["public_id"], img_ver=str(response["version"]))
+                        ui.save()
 
-                        user.img_id = response["public_id"]
-                        user.img_ver = str(response["version"])
                     if request.user.is_superuser:  # only allow role editing if admin
                         if "is_staff" in serializer.validated_data:
                             user.is_staff = serializer.validated_data["is_staff"]
@@ -735,7 +735,7 @@ class UserRequestUsername(APIView):
             "If a matching user was found you will receive an email shortly."
         )
 
-
+# TODO: Merge with UsersView
 class UserData(APIView):
     """
     API endpoint
