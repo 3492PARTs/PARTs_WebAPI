@@ -846,7 +846,8 @@ class UserSeasonView(APIView):
         )
 
     def save_fun(self, request):
-        serializer = UserSeasonSerializer(data=request.data)
+        is_list = request.data and isinstance(request.data, list)
+        serializer = UserSeasonSerializer(data=request.data, many=is_list)
         if not serializer.is_valid():
             return ret_message(
                 "Invalid data",
@@ -856,8 +857,8 @@ class UserSeasonView(APIView):
                 error_message=serializer.errors,
             )
 
-        user_season = scouting.admin.util.save_user_season(serializer.validated_data)
-        return Response(UserSeasonSerializer(user_season).data)
+        user_season = scouting.admin.util.save_user_seasons(serializer.validated_data) if is_list else scouting.admin.util.save_user_season(serializer.validated_data)
+        return Response(UserSeasonSerializer(user_season, many=is_list).data)
 
     def post(self, request, format=None) -> Response:
         """
