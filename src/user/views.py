@@ -385,9 +385,8 @@ class UserProfile(APIView):
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
                         response = general.cloudinary.upload_image(
-                            serializer.validated_data["image"],
-                            user.img_id,
-                            "User Profile Images",
+                            file=serializer.validated_data["image"],
+                            folder=f"User/Profile/{user.id}/",
                         )
                         ui = UserImage(user=user, img_id=response["public_id"], img_ver=str(response["version"]))
                         ui.save()
@@ -1258,8 +1257,8 @@ class UserImagesView(APIView):
         """
 
         def fun():
-            approval_status = request.query_params.get("approval_status", None)
-            user_images = user.util.get_user_images(approval_status)
+            img_approved = request.query_params.get("img_approved", None)
+            user_images = user.util.get_parsed_user_images(img_approved)
             serializer = UserImageSerializer(user_images, many=True)
             return Response(serializer.data)
 
@@ -1292,7 +1291,7 @@ class UserImagesView(APIView):
                     error_message=serializer.errors,
                 )
 
-            user_image = user.util.save_user_image(serializer.validated_data)
+            user_image = user.util.parse_user_image(user.util.save_user_image(serializer.validated_data))
             return Response(UserImageSerializer(user_image).data)
 
         return access_response(

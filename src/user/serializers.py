@@ -70,9 +70,9 @@ class UserSerializer(serializers.Serializer):
 class UserImageSerializer(serializers.Serializer):
     """Serializer for user image objects."""
 
-    id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     user = UserSerializer()
-    image = serializers.CharField()
+    image = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     img_approved = serializers.BooleanField()
     date_added = serializers.DateTimeField()
     void_ind = serializers.CharField(default="n")
