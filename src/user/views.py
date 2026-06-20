@@ -27,6 +27,7 @@ from .serializers import (
     RetMessageSerializer,
     UserCreationSerializer,
     LinkSerializer,
+    UserImageSerializer,
     UserSerializer,
     UserUpdateSerializer,
     GetAlertsSerializer,
@@ -1233,6 +1234,75 @@ class SimulateUser(APIView):
         )
 
 
+class UserImagesView(APIView):
+    """
+    API endpoint to manage user images.
+    
+    Authentication required: JWT
+    Permission required: admin
+    
+    GET: Retrieve list of user images
+    POST: Save a user image with approval status
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "user-images/"
+
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve user images.
+
+        Returns:
+            Response with list of user images or error message
+        """
+
+        def fun():
+            approval_status = request.query_params.get("approval_status", None)
+            user_images = user.util.get_user_images(approval_status)
+            serializer = UserImageSerializer(user_images, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while getting user images.",
+            fun,
+        )
+
+    def post(self, request, format=None) -> Response:
+        """
+        POST endpoint to save a user image with approval status.
+
+        Request body: UserImage object with approval status.
+
+        Returns:
+            Success message or error response
+        """
+
+        def fun():
+            serializer = UserImageSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            user_image = user.util.save_user_image(serializer.validated_data)
+            return Response(UserImageSerializer(user_image).data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            "admin",
+            "An error occurred while saving user image.",
+            fun,
+        )
+    
 # Backward compatibility aliases (can be removed in future versions)
 Alerts = AlertsView
 SaveWebPushInfo = SaveWebPushInfoView

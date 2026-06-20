@@ -4,7 +4,7 @@ from django.db.models import Q, QuerySet
 from django.db.models.functions import Lower
 
 from scouting.models import ScoutAuthGroup
-from user.models import User, PhoneType, Link
+from user.models import User, PhoneType, Link, UserImage
 import general.cloudinary
 import general.security
 
@@ -362,3 +362,45 @@ def save_link(data):
 
 def delete_link(link_id: int):
     Link.objects.get(id=link_id).delete()
+
+
+def get_user_images(approval_status: bool | None = None) -> QuerySet[UserImage]:
+    """
+    Get all user images.
+
+    Args:
+        approval_status: Optional boolean to filter images by approval status.
+
+    Returns:
+        QuerySet of UserImage objects ordered by date added
+    """
+
+    approval_filter = Q()
+    if approval_status is not None:
+        approval_filter = Q(img_approved=approval_status)
+
+    return UserImage.objects.filter(approval_filter).order_by("date_added")
+
+def save_user_image(data: dict[str, Any]) -> UserImage:
+    """
+    Save a user image with approval status.
+
+    Args:
+        data: Dictionary containing user image data (user, image, img_approved)
+
+    Returns:
+        The saved UserImage object
+    """
+    user_image = UserImage()
+    user_image.user = User.objects.get(id=data["user"]["id"])
+
+    if data.get("img_id", None) is not None:
+        user_image.img_id = data["img_id"]
+
+    if data.get("img_ver", None) is not None:
+        user_image.img_ver = data["img_ver"]
+
+    user_image.img_approved = data["img_approved"]
+    user_image.save()
+
+    return user_image

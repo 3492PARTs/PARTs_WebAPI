@@ -122,6 +122,7 @@ class UserImage(models.Model):
     img_ver = models.CharField(max_length=500, blank=True, null=True)
     date_added = models.DateTimeField(auto_now_add=True)
     img_approved = models.BooleanField(default=False)
+    void_ind = models.CharField(max_length=1, default="n")
 
     def __str__(self):
         return str(self.id) + " " + str(self.user)
