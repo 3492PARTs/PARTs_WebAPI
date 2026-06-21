@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     UserData,
     Groups,
+    UserImagesView,
     UserProfile,
     UserEmailConfirmation,
     UserEmailResendConfirmation,
@@ -51,4 +52,5 @@ urlpatterns = [
     path("security-audit/", SecurityAuditView.as_view(), name="security-audit"),
     path("links/", Links.as_view(), name="links"),
     path("simulate/", SimulateUser.as_view(), name="simulate"),
+    path("user-images/", UserImagesView.as_view(), name="user-images"),
 ]
