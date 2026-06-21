@@ -655,24 +655,25 @@ def stage_user_image_approval_alert() -> str:
         )
 
         user_images = UserImage.objects.filter(
-            Q(img_approved=False)
-            & Q(void_ind="n")
-            & ~Q(id__in=excluded_ids)
+            Q(img_approved=False) & Q(void_ind="n") & ~Q(id__in=excluded_ids)
         )
 
+        count = 0
         for user_img_obj in user_images:
             message += f"Alerted New User Profile Image: {user_img_obj.id} : {user_img_obj.user.name}\n"
 
-
-            sent = send_alerts_to_role(
-                            alert_typ.subject,
-                             f"\n<a href='{settings.FRONTEND_ADDRESS}admin/user-image-approval'>{alert_typ.body}</a>",
-                            alert_typ.permission.codename,
-                            ["notification", "email"],
-                            alert_type=alert_typ,
-                        )
+            count += 1
 
             AlertedResource(foreign_id=user_img_obj.id, alert_typ=alert_typ).save()
+
+        if count > 0:
+            sent = send_alerts_to_role(
+                alert_typ.subject,
+                f"\n<a href='{settings.FRONTEND_ADDRESS}admin/user-image-approval'>{alert_typ.body}</a>",
+                alert_typ.permission.codename,
+                ["notification", "email"],
+                alert_type=alert_typ,
+            )
 
         alert_typ.last_run = timezone.now()
         alert_typ.save()
