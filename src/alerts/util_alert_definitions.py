@@ -655,7 +655,7 @@ def stage_user_image_approval_alert() -> str:
         )
 
         user_images = UserImage.objects.filter(
-            Q(profile_img_approval=False)
+            Q(img_approved=False)
             & Q(void_ind="n")
             & ~Q(id__in=excluded_ids)
         )
@@ -666,7 +666,7 @@ def stage_user_image_approval_alert() -> str:
 
             sent = send_alerts_to_role(
                             alert_typ.subject,
-                            alert_typ.body,
+                             f"\n<a href='{settings.FRONTEND_ADDRESS}admin/user-image-approval'>{alert_typ.body}</a>",
                             alert_typ.permission.codename,
                             ["notification", "email"],
                             alert_type=alert_typ,
