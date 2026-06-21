@@ -4,11 +4,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import alerts.util_alert_definitions
-from alerts.util import (
-    send_alerts,
-    dismiss_alert,
-)
-from general.security import ret_message
+import alerts.util
+from general.security import access_response, ret_message
+from alerts.serializers import AlertTypeSerializer
+from admin.views import auth_obj as auth_obj_admin
 
 app_url = "alerts/"
 
@@ -61,7 +60,7 @@ class SendAlertsView(APIView):
         """
         try:
             ret = "SEND ALERTS: "
-            ret += send_alerts()
+            ret += alerts.util.send_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -94,7 +93,7 @@ class RunAlertsView(APIView):
             ret += "STAGE ALERTS: "
             ret += alerts.util_alert_definitions.stage_alerts()
             ret += "SEND ALERTS: "
-            ret += send_alerts()
+            ret += alerts.util.send_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -130,7 +129,7 @@ class DismissAlertView(APIView):
             Response with empty message on success or error message
         """
         try:
-            dismiss_alert(request.query_params.get("channel_send_id", None))
+            alerts.util.dismiss_alert(request.query_params.get("channel_send_id", None))
             return ret_message("")
         except Exception as e:
             return ret_message(
@@ -140,6 +139,77 @@ class DismissAlertView(APIView):
                 -1,
                 e,
             )
+
+
+class AlertTypesView(APIView):
+    """
+    API endpoint to alert types.
+
+    Authentication required: JWT
+    Permission required: attendance or meetings
+
+    GET: Returns all alert types for the current season
+    POST: Creates or updates an alert type
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "alert_types/"
+
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve all alert types.
+
+        Returns:
+            Response with list of alert types or error message
+        """
+
+        def fun():
+            alert_type_id = request.query_params.get("id", None)
+
+            alert_types = alerts.util.get_alert_types(alert_type_id)
+            serializer = AlertTypeSerializer(alert_types, many=alert_type_id is None)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj_admin,
+            "An error occurred while getting alert types.",
+            fun,
+        )
+
+    def post(self, request, format=None) -> Response:
+        """
+        POST endpoint to create or update an alert type.
+
+        Request body: AlertType object with title, description, etc.
+
+        Returns:
+            Success message or error response
+        """
+
+        def fun():
+            serializer = AlertTypeSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            alert_type = alerts.util.save_alert_type(serializer.validated_data)
+            return Response(AlertTypeSerializer(alert_type).data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj_admin,
+            "An error occurred while saving alert type.",
+            fun,
+        )
 
 
 # Backward compatibility aliases (can be removed in future versions)

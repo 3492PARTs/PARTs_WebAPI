@@ -28,7 +28,7 @@ class AlertType(models.Model):
     alert_typ_nm = models.CharField(max_length=255)
     subject = models.CharField(max_length=255, null=True)
     body = models.CharField(max_length=4000, null=True)
-    last_run = models.DateTimeField()
+    last_run = models.DateTimeField(null=True)
     permission = models.ForeignKey(Permission, on_delete=models.PROTECT, null=True)
     void_ind = models.CharField(max_length=1, default="n")
 

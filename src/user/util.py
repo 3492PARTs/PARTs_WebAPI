@@ -292,14 +292,20 @@ def delete_group(group_id: int) -> None:
     Group.objects.get(id=group_id).delete()
 
 
-def get_permissions() -> QuerySet[Permission]:
+def get_permissions(codename: str | None = None) -> QuerySet[Permission]:
     """
     Get all custom permissions (those with content_type_id=-1).
+
+    Args:
+        codename: Optional codename to filter permissions
 
     Returns:
         QuerySet of Permission objects ordered by name
     """
-    return Permission.objects.filter(content_type_id=-1).order_by("name")
+    codename_filter = Q()
+    if codename is not None:
+        codename_filter = Q(codename=codename)
+    return Permission.objects.filter(Q(content_type_id=-1) & codename_filter).order_by("name")
 
 
 def save_permission(data: dict[str, Any]) -> None:

@@ -56,6 +56,7 @@ from django.contrib.auth.password_validation import (
 from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 from general import send_message
+from admin.views import auth_obj as auth_obj_admin
 
 auth_obj_save_user = "save_user"
 app_url = "user/"
@@ -1265,7 +1266,7 @@ class UserImagesView(APIView):
         return access_response(
             app_url + self.endpoint,
             request.user.id,
-            "admin",
+            auth_obj_admin,
             "An error occurred while getting user images.",
             fun,
         )
@@ -1297,7 +1298,7 @@ class UserImagesView(APIView):
         return access_response(
             app_url + self.endpoint,
             request.user.id,
-            "admin",
+            auth_obj_admin,
             "An error occurred while saving user image.",
             fun,
         )
