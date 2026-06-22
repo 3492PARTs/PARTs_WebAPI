@@ -67,6 +67,16 @@ class UserSerializer(serializers.Serializer):
     links = LinkSerializer(many=True, required=False)
 
 
+class UserImageSerializer(serializers.Serializer):
+    """Serializer for user image objects."""
+
+    id = serializers.IntegerField(required=False, allow_null=True)
+    user = UserSerializer()
+    image = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    img_approved = serializers.BooleanField()
+    date_added = serializers.DateTimeField()
+    void_ind = serializers.CharField(default="n")
+
 class UserCreationSerializer(serializers.Serializer):
     """
     User serializer, used only for validation of fields upon user registration.

@@ -2,7 +2,7 @@ import django
 from typing import Any
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 
 from alerts.models import Alert, AlertType, ChannelSend, CommunicationChannelType
 from general import send_message
@@ -257,7 +257,7 @@ def send_alerts_to_role(
         return alerts
 
 
-def get_alert_type(alert_typ: str) -> AlertType:
+def get_alert_type(alert_typ: str) -> AlertType | None:
     """
     Retrieve an AlertType by its type code.
 
@@ -265,6 +265,54 @@ def get_alert_type(alert_typ: str) -> AlertType:
         alert_typ: The alert type code to look up
 
     Returns:
-        The AlertType object with the specified code
+        The AlertType object with the specified code, or None if not found.
     """
-    return AlertType.objects.get(Q(alert_typ=alert_typ) & Q(void_ind="n"))
+    return get_alert_types(alert_type=alert_typ).first()
+
+
+def get_alert_types(alert_type_id: int | None = None, alert_type: str | None = None) -> QuerySet[AlertType]:
+    """
+    Retrieve alert types, optionally filtering by a specific ID or type code.
+
+    Args:
+        alert_type_id: Optional ID of the AlertType to retrieve. If None, retrieves all alert types.
+        alert_type: Optional type code of the AlertType to retrieve. If None, retrieves all alert types.
+
+    Returns:
+        QuerySet of AlertType objects matching the specified ID or type code, or all AlertType objects if no ID or type code is provided.
+    """
+    alert_type_id_filter = Q()
+    if alert_type_id is not None:
+        alert_type_id_filter = Q(id=alert_type_id)
+
+    alert_type_filter = Q()
+    if alert_type is not None:
+        alert_type_filter &= Q(alert_typ=alert_type)
+
+    return AlertType.objects.filter(alert_type_id_filter & alert_type_filter & Q(void_ind="n"))
+
+def save_alert_type(alert_type_data: dict[str, Any]) -> AlertType:
+    """
+    Create or update an AlertType based on provided data.
+
+    Args:
+        alert_type_data: Dictionary containing AlertType fields (e.g., alert_typ, alert_typ_nm, subject, body, permission)
+
+    Returns:
+        The created or updated AlertType object.
+    """
+    if alert_type_data.get("id", None) is not None:
+        alert_type = AlertType.objects.get(id=alert_type_data["id"])
+    else:
+        alert_type = AlertType()
+    alert_type.alert_typ = alert_type_data["alert_typ"]
+    alert_type.alert_typ_nm = alert_type_data["alert_typ_nm"]
+    alert_type.subject = alert_type_data.get("subject", None)
+    alert_type.body = alert_type_data.get("body", None)
+    if alert_type_data.get("permission", None) is not None:
+        alert_type.permission = user.util.get_permissions(
+            alert_type_data["permission"]["codename"]
+        ).first()
+    alert_type.void_ind = alert_type_data.get("void_ind", "n")
+    alert_type.save()
+    return alert_type
