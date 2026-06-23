@@ -8,6 +8,7 @@ import alerts.util
 from general.security import access_response, ret_message
 from alerts.serializers import AlertTypeSerializer
 from admin.views import auth_obj as auth_obj_admin
+from alerts.util import dismiss_alert, send_alerts
 
 app_url = "alerts/"
 
@@ -60,7 +61,7 @@ class SendAlertsView(APIView):
         """
         try:
             ret = "SEND ALERTS: "
-            ret += alerts.util.send_alerts()
+            ret += send_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -93,7 +94,7 @@ class RunAlertsView(APIView):
             ret += "STAGE ALERTS: "
             ret += alerts.util_alert_definitions.stage_alerts()
             ret += "SEND ALERTS: "
-            ret += alerts.util.send_alerts()
+            ret += send_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -129,7 +130,7 @@ class DismissAlertView(APIView):
             Response with empty message on success or error message
         """
         try:
-            alerts.util.dismiss_alert(request.query_params.get("channel_send_id", None))
+            dismiss_alert(request.query_params.get("channel_send_id", None))
             return ret_message("")
         except Exception as e:
             return ret_message(

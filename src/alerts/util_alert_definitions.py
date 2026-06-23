@@ -647,6 +647,8 @@ def stage_user_image_approval_alert() -> str:
 
     try:
         alert_typ = get_alert_type("user_image_approval")
+        if alert_typ is None:
+            return "NONE TO STAGE"
 
         excluded_ids = (
             AlertedResource.objects.filter(Q(alert_typ=alert_typ) & Q(void_ind="n"))
