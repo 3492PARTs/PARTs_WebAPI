@@ -139,7 +139,7 @@ class SeasonView(APIView):
                         error_message=serializer.errors,
                     )
                 req = scouting.admin.util.save_season(serializer.validated_data)
-                #ret_message("Successfully saved season")
+                # ret_message("Successfully saved season")
                 return req
             else:
                 return ret_message(
@@ -834,7 +834,10 @@ class UserSeasonView(APIView):
             user_id = request.query_params.get("user_id", None)
             id = request.query_params.get("id", None)
             user_seasons = scouting.admin.util.get_user_seasons(id=id, user_id=user_id)
-            serializer = UserSeasonSerializer(user_seasons, many=user_id is not None or (user_id is None and id is None))
+            serializer = UserSeasonSerializer(
+                user_seasons,
+                many=user_id is not None or (user_id is None and id is None),
+            )
             return Response(serializer.data)
 
         return access_response(
@@ -857,7 +860,13 @@ class UserSeasonView(APIView):
                 error_message=serializer.errors,
             )
 
-        user_season = scouting.admin.util.save_user_seasons(serializer.validated_data) if is_list else scouting.admin.util.save_user_season(serializer.validated_data)
+        user_season = (
+            scouting.admin.util.save_user_seasons(
+                request.user.id, serializer.validated_data
+            )
+            if is_list
+            else scouting.admin.util.save_user_season(serializer.validated_data)
+        )
         return Response(UserSeasonSerializer(user_season, many=is_list).data)
 
     def post(self, request, format=None) -> Response:
@@ -869,7 +878,7 @@ class UserSeasonView(APIView):
         Returns:
             Success message or error response
         """
-        
+
         return access_response(
             app_url + self.endpoint,
             request.user.id,
@@ -887,7 +896,7 @@ class UserSeasonView(APIView):
         Returns:
             Success message or error response
         """
-        
+
         return access_response(
             app_url + self.endpoint,
             request.user.id,

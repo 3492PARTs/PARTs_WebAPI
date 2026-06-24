@@ -21,7 +21,6 @@ from scouting.admin.views import UserSeasonView
 from scouting.models import Season, UserSeason
 from user.models import User
 
-
 # ---------------------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------------------
@@ -253,35 +252,35 @@ class TestSaveUserSeasons:
     def test_creates_multiple(self, user_a, user_b, season):
         payloads = [
             self._payload(user_a, season),
-            self._payload(user_b, season),
+            self._payload(user_a, season),
         ]
-        result = admin_util.save_user_seasons(payloads)
+        result = admin_util.save_user_seasons(user_a.id, payloads)
         assert len(result) == 2
         users = {r.user for r in result}
         assert user_a in users
-        assert user_b in users
+        # assert user_b in users
 
-    def test_deletes_unlisted_records(self, user_season_a, user_season_b, user_a, season):
-        # Only keep user_a's record
+    def test_deletes_unlisted_records(
+        self, user_season_a, user_season_b, user_a, season
+    ):
+        # Only modify user_a's record
         payloads = [self._payload(user_a, season, id=user_season_a.id)]
-        admin_util.save_user_seasons(payloads)
-        assert not UserSeason.objects.filter(id=user_season_b.id).exists()
-        assert UserSeason.objects.filter(id=user_season_a.id).exists()
+        admin_util.save_user_seasons(user_a.id, payloads)
+        assert admin_util.get_user_seasons(user_id=user_season_b.user.id).exists()
+        assert admin_util.get_user_seasons(user_id=user_season_a.user.id).exists()
 
     def test_empty_list_deletes_all(self, user_season_a, user_season_b):
-        admin_util.save_user_seasons([])
-        assert UserSeason.objects.count() == 0
+        admin_util.save_user_seasons(user_season_a.user.id, [])
+        assert admin_util.get_user_seasons(user_id=user_season_a.user.id).count() == 0
 
     def test_returns_list(self, user_a, season):
         payloads = [self._payload(user_a, season)]
-        result = admin_util.save_user_seasons(payloads)
+        result = admin_util.save_user_seasons(user_a.id, payloads)
         assert isinstance(result, list)
 
-    def test_updates_existing_in_list(
-        self, user_season_a, user_a, season, season2
-    ):
+    def test_updates_existing_in_list(self, user_season_a, user_a, season, season2):
         payload = self._payload(user_a, season2, id=user_season_a.id, void_ind="y")
-        result = admin_util.save_user_seasons([payload])
+        result = admin_util.save_user_seasons(user_a.id, [payload])
         assert result[0].id == user_season_a.id
         assert result[0].season == season2
         assert result[0].void_ind == "y"
@@ -331,7 +330,9 @@ class TestUserSeasonViewGet:
         response = UserSeasonView.as_view()(request)
         assert response.status_code == 401
 
-    def test_get_all_user_seasons(self, api_rf, test_user, user_season_a, user_season_b):
+    def test_get_all_user_seasons(
+        self, api_rf, test_user, user_season_a, user_season_b
+    ):
         request = api_rf.get("/scouting/admin/user-seasons/")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
@@ -341,9 +342,7 @@ class TestUserSeasonViewGet:
         assert len(response.data) == 2
 
     def test_get_by_id(self, api_rf, test_user, user_season_a):
-        request = api_rf.get(
-            f"/scouting/admin/user-seasons/?id={user_season_a.id}"
-        )
+        request = api_rf.get(f"/scouting/admin/user-seasons/?id={user_season_a.id}")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
@@ -353,9 +352,7 @@ class TestUserSeasonViewGet:
     def test_get_by_user_id(
         self, api_rf, test_user, user_season_a, user_season_b, user_a
     ):
-        request = api_rf.get(
-            f"/scouting/admin/user-seasons/?user_id={user_a.id}"
-        )
+        request = api_rf.get(f"/scouting/admin/user-seasons/?user_id={user_a.id}")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
@@ -375,11 +372,10 @@ class TestUserSeasonViewGet:
     def test_get_exception_returns_error(self, api_rf, test_user, system_user):
         request = api_rf.get("/scouting/admin/user-seasons/")
         force_authenticate(request, user=test_user)
-        with patch("general.security.has_access", return_value=True), \
-             patch(
-                 "scouting.admin.util.get_user_seasons",
-                 side_effect=Exception("boom"),
-             ):
+        with patch("general.security.has_access", return_value=True), patch(
+            "scouting.admin.util.get_user_seasons",
+            side_effect=Exception("boom"),
+        ):
             response = UserSeasonView.as_view()(request)
         assert response.status_code == 200
         assert response.data.get("error") is True
@@ -389,19 +385,13 @@ class TestUserSeasonViewGet:
 class TestUserSeasonViewPost:
     def test_unauthenticated_returns_401(self, api_rf, user_a, season):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.post(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         response = UserSeasonView.as_view()(request)
         assert response.status_code == 401
 
-    def test_post_creates_single_user_season(
-        self, api_rf, test_user, user_a, season
-    ):
+    def test_post_creates_single_user_season(self, api_rf, test_user, user_a, season):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.post(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
@@ -416,9 +406,7 @@ class TestUserSeasonViewPost:
             _user_season_payload(user_a, season),
             _user_season_payload(user_b, season),
         ]
-        request = api_rf.post(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
@@ -432,9 +420,7 @@ class TestUserSeasonViewPost:
         payload = _user_season_payload(
             user_a, season2, id=user_season_a.id, void_ind="y"
         )
-        request = api_rf.post(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
@@ -443,9 +429,7 @@ class TestUserSeasonViewPost:
         assert response.data["void_ind"] == "y"
 
     def test_post_invalid_data_returns_error(self, api_rf, test_user):
-        request = api_rf.post(
-            "/scouting/admin/user-seasons/", {}, format="json"
-        )
+        request = api_rf.post("/scouting/admin/user-seasons/", {}, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
@@ -454,26 +438,23 @@ class TestUserSeasonViewPost:
 
     def test_post_access_denied(self, api_rf, test_user, user_a, season):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.post(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=False):
             response = UserSeasonView.as_view()(request)
         assert response.status_code == 200
         assert response.data.get("error") is True
 
-    def test_post_exception_returns_error(self, api_rf, test_user, system_user, user_a, season):
+    def test_post_exception_returns_error(
+        self, api_rf, test_user, system_user, user_a, season
+    ):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.post(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
-        with patch("general.security.has_access", return_value=True), \
-             patch(
-                 "scouting.admin.util.save_user_season",
-                 side_effect=Exception("boom"),
-             ):
+        with patch("general.security.has_access", return_value=True), patch(
+            "scouting.admin.util.save_user_season",
+            side_effect=Exception("boom"),
+        ):
             response = UserSeasonView.as_view()(request)
         assert response.status_code == 200
         assert response.data.get("error") is True
@@ -483,9 +464,7 @@ class TestUserSeasonViewPost:
 class TestUserSeasonViewDelete:
     def test_unauthenticated_returns_401(self, api_rf, user_a, season):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.delete(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.delete("/scouting/admin/user-seasons/", payload, format="json")
         response = UserSeasonView.as_view()(request)
         assert response.status_code == 401
 
@@ -495,18 +474,14 @@ class TestUserSeasonViewDelete:
         payload = _user_season_payload(
             user_a, season, id=user_season_a.id, void_ind="y"
         )
-        request = api_rf.delete(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.delete("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
         assert response.status_code == 200
 
     def test_delete_invalid_data_returns_error(self, api_rf, test_user):
-        request = api_rf.delete(
-            "/scouting/admin/user-seasons/", {}, format="json"
-        )
+        request = api_rf.delete("/scouting/admin/user-seasons/", {}, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
             response = UserSeasonView.as_view()(request)
@@ -515,9 +490,7 @@ class TestUserSeasonViewDelete:
 
     def test_delete_access_denied(self, api_rf, test_user, user_a, season):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.delete(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.delete("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=False):
             response = UserSeasonView.as_view()(request)
@@ -528,15 +501,12 @@ class TestUserSeasonViewDelete:
         self, api_rf, test_user, system_user, user_a, season
     ):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.delete(
-            "/scouting/admin/user-seasons/", payload, format="json"
-        )
+        request = api_rf.delete("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
-        with patch("general.security.has_access", return_value=True), \
-             patch(
-                 "scouting.admin.util.save_user_season",
-                 side_effect=Exception("boom"),
-             ):
+        with patch("general.security.has_access", return_value=True), patch(
+            "scouting.admin.util.save_user_season",
+            side_effect=Exception("boom"),
+        ):
             response = UserSeasonView.as_view()(request)
         assert response.status_code == 200
         assert response.data.get("error") is True

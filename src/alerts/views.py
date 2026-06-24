@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import alerts.util_alert_definitions
-import alerts.util
+from alerts.util import dismiss_alert, send_alerts, get_alert_types, save_alert_type
 from general.security import access_response, ret_message
 from alerts.serializers import AlertTypeSerializer
 from admin.views import auth_obj as auth_obj_admin
@@ -15,7 +15,7 @@ app_url = "alerts/"
 class StageAlertsView(APIView):
     """
     API endpoint to stage user alerts.
-    
+
     This view triggers the staging of alerts defined in alert definitions.
     """
 
@@ -24,7 +24,7 @@ class StageAlertsView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to stage all alerts.
-        
+
         Returns:
             Response with success message or error message
         """
@@ -45,7 +45,7 @@ class StageAlertsView(APIView):
 class SendAlertsView(APIView):
     """
     API endpoint to send queued alerts to users.
-    
+
     This view processes staged alerts and sends them through configured channels.
     """
 
@@ -54,13 +54,13 @@ class SendAlertsView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to send all staged alerts.
-        
+
         Returns:
             Response with success message or error message
         """
         try:
             ret = "SEND ALERTS: "
-            ret += alerts.util.send_alerts()
+            ret += send_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -75,7 +75,7 @@ class SendAlertsView(APIView):
 class RunAlertsView(APIView):
     """
     API endpoint to stage and send alerts in one operation.
-    
+
     This view combines staging and sending of alerts for convenience.
     """
 
@@ -84,7 +84,7 @@ class RunAlertsView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to stage and send all alerts.
-        
+
         Returns:
             Response with success message or error message
         """
@@ -93,7 +93,7 @@ class RunAlertsView(APIView):
             ret += "STAGE ALERTS: "
             ret += alerts.util_alert_definitions.stage_alerts()
             ret += "SEND ALERTS: "
-            ret += alerts.util.send_alerts()
+            ret += send_alerts()
             return ret_message(ret)
         except Exception as e:
             return ret_message(
@@ -108,7 +108,7 @@ class RunAlertsView(APIView):
 class DismissAlertView(APIView):
     """
     API endpoint to dismiss an alert for the authenticated user.
-    
+
     Authentication required: JWT
     Permission required: IsAuthenticated
     """
@@ -121,15 +121,15 @@ class DismissAlertView(APIView):
     def get(self, request, format=None) -> Response:
         """
         GET endpoint to dismiss a specific alert.
-        
+
         Query parameters:
             channel_send_id: The ID of the channel send to dismiss
-            
+
         Returns:
             Response with empty message on success or error message
         """
         try:
-            alerts.util.dismiss_alert(request.query_params.get("channel_send_id", None))
+            dismiss_alert(request.query_params.get("channel_send_id", None))
             return ret_message("")
         except Exception as e:
             return ret_message(
@@ -167,7 +167,7 @@ class AlertTypesView(APIView):
         def fun():
             alert_type_id = request.query_params.get("id", None)
 
-            alert_types = alerts.util.get_alert_types(alert_type_id)
+            alert_types = get_alert_types(alert_type_id)
             serializer = AlertTypeSerializer(alert_types, many=alert_type_id is None)
             return Response(serializer.data)
 
@@ -200,7 +200,7 @@ class AlertTypesView(APIView):
                     error_message=serializer.errors,
                 )
 
-            alert_type = alerts.util.save_alert_type(serializer.validated_data)
+            alert_type = save_alert_type(serializer.validated_data)
             return Response(AlertTypeSerializer(alert_type).data)
 
         return access_response(
