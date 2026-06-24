@@ -870,10 +870,10 @@ def get_user_seasons(
     if id is not None:
         id_cond = Q(id=id)
 
-    return UserSeason.objects.filter(
-        id_cond & user_cond & Q(void_ind="n")
-    ).order_by("season__season", "user__name")
-    
+    return UserSeason.objects.filter(id_cond & user_cond & Q(void_ind="n")).order_by(
+        "season__season", "user__name"
+    )
+
 
 def save_user_season(user_season: dict[str, Any]) -> UserSeason:
     """
@@ -898,11 +898,15 @@ def save_user_season(user_season: dict[str, Any]) -> UserSeason:
     us.save()
     return us
 
-def save_user_seasons(user_seasons: list[dict[str, Any]]) -> list[UserSeason]:
+
+def save_user_seasons(
+    user_id: str, user_seasons: list[dict[str, Any]]
+) -> list[UserSeason]:
     """
     Save or update multiple user season records.
 
     Args:
+        user_id: The ID of the user for whom the user seasons are being saved
         user_seasons: List of dictionaries containing user season data (id, user_id, season_id, void_ind)
                 If id is present in a dictionary, updates existing user season; otherwise creates new one
                 Using the list of provided user seasons to determine which user seasons to delete (those not in the list)
@@ -910,12 +914,13 @@ def save_user_seasons(user_seasons: list[dict[str, Any]]) -> list[UserSeason]:
     Returns:
         List of created or updated UserSeason objects
     """
-    
+
     user_season_ids = [us["id"] for us in user_seasons if us.get("id") is not None]
-    user_ids = [us["user"]["id"] for us in user_seasons if us.get("id") is not None]
-    
+
     # Set void_ind to 'y' for any existing user seasons not in the provided list
-    UserSeason.objects.filter(~Q(id__in=user_season_ids) & Q(user__id__in=user_ids) & Q(void_ind='n')).update(void_ind='y')
+    UserSeason.objects.filter(
+        ~Q(id__in=user_season_ids) & Q(user__id=user_id) & Q(void_ind="n")
+    ).update(void_ind="y")
 
     result = []
     for user_season in user_seasons:
