@@ -848,28 +848,23 @@ class UserSeasonView(APIView):
             fun,
         )
 
-    def save_fun(self, request):
-        is_list = request.data and isinstance(request.data, list)
-        serializer = UserSeasonSerializer(data=request.data, many=is_list)
+    def save_fun(self, user_id, data):
+        serializer = UserSeasonSerializer(data=data, many=True)
         if not serializer.is_valid():
             return ret_message(
                 "Invalid data",
                 True,
                 app_url + self.endpoint,
-                request.user.id,
+                user_id,
                 error_message=serializer.errors,
             )
 
-        user_season = (
-            scouting.admin.util.save_user_seasons(
-                request.user.id, serializer.validated_data
-            )
-            if is_list
-            else scouting.admin.util.save_user_season(serializer.validated_data)
+        user_season = scouting.admin.util.save_user_seasons(
+            user_id, serializer.validated_data
         )
-        return Response(UserSeasonSerializer(user_season, many=is_list).data)
+        return Response(UserSeasonSerializer(user_season, many=True).data)
 
-    def post(self, request, format=None) -> Response:
+    def post(self, request, user_id, format=None) -> Response:
         """
         POST endpoint to create or update a user season.
 
@@ -884,10 +879,10 @@ class UserSeasonView(APIView):
             request.user.id,
             auth_obj,
             "An error occurred while saving user season entry.",
-            lambda: self.save_fun(request),
+            lambda: self.save_fun(user_id, request.data),
         )
 
-    def delete(self, request, format=None) -> Response:
+    def delete(self, request, user_id, format=None) -> Response:
         """
         DELETE endpoint to remove a user season.
 
@@ -902,5 +897,5 @@ class UserSeasonView(APIView):
             request.user.id,
             auth_obj,
             "An error occurred while deleting user season entry.",
-            lambda: self.save_fun(request),
+            lambda: self.save_fun(user_id, request.data),
         )
