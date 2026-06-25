@@ -389,16 +389,6 @@ class TestUserSeasonViewPost:
         response = UserSeasonView.as_view()(request)
         assert response.status_code == 401
 
-    def test_post_creates_single_user_season(self, api_rf, test_user, user_a, season):
-        payload = _user_season_payload(user_a, season)
-        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
-        force_authenticate(request, user=test_user)
-        with patch("general.security.has_access", return_value=True):
-            response = UserSeasonView.as_view()(request)
-        assert response.status_code == 200
-        assert response.data["user"]["id"] == user_a.id
-        assert response.data["season"]["id"] == season.id
-
     def test_post_creates_list_of_user_seasons(
         self, api_rf, test_user, user_a, user_b, season
     ):
@@ -409,7 +399,7 @@ class TestUserSeasonViewPost:
         request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
         assert isinstance(response.data, list)
         assert len(response.data) == 2
@@ -420,19 +410,19 @@ class TestUserSeasonViewPost:
         payload = _user_season_payload(
             user_a, season2, id=user_season_a.id, void_ind="y"
         )
-        request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
+        request = api_rf.post("/scouting/admin/user-seasons/", [payload], format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
-        assert response.data["id"] == user_season_a.id
-        assert response.data["void_ind"] == "y"
+        assert response.data[0]["id"] == user_season_a.id
+        assert response.data[0]["void_ind"] == "y"
 
-    def test_post_invalid_data_returns_error(self, api_rf, test_user):
+    def test_post_invalid_data_returns_error(self, api_rf, test_user, user_a):
         request = api_rf.post("/scouting/admin/user-seasons/", {}, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -441,7 +431,7 @@ class TestUserSeasonViewPost:
         request = api_rf.post("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=False):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -455,7 +445,7 @@ class TestUserSeasonViewPost:
             "scouting.admin.util.save_user_season",
             side_effect=Exception("boom"),
         ):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -464,7 +454,9 @@ class TestUserSeasonViewPost:
 class TestUserSeasonViewDelete:
     def test_unauthenticated_returns_401(self, api_rf, user_a, season):
         payload = _user_season_payload(user_a, season)
-        request = api_rf.delete("/scouting/admin/user-seasons/", payload, format="json")
+        request = api_rf.delete(
+            f"/scouting/admin/user-seasons/{user_a.id}/", payload, format="json"
+        )
         response = UserSeasonView.as_view()(request)
         assert response.status_code == 401
 
@@ -477,14 +469,14 @@ class TestUserSeasonViewDelete:
         request = api_rf.delete("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
 
     def test_delete_invalid_data_returns_error(self, api_rf, test_user):
         request = api_rf.delete("/scouting/admin/user-seasons/", {}, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=True):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=test_user.id)
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -493,7 +485,7 @@ class TestUserSeasonViewDelete:
         request = api_rf.delete("/scouting/admin/user-seasons/", payload, format="json")
         force_authenticate(request, user=test_user)
         with patch("general.security.has_access", return_value=False):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
         assert response.data.get("error") is True
 
@@ -507,6 +499,6 @@ class TestUserSeasonViewDelete:
             "scouting.admin.util.save_user_season",
             side_effect=Exception("boom"),
         ):
-            response = UserSeasonView.as_view()(request)
+            response = UserSeasonView.as_view()(request, user_id=user_a.id)
         assert response.status_code == 200
         assert response.data.get("error") is True
