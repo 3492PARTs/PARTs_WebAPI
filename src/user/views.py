@@ -27,12 +27,13 @@ from .serializers import (
     RetMessageSerializer,
     UserCreationSerializer,
     LinkSerializer,
+    UserImageSerializer,
     UserSerializer,
     UserUpdateSerializer,
     GetAlertsSerializer,
     PermissionSerializer,
 )
-from .models import User, Link
+from .models import User, Link, UserImage
 from general.security import (
     access_response,
     get_user_groups,
@@ -55,6 +56,7 @@ from django.contrib.auth.password_validation import (
 from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 from general import send_message
+from admin.views import auth_obj as auth_obj_admin
 
 auth_obj_save_user = "save_user"
 app_url = "user/"
@@ -384,13 +386,12 @@ class UserProfile(APIView):
                         user.last_name = serializer.validated_data["last_name"]
                     if "image" in serializer.validated_data:
                         response = general.cloudinary.upload_image(
-                            serializer.validated_data["image"],
-                            user.img_id,
-                            "User Profile Images",
+                            file=serializer.validated_data["image"],
+                            folder=f"User/Profile/{user.id}/",
                         )
+                        ui = UserImage(user=user, img_id=response["public_id"], img_ver=str(response["version"]))
+                        ui.save()
 
-                        user.img_id = response["public_id"]
-                        user.img_ver = str(response["version"])
                     if request.user.is_superuser:  # only allow role editing if admin
                         if "is_staff" in serializer.validated_data:
                             user.is_staff = serializer.validated_data["is_staff"]
@@ -735,7 +736,7 @@ class UserRequestUsername(APIView):
             "If a matching user was found you will receive an email shortly."
         )
 
-
+# TODO: Merge with UsersView
 class UserData(APIView):
     """
     API endpoint
@@ -1233,6 +1234,75 @@ class SimulateUser(APIView):
         )
 
 
+class UserImagesView(APIView):
+    """
+    API endpoint to manage user images.
+    
+    Authentication required: JWT
+    Permission required: admin
+    
+    GET: Retrieve list of user images
+    POST: Save a user image with approval status
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "user-images/"
+
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve user images.
+
+        Returns:
+            Response with list of user images or error message
+        """
+
+        def fun():
+            img_approved = request.query_params.get("img_approved", None)
+            user_images = user.util.get_parsed_user_images(img_approved)
+            serializer = UserImageSerializer(user_images, many=True)
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj_admin,
+            "An error occurred while getting user images.",
+            fun,
+        )
+
+    def post(self, request, format=None) -> Response:
+        """
+        POST endpoint to save a user image with approval status.
+
+        Request body: UserImage object with approval status.
+
+        Returns:
+            Success message or error response
+        """
+
+        def fun():
+            serializer = UserImageSerializer(data=request.data)
+            if not serializer.is_valid():
+                return ret_message(
+                    "Invalid data",
+                    True,
+                    app_url + self.endpoint,
+                    request.user.id,
+                    error_message=serializer.errors,
+                )
+
+            user_image = user.util.parse_user_image(user.util.save_user_image(serializer.validated_data))
+            return Response(UserImageSerializer(user_image).data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj_admin,
+            "An error occurred while saving user image.",
+            fun,
+        )
+    
 # Backward compatibility aliases (can be removed in future versions)
 Alerts = AlertsView
 SaveWebPushInfo = SaveWebPushInfoView
