@@ -244,7 +244,7 @@ class TestStageUserImageApprovalAlert:
         user_obj = User.objects.create_user(
             username="imgtest_user_uia",
             email="imgtest_uia@example.com",
-            ******,
+            ######
         )
         UserImage.objects.create(
             user=user_obj,

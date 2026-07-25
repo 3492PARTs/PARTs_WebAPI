@@ -240,7 +240,7 @@ class TestUserUpdateSuperuserFields:
     def test_superuser_can_update_is_active(self, api_client):
         """Lines 396-403: superuser → is_active, is_staff, is_superuser fields updated."""
         admin = User.objects.create_superuser(
-            username="su_test_fields", email="su_fields@example.com", ******
+            username="su_test_fields", email="su_fields@example.com", ######
         )
         api_client.force_authenticate(user=admin)
 
@@ -318,7 +318,7 @@ class TestSimulateUserView:
         api_client.force_authenticate(user=test_user)
 
         target = User.objects.create_user(
-            username="sim_target", email="sim_target@example.com", ******
+            username="sim_target", email="sim_target@example.com", ######
         )
 
         with patch("user.views.access_response",

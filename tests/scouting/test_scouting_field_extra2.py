@@ -72,7 +72,7 @@ class TestScoutingFieldUtil:
 
         User = get_user_model()
         user1 = User.objects.create_user(
-            username="scout_r1_ci", email="r1_ci@example.com", ******
+            username="scout_r1_ci", email="r1_ci@example.com", ######
         )
 
         season = Season.objects.create(season="2099ci1", current="y", game="G", manual="M")
@@ -103,10 +103,10 @@ class TestScoutingFieldUtil:
 
         User = get_user_model()
         user1 = User.objects.create_user(
-            username="scout_r1_ci2", email="r1_ci2@example.com", ******
+            username="scout_r1_ci2", email="r1_ci2@example.com", ######
         )
         user2 = User.objects.create_user(
-            username="scout_r2_ci2", email="r2_ci2@example.com", ******
+            username="scout_r2_ci2", email="r2_ci2@example.com", ######
         )
 
         season = Season.objects.create(season="2099ci2", current="y", game="G", manual="M")
@@ -141,7 +141,7 @@ class TestScoutingFieldUtil:
 
         User = get_user_model()
         user_b1 = User.objects.create_user(
-            username="scout_b1_ci", email="b1_ci@example.com", ******
+            username="scout_b1_ci", email="b1_ci@example.com", ######
         )
 
         season = Season.objects.create(season="2099ci3", current="y", game="G", manual="M")
@@ -170,7 +170,7 @@ class TestScoutingFieldUtil:
 
         User = get_user_model()
         user_b2 = User.objects.create_user(
-            username="scout_b2_ci", email="b2_ci@example.com", ******
+            username="scout_b2_ci", email="b2_ci@example.com", ######
         )
 
         season = Season.objects.create(season="2099ci4", current="y", game="G", manual="M")
