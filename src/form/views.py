@@ -32,7 +32,7 @@ class QuestionView(APIView):
     API endpoint to get questions
     """
 
-    endpoint = "questions/"
+    endpoint = "question/"
 
     def get(self, request, format=None):
         try:
@@ -49,6 +49,7 @@ class QuestionView(APIView):
                 app_url + self.endpoint,
                 -1,
                 e,
+                request,
             )
 
     def post(self, request, format=None):
