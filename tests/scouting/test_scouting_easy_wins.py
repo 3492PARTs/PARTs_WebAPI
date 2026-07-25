@@ -40,6 +40,11 @@ class TestScoutingModelStrMethods:
         from scouting.models import Season
         return Season.objects.create(season="2099s", current="y", game="G", manual="M")
 
+    def _make_user(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        return User.objects.create_user(username="graphuser", email="guser@test.com", password="password")
+
     def _make_event(self, season):
         from scouting.models import Event
         return Event.objects.create(
@@ -72,11 +77,14 @@ class TestScoutingModelStrMethods:
         import form.models as fm
         season = self._make_season()
         qt = fm.QuestionType.objects.create(question_typ="num_sq", question_typ_nm="Number SQ")
-        ftype = fm.FormType.objects.create(form_typ="field_sq", form_typ_nm="Field SQ")
+        ftype = fm.FormType.objects.create(form_typ="field_sq", form_nm="Field SQ")
         q = fm.Question.objects.create(
             question="Test SQ Question",
             question_typ=qt,
             form_typ=ftype,
+            table_col_width="100",
+            order=1,
+            required="n",
             active="y",
             void_ind="n",
         )
@@ -89,7 +97,8 @@ class TestScoutingModelStrMethods:
         from scouting.models import QuestionFlow, Season
         import form.models as fm
         season = self._make_season()
-        flow = fm.Flow.objects.create(name="Test Flow SQ", void_ind="n")
+        ftype = fm.FormType.objects.get_or_create(form_typ="field_qf", defaults={"form_nm": "Field QF"})[0]
+        flow = fm.Flow.objects.create(name="Test Flow SQ", form_typ=ftype, void_ind="n")
         qf = QuestionFlow.objects.create(flow=flow, season=season, void_ind="n")
         s = str(qf)
         assert str(qf.id) in s
@@ -100,11 +109,16 @@ class TestScoutingModelStrMethods:
         import form.models as fm
         season = self._make_season()
         graph_typ = fm.GraphType.objects.create(
-            graph_typ="histogram_sg", graph_typ_nm="Histogram SG"
+            graph_typ="histogram_sg", graph_nm="Histogram SG"
         )
         g = fm.Graph.objects.create(
             name="Test Graph SQ",
             graph_typ=graph_typ,
+            x_scale_min=0,
+            x_scale_max=10,
+            y_scale_min=0,
+            y_scale_max=10,
+            creator=self._make_user(),
             void_ind="n",
         )
         sg = ScoutGraph.objects.create(graph=g, season=season, void_ind="n")
@@ -119,16 +133,16 @@ class TestScoutFieldScheduleSerializerGetSchNm:
     """Line 108: get_sch_nm handles dict obj."""
 
     def test_get_sch_nm_with_dict(self):
-        from scouting.serializers import ScoutFieldScheduleSerializer
-        s = ScoutFieldScheduleSerializer()
+        from scouting.serializers import ScheduleSerializer
+        s = ScheduleSerializer()
         # obj is a dict (not a model instance)
         obj = {"sch_nm": "Pit Schedule"}
         result = s.get_sch_nm(obj)
         assert result == "Pit Schedule"
 
     def test_get_sch_nm_with_dict_missing_key(self):
-        from scouting.serializers import ScoutFieldScheduleSerializer
-        s = ScoutFieldScheduleSerializer()
+        from scouting.serializers import ScheduleSerializer
+        s = ScheduleSerializer()
         obj = {}
         result = s.get_sch_nm(obj)
         assert result == ""

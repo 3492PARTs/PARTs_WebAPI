@@ -24,7 +24,7 @@ import datetime
 def _create_form_type(form_typ="contact", form_nm="Contact"):
     from form.models import FormType
     ft, _ = FormType.objects.get_or_create(
-        form_typ=form_typ, defaults={"form_nm": form_nm, "void_ind": "n"}
+        form_typ=form_typ, defaults={"form_nm": form_nm}
     )
     return ft
 
@@ -55,7 +55,7 @@ def _create_question(form_typ_obj, qtyp, question_text="Q", order=1):
 def _create_agg_type(typ="sum"):
     from form.models import QuestionAggregateType
     at, _ = QuestionAggregateType.objects.get_or_create(
-        question_aggregate_typ=typ, defaults={"question_aggregate_typ_nm": typ, "void_ind": "n"}
+        question_aggregate_typ=typ, defaults={"question_aggregate_nm": typ}
     )
     return at
 
@@ -110,7 +110,7 @@ class TestSaveQuestionUpdateScoutQuestion:
         # Need a pit FormType
         ft, _ = FormType.objects.get_or_create(
             form_typ="pit",
-            defaults={"form_nm": "Pit", "void_ind": "n"},
+            defaults={"form_nm": "Pit"},
         )
         qtyp = _create_question_type("text")
         season = sm.Season.objects.create(
@@ -304,7 +304,7 @@ class TestSaveFlowPitCreatesQuestionFlow:
         import scouting.models as sm
 
         ft, _ = FormType.objects.get_or_create(
-            form_typ="pit", defaults={"form_nm": "Pit", "void_ind": "n"}
+            form_typ="pit", defaults={"form_nm": "Pit"}
         )
         season = sm.Season.objects.create(season="2099sf997", current="y", game="G", manual="M")
 

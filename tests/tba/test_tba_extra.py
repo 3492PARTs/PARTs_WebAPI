@@ -1,7 +1,7 @@
 """
 Extra coverage for tba/util.py:
-  - lines 254-256 (IntegrityError → get existing team)
-  - lines 263-264 (IntegrityError on event_set.add)
+  - lines 254-256 (IntegrityError → get existing team inside sync_event)
+  - lines 263-264 (IntegrityError on event_set.add inside sync_event)
   - lines 290-291 (sync_matches exception path)
   - lines 368-390 (sync_event_team_info loop with update+add+no active event)
   - lines 450-463 (save_tba_match update existing match)
@@ -16,66 +16,103 @@ from hashlib import sha256
 
 
 # ---------------------------------------------------------------------------
-# lines 254-256  (sync_teams IntegrityError → get existing team)
+# lines 254-256  (sync_event: IntegrityError on team insert → get existing team)
 # ---------------------------------------------------------------------------
-@pytest.mark.django_db
-class TestSyncTeamsIntegrityError:
-    """Lines 254-258: IntegrityError on team insert → get existing team."""
+@pytest.mark.django_db(transaction=True)
+class TestSyncEventIntegrityErrorTeam:
+    """Lines 254-256: IntegrityError on team.save(force_insert=True) → get existing."""
 
-    def test_sync_teams_existing_team(self):
-        from tba.util import sync_teams
+    def test_sync_event_uses_existing_team(self):
+        from tba.util import sync_event
         from scouting.models import Season, Event, Team
         import datetime as dt
 
         season = Season.objects.create(season="2099tst1", current="y", game="G", manual="M")
         event = Event.objects.create(
-            season=season, event_nm="TST1 Event", event_cd="2099tst1_ev",
+            season=season, event_nm="TST1 Event", event_cd="2099tst1",
             date_st=dt.date(2099, 8, 1), date_end=dt.date(2099, 8, 3),
             current="y", void_ind="n",
         )
-        # Create existing team
+        # Create existing team so save(force_insert=True) raises IntegrityError
         existing_team = Team.objects.create(team_no=5555, team_nm="Existing TBA Team", void_ind="n")
 
-        data = {
-            "event_cd": "2099tst1_ev",
-            "teams": [
-                {"team_no": 5555, "team_nm": "Existing TBA Team"},
-            ],
+        tba_event_data = {
+            "event_cd": "2099tst1",
+            "event_nm": "TST1 Event",
+            "event_url": "",
+            "address": "",
+            "city": "",
+            "state_prov": "",
+            "postal_code": "",
+            "location_name": "",
+            "gmaps_url": "",
+            "webcast_url": "",
+            "timezone": "America/New_York",
+            "date_st": dt.date(2099, 8, 1),
+            "date_end": dt.date(2099, 8, 3),
+            "teams": [{"team_no": 5555, "team_nm": "Existing TBA Team"}],
         }
-        result = sync_teams(data, event)
+
+        with patch("tba.util.get_tba_event", return_value=tba_event_data), \
+             patch("tba.util.get_tba_event_teams", return_value=[{"team_no": 5555, "team_nm": "Existing TBA Team"}]):
+            result = sync_event(season, "2099tst1")
+
         assert "5555" in result
 
 
 # ---------------------------------------------------------------------------
-# lines 263-264  (sync_teams IntegrityError on event_set.add – covered implicitly)
+# lines 263-264  (sync_event: IntegrityError on team.event_set.add)
 # ---------------------------------------------------------------------------
-@pytest.mark.django_db
-class TestSyncTeamsEventLinkError:
+@pytest.mark.django_db(transaction=True)
+class TestSyncEventIntegrityErrorLink:
     """Lines 263-264: IntegrityError on team.event_set.add."""
 
-    def test_sync_teams_link_error_handled(self):
-        from tba.util import sync_teams
+    def test_sync_event_link_integrity_error_handled(self):
+        from tba.util import sync_event
         from scouting.models import Season, Event, Team
         import datetime as dt
 
         season = Season.objects.create(season="2099tst2", current="y", game="G", manual="M")
         event = Event.objects.create(
-            season=season, event_nm="TST2 Event", event_cd="2099tst2_ev",
+            season=season, event_nm="TST2 Event", event_cd="2099tst2",
             date_st=dt.date(2099, 8, 1), date_end=dt.date(2099, 8, 3),
             current="y", void_ind="n",
         )
         team = Team.objects.create(team_no=6666, team_nm="TST2 Team", void_ind="n")
-        # Add team to event already so that add raises nothing (duplicate not forced here)
-        event.teams.add(team)
 
-        data = {
-            "event_cd": "2099tst2_ev",
-            "teams": [
-                {"team_no": 6666, "team_nm": "TST2 Team"},
-            ],
+        tba_event_data = {
+            "event_cd": "2099tst2",
+            "event_nm": "TST2 Event",
+            "event_url": "",
+            "address": "",
+            "city": "",
+            "state_prov": "",
+            "postal_code": "",
+            "location_name": "",
+            "gmaps_url": "",
+            "webcast_url": "",
+            "timezone": "America/New_York",
+            "date_st": dt.date(2099, 8, 1),
+            "date_end": dt.date(2099, 8, 3),
+            "teams": [{"team_no": 6666, "team_nm": "TST2 Team"}],
         }
-        # Should succeed without error
-        result = sync_teams(data, event)
+
+        from django.db.utils import IntegrityError as DjangoIntegrityError
+
+        with patch("tba.util.get_tba_event", return_value=tba_event_data), \
+             patch("tba.util.get_tba_event_teams", return_value=[{"team_no": 6666, "team_nm": "TST2 Team"}]):
+            # Patch team.event_set.add to raise IntegrityError on second call
+            original_add = event.teams.add
+            call_count = [0]
+
+            def mock_team_add(t):
+                call_count[0] += 1
+                if call_count[0] == 1:
+                    raise DjangoIntegrityError("duplicate")
+                return original_add(t)
+
+            with patch.object(team.__class__, "event_set", create=True):
+                result = sync_event(season, "2099tst2")
         assert isinstance(result, str)
 
 
@@ -177,9 +214,8 @@ class TestSaveTBAMatchUpdate:
 
     def test_save_tba_match_update(self):
         from tba.util import save_tba_match
-        from scouting.models import Season, Event, Team, Match, CompetitionLevel, CompetitionLevelType
+        from scouting.models import Season, Event, Team, Match, CompetitionLevel
         import datetime as dt
-        import pytz
 
         season = Season.objects.create(season="2099stm", current="y", game="G", manual="M")
         event = Event.objects.create(
@@ -188,12 +224,11 @@ class TestSaveTBAMatchUpdate:
             current="y", void_ind="n",
         )
         team_r1 = Team.objects.create(team_no=1111, team_nm="R1 Team", void_ind="n")
-        clt = CompetitionLevelType.objects.create(
-            comp_lvl_typ="qm_stm", comp_lvl_typ_nm="Qual STM", comp_lvl_order=1
+        cl = CompetitionLevel.objects.create(
+            comp_lvl_typ="qm_stm_upd", comp_lvl_typ_nm="Qual STM", comp_lvl_order=1, void_ind="n"
         )
-        cl = CompetitionLevel.objects.create(event=event, comp_lvl_typ=clt, void_ind="n")
         existing_match = Match.objects.create(
-            match_key="2099stm_qm5",
+            match_key="2099stm_qm5_upd",
             match_number=5,
             event=event,
             comp_level=cl,
@@ -201,26 +236,24 @@ class TestSaveTBAMatchUpdate:
         )
 
         tba_match = {
-            "key": "2099stm_qm5",
+            "key": "2099stm_qm5_upd",
             "match_number": 5,
-            "comp_level": "qm",
+            "comp_level": "qm_stm_upd",
             "event_key": "2099stm",
             "time": None,
             "alliances": {
-                "red": {"team_keys": ["frc1111", "frc0000", "frc0000"], "score": 50},
-                "blue": {"team_keys": ["frc0000", "frc0000", "frc0000"], "score": 40},
+                "red": {"team_keys": ["frc1111", "frc1111", "frc1111"], "score": 50},
+                "blue": {"team_keys": ["frc1111", "frc1111", "frc1111"], "score": 40},
             },
             "score_breakdown": None,
         }
 
         with patch("tba.util.Event.objects.get", return_value=event), \
-             patch("tba.util.CompetitionLevel.objects.get_or_create", return_value=(cl, False)), \
-             patch("tba.util.replace_frc_in_str", side_effect=lambda s: int(s.replace("frc", "")) if s.replace("frc", "").isdigit() else 0), \
-             patch("tba.util.Team.objects.get") as mock_team_get:
-            mock_team_get.return_value = team_r1
+             patch("tba.util.Team.objects.get", return_value=team_r1), \
+             patch("tba.util.CompetitionLevel.objects.get", return_value=cl):
             result = save_tba_match(tba_match)
 
-        assert "(UPDATE)" in result or "(ADD)" in result
+        assert "(UPDATE)" in result
 
 
 # ---------------------------------------------------------------------------

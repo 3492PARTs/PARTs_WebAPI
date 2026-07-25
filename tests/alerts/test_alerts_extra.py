@@ -23,7 +23,7 @@ class TestSendAlertsDiscordSystemUser:
         from alerts.util import create_alert, create_channel_send_for_comm_typ
         from alerts.models import (
             CommunicationChannelType,
-            AlertChannelSend,
+            ChannelSend,
         )
 
         comm_type = CommunicationChannelType.objects.create(
@@ -61,8 +61,7 @@ class TestGetAlertTypes:
         )
 
         result = get_alert_types(alert_type="test_typ_gat")
-        pks = list(result.values_list("id", flat=True))
-        assert at.id in pks
+        assert result.filter(alert_typ=at.alert_typ).exists()
 
     def test_get_alert_types_with_id_filter(self):
         from alerts.util import get_alert_types
@@ -75,9 +74,8 @@ class TestGetAlertTypes:
             void_ind="n",
         )
 
-        result = get_alert_types(alert_type_id=at.id)
-        pks = list(result.values_list("id", flat=True))
-        assert at.id in pks
+        result = get_alert_types(alert_type_id=at.pk)
+        assert result.filter(alert_typ=at.alert_typ).exists()
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +95,7 @@ class TestSaveAlertType:
             "void_ind": "n",
         }
         result = save_alert_type(data)
-        assert result.id is not None
+        assert result.pk is not None
         assert result.alert_typ == "new_sat_typ"
 
     def test_save_alert_type_update(self):
@@ -113,7 +111,7 @@ class TestSaveAlertType:
         )
 
         data = {
-            "id": at.id,
+            "id": at.pk,
             "alert_typ": "upd_sat_typ",
             "alert_typ_nm": "Updated Name",
             "void_ind": "n",
