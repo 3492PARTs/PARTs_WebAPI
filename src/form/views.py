@@ -49,7 +49,7 @@ class QuestionView(APIView):
                 app_url + self.endpoint,
                 -1,
                 e,
-                str(request),
+                f"Query Params: {request.query_params}",
             )
 
     def post(self, request, format=None):
