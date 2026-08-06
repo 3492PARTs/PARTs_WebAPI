@@ -30,7 +30,7 @@ class TestSendAlertsDiscordSystemUser:
             comm_typ="discord", comm_nm="Discord", void_ind="n"
         )
         alert = create_alert(system_user, "Subject", "Body")
-        acs = create_channel_send_for_comm_typ(alert, comm_type)
+        acs = create_channel_send_for_comm_typ(alert, comm_type.comm_typ)
 
         with patch("alerts.util.send_message.send_discord_notification") as mock_discord:
             from alerts.util import send_alerts
@@ -124,9 +124,15 @@ class TestSaveAlertType:
         from alerts.util import save_alert_type
         from django.contrib.auth.models import Permission
         from django.contrib.contenttypes.models import ContentType
+        from django.db import connection
 
-        # Create a permission with content_type_id = -1
+        # get_permissions filters by content_type_id=-1 (custom permissions)
+        # Create a ContentType with id=-1 using raw SQL to satisfy FK constraint
         ct = ContentType.objects.first()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO django_content_type (id, app_label, model) VALUES (-1, 'custom', 'customperm')"
+            )
         perm = Permission.objects.create(
             name="Test Perm SAT",
             codename="test_perm_sat",
@@ -185,7 +191,7 @@ class TestAlertTypesViewGet:
         api_client.force_authenticate(user=test_user)
         with patch("alerts.views.access_response",
                    side_effect=lambda url, uid, auth, msg, fun: fun()):
-            response = api_client.get(f"{self.url}?id={at.id}")
+            response = api_client.get(f"{self.url}?id={at.pk}")
 
         assert response.status_code == 200
 
@@ -251,13 +257,15 @@ class TestStageUserImageApprovalAlert:
         )
 
         from django.contrib.auth.models import Permission
+        from django.contrib.contenttypes.models import ContentType
+        ct = ContentType.objects.first()
         perm = Permission.objects.create(
             name="User Image Approval",
             codename="user_image_approval_perm",
-            content_type_id=-1,
+            content_type=ct,
         )
         alert_typ = AlertType.objects.create(
-            alert_typ="user-img-approval",
+            alert_typ="user_image_approval",
             alert_typ_nm="User Image Approval",
             subject="New Images",
             body="New user profile images",
@@ -278,13 +286,15 @@ class TestStageUserImageApprovalAlert:
         from alerts.models import AlertType
 
         from django.contrib.auth.models import Permission
+        from django.contrib.contenttypes.models import ContentType
+        ct = ContentType.objects.first()
         perm = Permission.objects.create(
             name="User Image Approval 2",
             codename="user_image_approval_perm2",
-            content_type_id=-1,
+            content_type=ct,
         )
         AlertType.objects.create(
-            alert_typ="user-img-approval2",
+            alert_typ="user_image_approval",
             alert_typ_nm="User Image Approval 2",
             subject="New Images 2",
             body="New user profile images 2",

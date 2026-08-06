@@ -24,7 +24,7 @@ class TestGetHoursExemptPath:
         from scouting.models import Season
 
         season = Season.objects.create(season="2099a", current="y", game="G", manual="M")
-        mt_reg = MeetingType.objects.create(meeting_typ="reg_xex", meeting_nm="Reg Exempt", void_ind="n")
+        mt_reg = MeetingType.objects.create(meeting_typ="reg", meeting_nm="Reg Exempt", void_ind="n")
         atype_exmpt = AttendanceApprovalType.objects.create(
             approval_typ="exmpt", approval_nm="Exempt", void_ind="n"
         )
@@ -57,8 +57,8 @@ class TestGetHoursExemptPath:
              patch("attendance.util.get_meeting_hours", return_value={"hours": 10.0, "event_hours": 5.0}), \
              patch("attendance.util.user.util.get_users") as mock_users:
             mock_users.return_value = [test_user]
-            from attendance.util import get_hours
-            result = get_hours(user_id=test_user.id)
+            from attendance.util import get_attendance_report
+            result = get_attendance_report(user_id=test_user.id)
 
         assert len(result) == 1
         # exempt reg meeting reduced user_total (10.0 - 2.0 = 8.0)
@@ -160,7 +160,8 @@ class TestAttendanceViewPost:
             "void_ind": "n",
         }
 
-        with patch("attendance.views.has_access", return_value=True), \
+        with patch("attendance.views.access_response",
+                   side_effect=lambda url, uid, auth, msg, fun: fun()), \
              patch("attendance.views.attendance.util.save_attendance", return_value=mock_att):
             response = api_client.post(self.url, payload, format="json")
 

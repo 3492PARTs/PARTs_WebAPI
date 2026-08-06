@@ -74,7 +74,7 @@ class TestLinkTeamToEventIntegrityError:
     """Lines 391-392: IntegrityError on team.event_set.add."""
 
     def test_link_team_integrity_error(self):
-        from scouting.admin.util import link_teams_to_event
+        from scouting.admin.util import link_team_to_event
         from scouting.models import Season, Event, Team
 
         season = Season.objects.create(season="2099lt", current="y", game="G", manual="M")
@@ -91,7 +91,7 @@ class TestLinkTeamToEventIntegrityError:
             "event_id": event.id,
             "teams": [{"team_no": 3333, "team_nm": "LT Team", "checked": True}],
         }
-        result = link_teams_to_event(data)
+        result = link_team_to_event(data)
         assert isinstance(result, str)
 
 

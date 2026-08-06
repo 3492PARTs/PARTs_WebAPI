@@ -3,6 +3,7 @@ Extra coverage for public/competition/views.py lines 26-27 (outer exception).
 """
 import pytest
 from unittest.mock import patch
+from rest_framework.response import Response
 
 
 @pytest.mark.django_db
@@ -18,7 +19,7 @@ class TestPublicCompetitionInitOuter:
             side_effect=Exception("outer boom"),
         ), patch(
             "public.competition.views.ret_message",
-            side_effect=[Exception("inner boom"), {"error": True, "message": "err"}],
+            side_effect=[Exception("inner boom"), Response({"error": True, "message": "err"})],
         ):
             # We just need to call the endpoint; either the inner or outer
             # exception path will execute lines 26-27

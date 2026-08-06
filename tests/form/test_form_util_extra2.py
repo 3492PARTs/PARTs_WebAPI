@@ -44,6 +44,7 @@ def _create_question(form_typ_obj, qtyp, question_text="Q", order=1):
         form_typ=form_typ_obj,
         question_typ=qtyp,
         order=order,
+        table_col_width="",
         required="n",
         active="y",
         void_ind="n",
@@ -75,8 +76,8 @@ class TestSaveQuestionFlowIdSet:
         flow_typ = ft  # reuse
         flow = Flow(
             name="Flow Q303",
-            single_run="n",
-            form_based="n",
+            single_run=False,
+            form_based=False,
             form_typ=ft,
             void_ind="n",
         )
@@ -90,6 +91,7 @@ class TestSaveQuestionFlowIdSet:
             "required": "n",
             "active": "y",
             "void_ind": "n",
+            "table_col_width": "",
             "question_flow_id_set": [flow.id],
         }
         q = save_question(data)
@@ -128,6 +130,7 @@ class TestSaveQuestionUpdateScoutQuestion:
             "required": "n",
             "active": "y",
             "void_ind": "n",
+            "table_col_width": "",
             "question_flow_id_set": [],
             "scout_question": {"id": sq.id},
         }
@@ -152,7 +155,7 @@ class TestSaveResponseUpdate:
         resp.save()
 
         data = {
-            "response_id": resp.response_id,
+            "response_id": resp.id,
             "form_typ": "contact_sr466",
             "time": datetime.datetime.now(tz=datetime.timezone.utc),
             "archive_ind": "y",
@@ -175,7 +178,7 @@ class TestGetResponse:
         resp = Response(form_typ=ft, archive_ind="n", void_ind="n")
         resp.save()
 
-        result = get_response(resp.response_id)
+        result = get_response(resp.id)
         assert isinstance(result, list)
 
 
@@ -208,7 +211,7 @@ class TestSaveQuestionAggregateUpdateQAQ:
 
         qa = QuestionAggregate(
             name="QA601",
-            horizontal="n",
+            horizontal=False,
             use_answer_time=False,
             active="y",
             question_aggregate_typ=agg_typ,
@@ -227,7 +230,7 @@ class TestSaveQuestionAggregateUpdateQAQ:
         data = {
             "id": qa.id,
             "name": "QA601 Updated",
-            "horizontal": "n",
+            "horizontal": False,
             "use_answer_time": False,
             "active": "y",
             "question_aggregate_typ": {"question_aggregate_typ": "sum"},
@@ -258,7 +261,7 @@ class TestSaveFlowUpdateFlowQuestion:
         ft = _create_form_type("contact_sf976", "ContactSF976")
         qtyp = _create_question_type("text")
         q = _create_question(ft, qtyp, "FlowQ976", 1)
-        flow = Flow(name="SF976 Flow", single_run="n", form_based="n", form_typ=ft, void_ind="n")
+        flow = Flow(name="SF976 Flow", single_run=False, form_based=False, form_typ=ft, void_ind="n")
         flow.save()
         fq = FlowQuestion(flow=flow, question=q, press_to_continue=False, order=1, void_ind="n")
         fq.save()
@@ -266,8 +269,8 @@ class TestSaveFlowUpdateFlowQuestion:
         data = {
             "id": flow.id,
             "name": "SF976 Flow Updated",
-            "single_run": "n",
-            "form_based": "n",
+            "single_run": False,
+            "form_based": False,
             "form_typ": {"form_typ": "contact_sf976"},
             "void_ind": "n",
             "flow_questions": [
@@ -282,6 +285,7 @@ class TestSaveFlowUpdateFlowQuestion:
                         "required": "n",
                         "active": "y",
                         "void_ind": "n",
+                        "table_col_width": "",
                         "question_flow_id_set": [],
                     },
                     "press_to_continue": False,
@@ -310,8 +314,8 @@ class TestSaveFlowPitCreatesQuestionFlow:
 
         data = {
             "name": "SF997 Pit Flow",
-            "single_run": "n",
-            "form_based": "n",
+            "single_run": False,
+            "form_based": False,
             "form_typ": {"form_typ": "pit"},
             "void_ind": "n",
             "flow_questions": [],

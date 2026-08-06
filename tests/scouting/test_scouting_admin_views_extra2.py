@@ -113,7 +113,7 @@ class TestScoutFieldScheduleAdminViewPost:
 class TestScheduleViewPost:
     """Lines 497-508: ScheduleView POST edge cases."""
 
-    url = f"{BASE}/schedule-entry/"
+    url = f"{BASE}/schedule/"
 
     def test_post_access_denied(self, api_client, test_user):
         """Lines 501-506: access denied."""
@@ -238,7 +238,7 @@ class TestMarkScoutPresentViewGet:
                    return_value="checked in"):
             response = api_client.get(f"{self.url}?scout_field_sch_id=1&user_id={test_user.id}")
         assert response.status_code == 200
-        assert "checked in" in str(response.data.get("message", ""))
+        assert "checked in" in str(response.data.get("retMessage", ""))
 
 
 # ---------------------------------------------------------------------------

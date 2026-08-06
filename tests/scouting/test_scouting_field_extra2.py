@@ -1,9 +1,6 @@
 """
 Extra coverage for scouting/field/views.py lines 188-192
 and scouting/field/util.py missing lines.
-
-Note: ScoutingResponsesView is not registered in scouting/field/urls.py
-so we test it by directly invoking the view.
 """
 import pytest
 from unittest.mock import patch, MagicMock
@@ -18,43 +15,32 @@ from rest_framework.test import APIRequestFactory
 class TestScoutingResponsesView:
     """Lines 188-192: if type(req) == Response → return req; else serialize."""
 
-    def _get_request(self, test_user):
-        factory = APIRequestFactory()
-        request = factory.get("/scouting/field/scouting-responses/")
-        request.user = test_user
-        return request
+    url = "/scouting/field/scouting-responses/"
 
-    def test_get_returns_response_directly(self, test_user):
+    def test_get_returns_response_directly(self, api_client, test_user):
         """Lines 188-189: get_scouting_responses returns a Response → returned directly."""
-        from scouting.field.views import ScoutingResponsesView
-
+        api_client.force_authenticate(user=test_user)
         direct = Response({"detail": "direct"})
-        request = self._get_request(test_user)
 
         with patch("scouting.field.views.has_access", return_value=True), \
              patch("scouting.field.views.scouting.field.util.get_scouting_responses",
                    return_value=direct):
-            view = ScoutingResponsesView.as_view()
-            response = view(request)
+            response = api_client.get(self.url)
 
         assert response.status_code == 200
 
-    def test_get_serializes_list(self, test_user):
+    def test_get_serializes_list(self, api_client, test_user):
         """Lines 191-192: get_scouting_responses returns list → FieldResponseSerializer called."""
-        from scouting.field.views import ScoutingResponsesView
-
-        request = self._get_request(test_user)
+        api_client.force_authenticate(user=test_user)
 
         with patch("scouting.field.views.has_access", return_value=True), \
              patch("scouting.field.views.scouting.field.util.get_scouting_responses",
                    return_value=[]), \
              patch("scouting.field.views.FieldResponseSerializer") as MockSer:
             MockSer.return_value.data = []
-            view = ScoutingResponsesView.as_view()
-            response = view(request)
+            response = api_client.get(self.url)
 
         assert response.status_code == 200
-
 
 # ---------------------------------------------------------------------------
 # scouting/field/util.py lines 88-94 (build_table_cols IndexError path)
@@ -218,8 +204,7 @@ class TestScoutingFieldUtil:
 
         season = Season.objects.create(season="2099gr", current="y", game="G", manual="M")
 
-        with patch("scouting.field.util.get_current_season", return_value=season), \
-             patch("scouting.field.util.get_current_event") as mock_event:
+        with patch("scouting.util.get_current_event") as mock_event:
             mock_event.side_effect = Exception("no event")
             # Should handle gracefully or raise
             try:
