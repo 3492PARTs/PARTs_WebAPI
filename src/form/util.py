@@ -299,10 +299,10 @@ def save_question(data):
     question.value_multiplier = data.get("value_multiplier", None)
     question.svg = data.get("svg", None)
 
+    question.save()
+
     for qfid in data.get("question_flow_id_set", []):
         question.question_flow.add(Flow.objects.get(id=qfid))
-
-    question.save()
 
     if data["form_typ"]["form_typ"] in ["pit", "field"]:
         if data.get("scout_question", None).get("id", None) is not None:
@@ -353,7 +353,7 @@ def save_question(data):
             Answer(response=qa, question=question, value="!EXIST", void_ind="n").save()
 
     if (
-        data["question_typ"]["is_list"] == "y"
+        data["question_typ"].get("is_list", "n") == "y"
         and len(data.get("questionoption_set", [])) <= 0
     ):
         raise Exception("Select questions must have options.")
@@ -372,6 +372,8 @@ def save_question(data):
             )
 
         qop.save()
+
+    return question
 
 
 def get_question_types():
@@ -463,7 +465,7 @@ def save_response(data):
     if data.get("response_id", None) is None:
         response = Response()
     else:
-        response = Response.objects.get(response_id=data["response_id"])
+        response = Response.objects.get(id=data["response_id"])
 
     response.form_typ_id = data["form_typ"]
     response.time = data["time"]
@@ -473,7 +475,7 @@ def save_response(data):
 
 
 def delete_response(response_id: int):
-    res = Response.objects.get(response_id=response_id)
+    res = Response.objects.get(id=response_id)
 
     res.void_ind = "y"
     res._change_reason = "User deleted"
