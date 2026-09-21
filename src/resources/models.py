@@ -27,15 +27,24 @@ class Resource(models.Model):
     def __str__(self):
         return f"{self.id} : {self.name}"
 
-    def is_checked_out(self) -> bool:
-        """Check if this resource currently has an open checkout (not checked back in)."""
+    def checked_out_object(self):
+        """Get the current open checkout for this resource, if any."""
         return self.resourcecheckout_set.filter(
             time_in__isnull=True, void_ind="n"
-        ).exists()
+        ).first()
+
+    def is_checked_out(self) -> bool:
+        """Check if this resource currently has an open checkout (not checked back in)."""
+        return self.checked_out_object() is not None
 
     @property
     def checked_out(self) -> bool:
         return self.is_checked_out()
+
+    @property
+    def checked_out_by(self) -> bool:
+        current_checkout = self.checked_out_object()
+        return current_checkout.user.get_full_name() if current_checkout else ""
 
 
 class ResourceCheckOut(models.Model):

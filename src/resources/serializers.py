@@ -24,6 +24,9 @@ class ResourceSerializer(serializers.Serializer):
         required=False, allow_null=True, allow_blank=True
     )
     checked_out = serializers.BooleanField(read_only=True, required=False)
+    checked_out_by = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
     void_ind = serializers.CharField(required=False)
 
 
