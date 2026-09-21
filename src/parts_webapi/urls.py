@@ -16,7 +16,6 @@ Including another URLconf
 
 from django.urls import include, path
 
-
 urlpatterns = [
     path("admin/", include("admin.urls")),
     path("alerts/", include("alerts.urls")),
@@ -27,4 +26,5 @@ urlpatterns = [
     path("form/", include("form.urls")),
     path("user/", include("user.urls")),
     path("attendance/", include("attendance.urls")),
+    path("resources/", include("resources.urls")),
 ]
