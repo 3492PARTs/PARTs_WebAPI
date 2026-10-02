@@ -4,10 +4,6 @@ Production settings for PARTs WebAPI project.
 
 from .base import *
 
-# DEBUG should always be False in production
-DEBUG = False
-DEBUG_PROPAGATE_EXCEPTIONS = False
-
 # ALLOWED_HOSTS based on ENVIRONMENT
 ALLOWED_HOSTS = []
 
@@ -16,6 +12,9 @@ if ENVIRONMENT == "main":
         "parts3492.org",
         "api.parts3492.org",
     ]
+    # DEBUG should always be False in production
+    DEBUG = False
+    DEBUG_PROPAGATE_EXCEPTIONS = False
 elif ENVIRONMENT == "uat":
     ALLOWED_HOSTS = [
         "partsuat.bduke.dev",
