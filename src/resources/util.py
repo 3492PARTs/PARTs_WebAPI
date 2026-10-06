@@ -105,6 +105,7 @@ def save_resource(resource: dict[str, Any]) -> Resource:
     r.name = resource["name"]
     r.description = resource.get("description", None)
     r.resource_type = ResourceType.objects.get(id=resource["resource_type"]["id"])
+    r.on_loan = resource.get("on_loan", False)
     r.void_ind = resource.get("void_ind", "n")
 
     r.save()

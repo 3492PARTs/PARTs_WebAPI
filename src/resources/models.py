@@ -21,6 +21,7 @@ class Resource(models.Model):
     resource_type = models.ForeignKey(ResourceType, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=2000, blank=True, null=True)
+    on_loan = models.BooleanField(default=False)
     void_ind = models.CharField(max_length=1, default="n")
     history = HistoricalRecords()
 
