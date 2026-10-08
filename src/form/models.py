@@ -72,6 +72,7 @@ class Question(models.Model):
     value_multiplier = models.IntegerField(null=True, default=None)
     active = models.CharField(max_length=1, default="y")
     void_ind = models.CharField(max_length=1, default="n")
+    question_flow = models.ManyToManyField("Flow", blank=True)
 
     def __str__(self):
         return f"{self.id} {self.question}"

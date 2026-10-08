@@ -168,7 +168,10 @@ class AlertTypesView(APIView):
             alert_type_id = request.query_params.get("id", None)
 
             alert_types = get_alert_types(alert_type_id)
-            serializer = AlertTypeSerializer(alert_types, many=alert_type_id is None)
+            if alert_type_id is not None:
+                serializer = AlertTypeSerializer(alert_types.first())
+            else:
+                serializer = AlertTypeSerializer(alert_types, many=True)
             return Response(serializer.data)
 
         return access_response(

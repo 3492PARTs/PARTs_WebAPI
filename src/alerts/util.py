@@ -283,7 +283,7 @@ def get_alert_types(alert_type_id: int | None = None, alert_type: str | None = N
     """
     alert_type_id_filter = Q()
     if alert_type_id is not None:
-        alert_type_id_filter = Q(id=alert_type_id)
+        alert_type_id_filter = Q(pk=alert_type_id)
 
     alert_type_filter = Q()
     if alert_type is not None:
@@ -302,7 +302,7 @@ def save_alert_type(alert_type_data: dict[str, Any]) -> AlertType:
         The created or updated AlertType object.
     """
     if alert_type_data.get("id", None) is not None:
-        alert_type = AlertType.objects.get(id=alert_type_data["id"])
+        alert_type = AlertType.objects.get(pk=alert_type_data["id"])
     else:
         alert_type = AlertType()
     alert_type.alert_typ = alert_type_data["alert_typ"]
@@ -316,3 +316,8 @@ def save_alert_type(alert_type_data: dict[str, Any]) -> AlertType:
     alert_type.void_ind = alert_type_data.get("void_ind", "n")
     alert_type.save()
     return alert_type
+
+def stage_field_schedule_alerts(*args, **kwargs):
+    """Re-export from alerts.util_alert_definitions for backward compatibility."""
+    from alerts.util_alert_definitions import stage_field_schedule_alerts as _fn
+    return _fn(*args, **kwargs)

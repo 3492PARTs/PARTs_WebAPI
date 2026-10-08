@@ -463,7 +463,7 @@ def save_dashboard(data: dict[str, Any], user_id: int) -> None:
         else:
             dashboard = Dashboard.objects.get(id=data["id"])
 
-        if dashboard.season is None:
+        if dashboard.season_id is None:
             dashboard.season = scouting.util.get_current_season()
 
         dashboard.active = data["active"]
