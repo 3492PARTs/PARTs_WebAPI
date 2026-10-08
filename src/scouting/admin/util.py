@@ -1,6 +1,6 @@
 from typing import Any
 from django.db import IntegrityError
-from django.db.models import Q, QuerySet
+from django.db.models import Q, ObjectDoesNotExist, QuerySet
 
 import general.cloudinary
 import general.util
@@ -23,6 +23,7 @@ from scouting.models import (
     Match,
     UserInfo,
     FieldForm,
+    UserSeason,
 )
 import scouting.util
 import scouting.models
@@ -160,6 +161,16 @@ def get_scout_auth_groups() -> list[Any]:
     groups = list(sag.group for sag in sags)
 
     return groups
+
+
+def get_seasons() -> QuerySet[Season]:
+    """
+    Get all non-voided seasons ordered by season year/name.
+
+    Returns:
+        QuerySet of Season objects ordered by season field
+    """
+    return Season.objects.filter(void_ind="n").order_by("season")
 
 
 def save_season(data: dict[str, Any]) -> Season:
@@ -837,3 +848,81 @@ def scouting_report() -> None:
                         csv += f"{csv_matches}\n"
         csv += "\n"
     return csv
+
+
+def get_user_seasons(
+    id: int = None, user_id: int = None
+) -> QuerySet[UserSeason] | UserSeason:
+    """
+    Get all non-voided user seasons for the current season.
+
+    Returns:
+        QuerySet of UserSeason objects for the current season, ordered by start time and title or a single UserSeason if id is provided
+    """
+    if id is not None:
+        return UserSeason.objects.get(id=id)
+
+    user_cond = Q()
+    if user_id is not None:
+        user_cond = Q(user_id=user_id)
+
+    id_cond = Q()
+    if id is not None:
+        id_cond = Q(id=id)
+
+    return UserSeason.objects.filter(id_cond & user_cond & Q(void_ind="n")).order_by(
+        "season__season", "user__name"
+    )
+
+
+def save_user_season(user_season: dict[str, Any]) -> UserSeason:
+    """
+    Create or update a user season record.
+
+    Args:
+        user_season: Dictionary containing user season data (id, user_id, season_id, void_ind)
+                If id is present, updates existing user season; otherwise creates new one
+
+    Returns:
+        The created or updated UserSeason object
+    """
+    if user_season.get("id", None) is not None:
+        us = UserSeason.objects.get(id=user_season["id"])
+    else:
+        us = UserSeason()
+
+    us.user = User.objects.get(id=user_season["user"]["id"])
+    us.season = Season.objects.get(id=user_season["season"]["id"])
+    us.void_ind = user_season["void_ind"]
+
+    us.save()
+    return us
+
+
+def save_user_seasons(
+    user_id: str, user_seasons: list[dict[str, Any]]
+) -> list[UserSeason]:
+    """
+    Save or update multiple user season records.
+
+    Args:
+        user_id: The ID of the user for whom the user seasons are being saved
+        user_seasons: List of dictionaries containing user season data (id, user_id, season_id, void_ind)
+                If id is present in a dictionary, updates existing user season; otherwise creates new one
+                Using the list of provided user seasons to determine which user seasons to delete (those not in the list)
+
+    Returns:
+        List of created or updated UserSeason objects
+    """
+
+    user_season_ids = [us["id"] for us in user_seasons if us.get("id") is not None]
+
+    # Set void_ind to 'y' for any existing user seasons not in the provided list
+    UserSeason.objects.filter(
+        ~Q(id__in=user_season_ids) & Q(user__id=user_id) & Q(void_ind="n")
+    ).update(void_ind="y")
+
+    result = []
+    for user_season in user_seasons:
+        result.append(save_user_season(user_season))
+    return result

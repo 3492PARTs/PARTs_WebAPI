@@ -94,8 +94,8 @@ class TestExtensiveAdminViews:
         test_user.save()
         api_client.force_authenticate(user=test_user)
         
-        response = api_client.get('/scouting/admin/seasons/')
-        assert response.status_code in [200, 404]
+        response = api_client.get('/scouting/season/')
+        assert response.status_code in [200]
     
     def test_admin_init_endpoint(self, api_client, test_user):
         """Test admin init endpoint."""

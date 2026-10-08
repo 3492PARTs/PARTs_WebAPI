@@ -1,5 +1,6 @@
 from typing import Any
 from statistics import median, stdev
+import copy
 
 from datetime import datetime, date, timedelta
 
@@ -490,7 +491,7 @@ def get_responses(form_typ: int, archive_ind: str):
     questions_copy = get_questions(form_typ, "y")
 
     for res in resps:
-        questions = questions_copy.copy()
+        questions = copy.deepcopy(questions_copy)
 
         for question in questions:
             question["answer"] = get_response_question_answer(res, question["id"])

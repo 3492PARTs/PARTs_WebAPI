@@ -8,8 +8,8 @@ class SeasonSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     season = serializers.CharField()
     current = serializers.CharField()
-    game = serializers.CharField()
-    manual = serializers.CharField()
+    game = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    manual = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
 class TeamSerializer(serializers.Serializer):
