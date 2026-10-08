@@ -31,7 +31,7 @@ RUN pip install poetry==2.5.1 \
     && touch README.md \
     && poetry install --with ${DEPENDENCY_GROUP} --no-root \
     && rm -rf $POETRY_CACHE_DIR \
-    && pipdeptree -fl --exclude poetry --exclude pipdeptree --python /app/.venv/bin/python > requirements.txt
+    && pipdeptree -fl --exclude poetry,pipdeptree --python /app/.venv/bin/python > requirements.txt
 
 # ------------------------------------------------------------
 # Test stage - contains dev dependencies for testing
