@@ -2,6 +2,7 @@
 Test settings for PARTs WebAPI.
 Minimal Django settings for testing without requiring .env files or JWT keys.
 """
+
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -22,7 +23,7 @@ ENVIRONMENT = "test"
 VERSION = "BUILD"
 FRONTEND_ADDRESS = "http://localhost:3000"
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -35,6 +36,7 @@ INSTALLED_APPS = [
     "tba.apps.TbaConfig",
     "user.apps.UserConfig",
     "attendance.apps.AttendanceConfig",
+    "resources.apps.ResourcesConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "corsheaders",
@@ -80,18 +82,21 @@ WSGI_APPLICATION = "parts_webapi.wsgi.application"
 
 # Database - use in-memory SQLite for tests
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
     }
 }
+
 
 # Disable migrations for faster tests
 class DisableMigrations:
     def __contains__(self, item):
         return True
+
     def __getitem__(self, item):
         return None
+
 
 MIGRATION_MODULES = DisableMigrations()
 
@@ -100,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = []
 
 # Simplified password hashing for tests
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+    "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
 # Internationalization
@@ -153,7 +158,7 @@ AUTH_USER_MODEL = "user.User"
 AUTHENTICATION_BACKENDS = ["user.views.UserLogIn"]
 
 # Email backend for tests
-EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 DEFAULT_FROM_EMAIL = "test@example.com"
 
 # Cloudinary settings (mocked in tests)
@@ -163,7 +168,7 @@ CLOUDINARY_URL = "cloudinary://test:test@test"
 WEBPUSH_SETTINGS = {
     "VAPID_PUBLIC_KEY": "test-public-key",
     "VAPID_PRIVATE_KEY": "test-private-key",
-    "VAPID_ADMIN_EMAIL": "test@example.com"
+    "VAPID_ADMIN_EMAIL": "test@example.com",
 }
 
 # TBA settings
@@ -173,15 +178,15 @@ DISCORD_NOTIFICATION_WEBHOOK = ""
 
 # Logging
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
     },
 }

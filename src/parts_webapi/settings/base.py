@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "tba.apps.TbaConfig",
     "user.apps.UserConfig",
     "attendance.apps.AttendanceConfig",
+    "resources.apps.ResourcesConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "corsheaders",

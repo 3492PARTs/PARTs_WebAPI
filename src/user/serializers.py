@@ -27,7 +27,7 @@ class GroupSerializer(serializers.Serializer):
 class PhoneTypeSerializer(serializers.Serializer):
     """Serializer for phone type objects used for SMS messaging."""
 
-    id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(required=False, allow_null=True)
     carrier = serializers.CharField()
     phone_type = serializers.CharField()
 

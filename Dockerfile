@@ -1,7 +1,7 @@
 # ------------------------------------------------------------
 # 1️⃣ Builder stage – builds the virtual environment
 # ------------------------------------------------------------
-FROM python:3.11.3 AS build
+FROM python:3.11.15-slim-bookworm AS build
 
 # Build argument to select dependency group (wvnet or uat)
 ARG DEPENDENCY_GROUP=wvnet
@@ -15,7 +15,7 @@ WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./
 
-RUN pip install poetry==2.1.4 \
+RUN pip install poetry==2.5.1 \
     && pip install pipdeptree \
     && set -ex \
     && BUILD_DEPS=" \
@@ -31,7 +31,7 @@ RUN pip install poetry==2.1.4 \
     && touch README.md \
     && poetry install --with ${DEPENDENCY_GROUP} --no-root \
     && rm -rf $POETRY_CACHE_DIR \
-    && pipdeptree -fl --exclude poetry --exclude pipdeptree --python /app/.venv/bin/python > requirements.txt
+    && pipdeptree -fl --exclude poetry,pipdeptree --python /app/.venv/bin/python > requirements.txt
 
 # ------------------------------------------------------------
 # Test stage - contains dev dependencies for testing
@@ -50,7 +50,7 @@ COPY ./ ./
 # ------------------------------------------------------------
 # 2️⃣ Runtime stage for MAIN branch (production)
 # ------------------------------------------------------------
-FROM python:3.11-slim AS runtime-production
+FROM python:3.11.15-slim-bookworm AS runtime-production
 
 WORKDIR /app
 
@@ -80,7 +80,7 @@ RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 ubuntu \
 # ------------------------------------------------------------
 # 2️⃣ Runtime stage for UAT branch
 # ------------------------------------------------------------
-FROM python:3.11-slim AS runtime-uat
+FROM python:3.11.15-slim-bookworm AS runtime-uat
 
 # ── Expose the HTTP port that uWSGI will listen on ────────────────────────
 EXPOSE 9090
@@ -103,6 +103,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # ── Runtime dependencies (no build‑deps) ─────────────────────────────────────
 RUN RUN_DEPS=" \
+        libpcre3 \
         default-mysql-client \
         libxml2 \
         cron \

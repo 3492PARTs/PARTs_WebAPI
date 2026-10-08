@@ -4,6 +4,7 @@ from .views import (
     ResponseColumnsView,
     ResponsesView,
     CheckInView,
+    ScoutingResponsesView,
 )
 
 app_name = "scouting_field"
@@ -12,6 +13,6 @@ urlpatterns = [
     path("responses/", ResponsesView.as_view(), name="responses"),
     path("check-in/", CheckInView.as_view(), name="check-in"),
     path("form/", FormView.as_view(), name="form"),
-    # path("scouting-responses/", ScoutingResponsesView.as_view()),
+    path("scouting-responses/", ScoutingResponsesView.as_view(), name="scouting-responses"),
     path("response-columns/", ResponseColumnsView.as_view(), name="response-columns"),
 ]

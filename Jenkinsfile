@@ -210,6 +210,7 @@ node {
         // error handling, if needed
         // throw the exception to jenkins
         env.RESULT = 'error'
+        currentBuild.result = 'FAILURE'
 
         mail(
             to: recipient,
