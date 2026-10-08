@@ -103,6 +103,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # ── Runtime dependencies (no build‑deps) ─────────────────────────────────────
 RUN RUN_DEPS=" \
+        libpcre3 \
         default-mysql-client \
         libxml2 \
         cron \
