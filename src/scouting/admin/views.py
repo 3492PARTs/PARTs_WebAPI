@@ -10,7 +10,7 @@ import scouting.field.util
 
 from .serializers import *
 from rest_framework.views import APIView
-from general.security import has_access, ret_message
+from general.security import access_response, has_access, ret_message
 from rest_framework.response import Response
 
 from ..serializers import FieldFormSerializer, MatchSerializer
@@ -94,7 +94,7 @@ class SeasonView(APIView):
 
     authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
-    endpoint = "season/"
+    endpoint = "seasons/"
 
     def post(self, request, format=None):
         try:
@@ -139,7 +139,7 @@ class SeasonView(APIView):
                         error_message=serializer.errors,
                     )
                 req = scouting.admin.util.save_season(serializer.validated_data)
-                ret_message("Successfully saved season")
+                # ret_message("Successfully saved season")
                 return req
             else:
                 return ret_message(
@@ -803,3 +803,99 @@ class ScoutingReportView(APIView):
                 request.user.id,
                 e,
             )
+
+
+class UserSeasonView(APIView):
+    """
+    API endpoint to manage user seasons.
+
+    Authentication required: JWT
+    Permission required: attendance or meetings
+
+    GET: Returns all user seasons for the current season
+    POST: Creates or updates a user season
+    """
+
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    endpoint = "user-seasons/"
+
+    def get(self, request, format=None) -> Response:
+        """
+        GET endpoint to retrieve all user seasons.
+
+        Returns:
+            Response with list of user seasons or error message
+        """
+
+        def fun():
+            # mtg_id = request.query_params.get("meeting_id", None)
+
+            user_id = request.query_params.get("user_id", None)
+            id = request.query_params.get("id", None)
+            user_seasons = scouting.admin.util.get_user_seasons(id=id, user_id=user_id)
+            serializer = UserSeasonSerializer(
+                user_seasons,
+                many=user_id is not None or (user_id is None and id is None),
+            )
+            return Response(serializer.data)
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while getting user seasons.",
+            fun,
+        )
+
+    def save_fun(self, user_id, data):
+        serializer = UserSeasonSerializer(data=data, many=True)
+        if not serializer.is_valid():
+            return ret_message(
+                "Invalid data",
+                True,
+                app_url + self.endpoint,
+                user_id,
+                error_message=serializer.errors,
+            )
+
+        user_season = scouting.admin.util.save_user_seasons(
+            user_id, serializer.validated_data
+        )
+        return Response(UserSeasonSerializer(user_season, many=True).data)
+
+    def post(self, request, user_id, format=None) -> Response:
+        """
+        POST endpoint to create or update a user season.
+
+        Request body: UserSeason object with relevant fields.
+
+        Returns:
+            Success message or error response
+        """
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while saving user season entry.",
+            lambda: self.save_fun(user_id, request.data),
+        )
+
+    def delete(self, request, user_id, format=None) -> Response:
+        """
+        DELETE endpoint to remove a user season.
+
+        Request body: UserSeason object with relevant fields.
+
+        Returns:
+            Success message or error response
+        """
+
+        return access_response(
+            app_url + self.endpoint,
+            request.user.id,
+            auth_obj,
+            "An error occurred while deleting user season entry.",
+            lambda: self.save_fun(user_id, request.data),
+        )

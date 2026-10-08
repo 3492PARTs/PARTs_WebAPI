@@ -1,17 +1,10 @@
 from rest_framework import serializers
 
-from form.serializers import (
-    FormSubTypeSerializer,
-    QuestionTypeSerializer,
-    QuestionSerializer,
-    FormTypeSerializer,
-)
 from scouting.models import Team
 from scouting.serializers import (
     EventSerializer,
     SeasonSerializer,
     TeamSerializer,
-    ScoutFieldScheduleSerializer,
 )
 from user.serializers import UserSerializer, PhoneTypeSerializer, GroupSerializer
 
@@ -67,3 +60,10 @@ class ScoutingUserInfoSerializer(serializers.Serializer):
     under_review = serializers.BooleanField(required=False)
     group_leader = serializers.BooleanField(required=False)
     eliminate_results = serializers.BooleanField(required=False)
+
+
+class UserSeasonSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False, allow_null=True)
+    user = UserSerializer()
+    season = SeasonSerializer()
+    void_ind = serializers.CharField(default="n")

@@ -14,6 +14,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import datetime
 import pytz
+from rest_framework.response import Response
 
 BASE_ADMIN = "/scouting/admin"
 
@@ -35,7 +36,7 @@ class TestScoutingAdminViewsMissingLines:
              patch("scouting.admin.views.scouting.admin.util.save_season",
                    side_effect=Exception("boom")):
             response = api_client.post(
-                f"{BASE_ADMIN}/season/",
+                f"{BASE_ADMIN}/seasons/",
                 {"season": "2025x", "current": "n", "game": "G", "manual": ""},
                 format="json"
             )
@@ -45,12 +46,12 @@ class TestScoutingAdminViewsMissingLines:
     def test_season_put_success(self, api_client, test_user, system_user):
         """Lines 141-143: PUT season success."""
         api_client.force_authenticate(user=test_user)
-        mock_result = MagicMock()
+        mock_result = Response({"error": False, "message": "ok"})
         with patch("scouting.admin.views.has_access", return_value=True), \
              patch("scouting.admin.views.scouting.admin.util.save_season",
                    return_value=mock_result):
             response = api_client.put(
-                f"{BASE_ADMIN}/season/",
+                f"{BASE_ADMIN}/seasons/",
                 {"season": "2025y", "current": "n", "game": "G", "manual": ""},
                 format="json"
             )
@@ -61,10 +62,12 @@ class TestScoutingAdminViewsMissingLines:
         api_client.force_authenticate(user=test_user)
         with patch("scouting.admin.views.has_access", return_value=False):
             response = api_client.put(
-                f"{BASE_ADMIN}/season/",
+                f"{BASE_ADMIN}/seasons/",
                 {"season": "2025z", "current": "n", "game": "G", "manual": ""},
                 format="json"
             )
+
+        print(response)
         assert response.status_code == 200
         assert response.data.get("error") is True
 

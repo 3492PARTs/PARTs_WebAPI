@@ -4,7 +4,7 @@ from django.db.models import Q, QuerySet
 from django.db.models.functions import Lower
 
 from scouting.models import ScoutAuthGroup
-from user.models import User, PhoneType, Link
+from user.models import User, PhoneType, Link, UserImage
 import general.cloudinary
 import general.security
 
@@ -53,6 +53,8 @@ def parse_user(usr: User) -> dict[str, Any]:
         Q(permission__in=permissions) | Q(permission_id__isnull=True)
     ).order_by("order")
 
+    img = usr.userimage_set.filter(Q(img_approved=True) & Q(void_ind="n")).order_by("-date_added").first()
+
     usr_dict = {
         "id": usr.id,
         "username": usr.username,
@@ -66,7 +68,7 @@ def parse_user(usr: User) -> dict[str, Any]:
         "permissions": permissions,
         "phone_type": usr.phone_type,
         "phone_type_id": usr.phone_type_id,
-        "image": general.cloudinary.build_image_url(usr.img_id, usr.img_ver),
+        "image": general.cloudinary.build_image_url(img.img_id, img.img_ver) if img is not None else None,
         "links": user_links,
         "discord_user_id": usr.discord_user_id,
     }
@@ -290,14 +292,20 @@ def delete_group(group_id: int) -> None:
     Group.objects.get(id=group_id).delete()
 
 
-def get_permissions() -> QuerySet[Permission]:
+def get_permissions(codename: str | None = None) -> QuerySet[Permission]:
     """
     Get all custom permissions (those with content_type_id=-1).
+
+    Args:
+        codename: Optional codename to filter permissions
 
     Returns:
         QuerySet of Permission objects ordered by name
     """
-    return Permission.objects.filter(content_type_id=-1).order_by("name")
+    codename_filter = Q()
+    if codename is not None:
+        codename_filter = Q(codename=codename)
+    return Permission.objects.filter(Q(content_type_id=-1) & codename_filter).order_by("name")
 
 
 def save_permission(data: dict[str, Any]) -> None:
@@ -360,3 +368,90 @@ def save_link(data):
 
 def delete_link(link_id: int):
     Link.objects.get(id=link_id).delete()
+
+
+def get_user_images(img_approved: bool | None = None) -> QuerySet[UserImage]:
+    """
+    Get all user images.
+
+    Args:
+        img_approved: Optional boolean to filter images by approval status.
+
+    Returns:
+        QuerySet of UserImage objects ordered by date added
+    """
+
+    approval_filter = Q()
+    if img_approved is not None:
+        approval_filter = Q(img_approved=True if img_approved == 'true' else False)
+
+    return UserImage.objects.filter(approval_filter & Q(void_ind="n")).order_by("date_added")
+
+
+def get_parsed_user_images(img_approved: bool | None = None) -> list[dict[str, Any]]:
+    """
+    Get all user images with parsed user information.
+
+    Args:
+        img_approved: Optional boolean to filter images by approval status.
+
+    Returns:
+        List of dictionaries containing user image details and associated user information
+    """
+    user_images = get_user_images(img_approved)
+    parsed_images = []
+
+    for img in user_images:
+        parsed_images.append(
+            parse_user_image(img)
+        )
+
+    return parsed_images
+
+def parse_user_image(user_image: UserImage) -> dict[str, Any]:
+    """
+    Parse a UserImage object into a dictionary with detailed information.
+
+    Args:
+        user_image: The UserImage object to parse
+
+    Returns:
+        Dictionary containing user image details and associated user information
+    """
+    return {
+        "id": user_image.id,
+        "user": parse_user(user_image.user),
+        "image": general.cloudinary.build_image_url(user_image.img_id, user_image.img_ver),
+        "img_approved": user_image.img_approved,
+        "date_added": user_image.date_added,
+    }
+
+def save_user_image(data: dict[str, Any]) -> UserImage:
+    """
+    Save a user image with approval status.
+
+    Args:
+        data: Dictionary containing user image data (user, image, img_approved)
+
+    Returns:
+        The saved UserImage object
+    """
+    if data.get("id", None) is not None:
+        user_image = UserImage.objects.get(id=data["id"])
+    else:
+        user_image = UserImage()
+
+    user_image.user = User.objects.get(id=data["user"]["id"])
+
+    if data.get("img_id", None) is not None:
+        user_image.img_id = data["img_id"]
+
+    if data.get("img_ver", None) is not None:
+        user_image.img_ver = data["img_ver"]
+
+    user_image.img_approved = data["img_approved"]
+
+    user_image.void_ind = data.get("void_ind", "n")
+    user_image.save()
+
+    return user_image

@@ -22,7 +22,7 @@ from alerts.util import (
     get_alert_type,
 )
 import user
-from user.models import User
+from user.models import User, UserImage
 from admin.models import ErrorLog
 from scouting.models import FieldSchedule, MatchStrategy, Schedule
 from attendance.models import Meeting
@@ -64,6 +64,8 @@ def stage_alerts() -> str:
     ret += stage_meeting_alert(True)
     ret += "] Meeting End Alert ["
     ret += stage_meeting_alert(False)
+    ret += "] New User Profile Image Approval ["
+    ret += stage_user_image_approval_alert()
     ret += "]"
     return ret
 
@@ -627,5 +629,59 @@ def stage_meeting_alert(start_or_end: bool = True) -> str:
     except Exception as e:
         message = "ERROR STAGING"
         ret_message(message, True, app_path + ".stage_meeting_alert", -1, e)
+
+    return message
+
+
+def stage_user_image_approval_alert() -> str:
+    """
+    Stage alerts for unapproved user images.
+
+    Args:
+        None
+
+    Returns:
+        String message listing user images alerted or "NONE TO STAGE"
+    """
+    message = ""
+
+    try:
+        alert_typ = get_alert_type("user_image_approval")
+
+        excluded_ids = (
+            AlertedResource.objects.filter(Q(alert_typ=alert_typ) & Q(void_ind="n"))
+            .annotate(foreign_id_int=Cast("foreign_id", output_field=IntegerField()))
+            .values_list("foreign_id_int", flat=True)
+        )
+
+        user_images = UserImage.objects.filter(
+            Q(img_approved=False) & Q(void_ind="n") & ~Q(id__in=excluded_ids)
+        )
+
+        count = 0
+        for user_img_obj in user_images:
+            message += f"Alerted New User Profile Image: {user_img_obj.id} : {user_img_obj.user.name}\n"
+
+            count += 1
+
+            AlertedResource(foreign_id=user_img_obj.id, alert_typ=alert_typ).save()
+
+        if count > 0:
+            sent = send_alerts_to_role(
+                alert_typ.subject,
+                f"\n<a href='{settings.FRONTEND_ADDRESS}admin/user-image-approval'>{alert_typ.body}</a>",
+                alert_typ.permission.codename,
+                ["notification", "email"],
+                alert_type=alert_typ,
+            )
+
+        alert_typ.last_run = timezone.now()
+        alert_typ.save()
+
+        if message == "":
+            message = "NONE TO STAGE"
+    except Exception as e:
+        message = "ERROR STAGING"
+        ret_message(message, True, app_path + ".stage_user_image_approval_alert", -1, e)
 
     return message

@@ -7,7 +7,6 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 import user.util
 from scouting.models import ScoutAuthGroup
-from user.models import PhoneType
 from .serializers import (
     ErrorLogSerializer,
     GroupSerializer,
